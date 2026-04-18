@@ -1,0 +1,47 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "cc.fascinated.fascinatedutils.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "AtmosphericFogModifierMixin",
+    "BossHealthOverlayMixin",
+    "CameraMixin",
+    "ChatComponentMixin",
+    "ClientPlayerEntityMixin",
+    "ClientPlayerInteractionManagerAccessorMixin",
+    "GameMenuScreenMixin",
+    "GameRendererMixin",
+    "GameRendererPostProcessorAccessorMixin",
+    "GuiMixin",
+    "GuiRendererMixin",
+    "HeldItemRendererMixin",
+    "KeyBindingAccessorMixin",
+    "LivingEntityRendererMixin",
+    "MouseHandlerMixin",
+    "PlayerEntityMixin",
+    "confirmdisconnect.GameMenuScreenMixin",
+    "freelook.CameraFreelookMixin",
+    "freelook.MouseHandlerFreelookMixin",
+    "performance.GlBackendMixin",
+    "performance.WindowMixin",
+    "statuseffects.GuiMixin",
+    "tab.PlayerListHudMixin",
+    "tab.PlayerTabOverlayMixin",
+    "turboentities.BlockEntityRenderDispatcherMixin",
+    "turboentities.ClientLevelTickMixin",
+    "turboentities.CullableMixin",
+    "turboentities.EntityRendererMixin",
+    "turboentities.ItemFrameBackCullingMixin",
+    "turboentities.LevelRendererMixin",
+    "turboentities.MapRendererBackCullingMixin",
+    "turboentities.PaintingBackCullingMixin",
+    "turboentities.SignBackCullingMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

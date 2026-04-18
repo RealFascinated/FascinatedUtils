@@ -1,0 +1,33 @@
+# Gradle
+.gradle/
+build/
+out/
+.temp-build.gradle
+
+# Loom / Minecraft dev
+run/
+
+# Eclipse
+.settings/
+.classpath
+.project
+bin/
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs & dumps
+*.log
+hs_err_pid*.log
+replay_pid*.txt
+
+# Java
+*.class

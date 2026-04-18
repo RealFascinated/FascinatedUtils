@@ -1,0 +1,41 @@
+triggers:
+  - type: NORMAL
+    pattern: "^ +1st Killer - ?\\[?\\w*\\+*\\]? \\w+ - \\d+(?: Kills?)?$"
+  - type: NORMAL
+    pattern: "^ *1st (?:Place ?)?(?:-|:)? ?\\[?\\w*\\+*\\]? \\w+(?: : \\d+| - \\d+(?: Points?)?| - \\d+(?: x .)?| \\(\\w+ .{1,6}\\) - \\d+ Kills?|: \\d+:\\d+| - \\d+ (?:Zombie )?(?:Kills?|Blocks? Destroyed)| - \\[LINK\\])?$"
+  - type: NORMAL
+    pattern: "^ +Winn(?:er #1 \\(\\d+ Kills\\): \\w+ \\(\\w+\\)|er(?::| - )(?:Hiders|Seekers|Defenders|Attackers|PLAYERS?|MURDERERS?|Red|Blue|RED|BLU|\\w+)(?: Team)?|ers?: ?\\[?\\w*\\+*\\]? \\w+(?:, ?\\[?\\w*\\+*\\]? \\w+)?|ing Team ?[\\:-] (?:Animals|Hunters|Red|Green|Blue|Yellow|RED|BLU|Survivors|Vampires))$"
+  - type: NORMAL
+    pattern: "^ +Alpha Infected: \\w+ \\(\\d+ infections?\\)"
+  - type: NORMAL
+    pattern: "^ +You survived \\d+ rounds!$"
+  - type: NORMAL
+    pattern: "^ +(?:UHC|SkyWars|Bridge|Sumo|Classic|OP|MegaWalls|Bow|NoDebuff|Blitz|Combo|Bow Spleef) (?:Duel|Doubles|3v3|4v4|Teams|Deathmatch|2v2v2v2|3v3v3v3)? ?- \\d+:\\d+$"
+  - type: NORMAL
+    pattern: "^ +They captured all wools!$"
+  - type: NORMAL
+    pattern: "^ +Game over!$"
+  - type: NORMAL
+    pattern: "^ +[\\d\\.]+k?/[\\d\\.]+k? \\w+$"
+  - type: NORMAL
+    pattern: "^ +(?:Criminal|Cop)s won the game!$"
+  - type: NORMAL
+    pattern: "^ +\\[?\\w*\\+*\\]? \\w+ - \\d+ Final Kills$"
+  - type: NORMAL
+    pattern: "^ +Zombies - \\d*:?\\d+:\\d+ \\(Round \\d+\\)$"
+  - type: NORMAL
+    pattern: "^ +. YOUR STATISTICS .$"
+  - type: NORMAL
+    pattern: "^ {21}Bridge CTF [a-zA-Z]+ - \\d\\d:\\d\\d$"
+  - type: CASUAL
+    pattern: "^MINOR EVENT! .+ in .+ ended$"
+  - type: CASUAL
+    pattern: "^DRAGON EGG OVER! Earned [\\d,]+XP [\\d,]g clicking the egg \\d+ times$"
+  - type: CASUAL
+    pattern: "^GIANT CAKE! Event ended! Cake's gone!$"
+  - type: CASUAL
+    pattern: "^PIT EVENT ENDED: .+ \\[INFO\\]$"
+  - type: ANTI_GG
+    pattern: "^(?:.* )?(?:\\[.+] )?\\w{1,16}(?: .+)?: (?:❤|${antigg_strings})$"
+  - type: ANTI_KARMA
+    pattern: "^\\+(?<karma>\\d)+ Karma!$"

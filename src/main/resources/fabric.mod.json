@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "fascinatedutils",
+  "version": "${version}",
+  "name": "FascinatedUtils",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/fascinatedutils/textures/ui/mod_settings/x.png",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-datagen": [
+      "cc.fascinated.fascinatedutils.client.DataGenerator"
+    ],
+    "client": [
+      "cc.fascinated.fascinatedutils.client.Client"
+    ],
+    "main": [
+      "cc.fascinated.fascinatedutils.FascinatedUtils"
+    ]
+  },
+  "mixins": [
+    "fascinatedutils.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
