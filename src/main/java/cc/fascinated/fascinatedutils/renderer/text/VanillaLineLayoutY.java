@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.renderer.text;
 
 import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.util.Mth;
 
@@ -21,9 +22,6 @@ public final class VanillaLineLayoutY {
     private static int cachedFontHeightKey = Integer.MIN_VALUE;
     private static float cachedDeltaNoShadow = Float.NaN;
     private static float cachedDeltaShadow = Float.NaN;
-
-    private VanillaLineLayoutY() {
-    }
 
     /**
      * Converts a layout line top to an integer vanilla {@code drawText} Y coordinate.
@@ -79,9 +77,9 @@ public final class VanillaLineLayoutY {
         if (client == null) {
             return fallbackLineTopToBaselinePx(fontHeightFallback());
         }
-        net.minecraft.client.gui.Font vanilla = client.font;
+        Font vanilla = client.font;
         try {
-            net.minecraft.client.gui.Font.PreparedText drawable = vanilla.prepareText(MEASUREMENT_SAMPLE, 0f, MEASUREMENT_BASELINE_Y, 0xFFFFFF, shadow, 0);
+            Font.PreparedText drawable = vanilla.prepareText(MEASUREMENT_SAMPLE, 0f, MEASUREMENT_BASELINE_Y, 0xFFFFFF, shadow, 0);
             ScreenRectangle rect = drawable.bounds();
             assert rect != null;
             if (rect.width() <= 0 || rect.height() <= 0) {
@@ -105,5 +103,8 @@ public final class VanillaLineLayoutY {
     private static int fontHeightFallback() {
         Minecraft client = Minecraft.getInstance();
         return client != null ? client.font.lineHeight : 9;
+    }
+
+    private VanillaLineLayoutY() {
     }
 }

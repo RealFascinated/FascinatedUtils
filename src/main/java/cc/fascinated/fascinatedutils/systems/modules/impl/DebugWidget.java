@@ -48,12 +48,12 @@ public class DebugWidget extends HudMiniMessageModule {
             out.add("  Rendered Block Entities: " + (consideredBlockEntities - cullTask.getCulledBlockEntityCount()) + "/" + consideredBlockEntities);
             int consideredEntities = cullTask.getConsideredEntityCount();
             out.add("  Rendered Entities: " + (consideredEntities - cullTask.getCulledEntityCount()) + "/" + consideredEntities);
-            int consideredFrames = turboEntities.getLastConsideredItemFrames();
-            out.add("  Rendered Item Frames: " + (consideredFrames - turboEntities.getLastBackCulledItemFrames()) + "/" + consideredFrames);
-            int consideredPaintings = turboEntities.getLastConsideredPaintings();
-            out.add("  Rendered Paintings: " + (consideredPaintings - turboEntities.getLastBackCulledPaintings()) + "/" + consideredPaintings);
-            int consideredSigns = turboEntities.getLastConsideredSigns();
-            out.add("  Rendered Signs: " + (consideredSigns - turboEntities.getLastBackCulledSigns()) + "/" + consideredSigns);
+            int consideredFrames = turboEntities.itemFrameCounters.considered;
+            out.add("  Rendered Item Frames: " + (consideredFrames - turboEntities.itemFrameCounters.culled) + "/" + consideredFrames);
+            int consideredPaintings = turboEntities.paintingCounters.considered;
+            out.add("  Rendered Paintings: " + (consideredPaintings - turboEntities.paintingCounters.culled) + "/" + consideredPaintings);
+            int consideredSigns = turboEntities.signCounters.considered;
+            out.add("  Rendered Signs: " + (consideredSigns - turboEntities.paintingCounters.culled) + "/" + consideredSigns);
             int skipped = turboEntities.getLastSkippedEntityTicks();
             int total = turboEntities.getLastTickedEntities() + skipped;
             out.add("  Ticked Entities: " + (total - skipped) + "/" + total);

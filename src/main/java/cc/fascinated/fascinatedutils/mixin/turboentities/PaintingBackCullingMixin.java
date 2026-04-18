@@ -22,7 +22,7 @@ public class PaintingBackCullingMixin {
             return;
         }
 
-        Client.TURBO_ENTITIES.incrementConsideredPaintings();
+        Client.TURBO_ENTITIES.paintingCounters.considered++;
 
         Direction direction = state.direction;
         double toCameraX = camera.pos.x - state.x;
@@ -31,7 +31,7 @@ public class PaintingBackCullingMixin {
         double dot = toCameraX * direction.getStepX() + toCameraY * direction.getStepY() + toCameraZ * direction.getStepZ();
 
         if (dot < 0) {
-            Client.TURBO_ENTITIES.incrementBackCulledPaintings();
+            Client.TURBO_ENTITIES.paintingCounters.culled++;
             info.cancel();
         }
     }

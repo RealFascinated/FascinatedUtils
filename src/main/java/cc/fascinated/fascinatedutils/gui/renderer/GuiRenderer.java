@@ -1,5 +1,10 @@
 package cc.fascinated.fascinatedutils.gui.renderer;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
+
 import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.GuiTheme;
 import cc.fascinated.fascinatedutils.gui.renderer.operations.GuiRenderOperation;
@@ -13,11 +18,8 @@ import cc.fascinated.fascinatedutils.renderer.Renderer2D;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * GUI orchestrator: root {@link GuiGraphics} scope, nested scissors with segment flushes, deferred text
@@ -346,7 +348,7 @@ public class GuiRenderer implements UIRenderer {
      * @param positionX left origin in logical pixels
      * @param positionY top origin in logical pixels
      */
-    public void drawGuiItem(net.minecraft.world.item.ItemStack stack, float positionX, float positionY) {
+    public void drawGuiItem(ItemStack stack, float positionX, float positionY) {
         backend.drawGuiItem(stack, positionX, positionY);
     }
 
@@ -358,7 +360,7 @@ public class GuiRenderer implements UIRenderer {
      * @param positionX left origin in logical pixels
      * @param positionY top origin in logical pixels
      */
-    public void drawGuiItem(net.minecraft.world.entity.LivingEntity holder, net.minecraft.world.item.ItemStack stack, float positionX, float positionY) {
+    public void drawGuiItem(LivingEntity holder, ItemStack stack, float positionX, float positionY) {
         backend.drawGuiItem(holder, stack, positionX, positionY);
     }
 

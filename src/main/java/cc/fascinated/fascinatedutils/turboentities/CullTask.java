@@ -28,27 +28,31 @@ public class CullTask implements Runnable {
     private static final double HITBOX_LIMIT = 64.0;
 
     private final OcclusionCullingInstance culling;
-    private final Minecraft client = Minecraft.getInstance();
+
     // Reused allocations — only accessed from the cull thread
     private final Vec3d aabbMin = new Vec3d(0, 0, 0);
     private final Vec3d aabbMax = new Vec3d(0, 0, 0);
     private final Vec3d cameraVec3d = new Vec3d(0, 0, 0);
+
     private volatile boolean running = true;
     private volatile boolean requestCull = false;
     @Setter
-    private volatile boolean ingame = false;
+    private volatile boolean inGame = false;
     @Setter
     private volatile List<Entity> entitiesForRendering = new ArrayList<>();
     @Setter
     private volatile Map<BlockPos, BlockEntity> blockEntities = new HashMap<>();
     @Setter
     private volatile Vec3 camera = Vec3.ZERO;
+
     private volatile int consideredEntityCount = 0;
     private volatile int culledEntityCount = 0;
     private volatile int consideredBlockEntityCount = 0;
     private volatile int culledBlockEntityCount = 0;
     @Getter
     private volatile long lastPassNanos = 0L;
+
+    @Setter
     private volatile Frustum frustum = null;
     private Vec3 lastCameraPos = Vec3.ZERO;
 
@@ -57,19 +61,15 @@ public class CullTask implements Runnable {
     }
 
     private static AABB getBlockEntityAABB(BlockPos pos, BlockEntity blockEntity) {
-        if (blockEntity instanceof BannerBlockEntity) {
-            return new AABB(pos).inflate(0, 1, 0);
-        }
-        return new AABB(pos);
+        return blockEntity instanceof BannerBlockEntity ? new AABB(pos).inflate(0, 1, 0) : new AABB(pos);
     }
 
     @Override
     public void run() {
-        while (running && client.isRunning()) {
+        while (running && Minecraft.getInstance().isRunning()) {
             try {
                 Thread.sleep(SLEEP_DELAY);
-
-                if (!ingame) {
+                if (!inGame) {
                     continue;
                 }
 
@@ -84,29 +84,19 @@ public class CullTask implements Runnable {
                     cullBlockEntities();
                     lastPassNanos = System.nanoTime() - passStart;
                 }
-            } catch (InterruptedException exception) {
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
-            } catch (Exception exception) {
-                // Silently handle exceptions from concurrent access
+            } catch (Exception ignored) {
+                // Concurrent access from the render thread; safe to skip this pass
             }
         }
     }
 
-    public void setFrustum(Frustum newFrustum) {
-        this.frustum = newFrustum;
-    }
-
-    /**
-     * Requests a cull update on the next tick.
-     */
     public void requestCull() {
         this.requestCull = true;
     }
 
-    /**
-     * Stops the cull task.
-     */
     public void stop() {
         this.running = false;
     }
@@ -114,8 +104,7 @@ public class CullTask implements Runnable {
     private void cullEntities() {
         Vec3 cameraPos = lastCameraPos;
         List<Entity> entities = entitiesForRendering;
-        int consideredCount = 0;
-        int culledCount = 0;
+        int considered = 0, culled = 0;
 
         for (Entity entity : entities) {
             if (entity == null) {
@@ -124,128 +113,103 @@ public class CullTask implements Runnable {
             if (!(entity instanceof Cullable cullable)) {
                 continue;
             }
-            consideredCount++;
+
+            considered++;
             if (cullable.fascinatedutils$isCulled()) {
-                culledCount++;
+                culled++;
             }
             if (cullable.fascinatedutils$isForcedVisible()) {
                 continue;
             }
 
-            if (client.shouldEntityAppearGlowing(entity)) {
+            if (Minecraft.getInstance().shouldEntityAppearGlowing(entity) || (Minecraft.getInstance().player != null && Minecraft.getInstance().player.getVehicle() == entity)) {
                 cullable.fascinatedutils$setCulled(false);
                 continue;
             }
 
-            // Never cull the entity the player is currently riding
-            if (client.player != null && client.player.getVehicle() == entity) {
+            EntityRenderer<?, ?> renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
+            if (!(renderer instanceof EntityRendererAccess rendererAccess) || !rendererAccess.fascinatedutils$affectedByCulling(entity)) {
                 cullable.fascinatedutils$setCulled(false);
                 continue;
             }
 
-            // Skip entities whose renderer opts out of culling (paintings, item frames, etc.)
-            EntityRenderer<?, ?> entityRenderer = client.getEntityRenderDispatcher().getRenderer(entity);
-            if (entityRenderer == null || !(entityRenderer instanceof EntityRendererAccess rendererAccess) || !rendererAccess.fascinatedutils$affectedByCulling(entity)) {
-                cullable.fascinatedutils$setCulled(false);
-                continue;
-            }
-
-            AABB boundingBox = getCullingBox(entity, rendererAccess);
-            if (boundingBox == null) {
-                cullable.fascinatedutils$setCulled(false);
-                continue;
-            }
-
-            if (boundingBox.getXsize() > HITBOX_LIMIT || boundingBox.getYsize() > HITBOX_LIMIT || boundingBox.getZsize() > HITBOX_LIMIT) {
-                cullable.fascinatedutils$setCulled(false);
-                continue;
-            }
-
-            // Frustum check first — fastest rejection, covers behind-you and off-screen
-            Frustum currentFrustum = frustum;
-            if (currentFrustum != null && !currentFrustum.isVisible(boundingBox)) {
-                cullable.fascinatedutils$setCulled(true);
-                continue;
-            }
-
-            // Occlusion raycast only for entities within tracing range
-            if (!entity.position().closerThan(cameraPos, TRACING_DISTANCE)) {
-                cullable.fascinatedutils$setCulled(false);
-                continue;
-            }
-
-            aabbMin.set(boundingBox.minX, boundingBox.minY, boundingBox.minZ);
-            aabbMax.set(boundingBox.maxX, boundingBox.maxY, boundingBox.maxZ);
-            boolean visible = culling.isAABBVisible(aabbMin, aabbMax, cameraVec3d);
-            cullable.fascinatedutils$setCulled(!visible);
+            AABB box = getCullingBox(entity, rendererAccess);
+            cullable.fascinatedutils$setCulled(!isVisible(box, entity.position(), cameraPos, true));
         }
 
-        consideredEntityCount = consideredCount;
-        culledEntityCount = culledCount;
+        consideredEntityCount = considered;
+        culledEntityCount = culled;
     }
 
     private void cullBlockEntities() {
-        Vec3 cameraPos = lastCameraPos;
-        Map<BlockPos, BlockEntity> blockEntitiesCopy = blockEntities;
-        int consideredCount = 0;
-        int culledCount = 0;
+        Map<BlockPos, BlockEntity> snapshot = blockEntities;
+        int considered = 0, culled = 0;
 
-        for (Map.Entry<BlockPos, BlockEntity> entry : blockEntitiesCopy.entrySet()) {
+        for (Map.Entry<BlockPos, BlockEntity> entry : snapshot.entrySet()) {
             try {
                 BlockPos pos = entry.getKey();
                 BlockEntity blockEntity = entry.getValue();
-
-                if (blockEntity == null) {
-                    continue;
-                }
                 if (!(blockEntity instanceof Cullable cullable)) {
                     continue;
                 }
-                consideredCount++;
+
+                considered++;
                 if (cullable.fascinatedutils$isCulled()) {
-                    culledCount++;
+                    culled++;
                 }
                 if (cullable.fascinatedutils$isForcedVisible()) {
                     continue;
                 }
 
-                // No renderer means vanilla won't render it anyway
-                if (client.getBlockEntityRenderDispatcher().getRenderer(blockEntity) == null) {
+                if (Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(blockEntity) == null) {
                     cullable.fascinatedutils$setCulled(false);
                     continue;
                 }
 
                 // Block entities beyond 64 blocks are outside vanilla's render range
-                double distSq = pos.distToCenterSqr(cameraPos);
-                if (distSq > 64 * 64) {
+                if (pos.distToCenterSqr(lastCameraPos) > 64 * 64) {
                     cullable.fascinatedutils$setCulled(false);
                     continue;
                 }
 
-                AABB boundingBox = getBlockEntityAABB(pos, blockEntity);
-
-                if (boundingBox.getXsize() > HITBOX_LIMIT || boundingBox.getYsize() > HITBOX_LIMIT || boundingBox.getZsize() > HITBOX_LIMIT) {
-                    cullable.fascinatedutils$setCulled(false);
-                    continue;
-                }
-
-                Frustum currentFrustum = frustum;
-                if (currentFrustum != null && !currentFrustum.isVisible(boundingBox)) {
-                    cullable.fascinatedutils$setCulled(true);
-                    continue;
-                }
-
-                aabbMin.set(boundingBox.minX, boundingBox.minY, boundingBox.minZ);
-                aabbMax.set(boundingBox.maxX, boundingBox.maxY, boundingBox.maxZ);
-                boolean visible = culling.isAABBVisible(aabbMin, aabbMax, cameraVec3d);
-                cullable.fascinatedutils$setCulled(!visible);
-            } catch (Exception exception) {
-                // Silently handle concurrent modification
+                AABB box = getBlockEntityAABB(pos, blockEntity);
+                cullable.fascinatedutils$setCulled(!isVisible(box, Vec3.atCenterOf(pos), lastCameraPos, false));
+            } catch (Exception ignored) {
+                // Concurrent modification; skip this block entity
             }
         }
 
-        consideredBlockEntityCount = consideredCount;
-        culledBlockEntityCount = culledCount;
+        consideredBlockEntityCount = considered;
+        culledBlockEntityCount = culled;
+    }
+
+    /**
+     * Shared frustum → hitbox-size → occlusion pipeline.
+     * Returns true if the object should be rendered, false if it should be culled.
+     *
+     * @param tracingRangeCheck whether to skip occlusion raycasting beyond TRACING_DISTANCE
+     */
+    private boolean isVisible(AABB box, Vec3 objectPos, Vec3 cameraPos, boolean tracingRangeCheck) {
+        if (box == null) {
+            return true;
+        }
+
+        if (box.getXsize() > HITBOX_LIMIT || box.getYsize() > HITBOX_LIMIT || box.getZsize() > HITBOX_LIMIT) {
+            return true;
+        }
+
+        Frustum currentFrustum = frustum;
+        if (currentFrustum != null && !currentFrustum.isVisible(box)) {
+            return false;
+        }
+
+        if (tracingRangeCheck && !objectPos.closerThan(cameraPos, TRACING_DISTANCE)) {
+            return true;
+        }
+
+        aabbMin.set(box.minX, box.minY, box.minZ);
+        aabbMax.set(box.maxX, box.maxY, box.maxZ);
+        return culling.isAABBVisible(aabbMin, aabbMax, cameraVec3d);
     }
 
     private AABB getCullingBox(Entity entity, EntityRendererAccess rendererAccess) {

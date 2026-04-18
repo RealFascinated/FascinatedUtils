@@ -86,11 +86,11 @@ public class LevelRendererMixin {
 
         Minecraft client = Minecraft.getInstance();
         if (client.level == null || client.player == null) {
-            cullTask.setIngame(false);
+            cullTask.setInGame(false);
             return;
         }
 
-        cullTask.setIngame(true);
+        cullTask.setInGame(true);
         cullTask.setCamera(camera.position());
         cullTask.setFrustum(frustum);
 

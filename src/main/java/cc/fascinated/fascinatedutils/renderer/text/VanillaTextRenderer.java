@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.renderer.text;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 
@@ -11,10 +12,6 @@ public class VanillaTextRenderer implements TextRenderer {
     public static final VanillaTextRenderer INSTANCE = new VanillaTextRenderer();
 
     private VanillaTextRenderer() {
-    }
-
-    private net.minecraft.client.gui.Font font() {
-        return Minecraft.getInstance().font;
     }
 
     @Override
@@ -46,5 +43,9 @@ public class VanillaTextRenderer implements TextRenderer {
     @Override
     public void drawText(GuiGraphicsExtractor drawContext, Component text, int originX, int originY, int colorArgb, boolean shadow) {
         drawContext.text(font(), text, originX, originY, colorArgb, shadow);
+    }
+
+    private Font font() {
+        return Minecraft.getInstance().font;
     }
 }

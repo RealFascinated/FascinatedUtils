@@ -1,17 +1,5 @@
 package cc.fascinated.fascinatedutils.updater;
 
-import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.common.types.GitHubAsset;
-import cc.fascinated.fascinatedutils.common.types.GitHubRelease;
-import cc.fascinated.fascinatedutils.common.types.ReleaseVersionInfo;
-import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
-import com.google.gson.*;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.client.Minecraft;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -26,118 +14,180 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import cc.fascinated.fascinatedutils.common.types.GitHubAsset;
+import cc.fascinated.fascinatedutils.common.types.GitHubRelease;
+import cc.fascinated.fascinatedutils.common.types.ReleaseVersionInfo;
+import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.minecraft.client.Minecraft;
 
 public final class UpdateChecker {
+    private static final Logger LOG = LoggerFactory.getLogger(UpdateChecker.class);
     private static final String GITHUB_LATEST_API = "https://api.github.com/repos/RealFascinated/FascinatedUtils/releases/latest";
-    private static final Duration DEFAULT_REQUEST_TIMEOUT = Duration.ofSeconds(30);
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
 
+    public static void checkForUpdatesAsync() {
+        new UpdateChecker().startPeriodicChecks();
+    }
     private final HttpClient client;
     private final Gson gson;
+
+    private ScheduledExecutorService scheduler;
 
     public UpdateChecker() {
         this.client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
         this.gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
     }
 
-    public static void checkForUpdatesAsync() {
-        CompletableFuture.runAsync(() -> {
-            try {
-                new UpdateChecker().checkForUpdates();
-            } catch (Throwable t) {
-                Client.LOG.warn("Update check failed", t);
-            }
+    public void startPeriodicChecks() {
+        if (this.scheduler != null && !this.scheduler.isShutdown()) {
+            return;
+        }
+        this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "FascinatedUtils-UpdateChecker");
+            t.setDaemon(true);
+            return t;
         });
+        this.scheduler.scheduleAtFixedRate(() -> {
+            try {
+                checkForUpdates();
+            } catch (Throwable t) {
+                LOG.warn("Update check failed", t);
+            }
+        }, 0, 1, TimeUnit.HOURS);
     }
 
-    public void checkForUpdates() {
-        try {
-            HttpRequest req = HttpRequest.newBuilder().uri(URI.create(GITHUB_LATEST_API)).header("Accept", "application/vnd.github+json").header("User-Agent", "FascinatedUtils-Updater").timeout(DEFAULT_REQUEST_TIMEOUT).GET().build();
+    public void checkForUpdates() throws Exception {
+        GitHubRelease release = fetchLatestRelease();
+        if (release == null || release.getTagName() == null || release.getTagName().isEmpty()) {
+            return;
+        }
 
+        List<GitHubAsset> assets = release.getAssets();
+        if (assets == null || assets.isEmpty()) {
+            return;
+        }
+
+        ModContainer mod = FabricLoader.getInstance().getModContainer("fascinatedutils").orElse(null);
+        if (mod == null) {
+            return;
+        }
+
+        String currentVersion = mod.getMetadata().getVersion().getFriendlyString();
+        String tagName = release.getTagName();
+        if (currentVersion.equals(tagName)) {
+            LOG.debug("Already on latest version: {}", currentVersion);
+            return;
+        }
+
+        if (!isCompatibleWithRuntime(assets, tagName)) {
+            return;
+        }
+
+        GitHubAsset jar = pickJarAsset(assets, mod).orElse(null);
+        if (jar == null) {
+            return;
+        }
+
+        Path staged = downloadToStaged(jar.getBrowserDownloadUrl(), tagName);
+        if (staged != null) {
+            FascinatedEventBus.INSTANCE.post(new UpdateRequiredEvent(tagName, jar.getBrowserDownloadUrl(), staged.toString()));
+        }
+    }
+
+    private GitHubRelease fetchLatestRelease() throws Exception {
+        HttpRequest req = HttpRequest.newBuilder().uri(URI.create(GITHUB_LATEST_API)).header("Accept", "application/vnd.github+json").header("User-Agent", "FascinatedUtils-Updater").timeout(REQUEST_TIMEOUT).GET().build();
+
+        HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
+        if (res.statusCode() != 200) {
+            LOG.debug("GitHub API returned non-OK status: {}", res.statusCode());
+            return null;
+        }
+        return gson.fromJson(res.body(), GitHubRelease.class);
+    }
+
+    private boolean isCompatibleWithRuntime(List<GitHubAsset> assets, String tagName) {
+        String releaseInfoUrl = assets.stream().filter(a -> a != null && "release_info.json".equalsIgnoreCase(a.getName())).map(GitHubAsset::getBrowserDownloadUrl).findFirst().orElse(null);
+
+        if (releaseInfoUrl == null) {
+            return true;
+        }
+
+        try {
+            HttpRequest req = HttpRequest.newBuilder().uri(URI.create(releaseInfoUrl)).timeout(REQUEST_TIMEOUT).GET().build();
             HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
             if (res.statusCode() != 200) {
-                Client.LOG.debug("GitHub API returned non-OK status: {}", res.statusCode());
-                return;
+                return true;
             }
 
-            GitHubRelease root = gson.fromJson(res.body(), GitHubRelease.class);
-            if (root == null) {
-                return;
-            }
-            String tagName = root.getTagName();
-            if (tagName == null || tagName.isEmpty()) {
-                return;
-            }
+            ReleaseVersionInfo info = gson.fromJson(res.body(), ReleaseVersionInfo.class);
+            String releaseMc = info != null ? info.getMinecraftVersion() : null;
+            String runtimeMc = getRuntimeMinecraftVersion();
 
-            List<GitHubAsset> assets = root.getAssets();
-            if (assets == null || assets.isEmpty()) {
-                return;
-            }
-
-            Optional<ModContainer> mod = FabricLoader.getInstance().getModContainer("fascinatedutils");
-            if (mod.isEmpty()) {
-                return;
-            }
-            ModContainer modContainer = mod.get();
-            String currentVersion = modContainer.getMetadata().getVersion().getFriendlyString();
-            if (currentVersion.equals(tagName)) {
-                Client.LOG.debug("Already on latest version: {}", currentVersion);
-                return;
-            }
-
-            String releaseInfoUrl = assets.stream().filter(a -> a != null && a.getName() != null && "release_info.json".equalsIgnoreCase(a.getName())).map(GitHubAsset::getBrowserDownloadUrl).findFirst().orElse(null);
-
-            if (releaseInfoUrl != null) {
-                try {
-                    HttpRequest infoReq = HttpRequest.newBuilder().uri(URI.create(releaseInfoUrl)).timeout(DEFAULT_REQUEST_TIMEOUT).GET().build();
-                    HttpResponse<String> infoRes = client.send(infoReq, HttpResponse.BodyHandlers.ofString());
-                    if (infoRes.statusCode() == 200) {
-                        ReleaseVersionInfo info = gson.fromJson(infoRes.body(), ReleaseVersionInfo.class);
-                        String releaseMc = info != null ? info.getMinecraftVersion() : null;
-                        String runtimeMc = getRuntimeMinecraftVersion();
-                        if (releaseMc != null && runtimeMc != null && !releaseMc.equals(runtimeMc)) {
-                            Client.LOG.info("Skipping update {} — release targets MC {} but runtime is {}", tagName, releaseMc, runtimeMc);
-                            return;
-                        }
-                    }
-                } catch (Exception e) {
-                    Client.LOG.warn("Failed to fetch release_info.json, continuing with caution", e);
-                }
-            }
-
-            GitHubAsset chosen = pickJarAsset(assets, modContainer).orElse(null);
-            if (chosen == null) {
-                return;
-            }
-            String downloadUrl = chosen.getBrowserDownloadUrl();
-
-            Path modsDir = FabricLoader.getInstance().getGameDir().resolve("mods");
-            try {
-                Files.createDirectories(modsDir);
-            } catch (IOException ioe) {
-                Client.LOG.warn("Unable to create mods directory: {}", modsDir, ioe);
-                return;
-            }
-
-            String stagedFileName = "FascinatedUtils-update-" + tagName + "-" + System.currentTimeMillis() + ".jar";
-            Path staged = modsDir.resolve(stagedFileName);
-
-            HttpRequest dlReq = HttpRequest.newBuilder().uri(URI.create(downloadUrl)).header("User-Agent", "FascinatedUtils-Updater").timeout(Duration.ofMinutes(2)).GET().build();
-
-            HttpResponse<InputStream> dlRes = client.send(dlReq, HttpResponse.BodyHandlers.ofInputStream());
-            if (dlRes.statusCode() == 200) {
-                try (InputStream is = dlRes.body()) {
-                    Files.copy(is, staged, StandardCopyOption.REPLACE_EXISTING);
-                    Client.LOG.info("Staged update {} -> {}", tagName, staged);
-                    FascinatedEventBus.INSTANCE.post(new UpdateRequiredEvent(tagName, downloadUrl, staged.toString()));
-                }
-            }
-            else {
-                Client.LOG.warn("Failed to download release asset: HTTP {}", dlRes.statusCode());
+            if (releaseMc != null && runtimeMc != null && !releaseMc.equals(runtimeMc)) {
+                LOG.info("Skipping update {} — release targets MC {} but runtime is {}", tagName, releaseMc, runtimeMc);
+                return false;
             }
         } catch (Exception e) {
-            Client.LOG.warn("Unhandled error during update check", e);
+            LOG.warn("Failed to fetch release_info.json, proceeding anyway", e);
+        }
+        return true;
+    }
+
+    private Path downloadToStaged(String downloadUrl, String tagName) throws Exception {
+        Path modsDir = FabricLoader.getInstance().getGameDir().resolve("mods");
+        Files.createDirectories(modsDir);
+
+        Path temp = Files.createTempFile(modsDir, "FascinatedUtils-update-temp-", ".jar");
+        try {
+            HttpRequest req = HttpRequest.newBuilder().uri(URI.create(downloadUrl)).header("User-Agent", "FascinatedUtils-Updater").timeout(Duration.ofMinutes(2)).GET().build();
+
+            HttpResponse<InputStream> res = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
+            if (res.statusCode() != 200) {
+                LOG.warn("Failed to download release asset: HTTP {}", res.statusCode());
+                return null;
+            }
+
+            try (InputStream is = res.body()) {
+                Files.copy(is, temp, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // Remove any previously staged updates
+            try (var stream = Files.list(modsDir)) {
+                stream.filter(p -> p.getFileName().toString().startsWith("FascinatedUtils-update-")).forEach(p -> {
+                    try {
+                        Files.deleteIfExists(p);
+                    } catch (Exception ignored) {
+                    }
+                });
+            } catch (IOException e) {
+                LOG.debug("Could not clean old staged files", e);
+            }
+
+            Path staged = modsDir.resolve("FascinatedUtils-update-" + tagName + "-" + System.currentTimeMillis() + ".jar");
+            Files.move(temp, staged, StandardCopyOption.REPLACE_EXISTING);
+            LOG.info("Staged update {} -> {}", tagName, staged);
+            return staged;
+        } catch (Exception e) {
+            try {
+                Files.deleteIfExists(temp);
+            } catch (Exception ignored) {
+            }
+            throw e;
         }
     }
 
@@ -145,23 +195,19 @@ public final class UpdateChecker {
         try {
             return Minecraft.getInstance().getLaunchedVersion();
         } catch (Throwable t) {
-            Client.LOG.debug("Minecraft client not available; falling back to fabric.mod.json", t);
-            try (InputStream ris = UpdateChecker.class.getClassLoader().getResourceAsStream("fabric.mod.json")) {
-                if (ris != null) {
-                    String fm = new String(ris.readAllBytes(), StandardCharsets.UTF_8);
-                    JsonObject fmObj = JsonParser.parseString(fm).getAsJsonObject();
-                    if (fmObj.has("depends")) {
-                        JsonObject depends = fmObj.getAsJsonObject("depends");
-                        if (depends.has("minecraft")) {
-                            return depends.get("minecraft").getAsString();
-                        }
-                    }
-                }
-            } catch (Exception ex) {
-                Client.LOG.debug("Failed to read fabric.mod.json", ex);
-            }
+            LOG.debug("Minecraft client not available; falling back to fabric.mod.json", t);
         }
-        return null;
+        try (InputStream is = UpdateChecker.class.getClassLoader().getResourceAsStream("fabric.mod.json")) {
+            if (is == null) {
+                return null;
+            }
+            JsonObject obj = JsonParser.parseString(new String(is.readAllBytes(), StandardCharsets.UTF_8)).getAsJsonObject();
+            JsonObject depends = obj.has("depends") ? obj.getAsJsonObject("depends") : null;
+            return depends != null && depends.has("minecraft") ? depends.get("minecraft").getAsString() : null;
+        } catch (Exception e) {
+            LOG.debug("Failed to read fabric.mod.json", e);
+            return null;
+        }
     }
 
     private Optional<GitHubAsset> pickJarAsset(List<GitHubAsset> assets, ModContainer mod) {
@@ -169,33 +215,20 @@ public final class UpdateChecker {
             return Optional.empty();
         }
 
-        List<GitHubAsset> jars = assets.stream().filter(a -> a != null && a.getName() != null && a.getName().toLowerCase(Locale.ROOT).endsWith(".jar")).toList();
-        if (jars.isEmpty()) {
+        List<GitHubAsset> candidates = assets.stream().filter(a -> a != null && a.getName() != null).filter(a -> a.getName().toLowerCase(Locale.ROOT).endsWith(".jar")).filter(a -> {
+            String name = a.getName().toLowerCase(Locale.ROOT);
+            return !name.contains("source") && !name.contains("sources") && !name.contains("javadoc") && !name.contains("src") && !name.contains("-sources");
+        }).toList();
+
+        if (candidates.isEmpty()) {
             return Optional.empty();
         }
 
-        List<GitHubAsset> nonSource = jars.stream().filter(a -> {
-            String nameLower = a.getName().toLowerCase(Locale.ROOT);
-            return !(nameLower.contains("source") || nameLower.contains("sources") || nameLower.contains("javadoc") || nameLower.contains("-src") || nameLower.contains("_src") || nameLower.contains("-sources") || nameLower.contains("src"));
-        }).toList();
-
-        List<GitHubAsset> candidates = nonSource.isEmpty() ? jars : nonSource;
-
-        String modId = null;
         try {
-            modId = mod.getMetadata().getId();
+            String modId = mod.getMetadata().getId().toLowerCase(Locale.ROOT);
+            return candidates.stream().filter(a -> a.getName().toLowerCase(Locale.ROOT).contains(modId)).findFirst().or(() -> candidates.stream().findFirst());
         } catch (Throwable t) {
-            // ignore
+            return candidates.stream().findFirst();
         }
-
-        if (modId != null) {
-            String mid = modId.toLowerCase(Locale.ROOT);
-            Optional<GitHubAsset> byName = candidates.stream().filter(a -> a.getName().toLowerCase(Locale.ROOT).contains(mid)).findFirst();
-            if (byName.isPresent()) {
-                return byName;
-            }
-        }
-
-        return candidates.stream().findFirst();
     }
 }

@@ -14,37 +14,23 @@ import java.util.Map;
 public class TurboEntities {
     public static final Map<EntityType<?>, Double> RENDER_DISTANCE_CAPS = Map.of(EntityType.ITEM, 32.0 * 32.0, EntityType.EXPERIENCE_ORB, 32.0 * 32.0, EntityType.ARMOR_STAND, 48.0 * 48.0, EntityType.ITEM_DISPLAY, 48.0 * 48.0);
 
+    public final CullCounters itemFrameCounters = new CullCounters();
+    public final CullCounters paintingCounters = new CullCounters();
+    public final CullCounters signCounters = new CullCounters();
+
     @Getter
     private CullTask cullTask;
     private Thread cullThread;
+
     private boolean previousEnabledState = false;
 
+    // Per-tick entity tick counters (snapshotted each tick for the debug widget)
     private volatile int tickedEntities = 0;
     private volatile int skippedEntityTicks = 0;
-    private volatile int consideredItemFrames = 0;
-    private volatile int backCulledItemFrames = 0;
-    private volatile int consideredPaintings = 0;
-    private volatile int backCulledPaintings = 0;
-    private volatile int consideredSigns = 0;
-    private volatile int backCulledSigns = 0;
-
-    // Snapshots of the previous tick's counters, read by the debug widget
     @Getter
     private volatile int lastTickedEntities = 0;
     @Getter
     private volatile int lastSkippedEntityTicks = 0;
-    @Getter
-    private volatile int lastConsideredItemFrames = 0;
-    @Getter
-    private volatile int lastBackCulledItemFrames = 0;
-    @Getter
-    private volatile int lastConsideredPaintings = 0;
-    @Getter
-    private volatile int lastBackCulledPaintings = 0;
-    @Getter
-    private volatile int lastConsideredSigns = 0;
-    @Getter
-    private volatile int lastBackCulledSigns = 0;
 
     public void incrementTickedEntities() {
         tickedEntities++;
@@ -54,43 +40,10 @@ public class TurboEntities {
         skippedEntityTicks++;
     }
 
-    public void incrementConsideredItemFrames() {
-        consideredItemFrames++;
-    }
-
-    public void incrementBackCulledItemFrames() {
-        backCulledItemFrames++;
-    }
-
-    public void incrementConsideredPaintings() {
-        consideredPaintings++;
-    }
-
-    public void incrementBackCulledPaintings() {
-        backCulledPaintings++;
-    }
-
-    public void incrementConsideredSigns() {
-        consideredSigns++;
-    }
-
-    public void incrementBackCulledSigns() {
-        backCulledSigns++;
-    }
-
     public void snapshotAndResetRenderFrameCounters() {
-        lastConsideredItemFrames = consideredItemFrames;
-        lastBackCulledItemFrames = backCulledItemFrames;
-        lastConsideredPaintings = consideredPaintings;
-        lastBackCulledPaintings = backCulledPaintings;
-        lastConsideredSigns = consideredSigns;
-        lastBackCulledSigns = backCulledSigns;
-        consideredItemFrames = 0;
-        backCulledItemFrames = 0;
-        consideredPaintings = 0;
-        backCulledPaintings = 0;
-        consideredSigns = 0;
-        backCulledSigns = 0;
+        itemFrameCounters.snapshotAndReset();
+        paintingCounters.snapshotAndReset();
+        signCounters.snapshotAndReset();
     }
 
     @EventHandler
@@ -103,10 +56,8 @@ public class TurboEntities {
 
     @EventHandler
     private void fascinatedutils$onClientTick(ClientTickEvent event) {
-        // Snapshot this tick's counters for the debug widget to read after rendering
         lastTickedEntities = tickedEntities;
         lastSkippedEntityTicks = skippedEntityTicks;
-
         tickedEntities = 0;
         skippedEntityTicks = 0;
 
@@ -118,9 +69,10 @@ public class TurboEntities {
         previousEnabledState = enabled;
         if (enabled) {
             startCullThread();
-            return;
         }
-        stopCullThread();
+        else {
+            stopCullThread();
+        }
     }
 
     @EventHandler

@@ -27,7 +27,7 @@ public class Settings {
 
     private final BooleanSetting reduceMacOSResolution = BooleanSetting.builder().id("reduce_mac_os_resolution").defaultValue(false).locked(() -> !ClientUtils.isMacOS()).lockedReason(() -> "This Setting Requires MacOS").categoryDisplayKey("Performance").build();
 
-    private final BooleanSetting turboEntities = BooleanSetting.builder().id("turbo_entities").defaultValue(true).categoryDisplayKey("Performance").build();
+    private final BooleanSetting turboEntities = BooleanSetting.builder().id("turbo_entities").defaultValue(false).categoryDisplayKey("Performance").build();
 
     private final ColorSetting hudBackgroundColor = ColorSetting.builder().id("hud_background_color").defaultValue(new SettingColor(0, 0, 0, 85)).translationKeyPath("fascinatedutils.setting.hud_background_color").categoryDisplayKey("HUD").build();
 

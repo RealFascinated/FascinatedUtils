@@ -18,6 +18,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,12 @@ public class Client implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> FascinatedEventBus.INSTANCE.post(new ClientTickEvent(client)));
 
         // Register updater shutdown hook and kick off an async update check
-        UpdateManager.registerShutdownHook();
-        UpdateChecker.checkForUpdatesAsync();
+        if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
+            UpdateManager.registerShutdownHook();
+            UpdateChecker.checkForUpdatesAsync();
+        }
+
+        // Subscribe UI notifier for update events so mod settings can show a badge
+        FascinatedEventBus.INSTANCE.subscribe(cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsUpdateNotifier.class);
     }
 }

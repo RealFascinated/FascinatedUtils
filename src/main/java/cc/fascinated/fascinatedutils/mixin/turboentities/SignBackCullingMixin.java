@@ -40,9 +40,9 @@ public class SignBackCullingMixin {
         double fz = v.z();
 
         double dot = toCameraX * fx + toCameraY * fy + toCameraZ * fz;
-        Client.TURBO_ENTITIES.incrementConsideredSigns();
+        Client.TURBO_ENTITIES.signCounters.considered++;
         if (dot < 0) {
-            Client.TURBO_ENTITIES.incrementBackCulledSigns();
+            Client.TURBO_ENTITIES.signCounters.culled++;
             info.cancel();
         }
     }

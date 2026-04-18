@@ -58,9 +58,9 @@ public class MapRendererBackCullingMixin {
         double dot = toCamX * worldNormal.x() + toCamY * worldNormal.y() + toCamZ * worldNormal.z();
 
         // Reuse item-frame counters to account for map quads (they are displayed in frames)
-        Client.TURBO_ENTITIES.incrementConsideredItemFrames();
+        Client.TURBO_ENTITIES.itemFrameCounters.considered++;
         if (dot < 0) {
-            Client.TURBO_ENTITIES.incrementBackCulledItemFrames();
+            Client.TURBO_ENTITIES.itemFrameCounters.culled++;
             info.cancel();
         }
     }

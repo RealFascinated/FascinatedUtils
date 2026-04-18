@@ -22,7 +22,7 @@ public class ItemFrameBackCullingMixin {
             return;
         }
 
-        Client.TURBO_ENTITIES.incrementConsideredItemFrames();
+        Client.TURBO_ENTITIES.itemFrameCounters.considered++;
 
         Direction direction = state.direction;
         double toCameraX = camera.pos.x - state.x;
@@ -31,7 +31,7 @@ public class ItemFrameBackCullingMixin {
         double dot = toCameraX * direction.getStepX() + toCameraY * direction.getStepY() + toCameraZ * direction.getStepZ();
 
         if (dot < 0) {
-            Client.TURBO_ENTITIES.incrementBackCulledItemFrames();
+            Client.TURBO_ENTITIES.itemFrameCounters.culled++;
             info.cancel();
         }
     }
