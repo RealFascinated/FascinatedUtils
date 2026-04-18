@@ -1,12 +1,10 @@
 package cc.fascinated.fascinatedutils.common;
 
-import org.joml.Matrix4f;
-
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ProjectionMatrixBuffer;
+import org.joml.Matrix4f;
 
 /**
  * Utility subset for custom GUI: framebuffer window size and orthographic projection toggles.
