@@ -1,4 +1,7 @@
-name: Release on src Change
+name: Create Release
+
+permissions:
+  contents: write
 
 on:
   push:
@@ -14,6 +17,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -31,19 +37,51 @@ jobs:
         id: vars
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
+      - name: Get Minecraft version
+        id: mc
+        run: |
+          mc=$(grep -E '^minecraft_version=' gradle.properties | cut -d= -f2 || true)
+          if [ -z "$mc" ]; then
+            mc="unknown"
+          fi
+          echo "mc_version=$mc" >> $GITHUB_OUTPUT
+
+      - name: Create and push tag
+        id: tag
+        run: |
+          TAG="${{ steps.mc.outputs.mc_version }}-${{ steps.vars.outputs.sha_short }}"
+          echo "Tag will be: $TAG"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "Tag $TAG already exists, skipping creation"
+          else
+            git tag -a "$TAG" -m "Automated release $TAG"
+            git push origin "$TAG"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Create release_info.json
+        id: release_info
+        run: |
+          echo "Creating release_info.json with minecraft_version=${{ steps.mc.outputs.mc_version }}"
+          printf '{"minecraft_version":"%s"}' "${{ steps.mc.outputs.mc_version }}" > release_info.json
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: src-${{ steps.vars.outputs.sha_short }}
-          name: Release ${{ steps.vars.outputs.sha_short }}
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
           body: |
             Automated release for commit ${{ github.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload JAR
+      - name: Upload JAR and release_info
         uses: softprops/action-gh-release@v2
         with:
-          files: build/libs/*.jar
+          files: |
+            build/libs/*.jar
+            release_info.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
