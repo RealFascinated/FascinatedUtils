@@ -1,5 +1,10 @@
 package cc.fascinated.fascinatedutils.gui.renderer;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
+
 import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.GuiTheme;
 import cc.fascinated.fascinatedutils.gui.renderer.operations.GuiRenderOperation;
@@ -13,11 +18,6 @@ import cc.fascinated.fascinatedutils.renderer.Renderer2D;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
 
 /**
  * GUI orchestrator: root {@link GuiGraphics} scope, nested scissors with segment flushes, deferred text
