@@ -1,16 +1,15 @@
 package cc.fascinated.fascinatedutils.turboentities;
 
-import java.util.Map;
-
-import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
-
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
+import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.world.entity.EntityType;
+
+import java.util.Map;
 
 public class TurboEntities {
     public static final Map<EntityType<?>, Double> RENDER_DISTANCE_CAPS = Map.of(EntityType.ITEM, 32.0 * 32.0, EntityType.EXPERIENCE_ORB, 32.0 * 32.0, EntityType.ARMOR_STAND, 48.0 * 48.0, EntityType.ITEM_DISPLAY, 48.0 * 48.0);

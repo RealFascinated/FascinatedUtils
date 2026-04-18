@@ -1,9 +1,5 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.ValueSmoother;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
@@ -11,6 +7,10 @@ import cc.fascinated.fascinatedutils.systems.hud.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
 import cc.fascinated.fascinatedutils.turboentities.CullTask;
 import cc.fascinated.fascinatedutils.turboentities.TurboEntities;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class DebugWidget extends HudMiniMessageModule {
     private final ValueSmoother hudRenderMs = new ValueSmoother(500);
