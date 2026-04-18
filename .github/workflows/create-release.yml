@@ -46,8 +46,6 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
-
-
       - name: Get Minecraft version
         id: mc
         run: |
