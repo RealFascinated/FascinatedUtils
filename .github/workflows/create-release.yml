@@ -30,12 +30,23 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build
-
       - name: Get short SHA
         id: vars
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Append short SHA to mod_version
+        run: |
+          echo "Appending short sha ${{ steps.vars.outputs.sha_short }} to mod_version in gradle.properties"
+          ORIGINAL=$(grep -E '^mod_version' gradle.properties | cut -d= -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          BASE=${ORIGINAL%%-*}
+          NEW="${BASE}-${{ steps.vars.outputs.sha_short }}"
+          sed -E -i "s/^(mod_version[[:space:]]*=[[:space:]]*).*/\1${NEW}/" gradle.properties
+          echo "mod_version updated to $(grep -E '^mod_version' gradle.properties)"
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+
 
       - name: Get Minecraft version
         id: mc
@@ -77,9 +88,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload JAR and release_info
+      - name: Upload Files
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.tag }}
           files: |
             build/libs/*.jar
             release_info.json
