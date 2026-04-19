@@ -37,9 +37,11 @@ jobs:
       - name: Append short SHA to mod_version
         run: |
           echo "Appending short sha ${{ steps.vars.outputs.sha_short }} to mod_version in gradle.properties"
-          ORIGINAL=$(grep -E '^mod_version' gradle.properties | cut -d= -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-          BASE=${ORIGINAL%%-*}
-          NEW="${BASE}-${{ steps.vars.outputs.sha_short }}"
+          MC=$(grep -E '^minecraft_version' gradle.properties | cut -d= -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          if [ -z "$MC" ]; then
+            MC="unknown"
+          fi
+          NEW="${MC}-${{ steps.vars.outputs.sha_short }}"
           sed -E -i "s/^(mod_version[[:space:]]*=[[:space:]]*).*/\1${NEW}/" gradle.properties
           echo "mod_version updated to $(grep -E '^mod_version' gradle.properties)"
 
