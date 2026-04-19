@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.PaintingRenderer;
@@ -18,7 +17,7 @@ public class PaintingBackCullingMixin {
 
     @Inject(method = "submit*", at = @At("HEAD"), cancellable = true)
     private void fascinatedutils$cullBack(PaintingRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera, CallbackInfo info) {
-        if (!SettingsRegistry.INSTANCE.getSettings().getTurboEntities().isEnabled()) {
+        if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
             return;
         }
 

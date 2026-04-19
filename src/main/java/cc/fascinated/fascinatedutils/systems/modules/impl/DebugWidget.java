@@ -6,19 +6,32 @@ import java.util.Locale;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.ValueSmoother;
+import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
-import cc.fascinated.fascinatedutils.turboentities.CullTask;
+import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.turboentities.EntitiesCullTask;
 import cc.fascinated.fascinatedutils.turboentities.TurboEntities;
-import cc.fascinated.fascinatedutils.turboparticles.TurboParticlesManager;
+import cc.fascinated.fascinatedutils.turboparticles.ParticleCullTask;
+import cc.fascinated.fascinatedutils.turboparticles.TurboParticles;
+import lombok.AllArgsConstructor;
 
 public class DebugWidget extends HudMiniMessageModule {
     private final ValueSmoother hudRenderMs = new ValueSmoother(500);
     private final ValueSmoother cullPassMs = new ValueSmoother(500);
+    private final ValueSmoother particleCullPassMs = new ValueSmoother(500);
+
+    private final EnumSetting<DebugStatsFormat> turboStatsFormat = EnumSetting.<DebugStatsFormat>builder()
+            .id("turbo_stats_format")
+            .defaultValue(DebugStatsFormat.RATIO)
+            .valueFormatter(debugStatsFormat -> debugStatsFormat.displayName)
+            .categoryDisplayKey(HudModule.APPEARANCE_CATEGORY_DISPLAY_KEY)
+            .build();
 
     public DebugWidget() {
         super("debug", "Debug", 200f);
+        addSetting(turboStatsFormat);
     }
 
     @Override
@@ -38,7 +51,7 @@ public class DebugWidget extends HudMiniMessageModule {
         // Turbo Entities
         out.add("<grey>Turbo Entities</grey>");
         TurboEntities turboEntities = Client.TURBO_ENTITIES;
-        CullTask cullTask = turboEntities.getCullTask();
+        EntitiesCullTask cullTask = turboEntities.getCullTask();
         if (cullTask == null) {
             cullPassMs.reset();
             out.add("  <grey>Disabled</grey>");
@@ -46,40 +59,65 @@ public class DebugWidget extends HudMiniMessageModule {
         else {
             double passMs = cullPassMs.smooth(cullTask.getLastPassNanos() / 1_000_000.0, deltaSeconds);
             int consideredBlockEntities = cullTask.getConsideredBlockEntityCount();
-            out.add("  Rendered Block Entities: " + (consideredBlockEntities - cullTask.getCulledBlockEntityCount()) + "/" + consideredBlockEntities);
+            int visibleBlockEntities = consideredBlockEntities - cullTask.getCulledBlockEntityCount();
+            out.add("  Rendered Block Entities: " + formatStat(visibleBlockEntities, consideredBlockEntities));
             int consideredEntities = cullTask.getConsideredEntityCount();
-            out.add("  Rendered Entities: " + (consideredEntities - cullTask.getCulledEntityCount()) + "/" + consideredEntities);
+            int visibleEntities = consideredEntities - cullTask.getCulledEntityCount();
+            out.add("  Rendered Entities: " + formatStat(visibleEntities, consideredEntities));
             int consideredFrames = turboEntities.itemFrameCounters.lastConsidered;
             int culledFrames = turboEntities.itemFrameCounters.lastCulled;
-            out.add("  Rendered Item Frames: " + (consideredFrames - culledFrames) + "/" + consideredFrames);
+            out.add("  Rendered Item Frames: " + formatStat(consideredFrames - culledFrames, consideredFrames));
             int consideredPaintings = turboEntities.paintingCounters.lastConsidered;
             int culledPaintings = turboEntities.paintingCounters.lastCulled;
-            out.add("  Rendered Paintings: " + (consideredPaintings - culledPaintings) + "/" + consideredPaintings);
+            out.add("  Rendered Paintings: " + formatStat(consideredPaintings - culledPaintings, consideredPaintings));
             int consideredSigns = turboEntities.signCounters.lastConsidered;
             int culledSigns = turboEntities.signCounters.lastCulled;
-            out.add("  Rendered Signs: " + (consideredSigns - culledSigns) + "/" + consideredSigns);
+            out.add("  Rendered Signs: " + formatStat(consideredSigns - culledSigns, consideredSigns));
             int skipped = turboEntities.getLastSkippedEntityTicks();
             int total = turboEntities.getLastTickedEntities() + skipped;
-            out.add("  Ticked Entities: " + (total - skipped) + "/" + total);
+            out.add("  Ticked Entities: " + formatStat(total - skipped, total));
             out.add(String.format(Locale.ENGLISH, "  Last Pass: %.2f ms", passMs));
         }
 
         // Turbo Particles (merged from ParticlesWidget)
         out.add("<grey>Turbo Particles</grey>");
-        TurboParticlesManager particles = Client.TURBO_PARTICLES;
+        TurboParticles particles = Client.TURBO_PARTICLES;
         if (particles == null) {
             out.add("  <grey>Unavailable</grey>");
         }
         else {
-            int pConsidered = particles.particleCounters.lastConsidered;
-            int pCulled = particles.particleCounters.lastCulled;
-            double pPct = pConsidered == 0 ? 0.0 : (100.0 * pCulled / pConsidered);
-            out.add("  Particles: considered=" + pConsidered + " culled=" + pCulled);
-            out.add(String.format(Locale.ENGLISH, "  Culled: %.1f%%", pPct));
-            out.add(String.format(Locale.ENGLISH, "  Extract: %.3f ms", particles.getLastExtractNanos() / 1_000_000.0));
+            ParticleCullTask particleCullTask = particles.getParticleCullTask();
+            if (particleCullTask == null) {
+                particleCullPassMs.reset();
+                out.add("  <grey>Disabled</grey>");
+            }
+            else {
+                double passMs = particleCullPassMs.smooth(particleCullTask.getLastPassNanos() / 1_000_000.0, deltaSeconds);
+                int consideredParticles = particleCullTask.getConsideredParticleCount();
+                int visibleParticles = consideredParticles - particleCullTask.getCulledParticleCount();
+                out.add("  Rendered Particles: " + formatStat(visibleParticles, consideredParticles));
+                out.add(String.format(Locale.ENGLISH, "  Last Pass: %.2f ms", passMs));
+            }
         }
 
         return out;
     }
-}
 
+    private String formatStat(int numerator, int denominator) {
+        if (turboStatsFormat.getValue() == DebugStatsFormat.PERCENTAGE) {
+            if (denominator <= 0) {
+                return "—";
+            }
+            return String.format(Locale.ENGLISH, "%.1f%%", 100.0 * (double) numerator / (double) denominator);
+        }
+        return numerator + "/" + denominator;
+    }
+
+    @AllArgsConstructor
+    private enum DebugStatsFormat {
+        RATIO("Ratio (current/total)"),
+        PERCENTAGE("Percentage");
+
+        private final String displayName;
+    }
+}

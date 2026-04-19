@@ -12,39 +12,45 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.level.block.entity.BannerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Getter
-public class CullTask implements Runnable {
+public class EntitiesCullTask implements Runnable {
     private static final int SLEEP_DELAY = 10;
-    private static final double TRACING_DISTANCE = 128.0;
     private static final double HITBOX_LIMIT = 64.0;
+    private static final double BLOCK_ENTITY_FORCE_CULL_DISTANCE_SQ = 128.0 * 128.0;
 
     private final OcclusionCullingInstance culling;
 
-    // Reused allocations — only accessed from the cull thread
     private final Vec3d aabbMin = new Vec3d(0, 0, 0);
     private final Vec3d aabbMax = new Vec3d(0, 0, 0);
     private final Vec3d cameraVec3d = new Vec3d(0, 0, 0);
+
+    private static final int ENTITY_BUFFER_CAPACITY = 4096;
+    private static final int BLOCK_ENTITY_BUFFER_CAPACITY = 8192;
 
     private volatile boolean running = true;
     private volatile boolean requestCull = false;
     @Setter
     private volatile boolean inGame = false;
     @Setter
-    private volatile List<Entity> entitiesForRendering = new ArrayList<>();
-    @Setter
-    private volatile Map<BlockPos, BlockEntity> blockEntities = new HashMap<>();
-    @Setter
     private volatile Vec3 camera = Vec3.ZERO;
+
+    private volatile int snapshotReadSlot;
+
+    /**
+     * {@code -1} while idle; otherwise the snapshot slot the cull thread is iterating.
+     */
+    private volatile int workerActiveReadSlot = -1;
+
+    private final ArrayList<Entity> entityBuffer0 = new ArrayList<>(ENTITY_BUFFER_CAPACITY);
+    private final ArrayList<Entity> entityBuffer1 = new ArrayList<>(ENTITY_BUFFER_CAPACITY);
+    private final ArrayList<BlockEntity> blockEntityBuffer0 = new ArrayList<>(BLOCK_ENTITY_BUFFER_CAPACITY);
+    private final ArrayList<BlockEntity> blockEntityBuffer1 = new ArrayList<>(BLOCK_ENTITY_BUFFER_CAPACITY);
 
     private volatile int consideredEntityCount = 0;
     private volatile int culledEntityCount = 0;
@@ -57,12 +63,8 @@ public class CullTask implements Runnable {
     private volatile Frustum frustum = null;
     private Vec3 lastCameraPos = Vec3.ZERO;
 
-    public CullTask(OcclusionCullingInstance culling) {
+    public EntitiesCullTask(OcclusionCullingInstance culling) {
         this.culling = culling;
-    }
-
-    private static AABB getBlockEntityAABB(BlockPos pos, BlockEntity blockEntity) {
-        return blockEntity instanceof BannerBlockEntity ? new AABB(pos).inflate(0, 1, 0) : new AABB(pos);
     }
 
     @Override
@@ -81,17 +83,45 @@ public class CullTask implements Runnable {
                     cameraVec3d.set(cameraSnap.x, cameraSnap.y, cameraSnap.z);
                     long passStart = System.nanoTime();
                     culling.resetCache();
-                    cullEntities();
-                    cullBlockEntities();
+                    int readSlot = snapshotReadSlot;
+                    workerActiveReadSlot = readSlot;
+                    try {
+                        cullEntities(readSlot);
+                        cullBlockEntities(readSlot);
+                    }
+                    finally {
+                        workerActiveReadSlot = -1;
+                    }
                     lastPassNanos = System.nanoTime() - passStart;
                 }
-            } catch (InterruptedException e) {
+            } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
                 break;
-            } catch (Exception ignored) {
-                // Concurrent access from the render thread; safe to skip this pass
             }
         }
+    }
+
+    public int snapshotWriteSlot() {
+        int workerSlot = workerActiveReadSlot;
+        if (workerSlot == 0) {
+            return 1;
+        }
+        if (workerSlot == 1) {
+            return 0;
+        }
+        return 1 - snapshotReadSlot;
+    }
+
+    public ArrayList<Entity> entityBufferForWrite(int writeSlot) {
+        return writeSlot == 0 ? entityBuffer0 : entityBuffer1;
+    }
+
+    public ArrayList<BlockEntity> blockEntityBufferForWrite(int writeSlot) {
+        return writeSlot == 0 ? blockEntityBuffer0 : blockEntityBuffer1;
+    }
+
+    public void publishSnapshotWrite(int writeSlot) {
+        this.snapshotReadSlot = writeSlot;
     }
 
     public void requestCull() {
@@ -102,10 +132,10 @@ public class CullTask implements Runnable {
         this.running = false;
     }
 
-    private void cullEntities() {
-        Vec3 cameraPos = lastCameraPos;
-        List<Entity> entities = entitiesForRendering;
-        int considered = 0, culled = 0;
+    private void cullEntities(int readSlot) {
+        ArrayList<Entity> entities = readSlot == 0 ? entityBuffer0 : entityBuffer1;
+        int considered = 0;
+        int culled = 0;
 
         for (Entity entity : entities) {
             if (entity == null) {
@@ -116,67 +146,60 @@ public class CullTask implements Runnable {
             }
 
             considered++;
-            if (cullable.fascinatedutils$isCulled()) {
-                culled++;
-            }
-            if (cullable.fascinatedutils$isForcedVisible()) {
-                continue;
-            }
 
             if (Minecraft.getInstance().shouldEntityAppearGlowing(entity) || (Minecraft.getInstance().player != null && Minecraft.getInstance().player.getVehicle() == entity)) {
                 cullable.fascinatedutils$setCulled(false);
-                continue;
+            }
+            else {
+                EntityRenderer<?, ?> renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
+                if (!(renderer instanceof EntityRendererAccess rendererAccess) || !rendererAccess.fascinatedutils$affectedByCulling(entity)) {
+                    cullable.fascinatedutils$setCulled(false);
+                }
+                else {
+                    AABB box = getCullingBox(entity, rendererAccess);
+                    cullable.fascinatedutils$setCulled(!isVisible(box));
+                }
             }
 
-            EntityRenderer<?, ?> renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
-            if (!(renderer instanceof EntityRendererAccess rendererAccess) || !rendererAccess.fascinatedutils$affectedByCulling(entity)) {
-                cullable.fascinatedutils$setCulled(false);
-                continue;
+            if (cullable.fascinatedutils$isCulled()) {
+                culled++;
             }
-
-            AABB box = getCullingBox(entity, rendererAccess);
-            cullable.fascinatedutils$setCulled(!isVisible(box, entity.position(), cameraPos, true));
         }
 
         consideredEntityCount = considered;
         culledEntityCount = culled;
     }
 
-    private void cullBlockEntities() {
-        Map<BlockPos, BlockEntity> snapshot = blockEntities;
-        int considered = 0, culled = 0;
+    private void cullBlockEntities(int readSlot) {
+        ArrayList<BlockEntity> snapshot = readSlot == 0 ? blockEntityBuffer0 : blockEntityBuffer1;
+        int considered = 0;
+        int culled = 0;
 
-        for (Map.Entry<BlockPos, BlockEntity> entry : snapshot.entrySet()) {
+        for (BlockEntity blockEntity : snapshot) {
             try {
-                BlockPos pos = entry.getKey();
-                BlockEntity blockEntity = entry.getValue();
                 if (!(blockEntity instanceof Cullable cullable)) {
                     continue;
                 }
 
+                BlockPos pos = blockEntity.getBlockPos();
+
                 considered++;
-                if (cullable.fascinatedutils$isCulled()) {
-                    culled++;
-                }
-                if (cullable.fascinatedutils$isForcedVisible()) {
-                    continue;
-                }
 
                 if (Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(blockEntity) == null) {
                     cullable.fascinatedutils$setCulled(false);
-                    continue;
+                }
+                else if (pos.distToCenterSqr(lastCameraPos) > BLOCK_ENTITY_FORCE_CULL_DISTANCE_SQ) {
+                    cullable.fascinatedutils$setCulled(true);
+                }
+                else {
+                    AABB box = BlockEntityCullBounds.forCull(blockEntity, pos);
+                    cullable.fascinatedutils$setCulled(!isVisible(box));
                 }
 
-                // Block entities beyond 64 blocks are outside vanilla's render range
-                if (pos.distToCenterSqr(lastCameraPos) > 64 * 64) {
-                    cullable.fascinatedutils$setCulled(false);
-                    continue;
+                if (cullable.fascinatedutils$isCulled()) {
+                    culled++;
                 }
-
-                AABB box = getBlockEntityAABB(pos, blockEntity);
-                cullable.fascinatedutils$setCulled(!isVisible(box, Vec3.atCenterOf(pos), lastCameraPos, false));
             } catch (Exception ignored) {
-                // Concurrent modification; skip this block entity
             }
         }
 
@@ -184,13 +207,7 @@ public class CullTask implements Runnable {
         culledBlockEntityCount = culled;
     }
 
-    /**
-     * Shared frustum → hitbox-size → occlusion pipeline.
-     * Returns true if the object should be rendered, false if it should be culled.
-     *
-     * @param tracingRangeCheck whether to skip occlusion raycasting beyond TRACING_DISTANCE
-     */
-    private boolean isVisible(AABB box, Vec3 objectPos, Vec3 cameraPos, boolean tracingRangeCheck) {
+    private boolean isVisible(AABB box) {
         if (box == null) {
             return true;
         }
@@ -202,10 +219,6 @@ public class CullTask implements Runnable {
         Frustum currentFrustum = frustum;
         if (currentFrustum != null && !currentFrustum.isVisible(box)) {
             return false;
-        }
-
-        if (tracingRangeCheck && !objectPos.closerThan(cameraPos, TRACING_DISTANCE)) {
-            return true;
         }
 
         aabbMin.set(box.minX, box.minY, box.minZ);

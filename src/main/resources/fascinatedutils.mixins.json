@@ -37,6 +37,7 @@
     "turboentities.MapRendererBackCullingMixin",
     "turboentities.PaintingBackCullingMixin",
     "turboentities.SignBackCullingMixin",
+    "turboparticles.ParticleEngineAccessor",
     "turboparticles.ParticleEngineMixin",
     "turboparticles.SingleQuadParticleMixin"
   ],

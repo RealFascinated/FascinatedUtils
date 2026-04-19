@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MapRenderer;
@@ -20,7 +19,7 @@ public class MapRendererBackCullingMixin {
 
     @Inject(method = "render*", at = @At("HEAD"), cancellable = true)
     private void fascinatedutils$cullBack(MapRenderState mapRenderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, boolean showOnlyFrame, int lightCoords, CallbackInfo info) {
-        if (!SettingsRegistry.INSTANCE.getSettings().getTurboEntities().isEnabled()) {
+        if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
             return;
         }
 

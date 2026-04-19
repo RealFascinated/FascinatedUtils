@@ -12,7 +12,7 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.gui.ModUiClientEntry;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.turboentities.TurboEntities;
-import cc.fascinated.fascinatedutils.turboparticles.TurboParticlesManager;
+import cc.fascinated.fascinatedutils.turboparticles.TurboParticles;
 import cc.fascinated.fascinatedutils.updater.UpdateChecker;
 import cc.fascinated.fascinatedutils.updater.UpdateManager;
 import net.fabricmc.api.ClientModInitializer;
@@ -28,7 +28,7 @@ public class Client implements ClientModInitializer {
 
 
     public static final TurboEntities TURBO_ENTITIES = new TurboEntities();
-    public static final TurboParticlesManager TURBO_PARTICLES = new TurboParticlesManager();
+    public static final TurboParticles TURBO_PARTICLES = new TurboParticles();
 
     @Override
     public void onInitializeClient() {

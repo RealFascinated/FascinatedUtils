@@ -10,7 +10,6 @@ import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import lombok.Getter;
 
 @Getter
@@ -32,11 +31,6 @@ public class Settings {
 
     private final BooleanSetting turboParticles = BooleanSetting.builder().id("turbo_particles").defaultValue(false).categoryDisplayKey("Performance").build();
 
-    private final SliderSetting turboParticlesMaxDistance = SliderSetting.builder().id("turbo_particles_max_distance")
-        .defaultValue(64f).minValue(8f).maxValue(256f).step(1f)
-        .valueFormatter(v -> v.intValue() + " blocks")
-        .categoryDisplayKey("Performance").build();
-
     private final ColorSetting hudBackgroundColor = ColorSetting.builder().id("hud_background_color").defaultValue(new SettingColor(0, 0, 0, 85)).translationKeyPath("fascinatedutils.setting.hud_background_color").categoryDisplayKey("HUD").build();
 
     private final ColorSetting hudBorderColor = ColorSetting.builder().id("hud_border_color").defaultValue(new SettingColor(208, 215, 225, 192)).translationKeyPath("fascinatedutils.setting.hud_border_color").categoryDisplayKey("HUD").build();
@@ -49,7 +43,6 @@ public class Settings {
         addSetting(reduceMacOSResolution);
         addSetting(turboEntities);
         addSetting(turboParticles);
-        addSetting(turboParticlesMaxDistance);
         addSetting(hudBackgroundColor);
         addSetting(hudBorderColor);
 

@@ -1,8 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
-import cc.fascinated.fascinatedutils.turboentities.CullTask;
+import cc.fascinated.fascinatedutils.turboentities.EntitiesCullTask;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -18,11 +17,11 @@ public class ClientLevelTickMixin {
 
     @Inject(method = "tickNonPassenger", at = @At("HEAD"), cancellable = true)
     private void fascinatedutils$skipCulledEntityTick(Entity entity, CallbackInfo info) {
-        if (!SettingsRegistry.INSTANCE.getSettings().getTurboEntities().isEnabled()) {
+        if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
             return;
         }
 
-        CullTask cullTask = Client.TURBO_ENTITIES.getCullTask();
+        EntitiesCullTask cullTask = Client.TURBO_ENTITIES.getCullTask();
         if (cullTask == null) {
             return;
         }

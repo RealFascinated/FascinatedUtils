@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.turboentities;
 
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
+import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -21,17 +21,7 @@ public abstract class BlockEntityRenderDispatcherMixin {
 
     @Inject(method = "tryExtractRenderState", at = @At("HEAD"), cancellable = true)
     private void fascinatedutils$tryExtractRenderState(BlockEntity blockEntity, float partialTicks, CrumblingOverlay breakProgress, CallbackInfoReturnable<BlockEntityRenderState> info) {
-        if (!SettingsRegistry.INSTANCE.getSettings().getTurboEntities().isEnabled()) {
-            return;
-        }
-
-        BlockEntityRenderer<?, ?> renderer = getRenderer(blockEntity);
-        if (renderer == null) {
-            return;
-        }
-
-        // Don't cull block entities that render off-screen (like beacons)
-        if (renderer.shouldRenderOffScreen()) {
+        if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
             return;
         }
 
@@ -39,15 +29,22 @@ public abstract class BlockEntityRenderDispatcherMixin {
             return;
         }
 
+        if (cullable.fascinatedutils$isCulled()) {
+            BlockEntityRenderer<?, ?> renderer = getRenderer(blockEntity);
+            if (renderer == null) {
+                return;
+            }
+            if (renderer.shouldRenderOffScreen()) {
+                return;
+            }
+            info.setReturnValue(null);
+            return;
+        }
+
         if (cullable.fascinatedutils$isForcedVisible()) {
             return;
         }
 
-        if (cullable.fascinatedutils$isCulled()) {
-            info.setReturnValue(null);
-        }
-        else {
-            cullable.fascinatedutils$setOutOfCamera(false);
-        }
+        cullable.fascinatedutils$setOutOfCamera(false);
     }
 }

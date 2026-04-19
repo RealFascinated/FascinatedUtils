@@ -10,21 +10,21 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(EntityRenderer.class)
 public abstract class EntityRendererMixin<T extends Entity> implements EntityRendererAccess {
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public boolean fascinatedutils$affectedByCulling(Entity entity) {
-        return affectedByCulling((T) entity);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public AABB fascinatedutils$getCullingBox(Entity entity) {
-        return getBoundingBoxForCulling((T) entity);
-    }
-
     @Shadow
     protected abstract boolean affectedByCulling(T entity);
 
     @Shadow
     protected abstract AABB getBoundingBoxForCulling(T entity);
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean fascinatedutils$affectedByCulling(Entity entity) {
+        return affectedByCulling((T) entity);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public AABB fascinatedutils$getCullingBox(Entity entity) {
+        return getBoundingBoxForCulling((T) entity);
+    }
 }

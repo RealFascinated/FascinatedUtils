@@ -7,6 +7,7 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
+import com.logisticscraft.occlusionculling.cache.ArrayOcclusionCache;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.world.entity.EntityType;
@@ -21,10 +22,22 @@ public class TurboEntities {
     public final CullCounters signCounters = new CullCounters();
 
     @Getter
-    private CullTask cullTask;
+    private EntitiesCullTask cullTask;
     private Thread cullThread;
 
+    /**
+     * Snapshot of the Turbo Entities setting for hot paths (render thread); refreshed each client tick.
+     */
+    private volatile boolean turboEntitiesCullEnabledMirror = false;
+
     private boolean previousEnabledState = false;
+
+    /**
+     * Fast gate for mixins: avoids walking {@link SettingsRegistry} on every block entity / entity call.
+     */
+    public boolean isTurboEntitiesCullEnabled() {
+        return turboEntitiesCullEnabledMirror;
+    }
 
     // Per-tick entity tick counters (snapshotted each tick for the debug widget)
     private volatile int tickedEntities = 0;
@@ -50,8 +63,10 @@ public class TurboEntities {
 
     @EventHandler
     private void fascinatedutils$onClientStarted(ClientStartedEvent event) {
-        previousEnabledState = SettingsRegistry.INSTANCE.getSettings().getTurboEntities().isEnabled();
-        if (previousEnabledState) {
+        boolean enabled = SettingsRegistry.INSTANCE.getSettings().getTurboEntities().isEnabled();
+        previousEnabledState = enabled;
+        turboEntitiesCullEnabledMirror = enabled;
+        if (enabled) {
             startCullThread();
         }
     }
@@ -64,6 +79,7 @@ public class TurboEntities {
         skippedEntityTicks = 0;
 
         boolean enabled = SettingsRegistry.INSTANCE.getSettings().getTurboEntities().isEnabled();
+        turboEntitiesCullEnabledMirror = enabled;
         if (enabled == previousEnabledState) {
             return;
         }
@@ -79,6 +95,7 @@ public class TurboEntities {
 
     @EventHandler
     private void fascinatedutils$onClientStopping(ClientStoppingEvent event) {
+        turboEntitiesCullEnabledMirror = false;
         stopCullThread();
     }
 
@@ -86,8 +103,10 @@ public class TurboEntities {
         if (cullThread != null && cullThread.isAlive()) {
             return;
         }
-        OcclusionCullingInstance culling = new OcclusionCullingInstance(128, new OcclusionProvider());
-        cullTask = new CullTask(culling);
+        // aabbExpansion 0: default 0.5 widens single-block AABBs so the library's all-axis INSIDE fast-path
+        // treats the camera cell as inside the target for most adjacent block entities when buried in solids.
+        OcclusionCullingInstance culling = new OcclusionCullingInstance(128, new OcclusionProvider(), new ArrayOcclusionCache(128), 0.0);
+        cullTask = new EntitiesCullTask(culling);
         cullThread = new Thread(cullTask, "FascinatedUtils-EntityCulling");
         cullThread.setDaemon(true);
         cullThread.start();

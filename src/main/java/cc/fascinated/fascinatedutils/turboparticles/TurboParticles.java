@@ -14,7 +14,7 @@ import meteordevelopment.orbit.EventHandler;
 /**
  * Turbo Particles: background frustum + occlusion culling for billboard particles.
  */
-public class TurboParticlesManager {
+public class TurboParticles {
 
     public final CullCounters particleCounters = new CullCounters();
 
