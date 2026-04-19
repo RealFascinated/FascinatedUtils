@@ -6,10 +6,10 @@ import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
 import net.minecraft.network.chat.Component;
 
 public class FHudLayoutEditorChipWidget extends FButtonWidget {
-    public static final float HORIZONTAL_TEXT_PAD_DESIGN = 8f;
+    public static final float HORIZONTAL_TEXT_PAD_DESIGN = 6f;
 
     public FHudLayoutEditorChipWidget(Runnable onActivate, float layoutWidth) {
-        super(onActivate, () -> Component.translatable("fascinatedutils.setting.shell.edit_hud_layout").getString(), layoutWidth, 1, 2f, 8f, 1f, HORIZONTAL_TEXT_PAD_DESIGN);
+        super(onActivate, () -> Component.translatable("fascinatedutils.setting.shell.edit_hud_layout").getString(), layoutWidth, 1, 1f, 6f, 1f, HORIZONTAL_TEXT_PAD_DESIGN);
     }
 
     public static float chipHeightPx() {

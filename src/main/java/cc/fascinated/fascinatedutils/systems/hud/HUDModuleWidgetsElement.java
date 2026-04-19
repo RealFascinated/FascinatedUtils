@@ -1,7 +1,5 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import cc.fascinated.fascinatedutils.common.ClientGuiUtils;
-import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
@@ -36,14 +34,11 @@ public class HUDModuleWidgetsElement implements HudElement {
         if (deltaSeconds <= 0f || Float.isNaN(deltaSeconds)) {
             deltaSeconds = 1f / 20f;
         }
-        ClientGuiUtils.unscaledProjection();
-        try {
-            guiRenderer.begin(UIScale.logicalWidth(), UIScale.logicalHeight());
-            hudManager.renderHUD(guiRenderer, Mth.clamp(deltaSeconds, 0f, 1f));
-            guiRenderer.end();
-        } finally {
-            ClientGuiUtils.scaledProjection();
-            profiler.pop();
-        }
+        float canvasWidth = HudLayoutCanvas.width(graphics);
+        float canvasHeight = HudLayoutCanvas.height(graphics);
+        guiRenderer.begin(canvasWidth, canvasHeight);
+        hudManager.renderHUD(guiRenderer, canvasWidth, canvasHeight, Mth.clamp(deltaSeconds, 0f, 1f));
+        guiRenderer.end();
+        profiler.pop();
     }
 }

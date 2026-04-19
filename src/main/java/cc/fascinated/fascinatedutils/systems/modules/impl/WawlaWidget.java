@@ -79,7 +79,7 @@ public class WawlaWidget extends HudModule {
         float textBlockHeight = lineHeight * 2f + LINE_GAP;
         float contentHeight = Math.max(ICON_SIZE, textBlockHeight);
         String titleMini = "<b><color:" + ColorUtils.rgbHex(TITLE_COLOR) + ">" + targetInfo.displayName() + "</color></b>";
-        String secondaryMini = targetInfo.livingEntity() != null ? "<white>" + targetInfo.sourceName() + "</white> <color:#ff5555>\u2764</color>" : "<color:" + ColorUtils.rgbHex(SOURCE_COLOR) + ">" + targetInfo.sourceName() + "</color>";
+        String secondaryMini = targetInfo.showEntityHealth() ? "<white>" + targetInfo.sourceName() + "</white> <color:#ff5555>\u2764</color>" : "<color:" + ColorUtils.rgbHex(SOURCE_COLOR) + ">" + targetInfo.sourceName() + "</color>";
         float line1Width = glRenderer.measureMiniMessageTextWidth(titleMini);
         float line2Width = glRenderer.measureMiniMessageTextWidth(secondaryMini);
         float textWidth = Math.max(line1Width, line2Width);
@@ -107,24 +107,14 @@ public class WawlaWidget extends HudModule {
             boolean mirrorIconAndText = hudContentHorizontalAlignment() == HudAnchorContentAlignment.Horizontal.RIGHT;
             if (!mirrorIconAndText) {
                 float iconX = PANEL_PADDING_X;
-                if (targetInfo.livingEntity() != null) {
-                    glRenderer.renderer3D().drawGuiEntity(targetInfo.livingEntity(), iconX, iconY, ICON_SIZE);
-                }
-                else {
-                    glRenderer.drawGuiItem(targetInfo.iconStack(), iconX, iconY);
-                }
+                glRenderer.drawGuiItem(targetInfo.iconStack(), iconX, iconY);
                 float textX = iconX + ICON_SIZE + ICON_TEXT_GAP;
                 glRenderer.drawMiniMessageText(titleMini, textX, textY, false);
                 glRenderer.drawMiniMessageText(secondaryMini, textX, textY + lineHeight + LINE_GAP, false);
             }
             else {
                 float iconX = layoutWidth - PANEL_PADDING_X - ICON_SIZE;
-                if (targetInfo.livingEntity() != null) {
-                    glRenderer.renderer3D().drawGuiEntity(targetInfo.livingEntity(), iconX, iconY, ICON_SIZE);
-                }
-                else {
-                    glRenderer.drawGuiItem(targetInfo.iconStack(), iconX, iconY);
-                }
+                glRenderer.drawGuiItem(targetInfo.iconStack(), iconX, iconY);
                 float textRight = iconX - ICON_TEXT_GAP;
                 glRenderer.drawMiniMessageText(titleMini, textRight - line1Width, textY, false);
                 glRenderer.drawMiniMessageText(secondaryMini, textRight - line2Width, textY + lineHeight + LINE_GAP, false);
@@ -146,7 +136,7 @@ public class WawlaWidget extends HudModule {
     @Nullable
     private TargetInfo resolveTarget(boolean editorMode) {
         if (editorMode) {
-            return new TargetInfo("Sandstone", "Minecraft", new ItemStack(Items.SANDSTONE), null, 0.65f, true);
+            return new TargetInfo("Sandstone", "Minecraft", new ItemStack(Items.SANDSTONE), false, 0.65f, true);
         }
         Minecraft minecraftClient = Minecraft.getInstance();
         if (minecraftClient.player == null || minecraftClient.level == null) {
@@ -165,18 +155,19 @@ public class WawlaWidget extends HudModule {
             Item iconItem = block.asItem();
             ItemStack iconStack = iconItem == Items.AIR ? new ItemStack(Items.SANDSTONE) : new ItemStack(iconItem);
             BreakingProgress breakingProgress = resolveBreakingProgress(minecraftClient, blockPos);
-            return new TargetInfo(displayName, sourceName, iconStack, null, breakingProgress.progress(), breakingProgress.active());
+            return new TargetInfo(displayName, sourceName, iconStack, false, breakingProgress.progress(), breakingProgress.active());
         }
         if (crosshairTarget.getType() == HitResult.Type.ENTITY && crosshairTarget instanceof EntityHitResult entityHitResult) {
             Entity entity = entityHitResult.getEntity();
             String displayName = entity.getName().getString();
             String sourceName = formatSourceName(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).getNamespace());
-            ItemStack iconStack = SpawnEggItem.byId(entity.getType()).map(ItemStack::new).orElseGet(() -> new ItemStack(Items.NAME_TAG));
-            LivingEntity livingEntity = entity instanceof LivingEntity targetLivingEntity ? targetLivingEntity : null;
-            if (livingEntity != null) {
+            ItemStack iconStack = SpawnEggItem.byId(entity.getType()).map(ItemStack::new).orElse(ItemStack.EMPTY);
+            boolean showEntityHealth = false;
+            if (entity instanceof LivingEntity livingEntity) {
                 sourceName = formatHealthLine(livingEntity);
+                showEntityHealth = true;
             }
-            return new TargetInfo(displayName, sourceName, iconStack, livingEntity, 0f, false);
+            return new TargetInfo(displayName, sourceName, iconStack, showEntityHealth, 0f, false);
         }
         return null;
     }
@@ -210,7 +201,7 @@ public class WawlaWidget extends HudModule {
     }
 
     private record TargetInfo(String displayName, String sourceName, ItemStack iconStack,
-                              @Nullable LivingEntity livingEntity, float breakProgress, boolean showBreakBar) {}
+                              boolean showEntityHealth, float breakProgress, boolean showBreakBar) {}
 
     private record BreakingProgress(float progress, boolean active) {}
 }

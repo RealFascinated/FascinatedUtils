@@ -1,10 +1,14 @@
 package cc.fascinated.fascinatedutils.gui.hudeditor;
 
+import cc.fascinated.fascinatedutils.client.ModBranding;
 import cc.fascinated.fascinatedutils.gui.UIScale;
-import cc.fascinated.fascinatedutils.gui.core.InputEvent;
+import cc.fascinated.fascinatedutils.gui.core.UiFocusIds;
+import cc.fascinated.fascinatedutils.gui.screens.HUDEditorScreen;
+import cc.fascinated.fascinatedutils.gui.screens.ModSettingsScreen;
 import cc.fascinated.fascinatedutils.systems.hud.HUDEditorSnap;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
@@ -17,10 +21,11 @@ import java.util.function.BooleanSupplier;
 public class HudEditorPointerSession {
 
     /**
-     * Total logical drag delta above which a gesture counts as move/scale (not a click).
+     * Last canvas from {@link HUDEditorScreen#renderCustom}; used between frames so pointer math matches the same
+     * bounds as paint.
      */
-    private static final float APPEARANCE_DRAG_MOVE_THRESHOLD_LOGICAL = 3f;
-    private final HudEditorAppearancePanelController appearancePanel;
+    private float editorCanvasWidth = HudEditorChrome.clampCanvasExtent(UIScale.logicalWidth());
+    private float editorCanvasHeight = HudEditorChrome.clampCanvasExtent(UIScale.logicalHeight());
     @Nullable
     private HudModule dragging;
     private float dragOffsetX;
@@ -31,25 +36,19 @@ public class HudEditorPointerSession {
     private HudModule scalingWidget;
     private float scaleDragReferenceDistance;
     private float scaleDragStartScale;
-    private boolean showControlsHint = true;
+    private int modMenuFocusScratch = UiFocusIds.NO_FOCUS_ID;
     private float snapGuideX = Float.NaN;
     private float snapGuideY = Float.NaN;
-    /**
-     * Accumulates {@code |dragX|+|dragY|} during a left drag or scale gesture (logical pixels).
-     */
-    private float leftPointerDragAccumulated;
-    /**
-     * When true, the appearance side panel stays hidden until the user completes a left press+release on a HUD widget
-     * without a meaningful drag; avoids opening the panel right after moving or scaling a widget.
-     */
-    private boolean blockAppearancePanelUntilClickWithoutDrag;
 
-    public HudEditorPointerSession(HudEditorAppearancePanelController appearancePanel) {
-        this.appearancePanel = appearancePanel;
-    }
-
-    public boolean showControlsHint() {
-        return showControlsHint;
+    /**
+     * Updates logical canvas extents for editor pointer and layout math (call once per editor paint).
+     *
+     * @param canvasWidth  clamped logical width from the active extract context
+     * @param canvasHeight clamped logical height from the active extract context
+     */
+    public void syncEditorCanvas(float canvasWidth, float canvasHeight) {
+        editorCanvasWidth = canvasWidth;
+        editorCanvasHeight = canvasHeight;
     }
 
     @Nullable
@@ -65,13 +64,6 @@ public class HudEditorPointerSession {
     @Nullable
     public HudModule scalingWidget() {
         return scalingWidget;
-    }
-
-    /**
-     * @return false while the user must click a widget (without a drag gesture) before the appearance panel may show
-     */
-    public boolean appearancePanelUnblocked() {
-        return !blockAppearancePanelUntilClickWithoutDrag;
     }
 
     public float snapGuideX() {
@@ -96,12 +88,11 @@ public class HudEditorPointerSession {
      * @return whether the event was consumed
      */
     public boolean onMouseClicked(MouseButtonEvent event, boolean doubled, BooleanSupplier delegateSuper) {
-        showControlsHint = false;
         clearSnapGuides();
         float pointerX = UIScale.logicalPointerX();
         float pointerY = UIScale.logicalPointerY();
-        if (appearancePanel.host().root() != null && appearancePanel.containsPoint(pointerX, pointerY)) {
-            appearancePanel.host().dispatchInput(new InputEvent.MousePress(pointerX, pointerY, event.button()));
+        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && HudEditorOverlays.hitTestModsButton(pointerX, pointerY)) {
+            Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id));
             return true;
         }
         if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
@@ -113,13 +104,16 @@ public class HudEditorPointerSession {
             if (!widget.containsPoint(pointerX, pointerY)) {
                 continue;
             }
-            if (widget.closeButtonContainsPoint(pointerX, pointerY)) {
+            if (HudEditorChrome.settingsButtonContainsPoint(widget, pointerX, pointerY)) {
+                Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, widget));
+                return true;
+            }
+            if (HudEditorChrome.closeButtonContainsPoint(widget, pointerX, pointerY)) {
                 HUDManager.INSTANCE.setWidgetVisible(widget, false, true);
                 selected = null;
                 return true;
             }
             if (widget == selected && HudEditorChrome.scaleHandleContainsPoint(widget, pointerX, pointerY)) {
-                leftPointerDragAccumulated = 0f;
                 scalingWidget = widget;
                 selected = widget;
                 float anchorX = widget.getHudState().getPositionX();
@@ -128,7 +122,6 @@ public class HudEditorPointerSession {
                 scaleDragStartScale = widget.getHudState().getScale();
                 return true;
             }
-            leftPointerDragAccumulated = 0f;
             dragging = widget;
             selected = widget;
             dragOffsetX = pointerX - widget.getHudState().getPositionX();
@@ -138,8 +131,6 @@ public class HudEditorPointerSession {
         selected = null;
         dragging = null;
         scalingWidget = null;
-        blockAppearancePanelUntilClickWithoutDrag = false;
-        leftPointerDragAccumulated = 0f;
         return true;
     }
 
@@ -155,12 +146,6 @@ public class HudEditorPointerSession {
     public boolean onMouseDragged(MouseButtonEvent event, double dragX, double dragY, BooleanSupplier delegateSuper) {
         float pointerX = UIScale.logicalPointerX();
         float pointerY = UIScale.logicalPointerY();
-        if (appearancePanel.host().root() != null && appearancePanel.host().dispatchInput(new InputEvent.MouseMove(pointerX, pointerY))) {
-            return true;
-        }
-        if (dragging != null || scalingWidget != null) {
-            leftPointerDragAccumulated += (float) (Math.abs(dragX) + Math.abs(dragY));
-        }
         if (scalingWidget != null) {
             clearSnapGuides();
             float anchorX = scalingWidget.getHudState().getPositionX();
@@ -174,8 +159,8 @@ public class HudEditorPointerSession {
             return true;
         }
         if (dragging != null) {
-            float canvasWidth = HudEditorChrome.clampCanvasExtent(UIScale.logicalWidth());
-            float canvasHeight = HudEditorChrome.clampCanvasExtent(UIScale.logicalHeight());
+            float canvasWidth = editorCanvasWidth;
+            float canvasHeight = editorCanvasHeight;
             float rawX = pointerX - dragOffsetX;
             float rawY = pointerY - dragOffsetY;
             float widgetWidth = dragging.getScaledWidth();
@@ -199,67 +184,46 @@ public class HudEditorPointerSession {
      * @return whether the release was consumed
      */
     public boolean onMouseReleased(MouseButtonEvent event, BooleanSupplier delegateSuper) {
-        float pointerX = UIScale.logicalPointerX();
-        float pointerY = UIScale.logicalPointerY();
-        if (appearancePanel.host().root() != null && appearancePanel.host().dispatchInput(new InputEvent.MouseRelease(pointerX, pointerY, event.button()))) {
-            return true;
-        }
         if (scalingWidget != null) {
             HudModule widget = scalingWidget;
             scalingWidget = null;
             clearSnapGuides();
             widget.getHudState().setScale(HudEditorChrome.snapScaleNearUnity(widget.getHudState().getScale()));
-            float canvasWidth = HudEditorChrome.clampCanvasExtent(UIScale.logicalWidth());
-            float canvasHeight = HudEditorChrome.clampCanvasExtent(UIScale.logicalHeight());
+            float canvasWidth = editorCanvasWidth;
+            float canvasHeight = editorCanvasHeight;
             float maxX = Math.max(0f, canvasWidth - widget.getScaledWidth());
             float maxY = Math.max(0f, canvasHeight - widget.getScaledHeight());
             widget.getHudState().setPositionX(Mth.clamp(widget.getHudState().getPositionX(), 0f, maxX));
             widget.getHudState().setPositionY(Mth.clamp(widget.getHudState().getPositionY(), 0f, maxY));
             widget.captureNearestHudAnchorFromPosition(canvasWidth, canvasHeight);
             widget.applyHudAnchorToPosition(canvasWidth, canvasHeight);
-            blockAppearancePanelUntilClickWithoutDrag = leftPointerDragAccumulated >= APPEARANCE_DRAG_MOVE_THRESHOLD_LOGICAL;
-            leftPointerDragAccumulated = 0f;
             return true;
         }
         if (dragging != null) {
             HudModule widget = dragging;
             dragging = null;
             clearSnapGuides();
-            float canvasWidth = HudEditorChrome.clampCanvasExtent(UIScale.logicalWidth());
-            float canvasHeight = HudEditorChrome.clampCanvasExtent(UIScale.logicalHeight());
+            float canvasWidth = editorCanvasWidth;
+            float canvasHeight = editorCanvasHeight;
             float maxX = Math.max(0f, canvasWidth - widget.getScaledWidth());
             float maxY = Math.max(0f, canvasHeight - widget.getScaledHeight());
             widget.getHudState().setPositionX(Mth.clamp(widget.getHudState().getPositionX(), 0f, maxX));
             widget.getHudState().setPositionY(Mth.clamp(widget.getHudState().getPositionY(), 0f, maxY));
             widget.captureNearestHudAnchorFromPosition(canvasWidth, canvasHeight);
             widget.applyHudAnchorToPosition(canvasWidth, canvasHeight);
-            blockAppearancePanelUntilClickWithoutDrag = leftPointerDragAccumulated >= APPEARANCE_DRAG_MOVE_THRESHOLD_LOGICAL;
-            leftPointerDragAccumulated = 0f;
             return true;
         }
         return delegateSuper.getAsBoolean();
     }
 
     /**
-     * Dispatches mouse move to the appearance panel when it is active.
-     */
-    public void onMouseMovedLogical() {
-        appearancePanel.dispatchMouseMoveLogical();
-    }
-
-    /**
-     * Handles scroll when the pointer is over the appearance panel.
+     * Handles scroll in the HUD editor (no embedded settings panel).
      *
      * @param verticalAmount vertical scroll delta
      * @param delegateSuper  invoked when the scroll is not consumed
      * @return whether scroll was consumed
      */
     public boolean onMouseScrolled(double verticalAmount, BooleanSupplier delegateSuper) {
-        float pointerX = UIScale.logicalPointerX();
-        float pointerY = UIScale.logicalPointerY();
-        if (appearancePanel.host().root() != null && appearancePanel.containsPoint(pointerX, pointerY) && appearancePanel.host().dispatchInput(new InputEvent.MouseScroll(pointerX, pointerY, (float) verticalAmount))) {
-            return true;
-        }
         return delegateSuper.getAsBoolean();
     }
 
@@ -271,13 +235,11 @@ public class HudEditorPointerSession {
      * @return whether the key event was consumed
      */
     public boolean onKeyPressed(KeyEvent event, BooleanSupplier delegateSuper) {
-        showControlsHint = false;
         if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
             HUDManager.INSTANCE.setEditMode(false);
             return true;
         }
 
-        // Keyboard nudge: arrow keys to move selected widget by 1px (or 5px with Shift)
         if (selected != null && !HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets()).contains(selected)) {
             return delegateSuper.getAsBoolean();
         }
@@ -285,8 +247,8 @@ public class HudEditorPointerSession {
         if (selected != null && (event.key() == GLFW.GLFW_KEY_LEFT || event.key() == GLFW.GLFW_KEY_RIGHT || event.key() == GLFW.GLFW_KEY_UP || event.key() == GLFW.GLFW_KEY_DOWN)) {
             boolean isShiftPressed = (event.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0;
             float nudgeDistance = isShiftPressed ? 5f : 1f;
-            float canvasWidth = UIScale.logicalWidth();
-            float canvasHeight = UIScale.logicalHeight();
+            float canvasWidth = editorCanvasWidth;
+            float canvasHeight = editorCanvasHeight;
 
             float newX = selected.getHudState().getPositionX();
             float newY = selected.getHudState().getPositionY();

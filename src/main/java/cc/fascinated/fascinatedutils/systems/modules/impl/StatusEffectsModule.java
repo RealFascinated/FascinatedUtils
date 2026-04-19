@@ -116,6 +116,7 @@ public class StatusEffectsModule extends HudModule {
             maxRowWidth = Math.max(maxRowWidth, ICON_SIZE + ICON_TEXT_GAP + textWidth);
         }
 
+        float maxTextWidth = maxRowWidth - ICON_SIZE - ICON_TEXT_GAP;
         float contentHeight = effectRows.size() * rowHeight + Math.max(0f, effectRows.size() - 1f) * ROW_GAP;
         float layoutWidth = Math.max(1f, Math.max(getMinWidth(), HORIZONTAL_PADDING * 2f + maxRowWidth));
         float layoutHeight = Math.max(1f, VERTICAL_PADDING * 2f + contentHeight);
@@ -133,10 +134,11 @@ public class StatusEffectsModule extends HudModule {
             float cursorY = VERTICAL_PADDING + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, contentHeight, hudContentVerticalAlignment());
             boolean rightAligned = hudContentHorizontalAlignment() == HudAnchorContentAlignment.Horizontal.RIGHT;
 
+            float sharedIconXWhenRight = HORIZONTAL_PADDING + innerWidth - ICON_SIZE;
+            float sharedTextXWhenRight = sharedIconXWhenRight - ICON_TEXT_GAP - maxTextWidth;
+
             for (int rowIndex = 0; rowIndex < effectRows.size(); rowIndex++) {
                 EffectRow effectRow = effectRows.get(rowIndex);
-                float rowWidth = ICON_SIZE + ICON_TEXT_GAP + textWidths[rowIndex];
-                float rowStartX = HORIZONTAL_PADDING + (rightAligned ? innerWidth - rowWidth : HudAnchorLayout.horizontalOffsetInInnerBand(innerWidth, rowWidth, HudAnchorContentAlignment.Horizontal.LEFT));
 
                 float iconY = cursorY + (rowHeight - ICON_SIZE) * 0.5f;
                 float textBlockY = cursorY + (rowHeight - textBlockHeight) * 0.5f;
@@ -144,8 +146,8 @@ public class StatusEffectsModule extends HudModule {
                 float durationY = textBlockY + fontHeight + TEXT_LINE_GAP;
 
                 if (rightAligned) {
-                    float textX = rowStartX;
-                    float iconX = rowStartX + textWidths[rowIndex] + ICON_TEXT_GAP;
+                    float textX = sharedTextXWhenRight;
+                    float iconX = sharedIconXWhenRight;
                     if (detailedLayout) {
                         glRenderer.drawMiniMessageText(effectRow.nameText(), textX, nameY, false);
                         glRenderer.drawMiniMessageText(effectRow.durationText(), textX, durationY, false);
@@ -156,6 +158,8 @@ public class StatusEffectsModule extends HudModule {
                     glRenderer.drawSprite(effectRow.effectSprite(), iconX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(effectRow.iconAlpha()));
                 }
                 else {
+                    float rowWidth = ICON_SIZE + ICON_TEXT_GAP + textWidths[rowIndex];
+                    float rowStartX = HORIZONTAL_PADDING + HudAnchorLayout.horizontalOffsetInInnerBand(innerWidth, rowWidth, HudAnchorContentAlignment.Horizontal.LEFT);
                     float iconX = rowStartX;
                     float textX = rowStartX + ICON_SIZE + ICON_TEXT_GAP;
                     glRenderer.drawSprite(effectRow.effectSprite(), iconX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(effectRow.iconAlpha()));

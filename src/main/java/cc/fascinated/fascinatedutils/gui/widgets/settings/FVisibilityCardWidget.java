@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     private static final float TITLE_PAD_TOP_DESIGN = 16f;
     private static final float TITLE_PAD_BOTTOM_DESIGN = 16f;
-    private static final float ACTION_STRIP_HEIGHT_DESIGN = 28f;
+    private static final float ACTION_STRIP_HEIGHT_DESIGN = 20f;
     private static final int TITLE_MAX_LINES = 2;
     private static final int ACTION_STRIP_COUNT = 2;
     private final float cardWidthLogical;

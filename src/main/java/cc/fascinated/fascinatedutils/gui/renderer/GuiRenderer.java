@@ -333,15 +333,6 @@ public class GuiRenderer implements UIRenderer {
     }
 
     /**
-     * 3D-style GUI entity preview draws for this frame.
-     *
-     * @return shared {@link Renderer3D} bound to this draw context
-     */
-    public Renderer3D renderer3D() {
-        return backend.renderer3D();
-    }
-
-    /**
      * Draw a GUI item stack with vanilla overlays (immediate; flushes batched geometry first).
      *
      * @param stack     item stack to draw

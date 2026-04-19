@@ -15,6 +15,7 @@ import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
+import cc.fascinated.fascinatedutils.systems.modules.Module;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
@@ -23,6 +24,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.IntConsumer;
@@ -48,9 +50,16 @@ public class ModSettingsScreen extends WidgetScreen {
     private float bodyCacheHeight = -1f;
     private ShellContentTab bodyCacheShellTab = ShellContentTab.MODULES;
     private boolean bodyRebuildDirty = true;
+    private final @Nullable Module navigateToModuleDetailOnOpen;
+    private boolean navigateToModuleDetailApplied;
 
     public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId) {
+        this(title, getFocusId, setFocusId, null);
+    }
+
+    public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId, @Nullable Module navigateToModuleDetailOnOpen) {
         super(title);
+        this.navigateToModuleDetailOnOpen = navigateToModuleDetailOnOpen;
         this.setFocusId = setFocusId;
         root.setFocusSync(getFocusId, setFocusId);
         topBarTabStrip = new FShellTabStripWidget(this::onShellTabSelected);
@@ -83,6 +92,7 @@ public class ModSettingsScreen extends WidgetScreen {
             topBarTabStrip.setSelectedKey(selectedShellTabKey());
             appliedPersistedShellTab = true;
         }
+        applyNavigateToModuleDetailIfPending();
         float framebufferScaleX = UIScale.framebufferScaleX();
         float framebufferScaleY = UIScale.framebufferScaleY();
         float pointerScreenX = UIScale.hiResPointerX();
@@ -368,6 +378,17 @@ public class ModSettingsScreen extends WidgetScreen {
 
     private void onProfilesChanged() {
         settingsTabElement.reset();
+        bodyRebuildDirty = true;
+    }
+
+    private void applyNavigateToModuleDetailIfPending() {
+        if (navigateToModuleDetailOnOpen == null || navigateToModuleDetailApplied) {
+            return;
+        }
+        shellContentTab = ShellContentTab.MODULES;
+        topBarTabStrip.setSelectedKey(selectedShellTabKey());
+        modulesTabElement.navigateToModuleSettingsPage(navigateToModuleDetailOnOpen);
+        navigateToModuleDetailApplied = true;
         bodyRebuildDirty = true;
     }
 

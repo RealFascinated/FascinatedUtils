@@ -6,7 +6,6 @@ import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
-import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
@@ -42,14 +41,14 @@ public class ModSettingsProfilesTabBuilder {
     }
 
     public static FWidget buildProfilesPane(float paneWidth, float paneHeight, Ref<Float> scrollYRef, Runnable onOpenCreateProfilePopup, ProfileActionCallback onProfileAction, Runnable onProfilesChanged, Runnable onOpenHudLayoutEditor) {
-        float settingsContentWidth = Math.max(GuiDesignSpace.pxX(40f), paneWidth);
-        float settingsInnerWidth = Math.max(GuiDesignSpace.pxX(20f), settingsContentWidth - 2f * GuiDesignSpace.pxX(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X));
+        float settingsContentWidth = Math.max(GuiDesignSpace.pxX(28f), paneWidth);
+        float settingsInnerWidth = Math.max(GuiDesignSpace.pxX(14f), settingsContentWidth - 2f * GuiDesignSpace.pxX(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X));
         float controlsHeight = GuiDesignSpace.pxY(SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN);
-        float gap = GuiDesignSpace.pxY(UITheme.GAP_SM);
+        float gap = GuiDesignSpace.pxY(3f);
 
         FColumnWidget scrollBody = new FColumnWidget(gap, Align.CENTER);
 
-        FButtonWidget createProfileButton = new FButtonWidget(onOpenCreateProfilePopup, () -> Component.translatable("fascinatedutils.setting.shell.new_profile_button").getString(), settingsInnerWidth, 1, 2f, 8f, 1.12f, 8f, 3f) {
+        FButtonWidget createProfileButton = new FButtonWidget(onOpenCreateProfilePopup, () -> Component.translatable("fascinatedutils.setting.shell.new_profile_button").getString(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
@@ -95,7 +94,7 @@ public class ModSettingsProfilesTabBuilder {
                 if (ModConfig.switchActiveProfile(profileId)) {
                     onProfilesChanged.run();
                 }
-            }, () -> profileEntry.getProfileName(), settingsInnerWidth, 1, 2f, 8f, 1.12f, 8f, 3f) {
+            }, () -> profileEntry.getProfileName(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f) {
                 @Override
                 public boolean mouseDown(float pointerX, float pointerY, int button) {
                     if (button == 1 && !isDefaultProfile) {
@@ -128,7 +127,7 @@ public class ModSettingsProfilesTabBuilder {
         FWidget profilesScrollClip = wrapScrollClip(scrollBody, gap, scrollYRef);
         FWidget bottomHudButtonRow = null;
         if (onOpenHudLayoutEditor != null) {
-            FButtonWidget editHudLayoutButton = new FButtonWidget(onOpenHudLayoutEditor, () -> Component.translatable("fascinatedutils.setting.shell.edit_hud_layout").getString(), settingsInnerWidth, 1, 2f, 8f, 1.12f, 8f, 3f) {
+            FButtonWidget editHudLayoutButton = new FButtonWidget(onOpenHudLayoutEditor, () -> Component.translatable("fascinatedutils.setting.shell.edit_hud_layout").getString(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f) {
                 @Override
                 protected int resolveButtonFillColorArgb(boolean hovered) {
                     return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRow();
@@ -165,9 +164,9 @@ public class ModSettingsProfilesTabBuilder {
             @Override
             public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
                 setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-                float topInset = GuiDesignSpace.pxY(UITheme.PADDING_SM);
+                float topInset = GuiDesignSpace.pxY(4f);
                 float bottomInset = GuiDesignSpace.pxY(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
-                float sectionGap = GuiDesignSpace.pxY(UITheme.GAP_SM);
+                float sectionGap = GuiDesignSpace.pxY(3f);
                 float createButtonHeight = topCreateButtonRow.intrinsicHeightForColumn(measure, layoutWidth);
                 topCreateButtonRow.layout(measure, layoutX, layoutY + topInset, layoutWidth, createButtonHeight);
                 float reservedTopHeight = topInset + createButtonHeight + sectionGap;
@@ -178,7 +177,7 @@ public class ModSettingsProfilesTabBuilder {
                     finalBottomHudButtonRow.layout(measure, layoutX, buttonY, layoutWidth, buttonHeight);
                     reservedBottomHeight = buttonHeight + bottomInset + sectionGap;
                 }
-                float scrollPad = GuiDesignSpace.pxY(UITheme.PADDING_XS);
+                float scrollPad = GuiDesignSpace.pxY(2f);
                 float scrollHeight = Math.max(0f, layoutHeight - reservedTopHeight - reservedBottomHeight - 2f * scrollPad);
                 profilesScrollClip.layout(measure, layoutX, layoutY + reservedTopHeight + scrollPad, layoutWidth, scrollHeight);
             }

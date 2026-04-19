@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.WorldModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.FogCustomizerModule;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -19,15 +19,15 @@ public class AtmosphericFogModifierMixin {
 
     @Inject(method = "setupFog", at = @At("TAIL"))
     private void fascinatedutils$clearAtmosphericFogWhenDisabled(FogData fog, Camera camera, ClientLevel level, float renderDistance, DeltaTracker deltaTracker, CallbackInfo callbackInfo) {
-        Optional<WorldModule> optionalWorldModule = ModuleRegistry.INSTANCE.getModule(WorldModule.class);
+        Optional<FogCustomizerModule> optionalWorldModule = ModuleRegistry.INSTANCE.getModule(FogCustomizerModule.class);
         if (optionalWorldModule.isPresent()) {
-            WorldModule worldModule = optionalWorldModule.get();
-            if (worldModule.isEnabled() && worldModule.getRenderFog().isDisabled()) {
-                float noFogDistance = Float.MAX_VALUE;
-                fog.environmentalStart = noFogDistance;
-                fog.environmentalEnd = noFogDistance;
-                fog.skyEnd = noFogDistance;
-                fog.cloudEnd = noFogDistance;
+            FogCustomizerModule worldModule = optionalWorldModule.get();
+            if (worldModule.isEnabled()) {
+                float atmosphericFogMultiplier = worldModule.getAtmosphericFogStrength().getValue().floatValue();
+                fog.environmentalStart /= atmosphericFogMultiplier;
+                fog.environmentalEnd /= atmosphericFogMultiplier;
+                fog.skyEnd /= atmosphericFogMultiplier;
+                fog.cloudEnd /= atmosphericFogMultiplier;
             }
         }
     }

@@ -7,7 +7,6 @@ import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.GuiTheme;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
-import cc.fascinated.fascinatedutils.gui.renderer.Renderer3D;
 import cc.fascinated.fascinatedutils.renderer.text.TextRenderer;
 import cc.fascinated.fascinatedutils.renderer.text.VanillaLineLayoutY;
 import net.kyori.adventure.platform.modcommon.MinecraftClientAudiences;
@@ -39,7 +38,6 @@ public class Renderer2D {
     private final GuiGraphicsExtractor graphics;
     private final GuiTheme guiTheme;
     private final TextRenderer guiTextRenderer;
-    private final Renderer3D renderer3D;
     private float multiplyAlpha = 1f;
     private float multiplyAlphaText = 1f;
 
@@ -47,7 +45,6 @@ public class Renderer2D {
         this.graphics = graphics;
         this.guiTheme = guiTheme;
         this.guiTextRenderer = guiTheme.textRenderer(graphics);
-        this.renderer3D = new Renderer3D(graphics);
     }
 
     /**
@@ -93,15 +90,6 @@ public class Renderer2D {
      */
     public GuiTheme guiTheme() {
         return guiTheme;
-    }
-
-    /**
-     * 3D-style GUI draws ({@link GuiGraphics#submitEntityRenderState}) for this frame.
-     *
-     * @return helper for entity previews and similar
-     */
-    public Renderer3D renderer3D() {
-        return renderer3D;
     }
 
     public void setMultiplyAlpha(float factor) {

@@ -6,7 +6,6 @@ import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
-import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FIconCheckboxWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FPopupWidget;
@@ -19,9 +18,9 @@ import java.util.function.Consumer;
  * Follows the same FPopupWidget pattern as ProfileCreatePopupWidget.
  */
 public class ColorPickerPopupWidget extends FPopupWidget {
-    private static final float SV_SIZE_DESIGN = 120f;
-    private static final float HUE_BAR_HEIGHT_DESIGN = 10f;
-    private static final float PREVIEW_SIZE_DESIGN = 14f;
+    private static final float SV_SIZE_DESIGN = 84f;
+    private static final float HUE_BAR_HEIGHT_DESIGN = 7f;
+    private static final float PREVIEW_SIZE_DESIGN = 10f;
     private final SettingColor editingColor;
     private final Consumer<SettingColor> onApply;
     private final Runnable onCancel;
@@ -54,12 +53,12 @@ public class ColorPickerPopupWidget extends FPopupWidget {
         this.saturation = hsv[1];
         this.value = hsv[2];
 
-        applyButton = new FButtonWidget(this::applyAndClose, () -> "Apply", GuiDesignSpace.pxX(80f), 1, 2f, 6f, 1f, 6f);
-        cancelButton = new FButtonWidget(onCancel, () -> "Cancel", GuiDesignSpace.pxX(80f), 1, 2f, 6f, 1f, 6f);
+        applyButton = new FButtonWidget(this::applyAndClose, () -> "Apply", GuiDesignSpace.pxX(56f), 1, 1f, 4f, 1f, 4f);
+        cancelButton = new FButtonWidget(onCancel, () -> "Cancel", GuiDesignSpace.pxX(56f), 1, 1f, 4f, 1f, 4f);
         rainbowToggleCheckbox = new FIconCheckboxWidget(rainbow, checked -> {
             rainbow = checked;
             syncEditingColor();
-        }, () -> "Rainbow", GuiDesignSpace.pxX(120f));
+        }, () -> "Rainbow", GuiDesignSpace.pxX(84f));
         addChild(applyButton);
         addChild(cancelButton);
         addChild(rainbowToggleCheckbox);
@@ -75,9 +74,9 @@ public class ColorPickerPopupWidget extends FPopupWidget {
 
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-        float horizontalPadding = GuiDesignSpace.pxX(UITheme.PADDING_MD);
-        float verticalPadding = GuiDesignSpace.pxY(UITheme.PADDING_MD);
-        float rowGap = GuiDesignSpace.pxY(UITheme.GAP_SM);
+        float horizontalPadding = GuiDesignSpace.pxX(7f);
+        float verticalPadding = GuiDesignSpace.pxY(7f);
+        float rowGap = GuiDesignSpace.pxY(3f);
 
         svAreaSize = GuiDesignSpace.pxUniform(SV_SIZE_DESIGN);
         hueBarHeight = GuiDesignSpace.pxY(HUE_BAR_HEIGHT_DESIGN);
@@ -85,7 +84,7 @@ public class ColorPickerPopupWidget extends FPopupWidget {
         float actionsHeight = applyButton.intrinsicHeightForColumn(measure, svAreaSize);
 
         float popupWidth = svAreaSize + 2f * horizontalPadding;
-        float titleHeight = GuiDesignSpace.pxY(16f);
+        float titleHeight = GuiDesignSpace.pxY(11f);
         float popupHeight = verticalPadding + titleHeight + rowGap + svAreaSize + rowGap + hueBarHeight + rowGap + rainbowRowHeight + rowGap + actionsHeight + verticalPadding;
 
         setDialogBounds(layoutX, layoutY, layoutWidth, layoutHeight, popupWidth, popupHeight);
@@ -108,7 +107,7 @@ public class ColorPickerPopupWidget extends FPopupWidget {
         rainbowToggleCheckbox.layout(measure, bodyLeft, cursorY, bodyWidth, rainbowRowHeight);
         cursorY += rainbowRowHeight + rowGap;
 
-        float actionGap = GuiDesignSpace.pxX(UITheme.GAP_SM);
+        float actionGap = GuiDesignSpace.pxX(3f);
         float actionWidth = Math.max(0f, (bodyWidth - actionGap) * 0.5f);
         float buttonHeight = applyButton.intrinsicHeightForColumn(measure, actionWidth);
         applyButton.layout(measure, bodyLeft, cursorY, actionWidth, buttonHeight);
@@ -173,8 +172,8 @@ public class ColorPickerPopupWidget extends FPopupWidget {
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
         super.renderSelf(graphics, mouseX, mouseY, deltaSeconds);
 
-        float horizontalPadding = GuiDesignSpace.pxX(UITheme.PADDING_MD);
-        float verticalPadding = GuiDesignSpace.pxY(UITheme.PADDING_MD);
+        float horizontalPadding = GuiDesignSpace.pxX(7f);
+        float verticalPadding = GuiDesignSpace.pxY(7f);
 
         float titleY = dialogY() + verticalPadding;
         graphics.drawCenteredText("Color Picker", dialogX() + dialogWidth() * 0.5f, titleY, graphics.theme().textPrimary(), false, true);

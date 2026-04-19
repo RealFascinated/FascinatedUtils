@@ -17,9 +17,9 @@ import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import net.minecraft.util.Mth;
 
 public class FModSettingsDetailHeaderCardWidget extends FWidget {
-    private static final float CARD_PAD_X_DESIGN = 10f;
-    private static final float CARD_PAD_Y_DESIGN = 4f;
-    private static final float BACK_SIZE_DESIGN = 20f;
+    private static final float CARD_PAD_X_DESIGN = 7f;
+    private static final float CARD_PAD_Y_DESIGN = 3f;
+    private static final float BACK_SIZE_DESIGN = 14f;
 
     private final Runnable onBack;
     private final String titleText;

@@ -9,7 +9,6 @@ import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
-import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.*;
@@ -25,12 +24,20 @@ import java.util.function.Consumer;
 @UtilityClass
 public class ModSettingsRegistrySettingsTabBuilder {
 
-    private static final float SETTINGS_SCROLL_BOTTOM_INSET = UITheme.PADDING_XS;
+    /**
+     * Sub-panes for the registry Settings tab: general options versus performance-related options.
+     */
+    public enum RegistrySettingsSubTab {
+        GENERAL,
+        PERFORMANCE
+    }
 
-    public static FWidget buildSettingsTab(float paneWidth, float paneHeight, Ref<Float> scrollYRef, Consumer<ColorSetting> openColorPicker) {
-        float settingsContentWidth = Math.max(GuiDesignSpace.pxX(40f), paneWidth);
-        float settingsInnerWidth = Math.max(GuiDesignSpace.pxX(20f), settingsContentWidth - 2f * GuiDesignSpace.pxX(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X));
-        float gap = GuiDesignSpace.pxY(UITheme.GAP_SM);
+    private static final String PERFORMANCE_CATEGORY_DISPLAY_KEY = "Performance";
+
+    public static FWidget buildSettingsTab(float paneWidth, float paneHeight, Ref<Float> scrollYRef, Consumer<ColorSetting> openColorPicker, RegistrySettingsSubTab subTab) {
+        float settingsContentWidth = Math.max(GuiDesignSpace.pxX(28f), paneWidth);
+        float settingsInnerWidth = Math.max(GuiDesignSpace.pxX(14f), settingsContentWidth - 2f * GuiDesignSpace.pxX(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X));
+        float gap = GuiDesignSpace.pxY(3f);
         FColumnWidget scrollBody = new FColumnWidget(gap, Align.CENTER);
         scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X)));
         List<Setting<?>> allSettings = SettingsRegistry.INSTANCE.getSettings().getSettings();
@@ -40,16 +47,43 @@ public class ModSettingsRegistrySettingsTabBuilder {
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.CENTER);
             scrollBody.addChild(empty);
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(UITheme.PADDING_SM)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(4f)));
             return wrapScrollClip(scrollBody, gap, scrollYRef);
         }
+        List<Setting<?>> topLevelSettings = new ArrayList<>();
         List<ModSettingsCategoryRows.CategoryBlock> categoryBlocks = new ArrayList<>();
-        for (SettingCategory category : SettingCategoryGrouper.categoriesInRegistrationOrder(allSettings)) {
-            categoryBlocks.add(new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), category.settings()));
+        partitionRegistrySettingsForSubTab(allSettings, subTab, topLevelSettings, categoryBlocks);
+        if (topLevelSettings.isEmpty() && categoryBlocks.isEmpty()) {
+            FLabelWidget empty = new FLabelWidget();
+            empty.setText(Component.translatable("fascinatedutils.setting.shell.settings_empty").getString());
+            empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
+            empty.setAlignX(Align.CENTER);
+            scrollBody.addChild(empty);
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(4f)));
+            return wrapScrollClip(scrollBody, gap, scrollYRef);
         }
-        ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, SettingCategoryGrouper.topLevelInRegistrationOrder(allSettings), (setting, innerWidth, sliderStartX) -> editorForRegistrySetting(setting, innerWidth, sliderStartX, openColorPicker));
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(SETTINGS_SCROLL_BOTTOM_INSET)));
+        ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, topLevelSettings, (setting, innerWidth, sliderStartX) -> editorForRegistrySetting(setting, innerWidth, sliderStartX, openColorPicker), (booleanSetting, cellWidth, cellHeight) -> new FBooleanSettingGridCellWidget(booleanSetting, cellWidth, cellHeight, ModConfig::saveSettings));
+        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET)));
         return wrapScrollClip(scrollBody, gap, scrollYRef);
+    }
+
+    private static void partitionRegistrySettingsForSubTab(List<Setting<?>> allSettings, RegistrySettingsSubTab subTab, List<Setting<?>> topLevelOut, List<ModSettingsCategoryRows.CategoryBlock> categoryBlocksOut) {
+        List<Setting<?>> topLevelAll = SettingCategoryGrouper.topLevelInRegistrationOrder(allSettings);
+        List<SettingCategory> categories = SettingCategoryGrouper.categoriesInRegistrationOrder(allSettings);
+        if (subTab == RegistrySettingsSubTab.GENERAL) {
+            topLevelOut.addAll(topLevelAll);
+            for (SettingCategory category : categories) {
+                if (!PERFORMANCE_CATEGORY_DISPLAY_KEY.equals(category.displayNameKey())) {
+                    categoryBlocksOut.add(new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), category.settings()));
+                }
+            }
+            return;
+        }
+        for (SettingCategory category : categories) {
+            if (PERFORMANCE_CATEGORY_DISPLAY_KEY.equals(category.displayNameKey())) {
+                categoryBlocksOut.add(new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), category.settings()));
+            }
+        }
     }
 
     private static FWidget editorForRegistrySetting(Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX, Consumer<ColorSetting> openColorPicker) {

@@ -1,15 +1,29 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
+import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
+import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
+import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FCellConstraints;
+import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FMinWidthHostWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.systems.config.ModConfig;
+import net.minecraft.client.resources.language.I18n;
 
 import java.util.function.Consumer;
 
 public class SettingsTabElement extends FWidget {
-    private final Ref<Float> settingsScrollRef = Ref.of(0f);
+    private final Ref<Float> generalRegistryScrollRef = Ref.of(0f);
+    private final Ref<Float> performanceRegistryScrollRef = Ref.of(0f);
+    private final Ref<ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab> registrySubTabRef = Ref.of(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
     private FWidget inner;
     private boolean dirty = true;
     private float cachedWidth = -1f;
@@ -43,7 +57,9 @@ public class SettingsTabElement extends FWidget {
     }
 
     public void reset() {
-        settingsScrollRef.setValue(0f);
+        generalRegistryScrollRef.setValue(0f);
+        performanceRegistryScrollRef.setValue(0f);
+        registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
         inner = null;
         dirty = true;
         cachedWidth = -1f;
@@ -55,16 +71,136 @@ public class SettingsTabElement extends FWidget {
 
     private void rebuild(float width, float height) {
         Consumer<ColorSetting> openColorPicker = this::openColorPicker;
-        FWidget settingsContent = ModSettingsRegistrySettingsTabBuilder.buildSettingsTab(width, height, settingsScrollRef, openColorPicker);
+        float controlsHeight = GuiDesignSpace.pxY(SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN);
+        float columnGap = GuiDesignSpace.pxY(4f);
+        float tabStripTopInset = GuiDesignSpace.pxY(4f);
+        float horizontalInset = GuiDesignSpace.pxX(SettingsUiMetrics.SETTINGS_DETAIL_CONTENT_INSET_X_DESIGN);
+        float tabStripInnerWidth = Math.max(GuiDesignSpace.pxX(14f), width - 2f * horizontalInset);
+        float tabStripHeight = tabStripTopInset + controlsHeight + columnGap;
+
+        FColumnWidget mainColumn = new FColumnWidget(columnGap, Align.CENTER) {
+            @Override
+            public boolean fillsVerticalInColumn() {
+                return true;
+            }
+
+            @Override
+            public boolean fillsHorizontalInRow() {
+                return true;
+            }
+        };
+
+        FRowWidget tabRow = new FRowWidget(GuiDesignSpace.pxX(3f), Align.CENTER) {
+            @Override
+            public boolean fillsHorizontalInRow() {
+                return true;
+            }
+
+            @Override
+            public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
+                return controlsHeight;
+            }
+        };
+
+        FButtonWidget generalTabButton = new FButtonWidget(() -> {
+            if (registrySubTabRef.getValue() != ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL) {
+                registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
+                dirty = true;
+            }
+        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_general"), GuiDesignSpace.pxX(56f), 1, 1f, 6f, 1.12f, 7f, 2f) {
+            @Override
+            public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
+                return controlsHeight;
+            }
+
+            @Override
+            protected int resolveButtonFillColorArgb(boolean hovered) {
+                boolean active = registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL;
+                if (active) {
+                    return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRowSelected();
+                }
+                return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRow();
+            }
+
+            @Override
+            protected int resolveButtonBorderColorArgb(boolean hovered) {
+                boolean active = registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL;
+                if (active) {
+                    return hovered ? FascinatedGuiTheme.INSTANCE.borderHover() : FascinatedGuiTheme.INSTANCE.borderMuted();
+                }
+                return super.resolveButtonBorderColorArgb(hovered);
+            }
+        };
+
+        FButtonWidget performanceTabButton = new FButtonWidget(() -> {
+            if (registrySubTabRef.getValue() != ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE) {
+                registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE);
+                dirty = true;
+            }
+        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_performance"), GuiDesignSpace.pxX(92f), 1, 1f, 6f, 1.12f, 7f, 2f) {
+            @Override
+            public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
+                return controlsHeight;
+            }
+
+            @Override
+            protected int resolveButtonFillColorArgb(boolean hovered) {
+                boolean active = registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE;
+                if (active) {
+                    return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRowSelected();
+                }
+                return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRow();
+            }
+
+            @Override
+            protected int resolveButtonBorderColorArgb(boolean hovered) {
+                boolean active = registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE;
+                if (active) {
+                    return hovered ? FascinatedGuiTheme.INSTANCE.borderHover() : FascinatedGuiTheme.INSTANCE.borderMuted();
+                }
+                return super.resolveButtonBorderColorArgb(hovered);
+            }
+        };
+
+        tabRow.addChild(generalTabButton);
+        tabRow.addChild(performanceTabButton);
+
+        FRowWidget paddedTabStrip = new FRowWidget(0f, Align.START) {
+            @Override
+            public boolean fillsHorizontalInRow() {
+                return true;
+            }
+
+            @Override
+            public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
+                return controlsHeight;
+            }
+        };
+        paddedTabStrip.addChild(new FSpacerWidget(horizontalInset, 0f));
+        FMinWidthHostWidget tabRowHost = new FMinWidthHostWidget(tabStripInnerWidth, tabRow);
+        tabRowHost.setCellConstraints(new FCellConstraints().setExpandHorizontal(true));
+        paddedTabStrip.addChild(tabRowHost);
+        paddedTabStrip.addChild(new FSpacerWidget(horizontalInset, 0f));
+
+        mainColumn.addChild(new FSpacerWidget(width, tabStripTopInset));
+        mainColumn.addChild(paddedTabStrip);
+
+        Ref<Float> activeScroll = registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL
+                ? generalRegistryScrollRef
+                : performanceRegistryScrollRef;
+        float settingsPaneHeight = Math.max(1f, height - tabStripHeight);
+        FWidget settingsContent = ModSettingsRegistrySettingsTabBuilder.buildSettingsTab(width, settingsPaneHeight, activeScroll, openColorPicker, registrySubTabRef.getValue());
+        settingsContent.setCellConstraints(new FCellConstraints().setExpandVertical(true));
+        mainColumn.addChild(settingsContent);
 
         FAbsoluteStackWidget rootStack = new FAbsoluteStackWidget();
-        rootStack.addChild(settingsContent);
+        rootStack.addChild(mainColumn);
 
         if (showColorPicker && activeColorSetting != null) {
             ColorSetting captured = activeColorSetting;
             rootStack.addChild(new ColorPickerPopupWidget(captured.getValue(), newColor -> {
                 captured.setValue(newColor);
-                cc.fascinated.fascinatedutils.systems.config.ModConfig.saveSettings();
+                ModConfig.saveSettings();
                 closeColorPicker();
             }, this::closeColorPicker));
         }

@@ -1,22 +1,81 @@
 package cc.fascinated.fascinatedutils.gui.hudeditor;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
+import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import org.jspecify.annotations.Nullable;
 
 public class HudEditorOverlays {
 
-    private static final int HINT_CARD_BACKGROUND = UiColor.argb("#a61c1824");
-    private static final int HINT_CARD_BORDER = UiColor.argb("#8b5cf6");
-    private static final int HINT_TITLE_COLOR = UiColor.argb("#faf5ff");
-    private static final int HINT_BODY_COLOR = UiColor.argb("#d4d4d8");
     private static final int SNAP_GUIDE_COLOR = UiColor.argb("#b3913de2");
     private static final float SNAP_GUIDE_THICKNESS = 1f;
-    private static final float HINT_CARD_PADDING_X = 10f;
-    private static final float HINT_CARD_PADDING_Y = 8f;
-    private static final float HINT_LINE_GAP = 2f;
+    private static final float BRANDING_TITLE_TO_MODS_GAP = 16f;
+    private static final float MODS_BUTTON_PAD_X = 32f;
+    private static final float MODS_BUTTON_PAD_Y = 9f;
+
+    @Nullable
+    private static BrandingHit brandingHit;
+
+    /**
+     * Clears the last published MODS button hit region before a new HUD editor frame is drawn.
+     */
+    public static void clearBrandingHitLayout() {
+        brandingHit = null;
+    }
+
+    /**
+     * Whether the logical pointer lies over the MODS button from the last {@link #drawBrandingCenterOverlay} call.
+     *
+     * @param pointerX logical pointer X
+     * @param pointerY logical pointer Y
+     * @return true when the MODS hit region exists and contains the point
+     */
+    public static boolean hitTestModsButton(float pointerX, float pointerY) {
+        BrandingHit hit = brandingHit;
+        return hit != null && hit.containsMods(pointerX, pointerY);
+    }
+
+    /**
+     * Draws a centered title and MODS entry control (Lunar-style chrome) for the empty HUD editor state.
+     *
+     * @param glRenderer   renderer for this pass
+     * @param canvasWidth  logical canvas width
+     * @param canvasHeight logical canvas height
+     * @param pointerX     logical pointer X (for MODS hover styling)
+     * @param pointerY     logical pointer Y (for MODS hover styling)
+     */
+    public static void drawBrandingCenterOverlay(GuiRenderer glRenderer, float canvasWidth, float canvasHeight, float pointerX, float pointerY) {
+        String titleMiniMessage = Component.translatable("fascinatedutils.setting.hud_editor.branding.title").getString();
+        String modsLabel = Component.translatable("fascinatedutils.setting.hud_editor.branding.mods_button").getString();
+        float lineHeight = glRenderer.getFontHeight();
+        int titleWidth = glRenderer.measureMiniMessageTextWidth(titleMiniMessage);
+        int modsTextWidth = glRenderer.measureTextWidth(modsLabel, true);
+        float modsButtonWidth = modsTextWidth + MODS_BUTTON_PAD_X * 2f;
+        float modsButtonHeight = lineHeight + MODS_BUTTON_PAD_Y * 2f;
+        float stackHeight = lineHeight + BRANDING_TITLE_TO_MODS_GAP + modsButtonHeight;
+        float blockTop = (canvasHeight - stackHeight) * 0.5f;
+        float centerX = canvasWidth * 0.5f;
+        float titleLeft = centerX - titleWidth * 0.5f;
+        float modsLeft = centerX - modsButtonWidth * 0.5f;
+        float modsTop = blockTop + lineHeight + BRANDING_TITLE_TO_MODS_GAP;
+        BrandingHit hitLayout = new BrandingHit(modsLeft, modsTop, modsButtonWidth, modsButtonHeight);
+        brandingHit = hitLayout;
+        boolean modsHovered = hitLayout.containsMods(pointerX, pointerY);
+        glRenderer.drawMiniMessageText(titleMiniMessage, titleLeft, blockTop, false);
+        float borderThicknessX = GuiDesignSpace.pxX(UITheme.BORDER_THICKNESS_PX);
+        float borderThicknessY = GuiDesignSpace.pxY(UITheme.BORDER_THICKNESS_PX);
+        float maxCornerRadius = Math.min(modsButtonWidth, modsButtonHeight) * 0.5f - 0.01f;
+        float themedCorner = GuiDesignSpace.pxUniform(glRenderer.theme().cardCornerRadius());
+        float modsCornerRadius = Mth.clamp(themedCorner, 0.5f, Math.max(0.5f, maxCornerRadius - Math.min(borderThicknessX, borderThicknessY) * 0.5f));
+        int modsBorderColor = modsHovered ? glRenderer.theme().borderHover() : glRenderer.theme().border();
+        glRenderer.fillRoundedRectFrame(modsLeft, modsTop, modsButtonWidth, modsButtonHeight, modsCornerRadius, modsBorderColor, glRenderer.theme().surface(), borderThicknessX, borderThicknessY, RectCornerRoundMask.ALL);
+        float modsTextY = modsTop + MODS_BUTTON_PAD_Y;
+        glRenderer.drawCenteredText(modsLabel, centerX, modsTextY, glRenderer.theme().textPrimary(), false, true);
+    }
 
     /**
      * Draws alignment snap guides when coordinates are finite.
@@ -38,31 +97,9 @@ public class HudEditorOverlays {
         }
     }
 
-    /**
-     * Draws the centered controls hint card.
-     *
-     * @param glRenderer   renderer for this pass
-     * @param canvasWidth  logical canvas width
-     * @param canvasHeight logical canvas height
-     */
-    public static void drawControlsHint(GuiRenderer glRenderer, float canvasWidth, float canvasHeight) {
-        String title = Component.translatable("fascinatedutils.setting.hud_editor.hint.title").getString();
-        String moveHint = Component.translatable("fascinatedutils.setting.hud_editor.hint.move").getString();
-        String closeHint = Component.translatable("fascinatedutils.setting.hud_editor.hint.close").getString();
-        int maxTextWidth = Math.max(glRenderer.measureTextWidth(title, true), Math.max(glRenderer.measureTextWidth(moveHint, false), glRenderer.measureTextWidth(closeHint, false)));
-        float lineHeight = glRenderer.getFontHeight();
-        float panelWidth = maxTextWidth + HINT_CARD_PADDING_X * 2f;
-        float panelHeight = lineHeight * 3f + HINT_LINE_GAP * 2f + HINT_CARD_PADDING_Y * 2f;
-        float panelX = (canvasWidth - panelWidth) * 0.5f;
-        float panelY = (canvasHeight - panelHeight) * 0.5f;
-        glRenderer.drawRect(panelX, panelY, panelWidth, panelHeight, HINT_CARD_BACKGROUND);
-        glRenderer.drawBorder(panelX, panelY, panelWidth, panelHeight, 1f, HINT_CARD_BORDER);
-        float textY = panelY + HINT_CARD_PADDING_Y;
-        float centerX = panelX + panelWidth * 0.5f;
-        glRenderer.drawMiniMessageText("<b><color:" + ColorUtils.rgbHex(HINT_TITLE_COLOR) + ">" + title + "</color></b>", centerX - glRenderer.measureMiniMessageTextWidth("<b><color:" + ColorUtils.rgbHex(HINT_TITLE_COLOR) + ">" + title + "</color></b>") * 0.5f, textY, false);
-        textY += lineHeight + HINT_LINE_GAP;
-        glRenderer.drawMiniMessageText("<color:" + ColorUtils.rgbHex(HINT_BODY_COLOR) + ">" + moveHint + "</color>", centerX - glRenderer.measureMiniMessageTextWidth("<color:" + ColorUtils.rgbHex(HINT_BODY_COLOR) + ">" + moveHint + "</color>") * 0.5f, textY, false);
-        textY += lineHeight + HINT_LINE_GAP;
-        glRenderer.drawMiniMessageText("<color:" + ColorUtils.rgbHex(HINT_BODY_COLOR) + ">" + closeHint + "</color>", centerX - glRenderer.measureMiniMessageTextWidth("<color:" + ColorUtils.rgbHex(HINT_BODY_COLOR) + ">" + closeHint + "</color>") * 0.5f, textY, false);
+    private record BrandingHit(float modsLeft, float modsTop, float modsWidth, float modsHeight) {
+        boolean containsMods(float pointerX, float pointerY) {
+            return pointerX >= modsLeft && pointerY >= modsTop && pointerX <= modsLeft + modsWidth && pointerY <= modsTop + modsHeight;
+        }
     }
 }

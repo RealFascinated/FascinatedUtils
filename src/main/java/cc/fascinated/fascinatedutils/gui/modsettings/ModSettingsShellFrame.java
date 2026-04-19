@@ -52,10 +52,13 @@ public class ModSettingsShellFrame {
         ModSettingsShellLayout.ShellBounds topBar = new ModSettingsShellLayout.ShellBounds(shell.positionX(), shell.positionY(), shell.width(), topBarHeight);
         float shellStrokeRequest = GuiDesignSpace.pxUniform(UITheme.BORDER_THICKNESS_PX);
         float shellBorderThickness = Renderer2D.roundedRectFrameBorderThickness(shellStrokeRequest, shellStrokeRequest);
+        float innerTitleTop = topBar.positionY() + shellBorderThickness;
+        float innerTitleHeight = Math.max(0f, topBar.height() - shellBorderThickness);
         float shellCornerRadius = GuiDesignSpace.pxUniform(ModSettingsTheme.SHELL_CORNER_RADIUS);
-        float closeButtonInset = GuiDesignSpace.pxUniform(UITheme.PADDING_SM);
+        float closeButtonInset = GuiDesignSpace.pxUniform(4f);
         float closeButtonSize = ModSettingsTheme.titleBarSquareControlSizePx();
-        ModSettingsShellLayout.ShellBounds closeButtonRect = closeButtonBoundsForTopBar(topBar, closeButtonInset, closeButtonSize);
+        ModSettingsShellLayout.ShellBounds closeButtonRect = closeButtonBoundsForTopBar(
+                topBar, shellBorderThickness, innerTitleTop, innerTitleHeight, closeButtonInset, closeButtonSize);
         float bodyTop = shell.positionY() + topBarHeight;
         float bodyHeight = Math.max(0f, shell.height() - topBarHeight - shellBorderThickness);
         float bodyPositionX = shell.positionX() + shellBorderThickness;
@@ -65,26 +68,28 @@ public class ModSettingsShellFrame {
         int closeBg = closePress ? glUiRenderer.theme().moduleListRowHover() : closeOver ? glUiRenderer.theme().surfaceElevated() : glUiRenderer.theme().surface();
         int closeBorder = closeOver ? glUiRenderer.theme().borderHover() : glUiRenderer.theme().border();
         int closeText = closeOver ? glUiRenderer.theme().textPrimary() : glUiRenderer.theme().textMuted();
-        float titleLeftInset = GuiDesignSpace.pxX(UITheme.PADDING_MD);
+        float titleLeftInset = GuiDesignSpace.pxX(7f);
         int titleTextWidth = glUiRenderer.measureTextWidth(titleStr, false);
         boolean showHudLayoutChip = hudLayoutButtonHost.root() != null;
         ModSettingsShellLayout.ShellBounds hudLayoutButtonRect;
         if (showHudLayoutChip) {
             String hudLayoutLabel = Component.translatable("fascinatedutils.setting.shell.edit_hud_layout").getString();
-            float hudButtonW = Math.max(GuiDesignSpace.pxX(48f), glUiRenderer.measureTextWidth(hudLayoutLabel, false) + 2f * GuiDesignSpace.pxX(FHudLayoutEditorChipWidget.HORIZONTAL_TEXT_PAD_DESIGN));
+            float hudButtonW = Math.max(GuiDesignSpace.pxX(34f), glUiRenderer.measureTextWidth(hudLayoutLabel, false) + 2f * GuiDesignSpace.pxX(FHudLayoutEditorChipWidget.HORIZONTAL_TEXT_PAD_DESIGN));
             float hudButtonH = FHudLayoutEditorChipWidget.chipHeightPx();
-            float betweenHudAndClose = GuiDesignSpace.pxX(UITheme.GAP_SM);
+            float betweenHudAndClose = GuiDesignSpace.pxX(3f);
             float hudButtonX = closeButtonRect.positionX() - betweenHudAndClose - hudButtonW;
-            float hudButtonY = topBar.positionY() + (topBarHeight - hudButtonH) * 0.5f;
+            float hudButtonY = innerTitleTop + (innerTitleHeight - hudButtonH) * 0.5f;
             hudLayoutButtonRect = new ModSettingsShellLayout.ShellBounds(hudButtonX, hudButtonY, hudButtonW, hudButtonH);
         }
         else {
             hudLayoutButtonRect = new ModSettingsShellLayout.ShellBounds(0f, 0f, 0f, 0f);
         }
-        float topBarTabsLeft = topBar.positionX() + titleLeftInset + titleTextWidth + GuiDesignSpace.pxX(UITheme.GAP_LG);
-        float topBarTabsRight = showHudLayoutChip ? hudLayoutButtonRect.positionX() - GuiDesignSpace.pxX(UITheme.GAP_MD) : closeButtonRect.positionX() - GuiDesignSpace.pxX(UITheme.GAP_MD);
+        float titleStartX = topBar.positionX() + shellBorderThickness + titleLeftInset;
+        float topBarTabsLeft = titleStartX + titleTextWidth + GuiDesignSpace.pxX(10f);
+        float topBarTabsRight = showHudLayoutChip ? hudLayoutButtonRect.positionX() - GuiDesignSpace.pxX(6f) : closeButtonRect.positionX() - GuiDesignSpace.pxX(6f);
         float topBarTabsWidth = Math.max(0f, topBarTabsRight - topBarTabsLeft);
-        ModSettingsShellLayout.ShellBounds topBarTabsRect = new ModSettingsShellLayout.ShellBounds(topBarTabsLeft, topBar.positionY(), topBarTabsWidth, topBar.height());
+        ModSettingsShellLayout.ShellBounds topBarTabsRect =
+                new ModSettingsShellLayout.ShellBounds(topBarTabsLeft, innerTitleTop, topBarTabsWidth, innerTitleHeight);
         float scrimAlpha = 1f;
         Matrix3x2fStack drawMatrices = graphics.pose();
         drawMatrices.pushMatrix();
@@ -106,7 +111,7 @@ public class ModSettingsShellFrame {
                     hudLayoutButtonHost.layoutOnly(glUiRenderer, hudLayoutButtonRect.positionX(), hudLayoutButtonRect.positionY(), hudLayoutButtonRect.width(), hudLayoutButtonRect.height());
                 }
                 glUiRenderer.setMultiplyAlpha(1f, 1f);
-                float closeButtonCornerRadius = Math.min(GuiDesignSpace.pxUniform(5f), closeButtonRect.height() * 0.5f - 0.01f);
+                float closeButtonCornerRadius = Math.min(GuiDesignSpace.pxUniform(4f), closeButtonRect.height() * 0.5f - 0.01f);
                 glUiRenderer.fillRoundedRectFrame(shell.positionX(), shell.positionY(), shell.width(), shell.height(), shellCornerRadius, ModSettingsTheme.SHELL_BORDER, glUiRenderer.theme().surface(), shellBorderThickness, shellBorderThickness, RectCornerRoundMask.ALL);
                 float titleFillX = topBar.positionX() + shellBorderThickness;
                 float titleFillY = topBar.positionY() + shellBorderThickness;
@@ -116,7 +121,11 @@ public class ModSettingsShellFrame {
                 glUiRenderer.fillRoundedRect(titleFillX, titleFillY, titleFillW, titleFillH, titleBarInnerCornerRadius, glUiRenderer.theme().background(), RectCornerRoundMask.TOP);
                 glUiRenderer.fillRoundedRectFrame(closeButtonRect.positionX(), closeButtonRect.positionY(), closeButtonRect.width(), closeButtonRect.height(), closeButtonCornerRadius, closeBorder, closeBg, GuiDesignSpace.pxUniform(UITheme.BORDER_THICKNESS_PX), GuiDesignSpace.pxUniform(UITheme.BORDER_THICKNESS_PX), RectCornerRoundMask.ALL);
                 Icons.paintModSettingsCloseIcon(glUiRenderer, closeButtonRect.positionX(), closeButtonRect.positionY(), closeButtonRect.width(), closeButtonRect.height(), closeText);
-                glUiRenderer.drawMiniMessageText("<color:" + ColorUtils.rgbHex(glUiRenderer.theme().textPrimary()) + ">" + titleStr + "</color>", topBar.positionX() + titleLeftInset, topBar.positionY() + (topBarHeight - glUiRenderer.getFontHeight()) * 0.5f, false);
+                glUiRenderer.drawMiniMessageText(
+                        "<color:" + ColorUtils.rgbHex(glUiRenderer.theme().textPrimary()) + ">" + titleStr + "</color>",
+                        titleStartX,
+                        innerTitleTop + (innerTitleHeight - glUiRenderer.getFontHeight()) * 0.5f,
+                        false);
                 topBarTabsHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);
                 if (showHudLayoutChip) {
                     hudLayoutButtonHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);
@@ -125,13 +134,13 @@ public class ModSettingsShellFrame {
                 // Draw update available badge in top-left of shell if updater reported an available update
                 try {
                     if (ModSettingsUpdateNotifier.isUpdateAvailable()) {
-                        float badgeX = bodyPositionX + GuiDesignSpace.pxX(6f);
-                        float badgeY = bodyTop + GuiDesignSpace.pxY(6f);
-                        float badgeW = GuiDesignSpace.pxX(120f);
-                        float badgeH = GuiDesignSpace.pxY(20f);
-                        float radius = 4f;
+                        float badgeX = bodyPositionX + GuiDesignSpace.pxX(4f);
+                        float badgeY = bodyTop + GuiDesignSpace.pxY(4f);
+                        float badgeW = GuiDesignSpace.pxX(84f);
+                        float badgeH = GuiDesignSpace.pxY(14f);
+                        float radius = 3f;
                         glUiRenderer.fillRoundedRect(badgeX, badgeY, badgeW, badgeH, radius, glUiRenderer.theme().accent(), RectCornerRoundMask.ALL);
-                        glUiRenderer.drawMiniMessageText("<color:#ffffff>Update available! Restart your game to apply it</color>", badgeX + GuiDesignSpace.pxX(6f), badgeY + (badgeH - glUiRenderer.getFontHeight()) * 0.5f, false);
+                        glUiRenderer.drawMiniMessageText("<color:#ffffff>Update available! Restart your game to apply it</color>", badgeX + GuiDesignSpace.pxX(4f), badgeY + (badgeH - glUiRenderer.getFontHeight()) * 0.5f, false);
                     }
                 } catch (Throwable ignored) {
                 }
@@ -156,9 +165,17 @@ public class ModSettingsShellFrame {
         return mask;
     }
 
-    private static ModSettingsShellLayout.ShellBounds closeButtonBoundsForTopBar(ModSettingsShellLayout.ShellBounds topBar, float closeButtonInset, float closeButtonSize) {
-        float closeButtonX = Mth.floor(topBar.positionX() + topBar.width() - closeButtonInset - closeButtonSize);
-        float closeButtonY = Mth.floor(topBar.positionY() + (topBar.height() - closeButtonSize) * 0.5f);
+    private static ModSettingsShellLayout.ShellBounds closeButtonBoundsForTopBar(
+            ModSettingsShellLayout.ShellBounds topBar,
+            float shellBorderThickness,
+            float innerTitleTop,
+            float innerTitleHeight,
+            float closeButtonInset,
+            float closeButtonSize) {
+        float closeButtonX =
+                Mth.floor(topBar.positionX() + topBar.width() - shellBorderThickness - closeButtonInset - closeButtonSize);
+        float closeButtonY =
+                Mth.floor(innerTitleTop + (innerTitleHeight - closeButtonSize) * 0.5f + 0.5f);
         return new ModSettingsShellLayout.ShellBounds(closeButtonX, closeButtonY, closeButtonSize, closeButtonSize);
     }
 

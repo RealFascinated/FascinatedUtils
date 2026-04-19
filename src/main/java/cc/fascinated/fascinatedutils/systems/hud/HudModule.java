@@ -89,14 +89,12 @@ public abstract class HudModule extends Module implements HudRenderableModule {
         hudState.setVisible(false);
         hudState.setScale(1.0f);
         hudState.setHudAnchor(HUDWidgetAnchor.TOP_LEFT);
-        hudState.setAnchorOffsetX(0.005f);
-        hudState.setAnchorOffsetY(0.005f);
+        hudState.setAnchorOffsetX(5f);
+        hudState.setAnchorOffsetY(5f);
         hudState.setPositionX(5f);
         hudState.setPositionY(5f);
         hudState.setLastLayoutWidth(-1f);
         hudState.setLastLayoutHeight(-1f);
-        hudState.setProportionalOffsets(true);
-        hudState.setNeedsProportionalMigration(false);
     }
 
     @Override
@@ -110,40 +108,52 @@ public abstract class HudModule extends Module implements HudRenderableModule {
     }
 
     public float getScaledWidth() {
-        float layoutWidth = hudState.getCommittedLayoutWidth() >= 0f ? hudState.getCommittedLayoutWidth() : minWidth;
+        float layoutWidth = layoutWidthForAnchoring();
         return layoutWidth * hudState.getScale();
     }
 
     public float getScaledHeight() {
-        float layoutHeight = hudState.getCommittedLayoutHeight() >= 0f ? hudState.getCommittedLayoutHeight() : minWidth;
+        float layoutHeight = layoutHeightForAnchoring();
         return layoutHeight * hudState.getScale();
+    }
+
+    private float layoutWidthForAnchoring() {
+        if (hudState.getCommittedLayoutWidth() >= 0f) {
+            return hudState.getCommittedLayoutWidth();
+        }
+        if (hudState.getLastLayoutWidth() >= 0f) {
+            return hudState.getLastLayoutWidth();
+        }
+        return minWidth;
+    }
+
+    private float layoutHeightForAnchoring() {
+        if (hudState.getCommittedLayoutHeight() >= 0f) {
+            return hudState.getCommittedLayoutHeight();
+        }
+        if (hudState.getLastLayoutHeight() >= 0f) {
+            return hudState.getLastLayoutHeight();
+        }
+        return minWidth;
     }
 
     public boolean containsPoint(float pointerX, float pointerY) {
         return pointerX >= hudState.getPositionX() && pointerX <= hudState.getPositionX() + getScaledWidth() && pointerY >= hudState.getPositionY() && pointerY <= hudState.getPositionY() + getScaledHeight();
     }
 
-    public boolean closeButtonContainsPoint(float pointerX, float pointerY) {
-        float buttonSize = 10f;
-        float buttonPad = 2f;
-        float scaledWidth = getScaledWidth();
-        float buttonX = hudState.getPositionX() + scaledWidth - buttonSize - buttonPad;
-        float buttonY = hudState.getPositionY() + buttonPad;
-        return pointerX >= buttonX && pointerX <= buttonX + buttonSize && pointerY >= buttonY && pointerY <= buttonY + buttonSize;
-    }
-
     public void applyHudAnchorToPosition(float canvasWidth, float canvasHeight) {
-        if (hudState.isNeedsProportionalMigration()) {
-            migrateToProportionalOffsets(canvasWidth, canvasHeight);
-        }
         float widgetWidth = getScaledWidth();
         float widgetHeight = getScaledHeight();
         float maxOffsetX = Math.max(0f, canvasWidth - widgetWidth);
         float maxOffsetY = Math.max(0f, canvasHeight - widgetHeight);
-        float offsetX = hudState.getAnchorOffsetX() * canvasWidth;
-        float offsetY = hudState.getAnchorOffsetY() * canvasHeight;
-        float resolvedX = offsetX;
-        float resolvedY = offsetY;
+        float offsetX = hudState.getAnchorOffsetX();
+        float offsetY = hudState.getAnchorOffsetY();
+        float halfCanvasWidth = canvasWidth * 0.5f;
+        float halfCanvasHeight = canvasHeight * 0.5f;
+        float halfWidgetWidth = widgetWidth * 0.5f;
+        float halfWidgetHeight = widgetHeight * 0.5f;
+        float resolvedX = 0f;
+        float resolvedY = 0f;
         switch (hudState.getHudAnchor()) {
             case TOP_LEFT -> {
                 resolvedX = offsetX;
@@ -162,24 +172,24 @@ public abstract class HudModule extends Module implements HudRenderableModule {
                 resolvedY = canvasHeight - widgetHeight - offsetY;
             }
             case TOP -> {
-                resolvedX = (canvasWidth - widgetWidth) * 0.5f + offsetX;
+                resolvedX = halfCanvasWidth - halfWidgetWidth + offsetX;
                 resolvedY = offsetY;
             }
             case BOTTOM -> {
-                resolvedX = (canvasWidth - widgetWidth) * 0.5f + offsetX;
+                resolvedX = halfCanvasWidth - halfWidgetWidth + offsetX;
                 resolvedY = canvasHeight - widgetHeight - offsetY;
             }
             case LEFT -> {
                 resolvedX = offsetX;
-                resolvedY = (canvasHeight - widgetHeight) * 0.5f + offsetY;
+                resolvedY = halfCanvasHeight - halfWidgetHeight + offsetY;
             }
             case RIGHT -> {
                 resolvedX = canvasWidth - widgetWidth - offsetX;
-                resolvedY = (canvasHeight - widgetHeight) * 0.5f + offsetY;
+                resolvedY = halfCanvasHeight - halfWidgetHeight + offsetY;
             }
             case CENTER -> {
-                resolvedX = (canvasWidth - widgetWidth) * 0.5f + offsetX;
-                resolvedY = (canvasHeight - widgetHeight) * 0.5f + offsetY;
+                resolvedX = halfCanvasWidth - halfWidgetWidth + offsetX;
+                resolvedY = halfCanvasHeight - halfWidgetHeight + offsetY;
             }
         }
         hudState.setPositionX(Mth.clamp(resolvedX, 0f, maxOffsetX));
@@ -196,47 +206,50 @@ public abstract class HudModule extends Module implements HudRenderableModule {
     public void syncHudAnchorOffsetsFromCurrentPosition(float canvasWidth, float canvasHeight) {
         float widgetWidth = getScaledWidth();
         float widgetHeight = getScaledHeight();
-        float safeCanvasW = Math.max(1f, canvasWidth);
-        float safeCanvasH = Math.max(1f, canvasHeight);
+        float halfCanvasWidth = canvasWidth * 0.5f;
+        float halfCanvasHeight = canvasHeight * 0.5f;
+        float halfWidgetWidth = widgetWidth * 0.5f;
+        float halfWidgetHeight = widgetHeight * 0.5f;
+        float positionX = hudState.getPositionX();
+        float positionY = hudState.getPositionY();
         switch (hudState.getHudAnchor()) {
             case TOP_LEFT -> {
-                hudState.setAnchorOffsetX(hudState.getPositionX() / safeCanvasW);
-                hudState.setAnchorOffsetY(hudState.getPositionY() / safeCanvasH);
+                hudState.setAnchorOffsetX(positionX);
+                hudState.setAnchorOffsetY(positionY);
             }
             case TOP_RIGHT -> {
-                hudState.setAnchorOffsetX((canvasWidth - widgetWidth - hudState.getPositionX()) / safeCanvasW);
-                hudState.setAnchorOffsetY(hudState.getPositionY() / safeCanvasH);
+                hudState.setAnchorOffsetX(canvasWidth - positionX - widgetWidth);
+                hudState.setAnchorOffsetY(positionY);
             }
             case BOTTOM_LEFT -> {
-                hudState.setAnchorOffsetX(hudState.getPositionX() / safeCanvasW);
-                hudState.setAnchorOffsetY((canvasHeight - widgetHeight - hudState.getPositionY()) / safeCanvasH);
+                hudState.setAnchorOffsetX(positionX);
+                hudState.setAnchorOffsetY(canvasHeight - positionY - widgetHeight);
             }
             case BOTTOM_RIGHT -> {
-                hudState.setAnchorOffsetX((canvasWidth - widgetWidth - hudState.getPositionX()) / safeCanvasW);
-                hudState.setAnchorOffsetY((canvasHeight - widgetHeight - hudState.getPositionY()) / safeCanvasH);
+                hudState.setAnchorOffsetX(canvasWidth - positionX - widgetWidth);
+                hudState.setAnchorOffsetY(canvasHeight - positionY - widgetHeight);
             }
             case TOP -> {
-                hudState.setAnchorOffsetX((hudState.getPositionX() - (canvasWidth - widgetWidth) * 0.5f) / safeCanvasW);
-                hudState.setAnchorOffsetY(hudState.getPositionY() / safeCanvasH);
+                hudState.setAnchorOffsetX(positionX + halfWidgetWidth - halfCanvasWidth);
+                hudState.setAnchorOffsetY(positionY);
             }
             case BOTTOM -> {
-                hudState.setAnchorOffsetX((hudState.getPositionX() - (canvasWidth - widgetWidth) * 0.5f) / safeCanvasW);
-                hudState.setAnchorOffsetY((canvasHeight - widgetHeight - hudState.getPositionY()) / safeCanvasH);
+                hudState.setAnchorOffsetX(positionX + halfWidgetWidth - halfCanvasWidth);
+                hudState.setAnchorOffsetY(canvasHeight - positionY - widgetHeight);
             }
             case LEFT -> {
-                hudState.setAnchorOffsetX(hudState.getPositionX() / safeCanvasW);
-                hudState.setAnchorOffsetY((hudState.getPositionY() - (canvasHeight - widgetHeight) * 0.5f) / safeCanvasH);
+                hudState.setAnchorOffsetX(positionX);
+                hudState.setAnchorOffsetY(positionY + halfWidgetHeight - halfCanvasHeight);
             }
             case RIGHT -> {
-                hudState.setAnchorOffsetX((canvasWidth - widgetWidth - hudState.getPositionX()) / safeCanvasW);
-                hudState.setAnchorOffsetY((hudState.getPositionY() - (canvasHeight - widgetHeight) * 0.5f) / safeCanvasH);
+                hudState.setAnchorOffsetX(canvasWidth - positionX - widgetWidth);
+                hudState.setAnchorOffsetY(positionY + halfWidgetHeight - halfCanvasHeight);
             }
             case CENTER -> {
-                hudState.setAnchorOffsetX((hudState.getPositionX() - (canvasWidth - widgetWidth) * 0.5f) / safeCanvasW);
-                hudState.setAnchorOffsetY((hudState.getPositionY() - (canvasHeight - widgetHeight) * 0.5f) / safeCanvasH);
+                hudState.setAnchorOffsetX(positionX + halfWidgetWidth - halfCanvasWidth);
+                hudState.setAnchorOffsetY(positionY + halfWidgetHeight - halfCanvasHeight);
             }
         }
-        hudState.setProportionalOffsets(true);
     }
 
     public final void recordHudContentSkipped() {
@@ -268,19 +281,6 @@ public abstract class HudModule extends Module implements HudRenderableModule {
      * @return the content to render, or {@code null} to skip rendering for this frame
      */
     protected abstract HudContent produceContent(float deltaSeconds, boolean editorMode);
-
-    /**
-     * Converts legacy pixel-based anchor offsets to proportional fractions of the canvas.
-     * Called once on first render after loading a config without proportional offsets.
-     */
-    private void migrateToProportionalOffsets(float canvasWidth, float canvasHeight) {
-        float safeCanvasW = Math.max(1f, canvasWidth);
-        float safeCanvasH = Math.max(1f, canvasHeight);
-        hudState.setAnchorOffsetX(hudState.getAnchorOffsetX() / safeCanvasW);
-        hudState.setAnchorOffsetY(hudState.getAnchorOffsetY() / safeCanvasH);
-        hudState.setProportionalOffsets(true);
-        hudState.setNeedsProportionalMigration(false);
-    }
 
     private @NonNull HUDWidgetAnchor getHudWidgetAnchor(float canvasWidth, float canvasHeight, float widgetWidth, float widgetHeight) {
         float centerX = hudState.getPositionX() + widgetWidth * 0.5f;

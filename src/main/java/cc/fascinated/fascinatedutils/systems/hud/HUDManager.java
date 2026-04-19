@@ -3,7 +3,6 @@ package cc.fascinated.fascinatedutils.systems.hud;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
-import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.screens.HUDEditorScreen;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
@@ -41,15 +40,12 @@ public class HUDManager {
         initialized = true;
     }
 
-    public void renderHUD(GuiRenderer renderer, float deltaSeconds) {
+    public void renderHUD(GuiRenderer renderer, float canvasWidth, float canvasHeight, float deltaSeconds) {
         if (editMode || Minecraft.getInstance().debugEntries.isOverlayVisible()) {
             return;
         }
 
         ProfilerFiller profiler = Profiler.get();
-
-        float canvasWidth = UIScale.logicalWidth();
-        float canvasHeight = UIScale.logicalHeight();
 
         long renderStart = System.nanoTime();
         for (HudModule widget : visibleWidgets) {
@@ -59,8 +55,8 @@ public class HUDManager {
             if (draw == null) {
                 widget.recordHudContentSkipped();
             }
-            else {
-                widget.applyHudAnchorToPosition(canvasWidth, canvasHeight);
+            widget.applyHudAnchorToPosition(canvasWidth, canvasHeight);
+            if (draw != null) {
                 renderer.pushTranslate(widget.getHudState().getPositionX(), widget.getHudState().getPositionY());
                 renderer.pushScale(widget.getHudState().getScale());
                 draw.run();

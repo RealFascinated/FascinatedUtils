@@ -6,7 +6,6 @@ import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
-import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
@@ -45,7 +44,7 @@ public class ProfileCreatePopupWidget extends FPopupWidget {
         descriptionLabel.setOverflow(TextOverflow.WRAP);
         descriptionLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
 
-        profileNameInput = new FOutlinedTextInputWidget(PROFILE_NAME_INPUT_FOCUS_ID, 64, 24f, () -> Component.translatable("fascinatedutils.setting.shell.profile_name_placeholder").getString());
+        profileNameInput = new FOutlinedTextInputWidget(PROFILE_NAME_INPUT_FOCUS_ID, 45, 17f, () -> Component.translatable("fascinatedutils.setting.shell.profile_name_placeholder").getString());
         profileNameInput.setValue(profileNameRef.getValue() == null ? "" : profileNameRef.getValue());
         profileNameInput.setOnChange(value -> {
             profileNameRef.setValue(value);
@@ -58,10 +57,10 @@ public class ProfileCreatePopupWidget extends FPopupWidget {
         validationLabel.setOverflow(TextOverflow.WRAP);
         validationLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textAccent());
 
-        copyDefaultToggleCheckbox = new FIconCheckboxWidget(Boolean.TRUE.equals(copyDefaultProfileSettingsRef.getValue()), checked -> copyDefaultProfileSettingsRef.setValue(checked), () -> Boolean.TRUE.equals(copyDefaultProfileSettingsRef.getValue()) ? Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_on").getString() : Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_off").getString(), GuiDesignSpace.pxX(220f));
+        copyDefaultToggleCheckbox = new FIconCheckboxWidget(Boolean.TRUE.equals(copyDefaultProfileSettingsRef.getValue()), checked -> copyDefaultProfileSettingsRef.setValue(checked), () -> Boolean.TRUE.equals(copyDefaultProfileSettingsRef.getValue()) ? Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_on").getString() : Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_off").getString(), GuiDesignSpace.pxX(154f));
 
-        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_cancel").getString(), GuiDesignSpace.pxX(100f), 1, 2f, 8f, 1f, 8f);
-        createButton = new FButtonWidget(this::submit, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_create").getString(), GuiDesignSpace.pxX(100f), 1, 2f, 8f, 1f, 8f) {
+        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_cancel").getString(), GuiDesignSpace.pxX(70f), 1, 1f, 6f, 1f, 6f);
+        createButton = new FButtonWidget(this::submit, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_create").getString(), GuiDesignSpace.pxX(70f), 1, 1f, 6f, 1f, 6f) {
             @Override
             protected int resolveButtonBorderColorArgb(boolean hovered) {
                 if (!isInputValid()) {
@@ -95,10 +94,10 @@ public class ProfileCreatePopupWidget extends FPopupWidget {
 
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-        float popupWidth = Math.min(Math.max(GuiDesignSpace.pxX(240f), layoutWidth * 0.45f), GuiDesignSpace.pxX(360f));
-        float horizontalPadding = GuiDesignSpace.pxX(UITheme.PADDING_MD);
-        float verticalPadding = GuiDesignSpace.pxY(UITheme.PADDING_MD);
-        float rowGap = GuiDesignSpace.pxY(UITheme.GAP_SM);
+        float popupWidth = Math.min(Math.max(GuiDesignSpace.pxX(168f), layoutWidth * 0.45f), GuiDesignSpace.pxX(252f));
+        float horizontalPadding = GuiDesignSpace.pxX(7f);
+        float verticalPadding = GuiDesignSpace.pxY(7f);
+        float rowGap = GuiDesignSpace.pxY(3f);
         float bodyWidth = Math.max(0f, popupWidth - 2f * horizontalPadding);
         float titleHeight = titleLabel.intrinsicHeightForColumn(measure, bodyWidth);
         float descriptionHeight = descriptionLabel.intrinsicHeightForColumn(measure, bodyWidth);
@@ -112,7 +111,7 @@ public class ProfileCreatePopupWidget extends FPopupWidget {
         float actionsHeight = cancelButton.intrinsicHeightForColumn(measure, bodyWidth);
 
         float computedDialogHeight = verticalPadding + titleHeight + rowGap + descriptionHeight + rowGap + inputHeight + (hasValidationMessage ? rowGap + validationHeight : 0f) + rowGap + toggleHeight + rowGap + actionsHeight + verticalPadding;
-        float popupHeight = Math.max(GuiDesignSpace.pxY(186f), computedDialogHeight);
+        float popupHeight = Math.max(GuiDesignSpace.pxY(130f), computedDialogHeight);
         setDialogBounds(layoutX, layoutY, layoutWidth, layoutHeight, popupWidth, popupHeight);
 
         float cursorY = dialogY() + verticalPadding;
@@ -138,7 +137,7 @@ public class ProfileCreatePopupWidget extends FPopupWidget {
         copyDefaultToggleCheckbox.layout(measure, dialogX() + horizontalPadding, cursorY, bodyWidth, toggleHeight);
 
         float actionsY = dialogY() + dialogHeight() - verticalPadding - actionsHeight;
-        float actionGap = GuiDesignSpace.pxX(UITheme.GAP_SM);
+        float actionGap = GuiDesignSpace.pxX(3f);
         float actionWidth = Math.max(0f, (bodyWidth - actionGap) * 0.5f);
         cancelButton.layout(measure, dialogX() + horizontalPadding, actionsY, actionWidth, cancelButton.intrinsicHeightForColumn(measure, actionWidth));
         createButton.layout(measure, dialogX() + horizontalPadding + actionWidth + actionGap, actionsY, actionWidth, createButton.intrinsicHeightForColumn(measure, actionWidth));

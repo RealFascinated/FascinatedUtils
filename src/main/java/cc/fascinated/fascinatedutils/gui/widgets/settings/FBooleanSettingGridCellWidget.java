@@ -12,43 +12,32 @@ import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.widgets.FAnimatable;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
-import cc.fascinated.fascinatedutils.systems.config.ModConfig;
-import cc.fascinated.fascinatedutils.systems.modules.Module;
 import net.minecraft.util.Mth;
 
-public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
+/**
+ * Compact boolean row used inside a two-column settings grid.
+ *
+ * <p>The toggle sits on the leading edge with the label immediately to its right, matching common mod-settings column
+ * layouts. A trailing reset control keeps parity with full-width boolean rows.
+ */
+public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatable {
 
-    // Design px; same fillet scale for track and thumb so outer and inner rounding match (not a pill track + tiny thumb).
     private static final float TOGGLE_CORNER_FILLET_DESIGN = 2.5f;
     private final Runnable onPersist;
     private final BooleanSetting booleanSetting;
     private final float outerWidth;
     private final float outerHeight;
-    private final float valueColumnStartX;
     private final AnimHandle toggleProgressAnim = new AnimHandle(0f).speed(26f);
     private boolean hoveredToggle;
     private boolean hoveredReset;
 
-    public FBooleanSettingRowWidget(Module module, BooleanSetting booleanSetting, float outerWidth, float outerHeight, float valueColumnStartX) {
-        this(booleanSetting, outerWidth, outerHeight, () -> ModConfig.saveActiveModule(module), valueColumnStartX);
-    }
-
-    public FBooleanSettingRowWidget(BooleanSetting booleanSetting, float outerWidth, float outerHeight, Runnable onPersist, float valueColumnStartX) {
+    public FBooleanSettingGridCellWidget(BooleanSetting booleanSetting, float outerWidth, float outerHeight, Runnable onPersist) {
         this.booleanSetting = booleanSetting;
         this.onPersist = onPersist;
         this.outerWidth = outerWidth;
         this.outerHeight = outerHeight;
-        this.valueColumnStartX = Math.max(0f, valueColumnStartX);
         float initial = booleanSetting.getValue() ? 1f : 0f;
         this.toggleProgressAnim.snap(initial);
-    }
-
-    public FBooleanSettingRowWidget(Module module, BooleanSetting booleanSetting, float outerWidth, float outerHeight) {
-        this(module, booleanSetting, outerWidth, outerHeight, 0f);
-    }
-
-    public FBooleanSettingRowWidget(BooleanSetting booleanSetting, float outerWidth, float outerHeight, Runnable onPersist) {
-        this(booleanSetting, outerWidth, outerHeight, onPersist, 0f);
     }
 
     private static boolean rectContains(float[] rect, float pointerX, float pointerY) {
@@ -151,16 +140,16 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
         boolean locked = booleanSetting.isLocked();
         float innerHeight = Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
         float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
-        float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
-        float bodyLeft = x() + padX;
-        String label = booleanSetting.getTranslatedDisplayName();
         float[] toggle = toggleBounds();
-        float toggleW = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_W);
-        float toggleH = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H);
+        float toggleW = toggle[2];
+        float toggleH = toggle[3];
         float titleRowHeight = Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), toggleH);
         float titleOriginY = titleRowTop(innerHeight, padY, titleRowHeight);
-        float labelX = bodyLeft;
-        float labelMaxWidth = Math.max(0f, toggle[0] - GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP) - labelX);
+        float labelGap = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP);
+        float labelX = toggle[0] + toggleW + labelGap;
+        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + w());
+        float labelMaxWidth = Math.max(0f, resetLeft - labelGap - labelX);
+        String label = booleanSetting.getTranslatedDisplayName();
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         float labelY = titleOriginY + Math.max(0f, (toggleH - graphics.getFontHeight()) * 0.5f);
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
@@ -196,15 +185,12 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
     private float[] toggleBounds() {
         float innerHeight = Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
         float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
-        float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
+        float padX = GuiDesignSpace.pxX(0f);
         float toggleW = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_W);
         float toggleH = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H);
         float titleRowHeight = Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), toggleH);
         float titleOriginY = titleRowTop(innerHeight, padY, titleRowHeight);
-        float bodyLeft = x() + padX;
-        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + w());
-        float maxToggleLeft = Math.max(bodyLeft, resetLeft - GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP) - toggleW);
-        float toggleLeft = Mth.clamp(bodyLeft + valueColumnStartX, bodyLeft, maxToggleLeft);
+        float toggleLeft = x() + padX;
         return new float[]{toggleLeft, titleOriginY, toggleW, toggleH};
     }
 

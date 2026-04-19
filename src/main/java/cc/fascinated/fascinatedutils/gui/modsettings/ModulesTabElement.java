@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class ModulesTabElement extends FWidget {
-    private static final float PROFILES_PANEL_WIDTH_DESIGN = 168f;
+    private static final float PROFILES_PANEL_WIDTH_DESIGN = 118f;
     private static final float SPLIT_DIVIDER_WIDTH_DESIGN = 1f;
 
     private final Runnable onProfilesChanged;
@@ -113,7 +113,7 @@ public class ModulesTabElement extends FWidget {
         Callback<Module> openModuleSettings = this::openModuleDetail;
 
         float splitDividerWidth = Math.max(1f, (float) Math.floor(GuiDesignSpace.pxX(SPLIT_DIVIDER_WIDTH_DESIGN)));
-        float profilesPanelWidth = Math.max(GuiDesignSpace.pxX(160f), Math.min(GuiDesignSpace.pxX(PROFILES_PANEL_WIDTH_DESIGN), width * 0.4f));
+        float profilesPanelWidth = Math.max(GuiDesignSpace.pxX(112f), Math.min(GuiDesignSpace.pxX(PROFILES_PANEL_WIDTH_DESIGN), width * 0.4f));
         float modulesPanelWidth = Math.max(0f, width - profilesPanelWidth - splitDividerWidth);
 
         FSplitRowWithDividerWidget splitLayout = new FSplitRowWithDividerWidget(profilesPanelWidth, splitDividerWidth);
@@ -317,6 +317,15 @@ public class ModulesTabElement extends FWidget {
         moduleSettingsScrollRef.setValue(0f);
         settingsScrollAnchorModule = module;
         needsRebuild = true;
+    }
+
+    /**
+     * Opens the modules tab detail view for the given module (used when entering settings from elsewhere, e.g. HUD editor).
+     *
+     * @param module module whose settings page should be shown
+     */
+    public void navigateToModuleSettingsPage(Module module) {
+        openModuleDetail(module);
     }
 
     private void closeModuleDetail() {

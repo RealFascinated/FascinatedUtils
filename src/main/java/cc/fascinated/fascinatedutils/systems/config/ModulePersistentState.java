@@ -41,7 +41,6 @@ public record ModulePersistentState(JsonObject settings, Boolean enabled, JsonOb
             hud.addProperty("anchor_offset_y", hudModule.getHudState().getAnchorOffsetY());
             hud.addProperty("last_layout_width", hudModule.getHudState().getLastLayoutWidth());
             hud.addProperty("last_layout_height", hudModule.getHudState().getLastLayoutHeight());
-            hud.addProperty("proportional_offsets", hudModule.getHudState().isProportionalOffsets());
         }
         return new ModulePersistentState(map, module.isEnabled(), hud);
     }
@@ -80,16 +79,18 @@ public record ModulePersistentState(JsonObject settings, Boolean enabled, JsonOb
                 hudModule.getHudState().setAnchorOffsetY(hud.get("anchor_offset_y").getAsFloat());
             }
             if (hud.has("last_layout_width")) {
-                hudModule.getHudState().setLastLayoutWidth(hud.get("last_layout_width").getAsFloat());
+                float layoutWidth = hud.get("last_layout_width").getAsFloat();
+                hudModule.getHudState().setLastLayoutWidth(layoutWidth);
+                if (layoutWidth > 0f && Float.isFinite(layoutWidth)) {
+                    hudModule.getHudState().setCommittedLayoutWidth(layoutWidth);
+                }
             }
             if (hud.has("last_layout_height")) {
-                hudModule.getHudState().setLastLayoutHeight(hud.get("last_layout_height").getAsFloat());
-            }
-            if (hud.has("proportional_offsets")) {
-                hudModule.getHudState().setProportionalOffsets(hud.get("proportional_offsets").getAsBoolean());
-            }
-            else {
-                hudModule.getHudState().setNeedsProportionalMigration(true);
+                float layoutHeight = hud.get("last_layout_height").getAsFloat();
+                hudModule.getHudState().setLastLayoutHeight(layoutHeight);
+                if (layoutHeight > 0f && Float.isFinite(layoutHeight)) {
+                    hudModule.getHudState().setCommittedLayoutHeight(layoutHeight);
+                }
             }
         }
         for (Setting<?> setting : module.getAllSettings()) {

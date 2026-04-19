@@ -11,28 +11,40 @@ import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
+import cc.fascinated.fascinatedutils.gui.theme.UITheme;
+import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.WTooltip;
+import net.minecraft.client.resources.language.I18n;
 
 import java.util.function.Consumer;
 
-public class FColorSettingRowWidget extends FWidget {
+/**
+ * Widgets-tab row: color swatch bound to a staging {@link ColorSetting}, plus a trailing chip that applies the staged
+ * color to a target registry setting.
+ */
+public class FGlobalHudColorApplyRowWidget extends FWidget {
+
     private static final float SWATCH_SIZE_DESIGN = 10f;
     private static final float SWATCH_CORNER_RADIUS_DESIGN = 2f;
-    private final ColorSetting colorSetting;
+    private static final float APPLY_CHIP_WIDTH_DESIGN = 112f;
+    private static final float APPLY_HORIZONTAL_PAD_DESIGN = 10f;
+    private static final float APPLY_LABEL_GAP_DESIGN = 8f;
+    private final ColorSetting stagingColor;
     private final float outerWidth;
     private final float outerHeight;
-    private final Runnable onPersist;
     private final float valueColumnStartX;
+    private final Runnable onApplyAll;
     private final Consumer<ColorSetting> openColorPicker;
     private boolean hoveredSwatch;
-    private boolean hoveredReset;
+    private boolean hoveredApply;
 
-    public FColorSettingRowWidget(ColorSetting colorSetting, float outerWidth, float outerHeight, Runnable onPersist, float valueColumnStartX, Consumer<ColorSetting> openColorPicker) {
-        this.colorSetting = colorSetting;
+    public FGlobalHudColorApplyRowWidget(ColorSetting stagingColor, float outerWidth, float outerHeight, float valueColumnStartX, Runnable onApplyAll, Consumer<ColorSetting> openColorPicker) {
+        this.stagingColor = stagingColor;
         this.outerWidth = outerWidth;
         this.outerHeight = outerHeight;
-        this.onPersist = onPersist;
         this.valueColumnStartX = Math.max(0f, valueColumnStartX);
+        this.onApplyAll = onApplyAll;
         this.openColorPicker = openColorPicker;
     }
 
@@ -63,7 +75,7 @@ public class FColorSettingRowWidget extends FWidget {
     @Override
     public boolean mouseLeave(float pointerX, float pointerY) {
         hoveredSwatch = false;
-        hoveredReset = false;
+        hoveredApply = false;
         return false;
     }
 
@@ -71,8 +83,7 @@ public class FColorSettingRowWidget extends FWidget {
     public boolean mouseMove(float pointerX, float pointerY) {
         float[] swatch = swatchBounds();
         hoveredSwatch = rectContains(swatch, pointerX, pointerY);
-        float[] resetSquare = inlineResetSquare();
-        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, colorSetting.isAtDefault());
+        hoveredApply = rectContains(applyChipBounds(), pointerX, pointerY);
         return false;
     }
 
@@ -81,11 +92,10 @@ public class FColorSettingRowWidget extends FWidget {
         if (button != 0) {
             return false;
         }
-        if (colorSetting.isLocked()) {
-            return hoveredSwatch || hoveredReset;
+        if (stagingColor.isLocked()) {
+            return hoveredSwatch || hoveredApply;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, colorSetting.isAtDefault())) {
+        if (rectContains(applyChipBounds(), pointerX, pointerY)) {
             return true;
         }
         return rectContains(swatchBounds(), pointerX, pointerY);
@@ -96,17 +106,15 @@ public class FColorSettingRowWidget extends FWidget {
         if (button != 0) {
             return false;
         }
-        if (colorSetting.isLocked()) {
-            return hoveredSwatch || hoveredReset;
+        if (stagingColor.isLocked()) {
+            return hoveredSwatch || hoveredApply;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, colorSetting.isAtDefault())) {
-            colorSetting.resetToDefault();
-            onPersist.run();
+        if (rectContains(applyChipBounds(), pointerX, pointerY)) {
+            onApplyAll.run();
             return true;
         }
         if (rectContains(swatchBounds(), pointerX, pointerY)) {
-            openColorPicker();
+            openColorPicker.accept(stagingColor);
             return true;
         }
         return false;
@@ -114,14 +122,20 @@ public class FColorSettingRowWidget extends FWidget {
 
     @Override
     public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        if (hoveredSwatch || hoveredReset) {
-            WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, colorSetting, hoveredReset);
+        if (hoveredSwatch) {
+            WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, stagingColor);
+        }
+        else if (hoveredApply) {
+            String tooltip = I18n.get("fascinatedutils.setting.shell.global_hud_apply_all.description");
+            if (tooltip != null && !tooltip.isBlank()) {
+                WTooltip.draw(graphics, mouseX, mouseY, tooltip);
+            }
         }
     }
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        boolean locked = colorSetting.isLocked();
+        boolean locked = stagingColor.isLocked();
         float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
         float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
         float bodyLeft = x() + padX;
@@ -131,7 +145,7 @@ public class FColorSettingRowWidget extends FWidget {
         float titleRowHeight = Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), swatchSize);
         float titleOriginY = y() + padY + (innerHeight - titleRowHeight) * 0.5f;
 
-        String label = colorSetting.getTranslatedDisplayName();
+        String label = stagingColor.getTranslatedDisplayName();
         float[] swatch = swatchBounds();
         float labelMaxWidth = Math.max(0f, swatch[0] - GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP) - bodyLeft);
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
@@ -139,7 +153,7 @@ public class FColorSettingRowWidget extends FWidget {
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
         graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, labelY, false);
 
-        SettingColor color = colorSetting.getValue();
+        SettingColor color = stagingColor.getValue();
         int swatchArgb = color.isRainbow() ? RainbowColors.currentColor().getPackedArgb() | 0xFF000000 : color.getPackedArgb();
 
         float cornerRadius = GuiDesignSpace.pxUniform(SWATCH_CORNER_RADIUS_DESIGN);
@@ -153,12 +167,25 @@ public class FColorSettingRowWidget extends FWidget {
             graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(rainbowTextColor) + ">Rainbow</color>", rainbowLabelX, labelY, false);
         }
 
-        float[] resetSquare = inlineResetSquare();
-        SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], swatchSize, hoveredReset && !locked, colorSetting.isAtDefault());
+        float[] apply = applyChipBounds();
+        int fillColor = FascinatedGuiTheme.INSTANCE.surface();
+        int outlineColor = hoveredApply ? FascinatedGuiTheme.INSTANCE.borderHover() : FascinatedGuiTheme.INSTANCE.border();
+        float chipBorderX = GuiDesignSpace.pxX(UITheme.BORDER_THICKNESS_PX);
+        float chipBorderY = GuiDesignSpace.pxY(UITheme.BORDER_THICKNESS_PX);
+        float chipCorner = resolveApplyChipCornerRadius(graphics, apply[2], apply[3]);
+        graphics.fillRoundedRectFrame(apply[0], apply[1], apply[2], apply[3], chipCorner, outlineColor, fillColor, chipBorderX, chipBorderY, RectCornerRoundMask.ALL);
+        String applyLabel = I18n.get("fascinatedutils.setting.shell.global_hud_apply_all");
+        float wrapBudget = Math.max(1f, apply[2] - 2f * GuiDesignSpace.pxX(APPLY_HORIZONTAL_PAD_DESIGN));
+        applyLabel = TextLineLayout.ellipsize(applyLabel, wrapBudget, segment -> graphics.measureTextWidth(segment, false));
+        float textX = apply[0] + (apply[2] - graphics.measureTextWidth(applyLabel, false)) * 0.5f;
+        float textY = apply[1] + (apply[3] - graphics.getFontHeight()) * 0.5f;
+        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(graphics.theme().textPrimary()) + ">" + applyLabel + "</color>", textX, textY, false);
     }
 
-    private void openColorPicker() {
-        openColorPicker.accept(colorSetting);
+    private float resolveApplyChipCornerRadius(GuiRenderer graphics, float chipWidth, float chipHeight) {
+        float maxRadius = Math.min(chipWidth, chipHeight) * 0.5f - 0.01f;
+        float themed = GuiDesignSpace.pxUniform(graphics.theme().cardCornerRadius());
+        return Math.max(0.5f, Math.min(themed, maxRadius));
     }
 
     private float[] swatchBounds() {
@@ -169,17 +196,28 @@ public class FColorSettingRowWidget extends FWidget {
         float titleRowHeight = Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), swatchSize);
         float titleOriginY = y() + padY + (innerHeight - titleRowHeight) * 0.5f;
         float bodyLeft = x() + padX;
-        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + w());
-        float maxSwatchLeft = Math.max(bodyLeft, resetLeft - GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP) - swatchSize);
+        float applyLeft = applyChipLeftX();
+        float maxSwatchLeft = Math.max(bodyLeft, applyLeft - GuiDesignSpace.pxX(APPLY_LABEL_GAP_DESIGN) - swatchSize);
         float swatchLeft = Math.min(bodyLeft + valueColumnStartX, maxSwatchLeft);
         return new float[]{swatchLeft, titleOriginY, swatchSize, swatchSize};
     }
 
-    private float[] inlineResetSquare() {
-        float[] swatch = swatchBounds();
-        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + w());
-        float resetTop = SettingRowResetLayout.verticallyCenteredTop(swatch[1], swatch[3]);
-        float box = SettingRowResetLayout.glyphBoxPx();
-        return new float[]{resetLeft, resetTop, box};
+    private float applyChipLeftX() {
+        float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
+        float chipWidth = GuiDesignSpace.pxX(APPLY_CHIP_WIDTH_DESIGN);
+        return x() + w() - padX - chipWidth;
+    }
+
+    private float[] applyChipBounds() {
+        float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
+        float innerHeight = Math.max(0f, h() - 2f * padY);
+        float chipWidth = GuiDesignSpace.pxX(APPLY_CHIP_WIDTH_DESIGN);
+        float swatchSize = GuiDesignSpace.pxUniform(SWATCH_SIZE_DESIGN);
+        float chipHeight = Math.max(swatchSize, GuiDesignSpace.pxY(SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN));
+        chipHeight = Math.min(chipHeight, innerHeight);
+        float chipLeft = applyChipLeftX();
+        float bodyTop = y() + padY;
+        float chipTop = bodyTop + Math.max(0f, (innerHeight - chipHeight) * 0.5f);
+        return new float[]{chipLeft, chipTop, chipWidth, chipHeight};
     }
 }

@@ -5,9 +5,14 @@ import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import cc.fascinated.fascinatedutils.turboentities.EntitiesCullTask;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.warden.AngerLevel;
+import net.minecraft.world.entity.monster.warden.Warden;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -45,10 +50,30 @@ public class ClientLevelTickMixin {
         // Entity is culled — run a minimal tick to keep interpolation and hurt flash correct
         entity.setOldPosAndRot();
         ++entity.tickCount;
-        if (entity instanceof LivingEntity living && living.hurtTime > 0) {
-            living.hurtTime--;
+        if (entity instanceof LivingEntity living) {
+            living.aiStep();
+            if (living.hurtTime > 0)
+                living.hurtTime--;
+        }
+        // the warden sounds are generated clientside instead of serverside, so simulate
+        // that part of the code here.
+        if (entity instanceof Warden warden) {
+            if (minecraft.level.isClientSide() && !warden.isSilent() && warden.tickCount % getWardenHeartBeatDelay(warden) == 0) {
+                minecraft.level.playLocalSound(warden.getX(), warden.getY(), warden.getZ(), SoundEvents.WARDEN_HEARTBEAT, warden.getSoundSource(),
+                        5.0F, warden.getVoicePitch(), false);
+            }
         }
         Client.TURBO_ENTITIES.incrementSkippedEntityTicks();
         info.cancel();
+    }
+
+    /**
+     * Copy of that method, since it's private. No need to use an access widener for
+     * this
+     */
+    @Unique
+    private int getWardenHeartBeatDelay(Warden warden) {
+        float f = (float) warden.getClientAngerLevel() / AngerLevel.ANGRY.getMinimumAnger();
+        return 40 - Mth.floor(Mth.clamp(f, 0.0F, 1.0F) * 30.0F);
     }
 }

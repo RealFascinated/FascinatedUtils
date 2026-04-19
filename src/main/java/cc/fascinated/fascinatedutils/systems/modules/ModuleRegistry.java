@@ -46,7 +46,7 @@ public class ModuleRegistry {
         modules.add(new HurtcamModule());
         modules.add(new BossbarModule());
         modules.add(new HypixelModule());
-        modules.add(new WorldModule());
+        modules.add(new FogCustomizerModule());
         modules.add(new FpsWidget());
         modules.add(new DebugWidget());
         modules.add(new CpsWidget());

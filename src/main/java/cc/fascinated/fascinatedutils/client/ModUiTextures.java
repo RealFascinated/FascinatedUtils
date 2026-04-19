@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 public enum ModUiTextures {
-    CLOSE("textures/ui/mod_settings/close.png", 64, 64), BACK("textures/ui/mod_settings/back.png", 64, 64), RESET("textures/ui/mod_settings/reset.png", 64, 64), TRASH("textures/ui/mod_settings/trash.png", 64, 64), CHECK("textures/ui/mod_settings/check.png", 64, 64);
+    CLOSE("textures/ui/mod_settings/close.png", 64, 64), BACK("textures/ui/mod_settings/back.png", 64, 64), RESET("textures/ui/mod_settings/reset.png", 64, 64), TRASH("textures/ui/mod_settings/trash.png", 64, 64), CHECK("textures/ui/mod_settings/check.png", 64, 64), SETTINGS("textures/ui/mod_settings/settings.png", 64, 64);
 
     private static final Identifier ATLAS_TEXTURE_ID = Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, "ui/mod_settings/chrome-atlas");
     private static final ConcurrentHashMap<Identifier, AtlasRegion> ICON_REGIONS = new ConcurrentHashMap<>();

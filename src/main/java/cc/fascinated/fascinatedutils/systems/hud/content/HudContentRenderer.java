@@ -59,9 +59,7 @@ public class HudContentRenderer {
             module.drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
 
             float innerHeight = layoutHeight - 2f * verticalPadding;
-            HudAnchorContentAlignment.Horizontal horizontal = module.hudContentHorizontalAlignment();
-            HudAnchorContentAlignment.Vertical vertical = module.hudContentVerticalAlignment();
-            float cursorY = verticalPadding + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, innerTextHeight, vertical);
+            float cursorY = verticalPadding + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, innerTextHeight, HudAnchorContentAlignment.Vertical.CENTER);
             float innerBandWidth = layoutWidth - 2f * horizontalPadding;
 
             for (int lineIndex = 0; lineIndex < lines.size(); lineIndex++) {
@@ -70,7 +68,7 @@ public class HudContentRenderer {
                     lineText = "";
                 }
                 float lineWidth = lineWidths[lineIndex];
-                float drawX = horizontalPadding + HudAnchorLayout.horizontalOffsetInInnerBand(innerBandWidth, lineWidth, horizontal);
+                float drawX = horizontalPadding + HudAnchorLayout.horizontalOffsetInInnerBand(innerBandWidth, lineWidth, HudAnchorContentAlignment.Horizontal.CENTER);
                 glRenderer.drawMiniMessageText(lineText, drawX, cursorY, false);
                 cursorY += lineHeight;
                 if (lineIndex < lines.size() - 1) {
@@ -98,9 +96,9 @@ public class HudContentRenderer {
 
         for (int index = 0; index < rows.size(); index++) {
             HudContent.ItemRow row = rows.get(index);
-            float textWidthPx = glRenderer.measureMiniMessageTextWidth(row.text());
+            float textWidthPx = itemRowTextWidthPx(glRenderer, row.text());
             textWidths[index] = textWidthPx;
-            float gapBeforeIcon = textWidthPx > 0 ? iconTextGap : 0f;
+            float gapBeforeIcon = textWidthPx > 0f ? iconTextGap : 0f;
             maxStripWidth = Math.max(maxStripWidth, textWidthPx + gapBeforeIcon + itemIconSize);
         }
 
@@ -126,16 +124,20 @@ public class HudContentRenderer {
             for (int index = 0; index < rows.size(); index++) {
                 HudContent.ItemRow row = rows.get(index);
                 float textWidthPx = textWidths[index];
-                float gapBeforeIcon = textWidthPx > 0 ? iconTextGap : 0f;
+                float gapBeforeIcon = textWidthPx > 0f ? iconTextGap : 0f;
                 float stripWidth = textWidthPx + gapBeforeIcon + itemIconSize;
                 float stripLeft = horizontalPadding + (isOnRight ? innerRowBandWidth - stripWidth : HudAnchorLayout.horizontalOffsetInInnerBand(innerRowBandWidth, stripWidth, HudAnchorContentAlignment.Horizontal.LEFT));
 
                 float iconY = cursorY + (rowHeight - itemIconSize) * 0.5f;
                 float textY = cursorY + (rowHeight - lineHeight) * 0.5f;
+                String rowText = row.text();
+                boolean drawRowText = rowText != null && !rowText.isBlank();
 
                 if (isOnRight) {
                     float iconX = stripLeft + textWidthPx + gapBeforeIcon;
-                    glRenderer.drawMiniMessageText(row.text(), stripLeft, textY, false);
+                    if (drawRowText) {
+                        glRenderer.drawMiniMessageText(rowText, stripLeft, textY, false);
+                    }
                     if (minecraftClient.player != null) {
                         glRenderer.drawGuiItem(minecraftClient.player, row.stack(), iconX, iconY);
                     }
@@ -152,7 +154,9 @@ public class HudContentRenderer {
                     else {
                         glRenderer.drawGuiItem(row.stack(), iconX, iconY);
                     }
-                    glRenderer.drawMiniMessageText(row.text(), textX, textY, false);
+                    if (drawRowText) {
+                        glRenderer.drawMiniMessageText(rowText, textX, textY, false);
+                    }
                 }
 
                 cursorY += rowHeight;
@@ -161,5 +165,13 @@ public class HudContentRenderer {
                 }
             }
         };
+    }
+
+    private static float itemRowTextWidthPx(GuiRenderer glRenderer, String miniMessageText) {
+        // Blank side text must not reserve the icon gap (measurement clamps empty components to 1px).
+        if (miniMessageText == null || miniMessageText.isBlank()) {
+            return 0f;
+        }
+        return glRenderer.measureMiniMessageTextWidth(miniMessageText);
     }
 }

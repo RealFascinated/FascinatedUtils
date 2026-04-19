@@ -1,9 +1,11 @@
 package cc.fascinated.fascinatedutils.gui.hudeditor;
 
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
+import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 
 import java.util.ArrayList;
@@ -18,8 +20,10 @@ public class HudEditorChrome {
      * Half-width of the band around 1.0 where scale snaps to exactly default.
      */
     public static final float SCALE_SNAP_TO_UNITY_BAND = 0.07f;
-    private static final float CLOSE_BUTTON_SIZE = 10f;
-    private static final float CLOSE_BUTTON_PAD = 2f;
+    public static final float CLOSE_BUTTON_SIZE = 10f;
+    public static final float CLOSE_BUTTON_PAD = 2f;
+    public static final float SETTINGS_BUTTON_SIZE = 10f;
+    public static final float SETTINGS_BUTTON_GAP = 2f;
     private static final int SELECTED_COLOR = UiColor.argb("#913de2");
     private static final int SCALE_HANDLE_FILL = UiColor.argb("#ede4fa");
 
@@ -47,10 +51,7 @@ public class HudEditorChrome {
      * @return clamped extent in logical pixels
      */
     public static float clampCanvasExtent(float extent) {
-        if (!Float.isFinite(extent) || extent <= 0f) {
-            return 1f;
-        }
-        return Math.min(extent, 8192f);
+        return HudLayoutCanvas.clampExtent(extent);
     }
 
     /**
@@ -74,6 +75,25 @@ public class HudEditorChrome {
      * @param pointerY pointer Y in logical space
      * @return true when the point is inside the handle rectangle
      */
+    public static boolean settingsButtonContainsPoint(HudModule widget, float pointerX, float pointerY) {
+        float widgetX = widget.getHudState().getPositionX();
+        float widgetY = widget.getHudState().getPositionY();
+        float scaledWidth = widget.getScaledWidth();
+        float closeLeft = widgetX + scaledWidth - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_PAD;
+        float buttonX = closeLeft - SETTINGS_BUTTON_GAP - SETTINGS_BUTTON_SIZE;
+        float buttonY = widgetY + CLOSE_BUTTON_PAD;
+        return pointerX >= buttonX && pointerX <= buttonX + SETTINGS_BUTTON_SIZE && pointerY >= buttonY && pointerY <= buttonY + SETTINGS_BUTTON_SIZE;
+    }
+
+    public static boolean closeButtonContainsPoint(HudModule widget, float pointerX, float pointerY) {
+        float widgetX = widget.getHudState().getPositionX();
+        float widgetY = widget.getHudState().getPositionY();
+        float scaledWidth = widget.getScaledWidth();
+        float buttonX = widgetX + scaledWidth - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_PAD;
+        float buttonY = widgetY + CLOSE_BUTTON_PAD;
+        return pointerX >= buttonX && pointerX <= buttonX + CLOSE_BUTTON_SIZE && pointerY >= buttonY && pointerY <= buttonY + CLOSE_BUTTON_SIZE;
+    }
+
     public static boolean scaleHandleContainsPoint(HudModule widget, float pointerX, float pointerY) {
         float widgetX = widget.getHudState().getPositionX();
         float widgetY = widget.getHudState().getPositionY();
@@ -109,6 +129,7 @@ public class HudEditorChrome {
             glRenderer.popTranslate();
         }
 
+        drawSettingsButton(glRenderer, widget.getHudState().getPositionX(), widget.getHudState().getPositionY(), widget.getScaledWidth());
         drawCloseButton(glRenderer, widget.getHudState().getPositionX(), widget.getHudState().getPositionY(), widget.getScaledWidth());
 
         if (widget == selectedWidget) {
@@ -153,6 +174,14 @@ public class HudEditorChrome {
         float handleTop = (float) Math.floor(widgetY + scaledHeight - snappedSize);
         glRenderer.drawRect(handleLeft, handleTop, snappedSize, snappedSize, SCALE_HANDLE_FILL);
         drawAxisAlignedBorder1px(glRenderer, handleLeft, handleTop, snappedSize, snappedSize, SELECTED_COLOR);
+    }
+
+    private static void drawSettingsButton(GuiRenderer glRenderer, float widgetX, float widgetY, float scaledWidth) {
+        float buttonX = widgetX + scaledWidth - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_PAD - SETTINGS_BUTTON_GAP - SETTINGS_BUTTON_SIZE;
+        float buttonY = widgetY + CLOSE_BUTTON_PAD;
+        glRenderer.drawRect(buttonX, buttonY, SETTINGS_BUTTON_SIZE, SETTINGS_BUTTON_SIZE, UiColor.argb("#44000000"));
+        float inset = 1f;
+        glRenderer.drawTexture(ModUiTextures.SETTINGS.getId(), buttonX + inset, buttonY + inset, SETTINGS_BUTTON_SIZE - inset * 2f, SETTINGS_BUTTON_SIZE - inset * 2f, 0xFFFFFFFF);
     }
 
     private static void drawCloseButton(GuiRenderer glRenderer, float widgetX, float widgetY, float scaledWidth) {

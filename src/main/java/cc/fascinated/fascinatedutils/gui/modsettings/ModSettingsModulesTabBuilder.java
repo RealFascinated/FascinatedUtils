@@ -7,7 +7,6 @@ import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
-import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FModuleVisibilityCardWidget;
@@ -23,8 +22,9 @@ import java.util.Locale;
 
 public class ModSettingsModulesTabBuilder {
 
-    private static final float GRID_MIN_CELL_WIDTH_DESIGN = 128f;
-    private static final float GRID_MARGIN_X_DESIGN = 12f;
+    private static final float GRID_MIN_CELL_WIDTH_DESIGN = 90f;
+    private static final float GRID_MARGIN_X_DESIGN = 8f;
+    private static final int MODULE_CARD_GRID_MAX_COLUMNS = 3;
     private static final int MODULES_SEARCH_FOCUS_ID = 5001;
 
     public static FWidget buildModulesTab(float paneWidth, float paneHeight, List<Module> modules, Ref<Float> modulesGridScrollYRef, Module settingsModule, Runnable onBackFromModuleSettings, Callback<Module> onOpenModuleSettings, Ref<Float> moduleSettingsScrollYRef, Ref<String> moduleSearchRef, Ref<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged) {
@@ -37,17 +37,17 @@ public class ModSettingsModulesTabBuilder {
     private static FWidget buildModuleCardGrid(float paneWidth, float paneHeight, List<Module> modules, Ref<Float> modulesGridScrollYRef, Callback<Module> onOpenModuleSettings, Ref<String> moduleSearchRef, Ref<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged) {
         float gridMarginX = GuiDesignSpace.pxX(GRID_MARGIN_X_DESIGN);
         float paddedInnerWidth = Math.max(0f, paneWidth - 2f * gridMarginX);
-        float settingsContentWidth = Math.max(GuiDesignSpace.pxX(40f), paddedInnerWidth);
+        float settingsContentWidth = Math.max(GuiDesignSpace.pxX(28f), paddedInnerWidth);
         float settingsInnerWidth = settingsContentWidth;
-        float gapY = GuiDesignSpace.pxY(UITheme.GAP_MD);
-        float gapX = GuiDesignSpace.pxX(UITheme.GAP_SM);
+        float gapY = GuiDesignSpace.pxY(6f);
+        float gapX = GuiDesignSpace.pxX(3f);
         float minCellWidth = GuiDesignSpace.pxX(GRID_MIN_CELL_WIDTH_DESIGN);
         float controlsHeight = GuiDesignSpace.pxY(SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN);
         int columnCount = computeCardGridColumnCount(settingsContentWidth, gapX, minCellWidth);
         float cellWidth = (settingsContentWidth - gapX * Math.max(0, columnCount - 1)) / Math.max(1, columnCount);
         float cellHeight = FModuleVisibilityCardWidget.stackedCellOuterHeightPx();
 
-        FOutlinedTextInputWidget searchInput = new FOutlinedTextInputWidget(MODULES_SEARCH_FOCUS_ID, 256, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN, () -> "Search modules...");
+        FOutlinedTextInputWidget searchInput = new FOutlinedTextInputWidget(MODULES_SEARCH_FOCUS_ID, 180, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN, () -> "Search modules...");
         String currentSearch = moduleSearchRef.getValue();
         searchInput.setValue(currentSearch == null ? "" : currentSearch);
         searchInput.setOnChange(text -> {
@@ -56,13 +56,13 @@ public class ModSettingsModulesTabBuilder {
         });
         searchInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
-        FRowWidget controlsRow = new FRowWidget(GuiDesignSpace.pxX(UITheme.GAP_SM), Align.CENTER) {
+        FRowWidget controlsRow = new FRowWidget(GuiDesignSpace.pxX(3f), Align.CENTER) {
             @Override
             public boolean fillsHorizontalInRow() {
                 return true;
             }
         };
-        FRowWidget categoryButtonsRow = new FRowWidget(GuiDesignSpace.pxX(UITheme.GAP_XS), Align.CENTER) {
+        FRowWidget categoryButtonsRow = new FRowWidget(GuiDesignSpace.pxX(2f), Align.CENTER) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
@@ -72,7 +72,7 @@ public class ModSettingsModulesTabBuilder {
         FButtonWidget allCategoriesButton = new FButtonWidget(() -> {
             moduleCategoryFilterRef.setValue(null);
             onFiltersChanged.run();
-        }, () -> "All", GuiDesignSpace.pxX(88f), 1, 2f, 8f, 1.12f, 10f, 3f) {
+        }, () -> "All", GuiDesignSpace.pxX(62f), 1, 1f, 6f, 1.12f, 7f, 2f) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
@@ -102,7 +102,7 @@ public class ModSettingsModulesTabBuilder {
             FButtonWidget categoryButton = new FButtonWidget(() -> {
                 moduleCategoryFilterRef.setValue(moduleCategory);
                 onFiltersChanged.run();
-            }, moduleCategory::getDisplayName, GuiDesignSpace.pxX(88f), 1, 2f, 8f, 1.12f, 10f, 3f) {
+            }, moduleCategory::getDisplayName, GuiDesignSpace.pxX(62f), 1, 1f, 6f, 1.12f, 7f, 2f) {
                 @Override
                 public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                     return controlsHeight;
@@ -135,11 +135,11 @@ public class ModSettingsModulesTabBuilder {
         rightPushSpacer.setCellConstraints(new FCellConstraints().setExpandHorizontal(true));
         controlsRow.addChild(rightPushSpacer);
 
-        FMinWidthHostWidget searchHost = new FMinWidthHostWidget(GuiDesignSpace.pxX(300f), searchInput);
+        FMinWidthHostWidget searchHost = new FMinWidthHostWidget(GuiDesignSpace.pxX(210f), searchInput);
         controlsRow.addChild(searchHost);
 
         float horizontalInset = GuiDesignSpace.pxX(SettingsUiMetrics.SETTINGS_DETAIL_CONTENT_INSET_X_DESIGN);
-        float controlsInnerWidth = Math.max(GuiDesignSpace.pxX(20f), settingsInnerWidth - 2f * horizontalInset);
+        float controlsInnerWidth = Math.max(GuiDesignSpace.pxX(14f), settingsInnerWidth - 2f * horizontalInset);
         FRowWidget paddedControlsRow = new FRowWidget(0f, Align.START) {
             @Override
             public boolean fillsHorizontalInRow() {
@@ -160,13 +160,13 @@ public class ModSettingsModulesTabBuilder {
         FColumnWidget scrollBody = new FColumnWidget(gapY, Align.CENTER);
 
         if (filteredModules.isEmpty()) {
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(UITheme.PADDING_XS)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(2f)));
             FLabelWidget empty = new FLabelWidget();
             empty.setText(Component.translatable("fascinatedutils.setting.shell.empty_modules").getString());
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.CENTER);
             scrollBody.addChild(empty);
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(UITheme.PADDING_SM)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(4f)));
             return buildModulesPaneLayout(controlsRowHost, createModulesGridScrollClip(scrollBody, gapY, modulesGridScrollYRef));
         }
         List<Module> sortedModules = new ArrayList<>(filteredModules);
@@ -186,7 +186,7 @@ public class ModSettingsModulesTabBuilder {
             }
             scrollBody.addChild(row);
         }
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(UITheme.PADDING_SM)));
+        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(4f)));
         return buildModulesPaneLayout(controlsRowHost, createModulesGridScrollClip(scrollBody, gapY, modulesGridScrollYRef));
     }
 
@@ -210,9 +210,9 @@ public class ModSettingsModulesTabBuilder {
             @Override
             public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
                 setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-                float topInset = GuiDesignSpace.pxY(UITheme.PADDING_SM);
-                float bottomInset = GuiDesignSpace.pxY(UITheme.PADDING_SM);
-                float sectionGap = GuiDesignSpace.pxY(UITheme.PADDING_SM);
+                float topInset = GuiDesignSpace.pxY(4f);
+                float bottomInset = GuiDesignSpace.pxY(4f);
+                float sectionGap = GuiDesignSpace.pxY(4f);
                 float controlsHeight = controlsRowHost.intrinsicHeightForColumn(measure, layoutWidth);
                 float controlsY = layoutY + topInset;
                 controlsRowHost.layout(measure, layoutX, controlsY, layoutWidth, controlsHeight);
@@ -247,6 +247,6 @@ public class ModSettingsModulesTabBuilder {
                 break;
             }
         }
-        return chosenColumns;
+        return Math.min(MODULE_CARD_GRID_MAX_COLUMNS, chosenColumns);
     }
 }

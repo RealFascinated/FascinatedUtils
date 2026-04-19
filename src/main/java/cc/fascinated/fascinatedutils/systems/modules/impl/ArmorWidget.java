@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -18,12 +19,14 @@ public class ArmorWidget extends HudModule {
     private static final EquipmentSlot[] ARMOR_SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
     private static final String SLOTS_CATEGORY_DISPLAY_KEY = "Slots";
     private final BooleanSetting[] slotRowVisibility = {BooleanSetting.builder().id("show_head").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_chest").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_legs").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_feet").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_main_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_off_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build()};
+    private final BooleanSetting hideUnbreakableDurability = BooleanSetting.builder().id("hide_unbreakable_durability").defaultValue(false).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
     public ArmorWidget() {
         super("armor_hud", "Armor HUD", 0f);
         for (int slotIndex = 0; slotIndex < ROW_COUNT; slotIndex++) {
             addSetting(slotRowVisibility[slotIndex]);
         }
+        addSetting(hideUnbreakableDurability);
     }
 
     private static ItemStack previewStack(Item item, int damage) {
@@ -57,12 +60,11 @@ public class ArmorWidget extends HudModule {
         return ItemStack.EMPTY;
     }
 
-    private static boolean rowShowsDurabilityNumber(ItemStack stack) {
-        return !stack.isEmpty() && stack.isDamageableItem();
-    }
-
-    private static String durabilityOnlyText(ItemStack stack) {
-        if (stack.isEmpty() || !stack.isDamageableItem()) {
+    private String durabilityOnlyText(ItemStack stack) {
+        if (stack.isEmpty() || stack.getMaxDamage() <= 0) {
+            return "";
+        }
+        if (hideUnbreakableDurability.isEnabled() && stack.has(DataComponents.UNBREAKABLE)) {
             return "";
         }
         return "<white>" + (stack.getMaxDamage() - stack.getDamageValue()) + "</white>";

@@ -88,7 +88,7 @@ public class FEnumSettingRowWidget extends FWidget {
             return UiPointerCursor.DEFAULT;
         }
         float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.rectContains(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY)) {
+        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, enumSetting.isAtDefault())) {
             return UiPointerCursor.HAND;
         }
         float[] chip = valueChipBounds();
@@ -110,7 +110,7 @@ public class FEnumSettingRowWidget extends FWidget {
         float[] chip = valueChipBounds();
         hoveredChip = rectContains(chip, pointerX, pointerY);
         float[] resetSquare = inlineResetSquare();
-        hoveredReset = SettingRowResetLayout.rectContains(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY);
+        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, enumSetting.isAtDefault());
         return false;
     }
 
@@ -125,7 +125,7 @@ public class FEnumSettingRowWidget extends FWidget {
             return hoveredChip || hoveredReset;
         }
         float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.rectContains(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY)) {
+        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, enumSetting.isAtDefault())) {
             return true;
         }
         return containsChip;
@@ -142,7 +142,7 @@ public class FEnumSettingRowWidget extends FWidget {
             return hoveredChip || hoveredReset;
         }
         float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.rectContains(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY)) {
+        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, enumSetting.isAtDefault())) {
             enumSetting.resetToDefault();
             onPersist.run();
             return true;

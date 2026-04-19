@@ -16,8 +16,8 @@ import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 public class FKeybindSettingWidget extends FWidget {
-    private static final float KEY_CHIP_WIDTH_DESIGN = 120f;
-    private static final float KEY_CHIP_HEIGHT_DESIGN = 18f;
+    private static final float KEY_CHIP_WIDTH_DESIGN = 84f;
+    private static final float KEY_CHIP_HEIGHT_DESIGN = 13f;
     private final KeybindSetting keybindSetting;
     private final float outerWidth;
     private final float outerHeight;
@@ -67,7 +67,7 @@ public class FKeybindSettingWidget extends FWidget {
     public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
         boolean locked = keybindSetting.isLocked();
         float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.rectContains(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY)) {
+        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, keybindSetting.isAtDefault())) {
             return locked ? UiPointerCursor.DEFAULT : UiPointerCursor.HAND;
         }
         return rectContains(chipBounds(), pointerX, pointerY) && !locked ? UiPointerCursor.HAND : UiPointerCursor.DEFAULT;
@@ -84,7 +84,7 @@ public class FKeybindSettingWidget extends FWidget {
     public boolean mouseMove(float pointerX, float pointerY) {
         hovered = rectContains(chipBounds(), pointerX, pointerY);
         float[] resetSquare = inlineResetSquare();
-        hoveredReset = SettingRowResetLayout.rectContains(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY);
+        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, keybindSetting.isAtDefault());
         return false;
     }
 
@@ -97,7 +97,7 @@ public class FKeybindSettingWidget extends FWidget {
             return hovered || hoveredReset;
         }
         float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.rectContains(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY)) {
+        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, keybindSetting.isAtDefault())) {
             return true;
         }
         return rectContains(chipBounds(), pointerX, pointerY);
@@ -113,7 +113,7 @@ public class FKeybindSettingWidget extends FWidget {
             return hovered || hoveredReset;
         }
         float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.rectContains(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY)) {
+        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, keybindSetting.isAtDefault())) {
             keybindSetting.resetToDefault();
             onPersist.run();
             listening = false;

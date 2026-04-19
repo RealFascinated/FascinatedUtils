@@ -10,53 +10,43 @@ import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
+import cc.fascinated.fascinatedutils.gui.theme.UITheme;
+import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FAnimatable;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
-import cc.fascinated.fascinatedutils.systems.config.ModConfig;
-import cc.fascinated.fascinatedutils.systems.modules.Module;
+import cc.fascinated.fascinatedutils.gui.widgets.WTooltip;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.util.Mth;
 
-public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
+/**
+ * Widgets-tab row: leading boolean toggle (staging only), label, and a trailing chip that applies the staged value to
+ * every HUD module.
+ */
+public class FGlobalHudBooleanApplyRowWidget extends FWidget implements FAnimatable {
 
-    // Design px; same fillet scale for track and thumb so outer and inner rounding match (not a pill track + tiny thumb).
     private static final float TOGGLE_CORNER_FILLET_DESIGN = 2.5f;
-    private final Runnable onPersist;
-    private final BooleanSetting booleanSetting;
+    private static final float APPLY_CHIP_WIDTH_DESIGN = 112f;
+    private static final float APPLY_HORIZONTAL_PAD_DESIGN = 10f;
+    private static final float APPLY_LABEL_GAP_DESIGN = 8f;
+    private final BooleanSetting stagingBoolean;
     private final float outerWidth;
     private final float outerHeight;
-    private final float valueColumnStartX;
+    private final Runnable onApplyAll;
     private final AnimHandle toggleProgressAnim = new AnimHandle(0f).speed(26f);
     private boolean hoveredToggle;
-    private boolean hoveredReset;
+    private boolean hoveredApply;
 
-    public FBooleanSettingRowWidget(Module module, BooleanSetting booleanSetting, float outerWidth, float outerHeight, float valueColumnStartX) {
-        this(booleanSetting, outerWidth, outerHeight, () -> ModConfig.saveActiveModule(module), valueColumnStartX);
-    }
-
-    public FBooleanSettingRowWidget(BooleanSetting booleanSetting, float outerWidth, float outerHeight, Runnable onPersist, float valueColumnStartX) {
-        this.booleanSetting = booleanSetting;
-        this.onPersist = onPersist;
+    public FGlobalHudBooleanApplyRowWidget(BooleanSetting stagingBoolean, float outerWidth, float outerHeight, Runnable onApplyAll) {
+        this.stagingBoolean = stagingBoolean;
         this.outerWidth = outerWidth;
         this.outerHeight = outerHeight;
-        this.valueColumnStartX = Math.max(0f, valueColumnStartX);
-        float initial = booleanSetting.getValue() ? 1f : 0f;
+        this.onApplyAll = onApplyAll;
+        float initial = Boolean.TRUE.equals(stagingBoolean.getValue()) ? 1f : 0f;
         this.toggleProgressAnim.snap(initial);
     }
 
-    public FBooleanSettingRowWidget(Module module, BooleanSetting booleanSetting, float outerWidth, float outerHeight) {
-        this(module, booleanSetting, outerWidth, outerHeight, 0f);
-    }
-
-    public FBooleanSettingRowWidget(BooleanSetting booleanSetting, float outerWidth, float outerHeight, Runnable onPersist) {
-        this(booleanSetting, outerWidth, outerHeight, onPersist, 0f);
-    }
-
-    private static boolean rectContains(float[] rect, float pointerX, float pointerY) {
-        float rectLeft = rect[0];
-        float rectTop = rect[1];
-        float rectW = rect[2];
-        float rectH = rect[3];
-        return pointerX >= rectLeft && pointerY >= rectTop && pointerX < rectLeft + rectW && pointerY < rectTop + rectH;
+    private static boolean rectContains(float rectLeft, float rectTop, float rectWidth, float rectHeight, float pointerX, float pointerY) {
+        return pointerX >= rectLeft && pointerY >= rectTop && pointerX < rectLeft + rectWidth && pointerY < rectTop + rectHeight;
     }
 
     @Override
@@ -82,31 +72,20 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
     @Override
     public boolean mouseLeave(float pointerX, float pointerY) {
         hoveredToggle = false;
-        hoveredReset = false;
+        hoveredApply = false;
         return false;
     }
 
     @Override
     public boolean mouseMove(float pointerX, float pointerY) {
-        hoveredToggle = rectContains(toggleBounds(), pointerX, pointerY);
-        float[] resetSquare = inlineResetSquare();
-        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, booleanSetting.isAtDefault());
+        hoveredToggle = rectContainsToggle(pointerX, pointerY);
+        hoveredApply = rectContainsApply(pointerX, pointerY);
         return false;
     }
 
     @Override
     public boolean mouseDown(float pointerX, float pointerY, int button) {
-        if (button != 0) {
-            return false;
-        }
-        if (booleanSetting.isLocked()) {
-            return hoveredToggle || hoveredReset;
-        }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, booleanSetting.isAtDefault())) {
-            return true;
-        }
-        return rectContains(toggleBounds(), pointerX, pointerY);
+        return button == 0 && (rectContainsToggle(pointerX, pointerY) || rectContainsApply(pointerX, pointerY));
     }
 
     @Override
@@ -114,20 +93,16 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
         if (button != 0) {
             return false;
         }
-        if (booleanSetting.isLocked()) {
-            return hoveredToggle || hoveredReset;
+        if (stagingBoolean.isLocked()) {
+            return hoveredToggle || hoveredApply;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, booleanSetting.isAtDefault())) {
-            booleanSetting.resetToDefault();
-            toggleProgressAnim.target(booleanSetting.getValue() ? 1f : 0f);
-            onPersist.run();
+        if (rectContainsApply(pointerX, pointerY)) {
+            onApplyAll.run();
             return true;
         }
-        if (rectContains(toggleBounds(), pointerX, pointerY)) {
-            booleanSetting.setValue(!booleanSetting.getValue());
-            toggleProgressAnim.target(booleanSetting.getValue() ? 1f : 0f);
-            onPersist.run();
+        if (rectContainsToggle(pointerX, pointerY)) {
+            stagingBoolean.setValue(!Boolean.TRUE.equals(stagingBoolean.getValue()));
+            toggleProgressAnim.target(Boolean.TRUE.equals(stagingBoolean.getValue()) ? 1f : 0f);
             return true;
         }
         return false;
@@ -135,32 +110,39 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
 
     @Override
     public void tickAnims(float deltaSeconds) {
-        toggleProgressAnim.target(booleanSetting.getValue() ? 1f : 0f);
+        toggleProgressAnim.target(Boolean.TRUE.equals(stagingBoolean.getValue()) ? 1f : 0f);
         toggleProgressAnim.tick(deltaSeconds);
     }
 
     @Override
     public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        if (hoveredToggle || hoveredReset) {
-            WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, booleanSetting, hoveredReset);
+        if (hoveredToggle) {
+            WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, stagingBoolean);
+        }
+        else if (hoveredApply) {
+            String tooltip = I18n.get("fascinatedutils.setting.shell.global_hud_apply_all.description");
+            if (tooltip != null && !tooltip.isBlank()) {
+                WTooltip.draw(graphics, mouseX, mouseY, tooltip);
+            }
         }
     }
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        boolean locked = booleanSetting.isLocked();
+        boolean locked = stagingBoolean.isLocked();
         float innerHeight = Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
         float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
         float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
-        float bodyLeft = x() + padX;
-        String label = booleanSetting.getTranslatedDisplayName();
-        float[] toggle = toggleBounds();
-        float toggleW = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_W);
-        float toggleH = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H);
+        float[] toggle = toggleBounds(padX, innerHeight, padY);
+        float toggleW = toggle[2];
+        float toggleH = toggle[3];
         float titleRowHeight = Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), toggleH);
         float titleOriginY = titleRowTop(innerHeight, padY, titleRowHeight);
-        float labelX = bodyLeft;
-        float labelMaxWidth = Math.max(0f, toggle[0] - GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP) - labelX);
+        float[] apply = applyChipBounds(padX, innerHeight, padY, toggleH);
+        float labelGap = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP);
+        float labelX = toggle[0] + toggleW + labelGap;
+        float labelMaxWidth = Math.max(0f, apply[0] - GuiDesignSpace.pxX(APPLY_LABEL_GAP_DESIGN) - labelX);
+        String label = stagingBoolean.getTranslatedDisplayName();
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         float labelY = titleOriginY + Math.max(0f, (toggleH - graphics.getFontHeight()) * 0.5f);
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
@@ -189,32 +171,64 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
         int thumbColor = locked ? WSettingTooltip.dimColor(graphics.theme().thumb(), 0.5f) : graphics.theme().thumb();
         graphics.fillRoundedRect(knobX, knobY, knobSize, knobSize, knobCornerRadius, thumbColor, RectCornerRoundMask.ALL);
 
-        float[] resetSquare = inlineResetSquare();
-        SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], toggleH, hoveredReset && !locked, booleanSetting.isAtDefault());
+        int fillColor = FascinatedGuiTheme.INSTANCE.surface();
+        int outlineColor = hoveredApply ? FascinatedGuiTheme.INSTANCE.borderHover() : FascinatedGuiTheme.INSTANCE.border();
+        float chipBorderX = GuiDesignSpace.pxX(UITheme.BORDER_THICKNESS_PX);
+        float chipBorderY = GuiDesignSpace.pxY(UITheme.BORDER_THICKNESS_PX);
+        float chipCorner = resolveApplyChipCornerRadius(graphics, apply[2], apply[3]);
+        graphics.fillRoundedRectFrame(apply[0], apply[1], apply[2], apply[3], chipCorner, outlineColor, fillColor, chipBorderX, chipBorderY, RectCornerRoundMask.ALL);
+        String applyLabel = I18n.get("fascinatedutils.setting.shell.global_hud_apply_all");
+        float wrapBudget = Math.max(1f, apply[2] - 2f * GuiDesignSpace.pxX(APPLY_HORIZONTAL_PAD_DESIGN));
+        applyLabel = TextLineLayout.ellipsize(applyLabel, wrapBudget, segment -> graphics.measureTextWidth(segment, false));
+        float textX = apply[0] + (apply[2] - graphics.measureTextWidth(applyLabel, false)) * 0.5f;
+        float textY = apply[1] + (apply[3] - graphics.getFontHeight()) * 0.5f;
+        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(graphics.theme().textPrimary()) + ">" + applyLabel + "</color>", textX, textY, false);
     }
 
-    private float[] toggleBounds() {
+    private float resolveApplyChipCornerRadius(GuiRenderer graphics, float chipWidth, float chipHeight) {
+        float maxRadius = Math.min(chipWidth, chipHeight) * 0.5f - 0.01f;
+        float themed = GuiDesignSpace.pxUniform(graphics.theme().cardCornerRadius());
+        return Math.max(0.5f, Math.min(themed, maxRadius));
+    }
+
+    private boolean rectContainsToggle(float pointerX, float pointerY) {
         float innerHeight = Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
         float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
         float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
+        float[] toggle = toggleBounds(padX, innerHeight, padY);
+        return rectContains(toggle[0], toggle[1], toggle[2], toggle[3], pointerX, pointerY);
+    }
+
+    private boolean rectContainsApply(float pointerX, float pointerY) {
+        float innerHeight = Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
+        float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
+        float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
+        float toggleH = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H);
+        float[] apply = applyChipBounds(padX, innerHeight, padY, toggleH);
+        return rectContains(apply[0], apply[1], apply[2], apply[3], pointerX, pointerY);
+    }
+
+    private float[] toggleBounds(float padX, float innerHeight, float padY) {
         float toggleW = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_W);
         float toggleH = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H);
         float titleRowHeight = Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), toggleH);
         float titleOriginY = titleRowTop(innerHeight, padY, titleRowHeight);
-        float bodyLeft = x() + padX;
-        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + w());
-        float maxToggleLeft = Math.max(bodyLeft, resetLeft - GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP) - toggleW);
-        float toggleLeft = Mth.clamp(bodyLeft + valueColumnStartX, bodyLeft, maxToggleLeft);
+        float toggleLeft = x() + padX;
         return new float[]{toggleLeft, titleOriginY, toggleW, toggleH};
     }
 
-    private float[] inlineResetSquare() {
-        float[] toggle = toggleBounds();
-        float toggleH = toggle[3];
-        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + w());
-        float resetTop = SettingRowResetLayout.verticallyCenteredTop(toggle[1], toggleH);
-        float box = SettingRowResetLayout.glyphBoxPx();
-        return new float[]{resetLeft, resetTop, box};
+    /**
+     * @return left, top, width, height of the apply chip in layout space
+     */
+    private float[] applyChipBounds(float padX, float innerHeight, float padY, float toggleHeight) {
+        float chipWidth = GuiDesignSpace.pxX(APPLY_CHIP_WIDTH_DESIGN);
+        float chipHeight = Math.max(toggleHeight, GuiDesignSpace.pxY(SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN));
+        chipHeight = Math.min(chipHeight, innerHeight);
+        float bodyRight = x() + w() - padX;
+        float chipLeft = bodyRight - chipWidth;
+        float bodyTop = y() + padY;
+        float chipTop = bodyTop + Math.max(0f, (innerHeight - chipHeight) * 0.5f);
+        return new float[]{chipLeft, chipTop, chipWidth, chipHeight};
     }
 
     private float titleRowTop(float innerHeight, float padY, float titleRowHeight) {

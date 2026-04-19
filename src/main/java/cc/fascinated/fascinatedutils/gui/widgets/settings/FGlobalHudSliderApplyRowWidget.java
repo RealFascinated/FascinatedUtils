@@ -9,32 +9,38 @@ import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
+import cc.fascinated.fascinatedutils.gui.theme.UITheme;
+import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
-import cc.fascinated.fascinatedutils.systems.config.ModConfig;
-import cc.fascinated.fascinatedutils.systems.modules.Module;
+import cc.fascinated.fascinatedutils.gui.widgets.WTooltip;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.util.Mth;
 
-public class FSliderSettingRowWidget extends FWidget {
-    private final SliderSetting sliderSetting;
+/**
+ * Widgets-tab row: slider bound to a staging {@link SliderSetting}, plus a trailing chip that applies the staged value
+ * to every HUD module.
+ */
+public class FGlobalHudSliderApplyRowWidget extends FWidget {
+
+    private static final float APPLY_CHIP_WIDTH_DESIGN = 112f;
+    private static final float APPLY_HORIZONTAL_PAD_DESIGN = 10f;
+    private static final float APPLY_LABEL_GAP_DESIGN = 8f;
+    private final SliderSetting stagingSlider;
     private final float outerWidth;
     private final float outerHeight;
-    private final Runnable onPersist;
     private final float valueColumnStartX;
+    private final Runnable onApplyAll;
     private boolean dragging;
     private boolean hoveredTrack;
-    private boolean hoveredReset;
+    private boolean hoveredApply;
 
-    public FSliderSettingRowWidget(Module module, SliderSetting sliderSetting, float outerWidth, float outerHeight, float valueColumnStartX) {
-        this(sliderSetting, outerWidth, outerHeight, () -> ModConfig.saveActiveModule(module), valueColumnStartX);
-    }
-
-    public FSliderSettingRowWidget(SliderSetting sliderSetting, float outerWidth, float outerHeight, Runnable onPersist, float valueColumnStartX) {
-        this.sliderSetting = sliderSetting;
+    public FGlobalHudSliderApplyRowWidget(SliderSetting stagingSlider, float outerWidth, float outerHeight, float valueColumnStartX, Runnable onApplyAll) {
+        this.stagingSlider = stagingSlider;
         this.outerWidth = outerWidth;
         this.outerHeight = outerHeight;
-        this.onPersist = onPersist;
         this.valueColumnStartX = Math.max(0f, valueColumnStartX);
+        this.onApplyAll = onApplyAll;
     }
 
     private static float valueFromPointer(float pointerX, float trackLeft, float trackWidth, float thumbSize, float min, float max, float step) {
@@ -47,6 +53,10 @@ public class FSliderSettingRowWidget extends FWidget {
 
     private static boolean inTrack(float pointerX, float pointerY, float trackLeft, float trackTop, float trackWidth, float trackHeight) {
         return pointerX >= trackLeft && pointerY >= trackTop && pointerX < trackLeft + trackWidth && pointerY < trackTop + trackHeight;
+    }
+
+    private static boolean rectContains(float rectLeft, float rectTop, float rectWidth, float rectHeight, float pointerX, float pointerY) {
+        return pointerX >= rectLeft && pointerY >= rectTop && pointerX < rectLeft + rectWidth && pointerY < rectTop + rectHeight;
     }
 
     @Override
@@ -72,12 +82,13 @@ public class FSliderSettingRowWidget extends FWidget {
     @Override
     public boolean mouseLeave(float pointerX, float pointerY) {
         hoveredTrack = false;
-        hoveredReset = false;
+        hoveredApply = false;
         return false;
     }
 
     @Override
     public boolean mouseMove(float pointerX, float pointerY) {
+        hoveredApply = rectContainsApply(pointerX, pointerY);
         float trackLeft = sliderTrackLeft();
         float trackWidth = sliderTrackWidth();
         float trackLayoutTop = computeTrackTop();
@@ -87,8 +98,6 @@ public class FSliderSettingRowWidget extends FWidget {
             applyPointer(pointerX, trackLeft, trackWidth);
             return true;
         }
-        float[] resetSquare = inlineResetSquare();
-        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, sliderSetting.isAtDefault());
         return false;
     }
 
@@ -97,11 +106,10 @@ public class FSliderSettingRowWidget extends FWidget {
         if (button != 0) {
             return false;
         }
-        if (sliderSetting.isLocked()) {
-            return hoveredTrack || hoveredReset;
+        if (stagingSlider.isLocked()) {
+            return hoveredTrack || hoveredApply;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, sliderSetting.isAtDefault())) {
+        if (rectContainsApply(pointerX, pointerY)) {
             return true;
         }
         float trackLeft = sliderTrackLeft();
@@ -130,13 +138,11 @@ public class FSliderSettingRowWidget extends FWidget {
         if (button != 0) {
             return false;
         }
-        if (sliderSetting.isLocked()) {
-            return hoveredTrack || hoveredReset;
+        if (stagingSlider.isLocked()) {
+            return hoveredTrack || hoveredApply;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, sliderSetting.isAtDefault())) {
-            sliderSetting.resetToDefault();
-            onPersist.run();
+        if (rectContainsApply(pointerX, pointerY)) {
+            onApplyAll.run();
             return true;
         }
         float trackLeft = sliderTrackLeft();
@@ -148,25 +154,32 @@ public class FSliderSettingRowWidget extends FWidget {
 
     @Override
     public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        if (hoveredTrack || hoveredReset) {
-            WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, sliderSetting, hoveredReset);
+        if (hoveredTrack) {
+            WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, stagingSlider);
+        }
+        else if (hoveredApply) {
+            String tooltip = I18n.get("fascinatedutils.setting.shell.global_hud_apply_all.description");
+            if (tooltip != null && !tooltip.isBlank()) {
+                WTooltip.draw(graphics, mouseX, mouseY, tooltip);
+            }
         }
     }
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        boolean locked = sliderSetting.isLocked();
+        boolean locked = stagingSlider.isLocked();
         float bodyLeft = x() + bodyPadX();
         float textLineHeight = Math.max(1f, GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()));
         float textTop = innerMidY() - textLineHeight * 0.5f;
+        float[] apply = applyChipBounds();
         float labelMaxWidth = Math.max(0f, sliderValueTextX(bodyLeft) - GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP) - bodyLeft);
-        String label = TextLineLayout.ellipsize(sliderSetting.getTranslatedDisplayName(), labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
+        String label = TextLineLayout.ellipsize(stagingSlider.getTranslatedDisplayName(), labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
         graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, textTop, false);
-        float value = sliderSetting.getValue().floatValue();
-        float min = sliderSetting.getMin();
-        float max = sliderSetting.getMax();
-        String valueText = sliderSetting.formatValueForDisplay();
+        float value = stagingSlider.getValue().floatValue();
+        float min = stagingSlider.getMin();
+        float max = stagingSlider.getMax();
+        String valueText = stagingSlider.formatValueForDisplay();
         float valueDrawX = sliderValueTextX(bodyLeft);
         int valueColor = locked ? graphics.theme().textMuted() : graphics.theme().textAccent();
         graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(valueColor) + ">" + valueText + "</color>", valueDrawX, textTop, false);
@@ -183,18 +196,34 @@ public class FSliderSettingRowWidget extends FWidget {
         float thumbCenterX = trackLeft + thumbSize * 0.5f + ratio * Math.max(0f, trackWidth - thumbSize);
         int thumbColor = locked ? WSettingTooltip.dimColor(graphics.theme().accentBright(), 0.5f) : graphics.theme().accentBright();
         graphics.fillRoundedRect(thumbCenterX - thumbSize * 0.5f, trackMidY - thumbSize * 0.5f, thumbSize, thumbSize, thumbSize * 0.5f, thumbColor, RectCornerRoundMask.ALL);
-        float[] resetSquare = inlineResetSquare();
-        SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], Math.max(1f, GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight())), hoveredReset && !locked, sliderSetting.isAtDefault());
+
+        int fillColor = FascinatedGuiTheme.INSTANCE.surface();
+        int outlineColor = hoveredApply ? FascinatedGuiTheme.INSTANCE.borderHover() : FascinatedGuiTheme.INSTANCE.border();
+        float chipBorderX = GuiDesignSpace.pxX(UITheme.BORDER_THICKNESS_PX);
+        float chipBorderY = GuiDesignSpace.pxY(UITheme.BORDER_THICKNESS_PX);
+        float chipCorner = resolveApplyChipCornerRadius(graphics, apply[2], apply[3]);
+        graphics.fillRoundedRectFrame(apply[0], apply[1], apply[2], apply[3], chipCorner, outlineColor, fillColor, chipBorderX, chipBorderY, RectCornerRoundMask.ALL);
+        String applyLabel = I18n.get("fascinatedutils.setting.shell.global_hud_apply_all");
+        float wrapBudget = Math.max(1f, apply[2] - 2f * GuiDesignSpace.pxX(APPLY_HORIZONTAL_PAD_DESIGN));
+        applyLabel = TextLineLayout.ellipsize(applyLabel, wrapBudget, segment -> graphics.measureTextWidth(segment, false));
+        float textX = apply[0] + (apply[2] - graphics.measureTextWidth(applyLabel, false)) * 0.5f;
+        float textY = apply[1] + (apply[3] - graphics.getFontHeight()) * 0.5f;
+        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(graphics.theme().textPrimary()) + ">" + applyLabel + "</color>", textX, textY, false);
+    }
+
+    private float resolveApplyChipCornerRadius(GuiRenderer graphics, float chipWidth, float chipHeight) {
+        float maxRadius = Math.min(chipWidth, chipHeight) * 0.5f - 0.01f;
+        float themed = GuiDesignSpace.pxUniform(graphics.theme().cardCornerRadius());
+        return Math.max(0.5f, Math.min(themed, maxRadius));
     }
 
     private void applyPointer(float pointerX, float trackLeft, float trackWidth) {
-        float min = sliderSetting.getMin();
-        float max = sliderSetting.getMax();
-        float step = sliderSetting.getStep();
+        float min = stagingSlider.getMin();
+        float max = stagingSlider.getMax();
+        float step = stagingSlider.getStep();
         float next = valueFromPointer(pointerX, trackLeft, trackWidth, thumbDiameter(), min, max, step);
-        if (Math.abs(next - sliderSetting.getValue().floatValue()) > 1e-6f) {
-            sliderSetting.setValue(next);
-            onPersist.run();
+        if (Math.abs(next - stagingSlider.getValue().floatValue()) > 1e-6f) {
+            stagingSlider.setValue(next);
         }
     }
 
@@ -236,10 +265,33 @@ public class FSliderSettingRowWidget extends FWidget {
         if (minecraftClient == null) {
             return minColumnWidth;
         }
-        String valueText = sliderSetting.formatValueForDisplay();
+        String valueText = stagingSlider.formatValueForDisplay();
         float measuredValueWidth = GuiDesignSpace.pxX(minecraftClient.font.width(valueText));
         float valuePadding = GuiDesignSpace.pxX(3f);
         return Math.max(minColumnWidth, measuredValueWidth + valuePadding);
+    }
+
+    private float applyChipLeftX() {
+        float padX = bodyPadX();
+        float chipWidth = GuiDesignSpace.pxX(APPLY_CHIP_WIDTH_DESIGN);
+        return x() + w() - padX - chipWidth;
+    }
+
+    private float[] applyChipBounds() {
+        float padY = bodyPadY();
+        float innerHeight = Math.max(0f, h() - 2f * padY);
+        float chipWidth = GuiDesignSpace.pxX(APPLY_CHIP_WIDTH_DESIGN);
+        float chipHeight = Math.max(computeTrackHeight(), GuiDesignSpace.pxY(SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN));
+        chipHeight = Math.min(chipHeight, innerHeight);
+        float chipLeft = applyChipLeftX();
+        float bodyTop = y() + padY;
+        float chipTop = bodyTop + Math.max(0f, (innerHeight - chipHeight) * 0.5f);
+        return new float[]{chipLeft, chipTop, chipWidth, chipHeight};
+    }
+
+    private boolean rectContainsApply(float pointerX, float pointerY) {
+        float[] apply = applyChipBounds();
+        return rectContains(apply[0], apply[1], apply[2], apply[3], pointerX, pointerY);
     }
 
     private float sliderTrackLeft() {
@@ -250,16 +302,8 @@ public class FSliderSettingRowWidget extends FWidget {
     }
 
     private float sliderTrackWidth() {
-        float right = x() + w() - SettingRowResetLayout.trailingResetReservePx();
-        return Math.max(GuiDesignSpace.pxX(25f), right - sliderTrackLeft());
-    }
-
-    private float[] inlineResetSquare() {
-        float contentRight = x() + w();
-        float resetLeft = SettingRowResetLayout.trailingResetLeftX(contentRight);
-        float box = SettingRowResetLayout.glyphBoxPx();
-        float sliderMidY = computeTrackTop() + computeTrackHeight() * 0.5f;
-        float resetTop = sliderMidY - box * 0.5f;
-        return new float[]{resetLeft, resetTop, box};
+        float gapBeforeApply = GuiDesignSpace.pxX(APPLY_LABEL_GAP_DESIGN);
+        float trackRight = applyChipLeftX() - gapBeforeApply;
+        return Math.max(GuiDesignSpace.pxX(25f), trackRight - sliderTrackLeft());
     }
 }
