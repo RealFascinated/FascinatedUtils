@@ -76,6 +76,16 @@ public abstract class HudModule extends Module implements HudRenderableModule {
     }
 
     /**
+     * How {@link HudContent.TextLines} are aligned horizontally within the padded panel. Override in a
+     * {@link HudMiniMessageModule} subclass for a fixed alignment (default matches the previous always-centered text).
+     *
+     * @return horizontal alignment for each text line inside the inner band
+     */
+    public HudAnchorContentAlignment.Horizontal hudTextLineHorizontalAlignment() {
+        return HudAnchorContentAlignment.Horizontal.CENTER;
+    }
+
+    /**
      * How content is aligned vertically inside the panel, derived from the current anchor.
      */
     public HudAnchorContentAlignment.Vertical hudContentVerticalAlignment() {

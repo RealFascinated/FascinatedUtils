@@ -68,7 +68,7 @@ public class HudContentRenderer {
                     lineText = "";
                 }
                 float lineWidth = lineWidths[lineIndex];
-                float drawX = horizontalPadding + HudAnchorLayout.horizontalOffsetInInnerBand(innerBandWidth, lineWidth, HudAnchorContentAlignment.Horizontal.CENTER);
+                float drawX = horizontalPadding + HudAnchorLayout.horizontalOffsetInInnerBand(innerBandWidth, lineWidth, module.hudTextLineHorizontalAlignment());
                 glRenderer.drawMiniMessageText(lineText, drawX, cursorY, false);
                 cursorY += lineHeight;
                 if (lineIndex < lines.size() - 1) {

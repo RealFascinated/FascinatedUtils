@@ -30,7 +30,7 @@ public class DebugWidget extends HudMiniMessageModule {
     }
 
     @Override
-    public HudAnchorContentAlignment.Horizontal hudContentHorizontalAlignment() {
+    public HudAnchorContentAlignment.Horizontal hudTextLineHorizontalAlignment() {
         return HudAnchorContentAlignment.Horizontal.LEFT;
     }
 
