@@ -9,6 +9,8 @@ import net.minecraft.network.chat.Component;
 public class ModBranding {
     /**
      * Title for the mod settings screen, including the loaded mod version from Fabric metadata.
+     *
+     * @return the translatable title component for the shell title bar
      */
     public Component modSettingsScreenTitle() {
         String version = FabricLoader.getInstance().getModContainer(FascinatedUtils.MOD_ID).map(container -> container.getMetadata().getVersion().getFriendlyString()).orElse("?");

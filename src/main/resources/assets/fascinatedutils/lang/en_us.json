@@ -6,7 +6,7 @@
   "fascinatedutils.setting.hud_editor.title": "HUD Editor",
   "fascinatedutils.setting.hud_editor.branding.title": "<b><color:#ffffff>Fascinated</color></b> <color:#dddddd>Utils</color>",
   "fascinatedutils.setting.hud_editor.branding.mods_button": "MODS",
-  "fascinatedutils.setting.shell.title": "FascinatedUtils v%s",
+  "fascinatedutils.setting.shell.title": "FascinatedUtils %s",
   "fascinatedutils.setting.shell.empty_modules": "No modules available.",
   "fascinatedutils.setting.shell.no_settings": "No settings for this module.",
   "fascinatedutils.setting.shell.back_to_modules": "Back to Modules",
