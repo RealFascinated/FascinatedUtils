@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
-import cc.fascinated.fascinatedutils.turboentities.Cullable;
+import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;

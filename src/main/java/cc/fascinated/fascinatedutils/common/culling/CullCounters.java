@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.turboentities;
+package cc.fascinated.fascinatedutils.common.culling;
 
 /**
  * Mutable counters for a single cull category, plus an immutable snapshot of the previous tick.

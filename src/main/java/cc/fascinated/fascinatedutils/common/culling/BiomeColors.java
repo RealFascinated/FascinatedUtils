@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.common;
+package cc.fascinated.fascinatedutils.common.culling;
 
 import lombok.Getter;
 import net.minecraft.resources.Identifier;

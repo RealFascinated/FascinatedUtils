@@ -36,7 +36,9 @@
     "turboentities.LevelRendererMixin",
     "turboentities.MapRendererBackCullingMixin",
     "turboentities.PaintingBackCullingMixin",
-    "turboentities.SignBackCullingMixin"
+    "turboentities.SignBackCullingMixin",
+    "turboparticles.ParticleEngineMixin",
+    "turboparticles.SingleQuadParticleMixin"
   ],
   "injectors": {
     "defaultRequire": 1

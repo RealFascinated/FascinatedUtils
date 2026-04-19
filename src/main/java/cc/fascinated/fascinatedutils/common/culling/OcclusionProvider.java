@@ -1,11 +1,11 @@
-package cc.fascinated.fascinatedutils.turboentities;
+package cc.fascinated.fascinatedutils.common.culling;
 
 import com.logisticscraft.occlusionculling.DataProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 
-class OcclusionProvider implements DataProvider {
+public class OcclusionProvider implements DataProvider {
 
     private final Minecraft client = Minecraft.getInstance();
     private ClientLevel world = null;

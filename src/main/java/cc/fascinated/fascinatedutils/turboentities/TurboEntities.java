@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.turboentities;
 
+import cc.fascinated.fascinatedutils.common.culling.CullCounters;
+import cc.fascinated.fascinatedutils.common.culling.OcclusionProvider;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;

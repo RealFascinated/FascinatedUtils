@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.turboentities;
 
-import cc.fascinated.fascinatedutils.turboentities.Cullable;
+import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Mixin;

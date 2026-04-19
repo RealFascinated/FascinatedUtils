@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import cc.fascinated.fascinatedutils.common.BiomeColors;
+import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.NumberUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;

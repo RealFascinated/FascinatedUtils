@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.mixin.turboentities;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import cc.fascinated.fascinatedutils.turboentities.CullTask;
-import cc.fascinated.fascinatedutils.turboentities.Cullable;
+import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import cc.fascinated.fascinatedutils.turboentities.TurboEntities;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;

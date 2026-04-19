@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.turboentities;
 
+import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
 import com.logisticscraft.occlusionculling.util.Vec3d;
 import lombok.Getter;
