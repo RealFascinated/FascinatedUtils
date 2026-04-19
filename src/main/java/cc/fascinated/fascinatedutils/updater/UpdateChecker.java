@@ -3,7 +3,6 @@ package cc.fascinated.fascinatedutils.updater;
 import cc.fascinated.fascinatedutils.common.types.GitHubAsset;
 import cc.fascinated.fascinatedutils.common.types.GitHubRelease;
 import cc.fascinated.fascinatedutils.common.types.ReleaseVersionInfo;
-import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import com.google.gson.*;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
@@ -21,6 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
@@ -28,8 +29,9 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
-public final class UpdateChecker {
+public class UpdateChecker {
     private static final Logger LOG = LoggerFactory.getLogger(UpdateChecker.class);
     private static final String GITHUB_LATEST_API = "https://api.github.com/repos/RealFascinated/FascinatedUtils/releases/latest";
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
@@ -50,16 +52,16 @@ public final class UpdateChecker {
         if (this.scheduler != null && !this.scheduler.isShutdown()) {
             return;
         }
-        this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "FascinatedUtils-UpdateChecker");
-            t.setDaemon(true);
-            return t;
+        this.scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "FascinatedUtils-UpdateChecker");
+            thread.setDaemon(true);
+            return thread;
         });
         this.scheduler.scheduleAtFixedRate(() -> {
             try {
                 checkForUpdates();
-            } catch (Throwable t) {
-                LOG.warn("Update check failed", t);
+            } catch (Throwable throwable) {
+                LOG.warn("Update check failed", throwable);
             }
         }, 0, 1, TimeUnit.HOURS);
     }
@@ -82,13 +84,34 @@ public final class UpdateChecker {
 
         String currentVersion = mod.getMetadata().getVersion().getFriendlyString();
         String tagName = release.getTagName();
-        if (currentVersion.equals(tagName)) {
-            LOG.debug("Already on latest version: {}", currentVersion);
+
+        Optional<ReleaseVersionInfo> releaseInfo = tryFetchReleaseVersionInfo(assets);
+        if (releaseInfo.isPresent() && !isMinecraftVersionCompatible(releaseInfo.get(), tagName)) {
             return;
         }
 
-        if (!isCompatibleWithRuntime(assets, tagName)) {
-            return;
+        Optional<String> normalizedReleaseHash = releaseInfo.flatMap(info -> normalizedArtifactSha256(info.getArtifactSha256()));
+
+        if (normalizedReleaseHash.isPresent()) {
+            Optional<Path> modJar = primaryModJarPath(mod);
+            if (modJar.isPresent()) {
+                String installedHash = sha256Hex(modJar.get());
+                if (normalizedReleaseHash.get().equals(installedHash)) {
+                    LOG.debug("Installed mod jar matches release artifact_sha256; skipping update.");
+                    return;
+                }
+            }
+            Path modsDir = FabricLoader.getInstance().getGameDir().resolve("mods");
+            Optional<Path> existingStaged = findStagedUpdateWithSha(modsDir, normalizedReleaseHash.get());
+            if (existingStaged.isPresent()) {
+                LOG.debug("Staged update jar already matches release artifact_sha256; skipping re-download.");
+                return;
+            }
+        } else {
+            if (currentVersion.equals(tagName)) {
+                LOG.debug("Already on latest version: {}", currentVersion);
+                return;
+            }
         }
 
         GitHubAsset jar = pickJarAsset(assets, mod).orElse(null);
@@ -96,10 +119,7 @@ public final class UpdateChecker {
             return;
         }
 
-        Path staged = downloadToStaged(jar.getBrowserDownloadUrl(), tagName);
-        if (staged != null) {
-            FascinatedEventBus.INSTANCE.post(new UpdateRequiredEvent(tagName, jar.getBrowserDownloadUrl(), staged.toString()));
-        }
+        downloadToStaged(jar.getBrowserDownloadUrl(), tagName);
     }
 
     private GitHubRelease fetchLatestRelease() throws Exception {
@@ -113,32 +133,112 @@ public final class UpdateChecker {
         return gson.fromJson(res.body(), GitHubRelease.class);
     }
 
-    private boolean isCompatibleWithRuntime(List<GitHubAsset> assets, String tagName) {
-        String releaseInfoUrl = assets.stream().filter(a -> a != null && "release_info.json".equalsIgnoreCase(a.getName())).map(GitHubAsset::getBrowserDownloadUrl).findFirst().orElse(null);
+    private Optional<ReleaseVersionInfo> tryFetchReleaseVersionInfo(List<GitHubAsset> assets) {
+        String releaseInfoUrl = assets.stream().filter(asset -> asset != null && "release_info.json".equalsIgnoreCase(asset.getName())).map(GitHubAsset::getBrowserDownloadUrl).findFirst().orElse(null);
 
         if (releaseInfoUrl == null) {
-            return true;
+            return Optional.empty();
         }
 
         try {
             HttpRequest req = HttpRequest.newBuilder().uri(URI.create(releaseInfoUrl)).timeout(REQUEST_TIMEOUT).GET().build();
             HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
             if (res.statusCode() != 200) {
-                return true;
+                return Optional.empty();
             }
 
-            ReleaseVersionInfo info = gson.fromJson(res.body(), ReleaseVersionInfo.class);
-            String releaseMc = info != null ? info.getMinecraftVersion() : null;
-            String runtimeMc = getRuntimeMinecraftVersion();
+            ReleaseVersionInfo parsed = gson.fromJson(res.body(), ReleaseVersionInfo.class);
+            return Optional.ofNullable(parsed);
+        } catch (Exception exception) {
+            LOG.warn("Failed to fetch release_info.json, proceeding without artifact hash", exception);
+            return Optional.empty();
+        }
+    }
 
-            if (releaseMc != null && runtimeMc != null && !releaseMc.equals(runtimeMc)) {
-                LOG.info("Skipping update {} — release targets MC {} but runtime is {}", tagName, releaseMc, runtimeMc);
-                return false;
-            }
-        } catch (Exception e) {
-            LOG.warn("Failed to fetch release_info.json, proceeding anyway", e);
+    private boolean isMinecraftVersionCompatible(ReleaseVersionInfo info, String tagName) {
+        String releaseMc = info != null ? info.getMinecraftVersion() : null;
+        String runtimeMc = getRuntimeMinecraftVersion();
+
+        if (releaseMc != null && runtimeMc != null && !releaseMc.equals(runtimeMc)) {
+            LOG.info("Skipping update {} — release targets MC {} but runtime is {}", tagName, releaseMc, runtimeMc);
+            return false;
         }
         return true;
+    }
+
+    private Optional<String> normalizedArtifactSha256(String raw) {
+        if (raw == null) {
+            return Optional.empty();
+        }
+        String trimmed = raw.trim().toLowerCase(Locale.ROOT);
+        if (trimmed.length() != 64) {
+            return Optional.empty();
+        }
+        for (int index = 0; index < trimmed.length(); index++) {
+            char character = trimmed.charAt(index);
+            if ((character < '0' || character > '9') && (character < 'a' || character > 'f')) {
+                return Optional.empty();
+            }
+        }
+        return Optional.of(trimmed);
+    }
+
+    private Optional<Path> primaryModJarPath(ModContainer mod) {
+        try {
+            for (Path root : mod.getRootPaths()) {
+                if (Files.isRegularFile(root) && root.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".jar")) {
+                    return Optional.of(root);
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return Optional.empty();
+    }
+
+    private Optional<Path> findStagedUpdateWithSha(Path modsDir, String releaseSha256Lower) {
+        if (!Files.isDirectory(modsDir)) {
+            return Optional.empty();
+        }
+        try (Stream<Path> entries = Files.list(modsDir)) {
+            List<Path> candidates = entries.filter(path -> Files.isRegularFile(path)).filter(path -> path.getFileName().toString().startsWith("FascinatedUtils-update-")).filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".jar")).toList();
+            for (Path candidate : candidates) {
+                try {
+                    if (releaseSha256Lower.equals(sha256Hex(candidate))) {
+                        return Optional.of(candidate);
+                    }
+                } catch (IOException exception) {
+                    LOG.debug("Could not hash staged candidate {}", candidate, exception);
+                }
+            }
+        } catch (IOException exception) {
+            LOG.debug("Could not scan mods directory for staged updates", exception);
+        }
+        return Optional.empty();
+    }
+
+    private static String sha256Hex(Path path) throws IOException {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 not available", exception);
+        }
+        try (InputStream inputStream = Files.newInputStream(path)) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = inputStream.read(buffer)) >= 0) {
+                digest.update(buffer, 0, read);
+            }
+        }
+        return hexLower(digest.digest());
+    }
+
+    private static String hexLower(byte[] digestBytes) {
+        StringBuilder builder = new StringBuilder(digestBytes.length * 2);
+        for (byte singleByte : digestBytes) {
+            builder.append(String.format(Locale.ROOT, "%02x", singleByte));
+        }
+        return builder.toString();
     }
 
     private Path downloadToStaged(String downloadUrl, String tagName) throws Exception {
@@ -155,50 +255,49 @@ public final class UpdateChecker {
                 return null;
             }
 
-            try (InputStream is = res.body()) {
-                Files.copy(is, temp, StandardCopyOption.REPLACE_EXISTING);
+            try (InputStream inputStream = res.body()) {
+                Files.copy(inputStream, temp, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            // Remove any previously staged updates
-            try (var stream = Files.list(modsDir)) {
-                stream.filter(p -> p.getFileName().toString().startsWith("FascinatedUtils-update-")).forEach(p -> {
+            try (Stream<Path> stream = Files.list(modsDir)) {
+                stream.filter(path -> path.getFileName().toString().startsWith("FascinatedUtils-update-")).forEach(path -> {
                     try {
-                        Files.deleteIfExists(p);
+                        Files.deleteIfExists(path);
                     } catch (Exception ignored) {
                     }
                 });
-            } catch (IOException e) {
-                LOG.debug("Could not clean old staged files", e);
+            } catch (IOException exception) {
+                LOG.debug("Could not clean old staged files", exception);
             }
 
             Path staged = modsDir.resolve("FascinatedUtils-update-" + tagName + "-" + System.currentTimeMillis() + ".jar");
             Files.move(temp, staged, StandardCopyOption.REPLACE_EXISTING);
             LOG.info("Staged update {} -> {}", tagName, staged);
             return staged;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             try {
                 Files.deleteIfExists(temp);
             } catch (Exception ignored) {
             }
-            throw e;
+            throw exception;
         }
     }
 
     private String getRuntimeMinecraftVersion() {
         try {
             return Minecraft.getInstance().getLaunchedVersion();
-        } catch (Throwable t) {
-            LOG.debug("Minecraft client not available; falling back to fabric.mod.json", t);
+        } catch (Throwable throwable) {
+            LOG.debug("Minecraft client not available; falling back to fabric.mod.json", throwable);
         }
-        try (InputStream is = UpdateChecker.class.getClassLoader().getResourceAsStream("fabric.mod.json")) {
-            if (is == null) {
+        try (InputStream inputStream = UpdateChecker.class.getClassLoader().getResourceAsStream("fabric.mod.json")) {
+            if (inputStream == null) {
                 return null;
             }
-            JsonObject obj = JsonParser.parseString(new String(is.readAllBytes(), StandardCharsets.UTF_8)).getAsJsonObject();
-            JsonObject depends = obj.has("depends") ? obj.getAsJsonObject("depends") : null;
+            JsonObject object = JsonParser.parseString(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8)).getAsJsonObject();
+            JsonObject depends = object.has("depends") ? object.getAsJsonObject("depends") : null;
             return depends != null && depends.has("minecraft") ? depends.get("minecraft").getAsString() : null;
-        } catch (Exception e) {
-            LOG.debug("Failed to read fabric.mod.json", e);
+        } catch (Exception exception) {
+            LOG.debug("Failed to read fabric.mod.json", exception);
             return null;
         }
     }
@@ -208,9 +307,9 @@ public final class UpdateChecker {
             return Optional.empty();
         }
 
-        List<GitHubAsset> candidates = assets.stream().filter(a -> a != null && a.getName() != null).filter(a -> a.getName().toLowerCase(Locale.ROOT).endsWith(".jar")).filter(a -> {
-            String name = a.getName().toLowerCase(Locale.ROOT);
-            return !name.contains("source") && !name.contains("sources") && !name.contains("javadoc") && !name.contains("src") && !name.contains("-sources");
+        List<GitHubAsset> candidates = assets.stream().filter(asset -> asset != null && asset.getName() != null).filter(asset -> {
+            String name = asset.getName().toLowerCase(Locale.ROOT);
+            return name.endsWith(".jar") && !name.contains("source") && !name.contains("sources") && !name.contains("javadoc") && !name.contains("src") && !name.contains("-sources");
         }).toList();
 
         if (candidates.isEmpty()) {
@@ -219,8 +318,8 @@ public final class UpdateChecker {
 
         try {
             String modId = mod.getMetadata().getId().toLowerCase(Locale.ROOT);
-            return candidates.stream().filter(a -> a.getName().toLowerCase(Locale.ROOT).contains(modId)).findFirst().or(() -> candidates.stream().findFirst());
-        } catch (Throwable t) {
+            return candidates.stream().filter(asset -> asset.getName().toLowerCase(Locale.ROOT).contains(modId)).findFirst().or(() -> candidates.stream().findFirst());
+        } catch (Throwable throwable) {
             return candidates.stream().findFirst();
         }
     }

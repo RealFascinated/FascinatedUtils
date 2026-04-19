@@ -54,8 +54,5 @@ public class Client implements ClientModInitializer {
             UpdateManager.registerShutdownHook();
             UpdateChecker.checkForUpdatesAsync();
         }
-
-        // Subscribe UI notifier for update events so mod settings can show a badge
-        FascinatedEventBus.INSTANCE.subscribe(cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsUpdateNotifier.class);
     }
 }

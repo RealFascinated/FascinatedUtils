@@ -9,4 +9,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ReleaseVersionInfo {
     private String minecraftVersion;
+    private String artifactSha256;
 }

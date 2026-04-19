@@ -131,19 +131,6 @@ public class ModSettingsShellFrame {
                     hudLayoutButtonHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);
                 }
                 bodyHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);
-                // Draw update available badge in top-left of shell if updater reported an available update
-                try {
-                    if (ModSettingsUpdateNotifier.isUpdateAvailable()) {
-                        float badgeX = bodyPositionX + GuiDesignSpace.pxX(4f);
-                        float badgeY = bodyTop + GuiDesignSpace.pxY(4f);
-                        float badgeW = GuiDesignSpace.pxX(84f);
-                        float badgeH = GuiDesignSpace.pxY(14f);
-                        float radius = 3f;
-                        glUiRenderer.fillRoundedRect(badgeX, badgeY, badgeW, badgeH, radius, glUiRenderer.theme().accent(), RectCornerRoundMask.ALL);
-                        glUiRenderer.drawMiniMessageText("<color:#ffffff>Update available! Restart your game to apply it</color>", badgeX + GuiDesignSpace.pxX(4f), badgeY + (badgeH - glUiRenderer.getFontHeight()) * 0.5f, false);
-                    }
-                } catch (Throwable ignored) {
-                }
                 glUiRenderer.resetMultiplyAlpha();
             } finally {
                 drawMatrices.popMatrix();

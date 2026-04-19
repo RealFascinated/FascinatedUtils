@@ -46,6 +46,17 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
+      - name: Compute main JAR SHA-256
+        id: artifact
+        run: |
+          MAIN_JAR=$(ls build/libs/*.jar | grep -viE 'sources|javadoc' | head -n1)
+          if [ -z "$MAIN_JAR" ] || [ ! -f "$MAIN_JAR" ]; then
+            echo "No main jar found under build/libs" >&2
+            exit 1
+          fi
+          echo "jar_path=$MAIN_JAR" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum "$MAIN_JAR" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
       - name: Get Minecraft version
         id: mc
         run: |
@@ -73,8 +84,8 @@ jobs:
       - name: Create release_info.json
         id: release_info
         run: |
-          echo "Creating release_info.json with minecraft_version=${{ steps.mc.outputs.mc_version }}"
-          printf '{"minecraft_version":"%s"}' "${{ steps.mc.outputs.mc_version }}" > release_info.json
+          echo "Creating release_info.json with minecraft_version=${{ steps.mc.outputs.mc_version }} artifact_sha256=${{ steps.artifact.outputs.sha256 }}"
+          printf '{"minecraft_version":"%s","artifact_sha256":"%s"}' "${{ steps.mc.outputs.mc_version }}" "${{ steps.artifact.outputs.sha256 }}" > release_info.json
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
