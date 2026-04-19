@@ -145,7 +145,7 @@ public final class UpdateChecker {
         Path modsDir = FabricLoader.getInstance().getGameDir().resolve("mods");
         Files.createDirectories(modsDir);
 
-        Path temp = Files.createTempFile(modsDir, "FascinatedUtils-update-temp-", ".jar");
+        Path temp = Files.createTempFile(modsDir, "FascinatedUtils-download-", ".jar");
         try {
             HttpRequest req = HttpRequest.newBuilder().uri(URI.create(downloadUrl)).header("User-Agent", "FascinatedUtils-Updater").timeout(Duration.ofMinutes(2)).GET().build();
 
