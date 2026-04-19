@@ -13,15 +13,20 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 public class EntitiesCullTask implements Runnable {
     private static final int SLEEP_DELAY = 10;
     private static final double HITBOX_LIMIT = 64.0;
+    private static final double ENTITY_FORCE_CULL_DISTANCE_SQ = 128.0 * 128.0;
     private static final double BLOCK_ENTITY_FORCE_CULL_DISTANCE_SQ = 128.0 * 128.0;
 
     private final OcclusionCullingInstance culling;
@@ -31,7 +36,7 @@ public class EntitiesCullTask implements Runnable {
     private final Vec3d cameraVec3d = new Vec3d(0, 0, 0);
 
     private static final int ENTITY_BUFFER_CAPACITY = 4096;
-    private static final int BLOCK_ENTITY_BUFFER_CAPACITY = 8192;
+    private static final int BLOCK_ENTITY_SNAPSHOT_INITIAL_CAPACITY = 16384;
 
     private volatile boolean running = true;
     private volatile boolean requestCull = false;
@@ -40,17 +45,19 @@ public class EntitiesCullTask implements Runnable {
     @Setter
     private volatile Vec3 camera = Vec3.ZERO;
 
-    private volatile int snapshotReadSlot;
+    private final ArrayList<Entity> entityPublishScratch = new ArrayList<>(ENTITY_BUFFER_CAPACITY);
 
     /**
-     * {@code -1} while idle; otherwise the snapshot slot the cull thread is iterating.
+     * Immutable hand-off from {@link #publishEntityCullSnapshotFromWorld} on a fixed tick cadence; the cull thread
+     * only reads this reference.
      */
-    private volatile int workerActiveReadSlot = -1;
+    private volatile List<Entity> entityCullSnapshot = List.of();
 
-    private final ArrayList<Entity> entityBuffer0 = new ArrayList<>(ENTITY_BUFFER_CAPACITY);
-    private final ArrayList<Entity> entityBuffer1 = new ArrayList<>(ENTITY_BUFFER_CAPACITY);
-    private final ArrayList<BlockEntity> blockEntityBuffer0 = new ArrayList<>(BLOCK_ENTITY_BUFFER_CAPACITY);
-    private final ArrayList<BlockEntity> blockEntityBuffer1 = new ArrayList<>(BLOCK_ENTITY_BUFFER_CAPACITY);
+    /**
+     * Replaced on the main thread on a fixed tick cadence (see {@link TurboEntities}). The cull thread only reads the
+     * published map reference once per pass.
+     */
+    private volatile Map<BlockPos, BlockEntity> blockEntityCullSnapshot = Map.of();
 
     private volatile int consideredEntityCount = 0;
     private volatile int culledEntityCount = 0;
@@ -83,15 +90,8 @@ public class EntitiesCullTask implements Runnable {
                     cameraVec3d.set(cameraSnap.x, cameraSnap.y, cameraSnap.z);
                     long passStart = System.nanoTime();
                     culling.resetCache();
-                    int readSlot = snapshotReadSlot;
-                    workerActiveReadSlot = readSlot;
-                    try {
-                        cullEntities(readSlot);
-                        cullBlockEntities(readSlot);
-                    }
-                    finally {
-                        workerActiveReadSlot = -1;
-                    }
+                    cullEntities();
+                    cullBlockEntities();
                     lastPassNanos = System.nanoTime() - passStart;
                 }
             } catch (InterruptedException exception) {
@@ -99,29 +99,6 @@ public class EntitiesCullTask implements Runnable {
                 break;
             }
         }
-    }
-
-    public int snapshotWriteSlot() {
-        int workerSlot = workerActiveReadSlot;
-        if (workerSlot == 0) {
-            return 1;
-        }
-        if (workerSlot == 1) {
-            return 0;
-        }
-        return 1 - snapshotReadSlot;
-    }
-
-    public ArrayList<Entity> entityBufferForWrite(int writeSlot) {
-        return writeSlot == 0 ? entityBuffer0 : entityBuffer1;
-    }
-
-    public ArrayList<BlockEntity> blockEntityBufferForWrite(int writeSlot) {
-        return writeSlot == 0 ? blockEntityBuffer0 : blockEntityBuffer1;
-    }
-
-    public void publishSnapshotWrite(int writeSlot) {
-        this.snapshotReadSlot = writeSlot;
     }
 
     public void requestCull() {
@@ -132,8 +109,54 @@ public class EntitiesCullTask implements Runnable {
         this.running = false;
     }
 
-    private void cullEntities(int readSlot) {
-        ArrayList<Entity> entities = readSlot == 0 ? entityBuffer0 : entityBuffer1;
+    /**
+     * Copies the client level {@code entitiesForRendering()} iterable on the main thread.
+     *
+     * @param client Minecraft client
+     */
+    public void publishEntityCullSnapshotFromWorld(Minecraft client) {
+        if (client.level == null) {
+            entityPublishScratch.clear();
+            entityCullSnapshot = List.of();
+            return;
+        }
+        entityPublishScratch.clear();
+        for (Entity entity : client.level.entitiesForRendering()) {
+            if (entity == null) {
+                break;
+            }
+            entityPublishScratch.add(entity);
+        }
+        entityCullSnapshot = List.copyOf(entityPublishScratch);
+    }
+
+    /**
+     * Builds a position-keyed map of block entities near the player on the main thread (matches vanilla
+     * client tick / world access expectations).
+     *
+     * @param client            Minecraft client
+     * @param chunkRadiusCap    maximum chunk radius from the player chunk (inclusive)
+     */
+    public void publishBlockEntityCullSnapshotFromWorld(Minecraft client, int chunkRadiusCap) {
+        if (client.level == null || client.player == null) {
+            this.blockEntityCullSnapshot = Map.of();
+            return;
+        }
+        int chunkRadius = Math.min(client.options.getEffectiveRenderDistance(), chunkRadiusCap);
+        HashMap<BlockPos, BlockEntity> map = new HashMap<>(BLOCK_ENTITY_SNAPSHOT_INITIAL_CAPACITY);
+        int playerChunkX = client.player.chunkPosition().x();
+        int playerChunkZ = client.player.chunkPosition().z();
+        for (int chunkX = -chunkRadius; chunkX <= chunkRadius; chunkX++) {
+            for (int chunkZ = -chunkRadius; chunkZ <= chunkRadius; chunkZ++) {
+                LevelChunk chunk = client.level.getChunk(playerChunkX + chunkX, playerChunkZ + chunkZ);
+                map.putAll(chunk.getBlockEntities());
+            }
+        }
+        this.blockEntityCullSnapshot = map;
+    }
+
+    private void cullEntities() {
+        List<Entity> entities = entityCullSnapshot;
         int considered = 0;
         int culled = 0;
 
@@ -149,6 +172,9 @@ public class EntitiesCullTask implements Runnable {
 
             if (Minecraft.getInstance().shouldEntityAppearGlowing(entity) || (Minecraft.getInstance().player != null && Minecraft.getInstance().player.getVehicle() == entity)) {
                 cullable.fascinatedutils$setCulled(false);
+            }
+            else if (entity.distanceToSqr(lastCameraPos.x, lastCameraPos.y, lastCameraPos.z) > ENTITY_FORCE_CULL_DISTANCE_SQ) {
+                cullable.fascinatedutils$setCulled(true);
             }
             else {
                 EntityRenderer<?, ?> renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
@@ -170,12 +196,12 @@ public class EntitiesCullTask implements Runnable {
         culledEntityCount = culled;
     }
 
-    private void cullBlockEntities(int readSlot) {
-        ArrayList<BlockEntity> snapshot = readSlot == 0 ? blockEntityBuffer0 : blockEntityBuffer1;
+    private void cullBlockEntities() {
+        Map<BlockPos, BlockEntity> snapshot = blockEntityCullSnapshot;
         int considered = 0;
         int culled = 0;
 
-        for (BlockEntity blockEntity : snapshot) {
+        for (BlockEntity blockEntity : snapshot.values()) {
             try {
                 if (!(blockEntity instanceof Cullable cullable)) {
                     continue;

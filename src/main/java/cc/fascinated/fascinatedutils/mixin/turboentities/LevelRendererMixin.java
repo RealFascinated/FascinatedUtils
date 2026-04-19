@@ -1,8 +1,8 @@
 package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.turboentities.EntitiesCullTask;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
+import cc.fascinated.fascinatedutils.turboentities.EntitiesCullTask;
 import cc.fascinated.fascinatedutils.turboentities.TurboEntities;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
@@ -13,16 +13,12 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.ArrayList;
 
 @Mixin(LevelRenderer.class)
 public class LevelRendererMixin {
@@ -89,29 +85,8 @@ public class LevelRendererMixin {
         cullTask.setCamera(camera.position());
         cullTask.setFrustum(frustum);
 
-        int writeSlot = cullTask.snapshotWriteSlot();
-        ArrayList<Entity> entities = cullTask.entityBufferForWrite(writeSlot);
-        entities.clear();
-        for (Entity entity : client.level.entitiesForRendering()) {
-            if (entity == null) {
-                break;
-            }
-            entities.add(entity);
-        }
         module.snapshotAndResetRenderFrameCounters();
 
-        // 11×11 chunks
-        ArrayList<BlockEntity> blockEntities = cullTask.blockEntityBufferForWrite(writeSlot);
-        blockEntities.clear();
-        int playerChunkX = client.player.chunkPosition().x();
-        int playerChunkZ = client.player.chunkPosition().z();
-        for (int chunkX = -5; chunkX <= 5; chunkX++) {
-            for (int chunkZ = -5; chunkZ <= 5; chunkZ++) {
-                LevelChunk chunk = client.level.getChunk(playerChunkX + chunkX, playerChunkZ + chunkZ);
-                blockEntities.addAll(chunk.getBlockEntities().values());
-            }
-        }
-        cullTask.publishSnapshotWrite(writeSlot);
         cullTask.requestCull();
     }
 }

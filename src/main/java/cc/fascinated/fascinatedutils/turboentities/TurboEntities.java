@@ -10,12 +10,22 @@ import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
 import com.logisticscraft.occlusionculling.cache.ArrayOcclusionCache;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.EntityType;
 
 import java.util.Map;
 
 public class TurboEntities {
     public static final Map<EntityType<?>, Double> RENDER_DISTANCE_CAPS = Map.of(EntityType.ITEM, 32.0 * 32.0, EntityType.EXPERIENCE_ORB, 32.0 * 32.0, EntityType.ARMOR_STAND, 48.0 * 48.0, EntityType.ITEM_DISPLAY, 48.0 * 48.0);
+
+    /**
+     * Block entities farther than this chunk radius from the player are not snapshotted for the cull worker
+     * (still capped by effective render distance).
+     */
+    public static final int BLOCK_ENTITY_CULL_CHUNK_RADIUS_CAP = 12;
+
+    // Rebuild entity + block-entity cull snapshots only every N client ticks to spread chunk/entity scan cost.
+    private static final int CULL_SNAPSHOT_CAPTURE_RATE_TICKS = 5;
 
     public final CullCounters itemFrameCounters = new CullCounters();
     public final CullCounters paintingCounters = new CullCounters();
@@ -31,6 +41,8 @@ public class TurboEntities {
     private volatile boolean turboEntitiesCullEnabledMirror = false;
 
     private boolean previousEnabledState = false;
+
+    private int cullSnapshotTickCounter;
 
     /**
      * Fast gate for mixins: avoids walking {@link SettingsRegistry} on every block entity / entity call.
@@ -80,16 +92,23 @@ public class TurboEntities {
 
         boolean enabled = SettingsRegistry.INSTANCE.getSettings().getTurboEntities().isEnabled();
         turboEntitiesCullEnabledMirror = enabled;
-        if (enabled == previousEnabledState) {
-            return;
+        if (enabled != previousEnabledState) {
+            previousEnabledState = enabled;
+            if (enabled) {
+                startCullThread();
+            }
+            else {
+                stopCullThread();
+            }
         }
 
-        previousEnabledState = enabled;
-        if (enabled) {
-            startCullThread();
-        }
-        else {
-            stopCullThread();
+        EntitiesCullTask task = cullTask;
+        if (task != null && enabled) {
+            if (cullSnapshotTickCounter++ % CULL_SNAPSHOT_CAPTURE_RATE_TICKS == 0) {
+                Minecraft client = Minecraft.getInstance();
+                task.publishEntityCullSnapshotFromWorld(client);
+                task.publishBlockEntityCullSnapshotFromWorld(client, BLOCK_ENTITY_CULL_CHUNK_RADIUS_CAP);
+            }
         }
     }
 
@@ -107,7 +126,8 @@ public class TurboEntities {
         // treats the camera cell as inside the target for most adjacent block entities when buried in solids.
         OcclusionCullingInstance culling = new OcclusionCullingInstance(128, new OcclusionProvider(), new ArrayOcclusionCache(128), 0.0);
         cullTask = new EntitiesCullTask(culling);
-        cullThread = new Thread(cullTask, "FascinatedUtils-EntityCulling");
+        cullSnapshotTickCounter = 0;
+        cullThread = new Thread(cullTask, "FascinatedUtils-TurboEntitiesCull");
         cullThread.setDaemon(true);
         cullThread.start();
     }

@@ -25,16 +25,17 @@ public abstract class BlockEntityRenderDispatcherMixin {
             return;
         }
 
+        BlockEntityRenderer<?, ?> blockEntityRenderer = getRenderer(blockEntity);
+        if (blockEntityRenderer == null) {
+            return;
+        }
+
         if (!(blockEntity instanceof Cullable cullable)) {
             return;
         }
 
         if (cullable.fascinatedutils$isCulled()) {
-            BlockEntityRenderer<?, ?> renderer = getRenderer(blockEntity);
-            if (renderer == null) {
-                return;
-            }
-            if (renderer.shouldRenderOffScreen()) {
+            if (blockEntityRenderer.shouldRenderOffScreen()) {
                 return;
             }
             info.setReturnValue(null);
