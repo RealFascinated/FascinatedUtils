@@ -9,9 +9,11 @@ import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class FpsWidget extends HudMiniMessageModule {
 
+    private static final long UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(50L);
     private static final int FPS_COLOR_YELLOW = UiColor.argb("#dddd44");
     private static final int FPS_COLOR_AMBER = UiColor.argb("#ddaa33");
     private static final int FPS_COLOR_RED = UiColor.argb("#dd4444");
@@ -49,5 +51,10 @@ public class FpsWidget extends HudMiniMessageModule {
             lines.add("<" + ColorUtils.rgbHex(fpsColorArgb(onePercentLows)) + ">" + onePercentLows + " 1%");
         }
         return lines;
+    }
+
+    @Override
+    protected long hudMiniMessageUpdateIntervalNanos() {
+        return UPDATE_INTERVAL_NANOS;
     }
 }

@@ -42,10 +42,6 @@ public abstract class BlockEntityRenderDispatcherMixin {
             return;
         }
 
-        if (cullable.fascinatedutils$isForcedVisible()) {
-            return;
-        }
-
         cullable.fascinatedutils$setOutOfCamera(false);
     }
 }

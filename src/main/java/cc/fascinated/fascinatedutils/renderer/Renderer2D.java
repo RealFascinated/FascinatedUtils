@@ -1,9 +1,5 @@
 package cc.fascinated.fascinatedutils.renderer;
 
-import org.joml.Matrix3x2f;
-import org.joml.Matrix3x2fStack;
-import org.joml.Vector2f;
-
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.common.LRUCache;
@@ -27,6 +23,9 @@ import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import org.joml.Matrix3x2f;
+import org.joml.Matrix3x2fStack;
+import org.joml.Vector2f;
 
 /**
  * Low-level GUI draw bridge: batched mesh quads (rounded rects, gradients, {@link #drawBorder}) via {@link MeshBuilder}
@@ -37,6 +36,20 @@ public class Renderer2D {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final LRUCache<String, net.minecraft.network.chat.Component> MINI_MESSAGE_CACHE = new LRUCache<>(1024);
+    private final GuiGraphicsExtractor graphics;
+    private final GuiTheme guiTheme;
+    private final TextRenderer guiTextRenderer;
+    private final Renderer3D renderer3D;
+    private float multiplyAlpha = 1f;
+    private float multiplyAlphaText = 1f;
+
+    public Renderer2D(GuiGraphicsExtractor graphics, GuiTheme guiTheme) {
+        this.graphics = graphics;
+        this.guiTheme = guiTheme;
+        this.guiTextRenderer = guiTheme.textRenderer(graphics);
+        this.renderer3D = new Renderer3D(graphics);
+    }
+
     /**
      * Stroke thickness applied inside {@link #fillRoundedRectFrame}; use the same value to inset content that must sit
      * flush with that pass's inner fill.
@@ -48,6 +61,7 @@ public class Renderer2D {
     public static float roundedRectFrameBorderThickness(float borderThicknessX, float borderThicknessY) {
         return Math.max(1f, Math.round(Math.min(borderThicknessX, borderThicknessY)));
     }
+
     private static int scaleColorAlpha(int color, float factor) {
         if (factor >= 0.999f) {
             return color;
@@ -56,6 +70,7 @@ public class Renderer2D {
         int scaledAlpha255 = Mth.clamp(Mth.floor(alpha255 * factor), 0, 255);
         return (scaledAlpha255 << 24) | (color & 0xFFFFFF);
     }
+
     /**
      * Average length of the pose image of the unit X and Y axes (translation cancels). Matches how {@link
      * GuiGraphics#fill} thickness scales with the matrix stack; the rounded-rect ring shader measures stroke in
@@ -71,22 +86,6 @@ public class Renderer2D {
         unitX.sub(origin);
         unitY.sub(origin);
         return 0.5f * (unitX.length() + unitY.length());
-    }
-    private final GuiGraphicsExtractor graphics;
-    private final GuiTheme guiTheme;
-    private final TextRenderer guiTextRenderer;
-
-    private final Renderer3D renderer3D;
-
-    private float multiplyAlpha = 1f;
-
-    private float multiplyAlphaText = 1f;
-
-    public Renderer2D(GuiGraphicsExtractor graphics, GuiTheme guiTheme) {
-        this.graphics = graphics;
-        this.guiTheme = guiTheme;
-        this.guiTextRenderer = guiTheme.textRenderer(graphics);
-        this.renderer3D = new Renderer3D(graphics);
     }
 
     /**

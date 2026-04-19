@@ -33,11 +33,6 @@ public abstract class SingleQuadParticleMixin {
             return;
         }
 
-        if (cullable.fascinatedutils$isForcedVisible()) {
-            Client.TURBO_PARTICLES.incrementConsidered(false);
-            return;
-        }
-
         Client.TURBO_PARTICLES.incrementConsidered(false);
     }
 }

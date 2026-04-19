@@ -1,8 +1,5 @@
 package cc.fascinated.fascinatedutils.settings;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import cc.fascinated.fascinatedutils.client.keybind.Keybinds;
 import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
@@ -11,6 +8,9 @@ import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public class Settings {

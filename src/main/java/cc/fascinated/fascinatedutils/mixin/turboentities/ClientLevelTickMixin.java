@@ -1,8 +1,8 @@
 package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.turboentities.EntitiesCullTask;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
+import cc.fascinated.fascinatedutils.turboentities.EntitiesCullTask;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.Entity;

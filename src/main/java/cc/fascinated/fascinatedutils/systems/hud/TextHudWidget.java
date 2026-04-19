@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,12 +26,11 @@ public class TextHudWidget extends HudMiniMessageModule {
     }
 
     @Override
-    protected HudContent produceContent(float deltaSeconds, boolean editorMode) {
-        List<String> rawLines = editorMode && editorPreviewProvider != null ? editorPreviewProvider.apply(deltaSeconds) : lines(deltaSeconds);
-        if (rawLines == null || rawLines.isEmpty()) {
-            rawLines = List.of("");
+    protected List<String> resolveRawMiniMessageLines(float deltaSeconds, boolean editorMode) {
+        if (editorMode && editorPreviewProvider != null) {
+            return editorPreviewProvider.apply(deltaSeconds);
         }
-        return new HudContent.TextLines(rawLines);
+        return lines(deltaSeconds);
     }
 
     public static class Builder {

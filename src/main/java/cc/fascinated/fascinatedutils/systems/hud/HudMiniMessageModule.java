@@ -3,20 +3,61 @@ package cc.fascinated.fascinatedutils.systems.hud;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public abstract class HudMiniMessageModule extends HudModule {
+    private static final long DEFAULT_UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
+
+    private List<String> cachedMiniMessageLines;
+    private long lastMiniMessageSampleNanos;
+
     protected HudMiniMessageModule(String widgetId, String name, float minWidth) {
         super(widgetId, name, minWidth);
     }
 
+    private static List<String> normalizeMiniMessageLines(List<String> rawLines) {
+        if (rawLines == null || rawLines.isEmpty()) {
+            return List.of("");
+        }
+        return List.copyOf(rawLines);
+    }
+
     protected abstract List<String> lines(float deltaSeconds);
+
+    /**
+     * Wall-clock interval between recomputing HUD lines from {@link #resolveRawMiniMessageLines}.
+     * Return {@code 0L} to refresh every frame.
+     *
+     * @return elapsed time threshold in nanoseconds
+     */
+    protected long hudMiniMessageUpdateIntervalNanos() {
+        return DEFAULT_UPDATE_INTERVAL_NANOS;
+    }
+
+    /**
+     * Raw MiniMessage lines before normalization and caching. The default delegates to {@link #lines}.
+     *
+     * @param deltaSeconds frame delta in seconds
+     * @param editorMode   true in the HUD editor
+     * @return lines to display, or {@code null} / empty to fall back to a single blank line
+     */
+    protected List<String> resolveRawMiniMessageLines(float deltaSeconds, boolean editorMode) {
+        return lines(deltaSeconds);
+    }
 
     @Override
     protected HudContent produceContent(float deltaSeconds, boolean editorMode) {
-        List<String> rawLines = lines(deltaSeconds);
-        if (rawLines == null || rawLines.isEmpty()) {
-            rawLines = List.of("");
-        }
+        List<String> rawLines = editorMode ? normalizeMiniMessageLines(resolveRawMiniMessageLines(deltaSeconds, true)) : miniMessageLinesWithCache(deltaSeconds);
         return new HudContent.TextLines(rawLines);
+    }
+
+    private List<String> miniMessageLinesWithCache(float deltaSeconds) {
+        long intervalNanos = hudMiniMessageUpdateIntervalNanos();
+        long now = System.nanoTime();
+        if (intervalNanos <= 0L || cachedMiniMessageLines == null || now - lastMiniMessageSampleNanos >= intervalNanos) {
+            cachedMiniMessageLines = normalizeMiniMessageLines(resolveRawMiniMessageLines(deltaSeconds, false));
+            lastMiniMessageSampleNanos = now;
+        }
+        return cachedMiniMessageLines;
     }
 }

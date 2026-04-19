@@ -1,9 +1,9 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.NumberUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;
+import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;

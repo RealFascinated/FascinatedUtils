@@ -1,40 +1,19 @@
 package cc.fascinated.fascinatedutils.systems.modules;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.module.ModuleEnabledStateChangedEvent;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.ArmorWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.BossbarModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.ClockWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.CoordinatesWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.CpsWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.DebugWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.FpsWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.FreelookModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.HurtcamModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.MemoryWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.MovementModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.PingWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.ScoreboardModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.StatusEffectsModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.SystemCpuUsageWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.TabModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.TitlesModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.TpsWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.VibrancyModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.WawlaWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.WorldModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.ZoomModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.*;
 import cc.fascinated.fascinatedutils.systems.modules.impl.hypixel.HypixelModule;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Getter
 public class ModuleRegistry {

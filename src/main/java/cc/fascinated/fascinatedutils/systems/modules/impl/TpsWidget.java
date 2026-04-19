@@ -12,8 +12,11 @@ import net.minecraft.client.Minecraft;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class TpsWidget extends HudMiniMessageModule {
+
+    private static final long UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(500L);
     private static final float MAX_TPS = 20f;
     private static final float MIN_WIDTH_WITH_MSPT = 110f;
     private static final float MIN_WIDTH_TPS_ONLY = 72f;
@@ -53,6 +56,11 @@ public class TpsWidget extends HudMiniMessageModule {
             return List.of("<grey>TPS N/A</grey>");
         }
         return formatLine(lastKnownTps, lastKnownMspt, !lastSampleIntegratedServer, showMspt.getValue(), useTpsColor.getValue());
+    }
+
+    @Override
+    protected long hudMiniMessageUpdateIntervalNanos() {
+        return UPDATE_INTERVAL_NANOS;
     }
 
     @EventHandler

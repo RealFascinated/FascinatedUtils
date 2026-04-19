@@ -56,10 +56,6 @@ public class LevelRendererMixin {
             return;
         }
 
-        if (cullable.fascinatedutils$isForcedVisible()) {
-            return;
-        }
-
         cullable.fascinatedutils$setOutOfCamera(false);
     }
 

@@ -20,18 +20,6 @@ public interface Cullable {
     boolean fascinatedutils$isCulled();
 
     /**
-     * Marks this as forced visible for a short duration.
-     */
-    void fascinatedutils$setTimeout();
-
-    /**
-     * Checks if this is temporarily forced visible.
-     *
-     * @return true if forced visible
-     */
-    boolean fascinatedutils$isForcedVisible();
-
-    /**
      * Sets whether this entity is outside the camera view.
      *
      * @param outOfCamera true if outside camera frustum

@@ -11,30 +11,14 @@ import org.spongepowered.asm.mixin.Unique;
 public class CullableMixin implements Cullable {
 
     @Unique
-    private long fascinatedutils$forcedVisibleUntil = 0;
-
-    @Unique
     private boolean fascinatedutils$culled = false;
 
     @Unique
     private boolean fascinatedutils$outOfCamera = false;
 
     @Override
-    public void fascinatedutils$setTimeout() {
-        this.fascinatedutils$forcedVisibleUntil = System.currentTimeMillis() + 1000;
-    }
-
-    @Override
-    public boolean fascinatedutils$isForcedVisible() {
-        return fascinatedutils$forcedVisibleUntil > System.currentTimeMillis();
-    }
-
-    @Override
     public void fascinatedutils$setCulled(boolean culled) {
         this.fascinatedutils$culled = culled;
-        if (!culled) {
-            fascinatedutils$setTimeout();
-        }
     }
 
     @Override

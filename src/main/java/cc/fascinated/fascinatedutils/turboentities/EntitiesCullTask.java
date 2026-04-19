@@ -27,28 +27,25 @@ public class EntitiesCullTask implements Runnable {
     private static final int SLEEP_DELAY = 10;
     private static final double HITBOX_LIMIT = 64.0;
     private static final double ENTITY_FORCE_CULL_DISTANCE_SQ = 128.0 * 128.0;
-    private static final double BLOCK_ENTITY_FORCE_CULL_DISTANCE_SQ = 128.0 * 128.0;
-
-    private final OcclusionCullingInstance culling;
-
-    private final Vec3d aabbMin = new Vec3d(0, 0, 0);
-    private final Vec3d aabbMax = new Vec3d(0, 0, 0);
-    private final Vec3d cameraVec3d = new Vec3d(0, 0, 0);
+    private static final double BLOCK_ENTITY_FORCE_CULL_DISTANCE_SQ = 64.0 * 64.0;
 
     private static final int ENTITY_BUFFER_CAPACITY = 4096;
-    private static final int BLOCK_ENTITY_SNAPSHOT_INITIAL_CAPACITY = 16384;
 
+    private static final int BLOCK_ENTITY_SNAPSHOT_INITIAL_CAPACITY = 16384;
+    private final OcclusionCullingInstance culling;
+    private final Vec3d aabbMin = new Vec3d(0, 0, 0);
+
+    private final Vec3d aabbMax = new Vec3d(0, 0, 0);
+    private final Vec3d cameraVec3d = new Vec3d(0, 0, 0);
+    private final ArrayList<Entity> entityPublishScratch = new ArrayList<>(ENTITY_BUFFER_CAPACITY);
     private volatile boolean running = true;
     private volatile boolean requestCull = false;
     @Setter
     private volatile boolean inGame = false;
     @Setter
     private volatile Vec3 camera = Vec3.ZERO;
-
-    private final ArrayList<Entity> entityPublishScratch = new ArrayList<>(ENTITY_BUFFER_CAPACITY);
-
     /**
-     * Immutable hand-off from {@link #publishEntityCullSnapshotFromWorld} on a fixed tick cadence; the cull thread
+     * Immutable hand-off on a fixed tick cadence; the cull thread
      * only reads this reference.
      */
     private volatile List<Entity> entityCullSnapshot = List.of();
@@ -122,9 +119,6 @@ public class EntitiesCullTask implements Runnable {
         }
         entityPublishScratch.clear();
         for (Entity entity : client.level.entitiesForRendering()) {
-            if (entity == null) {
-                break;
-            }
             entityPublishScratch.add(entity);
         }
         entityCullSnapshot = List.copyOf(entityPublishScratch);
@@ -134,8 +128,8 @@ public class EntitiesCullTask implements Runnable {
      * Builds a position-keyed map of block entities near the player on the main thread (matches vanilla
      * client tick / world access expectations).
      *
-     * @param client            Minecraft client
-     * @param chunkRadiusCap    maximum chunk radius from the player chunk (inclusive)
+     * @param client         Minecraft client
+     * @param chunkRadiusCap maximum chunk radius from the player chunk (inclusive)
      */
     public void publishBlockEntityCullSnapshotFromWorld(Minecraft client, int chunkRadiusCap) {
         if (client.level == null || client.player == null) {
@@ -208,11 +202,9 @@ public class EntitiesCullTask implements Runnable {
                 }
 
                 BlockPos pos = blockEntity.getBlockPos();
-
-                considered++;
-
                 if (Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(blockEntity) == null) {
                     cullable.fascinatedutils$setCulled(false);
+                    continue;
                 }
                 else if (pos.distToCenterSqr(lastCameraPos) > BLOCK_ENTITY_FORCE_CULL_DISTANCE_SQ) {
                     cullable.fascinatedutils$setCulled(true);
@@ -222,6 +214,7 @@ public class EntitiesCullTask implements Runnable {
                     cullable.fascinatedutils$setCulled(!isVisible(box));
                 }
 
+                considered++;
                 if (cullable.fascinatedutils$isCulled()) {
                     culled++;
                 }

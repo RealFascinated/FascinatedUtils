@@ -1,9 +1,5 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.ValueSmoother;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
@@ -17,17 +13,16 @@ import cc.fascinated.fascinatedutils.turboparticles.ParticleCullTask;
 import cc.fascinated.fascinatedutils.turboparticles.TurboParticles;
 import lombok.AllArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 public class DebugWidget extends HudMiniMessageModule {
     private final ValueSmoother hudRenderMs = new ValueSmoother(500);
     private final ValueSmoother cullPassMs = new ValueSmoother(500);
     private final ValueSmoother particleCullPassMs = new ValueSmoother(500);
 
-    private final EnumSetting<DebugStatsFormat> turboStatsFormat = EnumSetting.<DebugStatsFormat>builder()
-            .id("turbo_stats_format")
-            .defaultValue(DebugStatsFormat.RATIO)
-            .valueFormatter(debugStatsFormat -> debugStatsFormat.displayName)
-            .categoryDisplayKey(HudModule.APPEARANCE_CATEGORY_DISPLAY_KEY)
-            .build();
+    private final EnumSetting<DebugStatsFormat> turboStatsFormat = EnumSetting.<DebugStatsFormat>builder().id("turbo_stats_format").defaultValue(DebugStatsFormat.RATIO).valueFormatter(debugStatsFormat -> debugStatsFormat.displayName).categoryDisplayKey(HudModule.APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
     public DebugWidget() {
         super("debug", "Debug", 200f);
@@ -115,8 +110,7 @@ public class DebugWidget extends HudMiniMessageModule {
 
     @AllArgsConstructor
     private enum DebugStatsFormat {
-        RATIO("Ratio (current/total)"),
-        PERCENTAGE("Percentage");
+        RATIO("Ratio (current/total)"), PERCENTAGE("Percentage");
 
         private final String displayName;
     }

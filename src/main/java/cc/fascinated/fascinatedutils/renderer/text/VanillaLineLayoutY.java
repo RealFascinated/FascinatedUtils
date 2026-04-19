@@ -23,6 +23,9 @@ public final class VanillaLineLayoutY {
     private static float cachedDeltaNoShadow = Float.NaN;
     private static float cachedDeltaShadow = Float.NaN;
 
+    private VanillaLineLayoutY() {
+    }
+
     /**
      * Converts a layout line top to an integer vanilla {@code drawText} Y coordinate.
      *
@@ -103,8 +106,5 @@ public final class VanillaLineLayoutY {
     private static int fontHeightFallback() {
         Minecraft client = Minecraft.getInstance();
         return client != null ? client.font.lineHeight : 9;
-    }
-
-    private VanillaLineLayoutY() {
     }
 }

@@ -43,14 +43,6 @@ public class TurboEntities {
     private boolean previousEnabledState = false;
 
     private int cullSnapshotTickCounter;
-
-    /**
-     * Fast gate for mixins: avoids walking {@link SettingsRegistry} on every block entity / entity call.
-     */
-    public boolean isTurboEntitiesCullEnabled() {
-        return turboEntitiesCullEnabledMirror;
-    }
-
     // Per-tick entity tick counters (snapshotted each tick for the debug widget)
     private volatile int tickedEntities = 0;
     private volatile int skippedEntityTicks = 0;
@@ -58,6 +50,13 @@ public class TurboEntities {
     private volatile int lastTickedEntities = 0;
     @Getter
     private volatile int lastSkippedEntityTicks = 0;
+
+    /**
+     * Fast gate for mixins: avoids walking {@link SettingsRegistry} on every block entity / entity call.
+     */
+    public boolean isTurboEntitiesCullEnabled() {
+        return turboEntitiesCullEnabledMirror;
+    }
 
     public void incrementTickedEntities() {
         tickedEntities++;
