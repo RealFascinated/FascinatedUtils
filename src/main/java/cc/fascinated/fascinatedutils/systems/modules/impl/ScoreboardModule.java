@@ -10,7 +10,6 @@ import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.mixin.scoreboard.GuiScoreDisplayOrderAccessor;
-import cc.fascinated.fascinatedutils.systems.hud.HUDPanelBackground;
 import cc.fascinated.fascinatedutils.systems.hud.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
@@ -42,8 +41,8 @@ public class ScoreboardModule extends HudModule {
     private final BooleanSetting hideScoreboardLines = BooleanSetting.builder().id("hide_scoreboard_lines").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().defaultValue(SettingColor.fromArgb(0x55000000)).build();
-    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
-    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
+    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().defaultValue(true).build();
+    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().defaultValue(16f).build();
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
@@ -118,8 +117,8 @@ public class ScoreboardModule extends HudModule {
             int rowWidth = font.width(row.name) + (row.scoreWidth > 0 ? spacerWidth + row.scoreWidth : 0);
             widest = Math.max(widest, rowWidth);
         }
-        float padX = HUDPanelBackground.HORIZONTAL_PADDING;
-        float padY = HUDPanelBackground.VERTICAL_PADDING;
+        float padX = getPadding();
+        float padY = getPadding();
         float layoutWidth = Math.max(getMinWidth(), (float) widest + 2f * padX);
         float layoutHeight = Math.max(1f, (rows.size() + 1) * lineHeight + 2f * padY);
         getHudState().setLastLayoutWidth(layoutWidth);

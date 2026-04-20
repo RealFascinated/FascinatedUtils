@@ -72,6 +72,8 @@
   "fascinatedutils.module.hud_background_color.description": "The background color of HUD panels.",
   "fascinatedutils.module.hud_border_color.display_name": "Border Color",
   "fascinatedutils.module.hud_border_color.description": "The outline color of HUD panels.",
+  "fascinatedutils.module.hud_padding.display_name": "Padding",
+  "fascinatedutils.module.hud_padding.description": "The spacing between the HUD panel edge and its content.",
   "fascinatedutils.module.fogcustomizer.atmospheric_fog.display_name": "Atmospheric Fog",
   "fascinatedutils.module.fogcustomizer.render_fogatmospheric_fog.description": "Adjusts how thick the atmospheric fog appears in the world.",
   "fascinatedutils.module.scoreboard.hide_scoreboard_lines.display_name": "Hide Scoreboard Numbers",

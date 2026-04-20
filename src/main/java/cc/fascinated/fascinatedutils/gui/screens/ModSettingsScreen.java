@@ -127,7 +127,7 @@ public class ModSettingsScreen extends WidgetScreen {
             float hudCanvasHeight = HudLayoutCanvas.height();
             guiRenderer.begin(hudCanvasWidth, hudCanvasHeight);
             try {
-                HUDManager.INSTANCE.renderHUD(guiRenderer, hudCanvasWidth, hudCanvasHeight, Mth.clamp(deltaSeconds, 0f, 1f));
+                HUDManager.INSTANCE.renderHUD(guiRenderer, hudCanvasWidth, hudCanvasHeight, Mth.clamp(deltaSeconds, 0f, 1f), true);
             } finally {
                 guiRenderer.end();
             }

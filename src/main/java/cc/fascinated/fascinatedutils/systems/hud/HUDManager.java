@@ -39,8 +39,8 @@ public class HUDManager {
         initialized = true;
     }
 
-    public void renderHUD(GuiRenderer renderer, float canvasWidth, float canvasHeight, float deltaSeconds) {
-        if (editMode || Minecraft.getInstance().debugEntries.isOverlayVisible()) {
+    public void renderHUD(GuiRenderer renderer, float canvasWidth, float canvasHeight, float deltaSeconds, boolean editorMode) {
+        if (this.editMode || Minecraft.getInstance().debugEntries.isOverlayVisible()) {
             return;
         }
 
@@ -50,7 +50,7 @@ public class HUDManager {
         for (HudModule widget : widgets.stream().filter(Module::isEnabled).toList()) {
             profiler.push("widget-" + widget.getId());
 
-            Runnable draw = widget.prepareAndDraw(renderer, deltaSeconds, false);
+            Runnable draw = widget.prepareAndDraw(renderer, deltaSeconds, editorMode);
             if (draw == null) {
                 widget.recordHudContentSkipped();
             }

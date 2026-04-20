@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.screens.ModSettingsScreen;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.minecraft.client.DeltaTracker;
@@ -37,7 +38,8 @@ public class HUDModuleWidgetsElement implements HudElement {
         float canvasWidth = HudLayoutCanvas.width();
         float canvasHeight = HudLayoutCanvas.height();
         guiRenderer.begin(canvasWidth, canvasHeight);
-        hudManager.renderHUD(guiRenderer, canvasWidth, canvasHeight, Mth.clamp(deltaSeconds, 0f, 1f));
+        boolean settingsOpen = Minecraft.getInstance().screen instanceof ModSettingsScreen;
+        hudManager.renderHUD(guiRenderer, canvasWidth, canvasHeight, Mth.clamp(deltaSeconds, 0f, 1f), settingsOpen);
         guiRenderer.end();
         profiler.pop();
     }

@@ -28,8 +28,10 @@ public abstract class HudModule extends Module implements HudRenderableModule {
     public static final String SETTING_BORDER_THICKNESS = "border_thickness";
     public static final String SETTING_BACKGROUND_COLOR = "hud_background_color";
     public static final String SETTING_BORDER_COLOR = "hud_border_color";
+    public static final String SETTING_PADDING = "hud_padding";
 
     private final HudDefaults defaults;
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
 
     @Getter
     private final String id;
@@ -49,6 +51,7 @@ public abstract class HudModule extends Module implements HudRenderableModule {
         this.hudState.setAnchorOffsetY(defaults.defaultYOffset());
         hudState.setPositionX(defaults.defaultXOffset());
         hudState.setPositionY(defaults.defaultYOffset());
+        addSetting(padding);
     }
 
     protected HudModule(String widgetId, String displayName, float minWidth) {
@@ -256,7 +259,7 @@ public abstract class HudModule extends Module implements HudRenderableModule {
     }
 
     public float getPadding() {
-        return HUDPanelBackground.HORIZONTAL_PADDING;
+        return padding.getValue().floatValue();
     }
 
     public float getCornerRadius() {
