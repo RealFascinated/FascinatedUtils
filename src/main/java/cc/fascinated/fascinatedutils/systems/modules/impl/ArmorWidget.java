@@ -22,43 +22,14 @@ public class ArmorWidget extends HudModule {
     private static final int ROW_COUNT = 6;
     private static final EquipmentSlot[] ARMOR_SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
     private static final String SLOTS_CATEGORY_DISPLAY_KEY = "Slots";
-    private static ItemStack previewStack(Item item, int damage) {
-        ItemStack stack = new ItemStack(item);
-        stack.setDamageValue(damage);
-        return stack;
-    }
-    private static ItemStack editorPreviewStackForRow(int rowIndex) {
-        return switch (rowIndex) {
-            case 0 -> previewStack(Items.DIAMOND_HELMET, 120);
-            case 1 -> previewStack(Items.DIAMOND_CHESTPLATE, 240);
-            case 2 -> previewStack(Items.DIAMOND_LEGGINGS, 180);
-            case 3 -> previewStack(Items.DIAMOND_BOOTS, 90);
-            case 4 -> previewStack(Items.DIAMOND_SWORD, 200);
-            case 5 -> previewStack(Items.SHIELD, 150);
-            default -> ItemStack.EMPTY;
-        };
-    }
-    private static ItemStack stackForRow(Player player, int rowIndex) {
-        if (rowIndex < ARMOR_SLOTS.length) {
-            return player.getItemBySlot(ARMOR_SLOTS[rowIndex]);
-        }
-        if (rowIndex == ARMOR_SLOTS.length) {
-            return player.getMainHandItem();
-        }
-        if (rowIndex == ARMOR_SLOTS.length + 1) {
-            return player.getOffhandItem();
-        }
-        return ItemStack.EMPTY;
-    }
+
     private final BooleanSetting[] slotRowVisibility = {BooleanSetting.builder().id("show_head").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_chest").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_legs").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_feet").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_main_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_off_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build()};
     private final BooleanSetting hideUnbreakableDurability = BooleanSetting.builder().id("hide_unbreakable_durability").defaultValue(false).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final BooleanSetting showTotalInventoryCount = BooleanSetting.builder().id("show_total_item_count").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
     private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
     private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
-
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
-
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
 
     public ArmorWidget() {
@@ -84,7 +55,9 @@ public class ArmorWidget extends HudModule {
     @Override
     protected HudContent produceContent(float deltaSeconds, boolean editorMode) {
         List<HudContent.ItemRow> rows = new ArrayList<>(ROW_COUNT);
-        if (editorMode) {
+        Player player = Minecraft.getInstance().player;
+
+        if (editorMode && !hasAnyVisibleEquippedStack(player)) {
             for (int rowIndex = 0; rowIndex < ROW_COUNT; rowIndex++) {
                 if (!isSlotRowShown(rowIndex)) {
                     continue;
@@ -97,7 +70,6 @@ public class ArmorWidget extends HudModule {
             }
         }
         else {
-            Player player = Minecraft.getInstance().player;
             if (player == null || !hasAnyVisibleEquippedStack(player)) {
                 return null;
             }
@@ -154,4 +126,36 @@ public class ArmorWidget extends HudModule {
         }
         return false;
     }
+
+    private static ItemStack previewStack(Item item, int damage) {
+        ItemStack stack = new ItemStack(item);
+        stack.setDamageValue(damage);
+        return stack;
+    }
+
+    private static ItemStack editorPreviewStackForRow(int rowIndex) {
+        return switch (rowIndex) {
+            case 0 -> previewStack(Items.DIAMOND_HELMET, 120);
+            case 1 -> previewStack(Items.DIAMOND_CHESTPLATE, 240);
+            case 2 -> previewStack(Items.DIAMOND_LEGGINGS, 180);
+            case 3 -> previewStack(Items.DIAMOND_BOOTS, 90);
+            case 4 -> previewStack(Items.DIAMOND_SWORD, 200);
+            case 5 -> previewStack(Items.SHIELD, 150);
+            default -> ItemStack.EMPTY;
+        };
+    }
+
+    private static ItemStack stackForRow(Player player, int rowIndex) {
+        if (rowIndex < ARMOR_SLOTS.length) {
+            return player.getItemBySlot(ARMOR_SLOTS[rowIndex]);
+        }
+        if (rowIndex == ARMOR_SLOTS.length) {
+            return player.getMainHandItem();
+        }
+        if (rowIndex == ARMOR_SLOTS.length + 1) {
+            return player.getOffhandItem();
+        }
+        return ItemStack.EMPTY;
+    }
+
 }
