@@ -168,7 +168,7 @@ public class FColorSettingRowWidget extends FWidget {
         float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), swatchSize);
         float titleOriginY = y() + padY + (innerHeight - titleRowHeight) * 0.5f;
         float bodyLeft = x() + padX;
-        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + w());
+        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + outerWidth);
         float maxSwatchLeft = Math.max(bodyLeft, resetLeft - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - swatchSize);
         float swatchLeft = Math.min(bodyLeft + valueColumnStartX, maxSwatchLeft);
         return new float[]{swatchLeft, titleOriginY, swatchSize, swatchSize};
@@ -176,7 +176,7 @@ public class FColorSettingRowWidget extends FWidget {
 
     private float[] inlineResetSquare() {
         float[] swatch = swatchBounds();
-        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + w());
+        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + outerWidth);
         float resetTop = SettingRowResetLayout.verticallyCenteredTop(swatch[1], swatch[3]);
         float box = SettingRowResetLayout.glyphBoxPx();
         return new float[]{resetLeft, resetTop, box};

@@ -1,5 +1,9 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
+import java.util.Locale;
+
+import org.jspecify.annotations.Nullable;
+
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
@@ -10,6 +14,7 @@ import cc.fascinated.fascinatedutils.mixin.ClientPlayerInteractionManagerAccesso
 import cc.fascinated.fascinatedutils.systems.hud.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.HudAnchorLayout;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -25,29 +30,13 @@ import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
-import org.jspecify.annotations.Nullable;
-
-import java.util.Locale;
 
 public class WawlaWidget extends HudModule {
-    private static final float PANEL_PADDING_X = 5f, PANEL_PADDING_Y = 4f, ICON_SIZE = 16f, ICON_TEXT_GAP = 5f, LINE_GAP = 1f, BREAK_BAR_GAP = 3f, BREAK_BAR_HEIGHT = 2f, BREAK_BAR_LERP_SPEED = 14f;
+    private record TargetInfo(String displayName, String sourceName, ItemStack iconStack, boolean showEntityHealth,
+                              float breakProgress, boolean showBreakBar) {}
+    private record BreakingProgress(float progress, boolean active) {}
+    private static final float ICON_SIZE = 16f, ICON_TEXT_GAP = 5f, LINE_GAP = 1f, BREAK_BAR_GAP = 3f, BREAK_BAR_HEIGHT = 2f, BREAK_BAR_LERP_SPEED = 14f;
     private static final int TITLE_COLOR = UiColor.argb("#f2f6ff"), SOURCE_COLOR = UiColor.argb("#7f91ff"), BREAK_BAR_BACKGROUND = UiColor.argb("#44232a33"), BREAK_BAR_FILL = UiColor.argb("#ffffffff");
-    private final BooleanSetting showBackground = BooleanSetting.builder().id(SETTING_SHOW_BACKGROUND).defaultValue(true).translationKeyPath("fascinatedutils.module.show_hud_background").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting showBorder = BooleanSetting.builder().id(SETTING_SHOW_BORDER).defaultValue(false).translationKeyPath("fascinatedutils.module.show_border").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final SliderSetting borderThickness = SliderSetting.builder().id(SETTING_BORDER_THICKNESS).defaultValue(2f).minValue(1f).maxValue(3f).step(1f).translationKeyPath("fascinatedutils.module.border_thickness").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final SliderSetting padding = SliderSetting.builder().id(SETTING_PADDING).defaultValue(6f).minValue(0f).maxValue(16f).step(1f).translationKeyPath("fascinatedutils.module.padding").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    @Nullable
-    private BlockPos activeBreakingPos;
-    private float smoothedBreakProgress;
-
-    public WawlaWidget() {
-        super("wawla", "WAWLA", 0f);
-        addSetting(showBackground);
-        addSetting(showBorder);
-        addSetting(borderThickness);
-        addSetting(padding);
-    }
-
     private static String formatSourceName(String namespace) {
         if (namespace == null || namespace.isBlank()) {
             return "Minecraft";
@@ -62,11 +51,9 @@ public class WawlaWidget extends HudModule {
         }
         return builder.toString();
     }
-
     private static String formatHealthLine(LivingEntity livingEntity) {
         return formatNumber(livingEntity.getHealth()) + "/" + formatNumber(livingEntity.getMaxHealth());
     }
-
     private static String formatNumber(float value) {
         if (!Float.isFinite(value)) {
             return "0";
@@ -76,6 +63,30 @@ public class WawlaWidget extends HudModule {
             return Integer.toString(Math.round(rounded));
         }
         return Float.toString(rounded);
+    }
+    private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
+    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
+    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
+
+    private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
+
+    private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
+
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
+
+    @Nullable
+    private BlockPos activeBreakingPos;
+
+    private float smoothedBreakProgress;
+
+    public WawlaWidget() {
+        super("wawla", "WAWLA", 0f);
+        addSetting(showBackground);
+        addSetting(roundedCorners);
+        addSetting(showBorder);
+        addSetting(roundingRadius);
+        addSetting(borderThickness);
+        addSetting(padding);
     }
 
     @Override
@@ -93,7 +104,8 @@ public class WawlaWidget extends HudModule {
         float line1Width = glRenderer.measureMiniMessageTextWidth(titleMini);
         float line2Width = glRenderer.measureMiniMessageTextWidth(secondaryMini);
         float textWidth = Math.max(line1Width, line2Width);
-        float layoutWidth = Math.max(getMinWidth(), PANEL_PADDING_X * 2f + ICON_SIZE + ICON_TEXT_GAP + textWidth);
+        float panelPadding = getPadding();
+        float layoutWidth = Math.max(getMinWidth(), panelPadding * 2f + ICON_SIZE + ICON_TEXT_GAP + textWidth);
         float targetBreakProgress = Mth.clamp(targetInfo.breakProgress(), 0f, 1f);
         if (targetInfo.showBreakBar()) {
             smoothedBreakProgress = Mth.lerp(Mth.clamp(deltaSeconds * BREAK_BAR_LERP_SPEED, 0f, 1f), smoothedBreakProgress, targetBreakProgress);
@@ -102,7 +114,7 @@ public class WawlaWidget extends HudModule {
             smoothedBreakProgress = 0f;
         }
         boolean renderBreakBar = targetInfo.showBreakBar() && smoothedBreakProgress > 0.001f;
-        float layoutHeight = PANEL_PADDING_Y * 2f + contentHeight + (renderBreakBar ? BREAK_BAR_GAP + BREAK_BAR_HEIGHT : 0f);
+        float layoutHeight = panelPadding * 2f + contentHeight + (renderBreakBar ? BREAK_BAR_GAP + BREAK_BAR_HEIGHT : 0f);
         getHudState().setLastLayoutWidth(layoutWidth);
         getHudState().setLastLayoutHeight(layoutHeight);
         getHudState().setCommittedLayoutWidth(layoutWidth);
@@ -111,29 +123,29 @@ public class WawlaWidget extends HudModule {
         float capturedSmoothedBreakProgress = smoothedBreakProgress;
         return () -> {
             drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
-            float innerTop = PANEL_PADDING_Y;
+            float innerTop = panelPadding;
             float iconY = innerTop + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, ICON_SIZE, hudContentVerticalAlignment());
             float textY = innerTop + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, textBlockHeight, hudContentVerticalAlignment());
             boolean mirrorIconAndText = hudContentHorizontalAlignment() == HudAnchorContentAlignment.Horizontal.RIGHT;
             if (!mirrorIconAndText) {
-                float iconX = PANEL_PADDING_X;
+                float iconX = panelPadding;
                 glRenderer.drawGuiItem(targetInfo.iconStack(), iconX, iconY);
                 float textX = iconX + ICON_SIZE + ICON_TEXT_GAP;
                 glRenderer.drawMiniMessageText(titleMini, textX, textY, false);
                 glRenderer.drawMiniMessageText(secondaryMini, textX, textY + lineHeight + LINE_GAP, false);
             }
             else {
-                float iconX = layoutWidth - PANEL_PADDING_X - ICON_SIZE;
+                float iconX = layoutWidth - panelPadding - ICON_SIZE;
                 glRenderer.drawGuiItem(targetInfo.iconStack(), iconX, iconY);
                 float textRight = iconX - ICON_TEXT_GAP;
                 glRenderer.drawMiniMessageText(titleMini, textRight - line1Width, textY, false);
                 glRenderer.drawMiniMessageText(secondaryMini, textRight - line2Width, textY + lineHeight + LINE_GAP, false);
             }
             if (renderBreakBar) {
-                float barY = PANEL_PADDING_Y + contentHeight + BREAK_BAR_GAP;
-                float barWidth = layoutWidth - PANEL_PADDING_X * 2f;
-                glRenderer.drawRect(PANEL_PADDING_X, barY, barWidth, BREAK_BAR_HEIGHT, BREAK_BAR_BACKGROUND);
-                glRenderer.drawRect(PANEL_PADDING_X, barY, barWidth * capturedSmoothedBreakProgress, BREAK_BAR_HEIGHT, BREAK_BAR_FILL);
+                float barY = panelPadding + contentHeight + BREAK_BAR_GAP;
+                float barWidth = layoutWidth - panelPadding * 2f;
+                glRenderer.drawRect(panelPadding, barY, barWidth, BREAK_BAR_HEIGHT, BREAK_BAR_BACKGROUND);
+                glRenderer.drawRect(panelPadding, barY, barWidth * capturedSmoothedBreakProgress, BREAK_BAR_HEIGHT, BREAK_BAR_FILL);
             }
         };
     }
@@ -209,9 +221,4 @@ public class WawlaWidget extends HudModule {
         activeBreakingPos = null;
         smoothedBreakProgress = 0f;
     }
-
-    private record TargetInfo(String displayName, String sourceName, ItemStack iconStack, boolean showEntityHealth,
-                              float breakProgress, boolean showBreakBar) {}
-
-    private record BreakingProgress(float progress, boolean active) {}
 }

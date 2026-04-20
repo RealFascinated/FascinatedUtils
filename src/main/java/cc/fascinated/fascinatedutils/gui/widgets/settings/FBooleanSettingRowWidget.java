@@ -201,7 +201,7 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
         float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), toggleH);
         float titleOriginY = titleRowTop(innerHeight, padY, titleRowHeight);
         float bodyLeft = x() + padX;
-        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + w());
+        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + outerWidth);
         float maxToggleLeft = Math.max(bodyLeft, resetLeft - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - toggleW);
         float toggleLeft = Mth.clamp(bodyLeft + valueColumnStartX, bodyLeft, maxToggleLeft);
         return new float[]{toggleLeft, titleOriginY, toggleW, toggleH};
@@ -210,7 +210,7 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
     private float[] inlineResetSquare() {
         float[] toggle = toggleBounds();
         float toggleH = toggle[3];
-        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + w());
+        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + outerWidth);
         float resetTop = SettingRowResetLayout.verticallyCenteredTop(toggle[1], toggleH);
         float box = SettingRowResetLayout.glyphBoxPx();
         return new float[]{resetLeft, resetTop, box};

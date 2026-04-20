@@ -1,5 +1,11 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+import org.jspecify.annotations.Nullable;
+
 import cc.fascinated.fascinatedutils.common.DateUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
@@ -8,6 +14,7 @@ import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.HudAnchorLayout;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
@@ -18,57 +25,48 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
-import org.jspecify.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 
 public class StatusEffectsModule extends HudModule {
-    private static final float HORIZONTAL_PADDING = 5f;
-    private static final float VERTICAL_PADDING = 4f;
+    private enum SortMode {
+        REMAINING_TIME("Remaining Time"), ALPHABETICAL("Alphabetical");
+
+        private final String displayName;
+
+        SortMode(String displayName) {
+            this.displayName = displayName;
+        }
+
+        private String displayName() {
+            return displayName;
+        }
+    }
+    private enum DisplayMode {
+        DETAILED("Detailed"), COMPACT("Compact");
+
+        private final String displayName;
+
+        DisplayMode(String displayName) {
+            this.displayName = displayName;
+        }
+
+        private String displayName() {
+            return displayName;
+        }
+    }
+    private record EffectRow(Identifier effectSprite, String nameText, String durationText, float iconAlpha) {}
     private static final float ICON_SIZE = 18f;
     private static final float ICON_TEXT_GAP = 5f;
     private static final float TEXT_LINE_GAP = 1f;
     private static final float ROW_GAP = 2f;
     private static final Identifier PREVIEW_SPEED_ICON = Identifier.withDefaultNamespace("mob_effect/speed");
     private static final Identifier PREVIEW_POISON_ICON = Identifier.withDefaultNamespace("mob_effect/poison");
-    private final BooleanSetting showAmplifier = BooleanSetting.builder().id("show_amplifier").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting showDuration = BooleanSetting.builder().id("show_duration").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final SliderSetting flashTimeWhenEnding = SliderSetting.builder().id("flash_time_when_ending").defaultValue(10f).minValue(0f).maxValue(30f).step(1f).valueFormatter(value -> {
-        int seconds = Math.round(value.floatValue());
-        return seconds <= 0 ? "Off" : seconds + "s";
-    }).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final EnumSetting<SortMode> sortMode = EnumSetting.<SortMode>builder().id("sort_mode").defaultValue(SortMode.REMAINING_TIME).valueFormatter(SortMode::displayName).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final EnumSetting<DisplayMode> displayMode = EnumSetting.<DisplayMode>builder().id("display_mode").defaultValue(DisplayMode.DETAILED).valueFormatter(DisplayMode::displayName).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final Minecraft minecraft = Minecraft.getInstance();
-    private final BooleanSetting showBackground = BooleanSetting.builder().id(SETTING_SHOW_BACKGROUND).defaultValue(true).translationKeyPath("fascinatedutils.module.show_hud_background").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting showBorder = BooleanSetting.builder().id(SETTING_SHOW_BORDER).defaultValue(false).translationKeyPath("fascinatedutils.module.show_border").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final SliderSetting borderThickness = SliderSetting.builder().id(SETTING_BORDER_THICKNESS).defaultValue(2f).minValue(1f).maxValue(3f).step(1f).translationKeyPath("fascinatedutils.module.border_thickness").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final SliderSetting padding = SliderSetting.builder().id(SETTING_PADDING).defaultValue(6f).minValue(0f).maxValue(16f).step(1f).translationKeyPath("fascinatedutils.module.padding").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-
-    public StatusEffectsModule() {
-        super("status_effects", "Status Effects", 56f);
-        addSetting(showBackground);
-        addSetting(showBorder);
-        addSetting(borderThickness);
-        addSetting(padding);
-        addSetting(showAmplifier);
-        addSetting(showDuration);
-        addSetting(flashTimeWhenEnding);
-        addSetting(sortMode);
-        addSetting(displayMode);
-    }
-
     private static int whiteWithAlpha(float alpha) {
         int alphaChannel = Mth.clamp(Math.round(alpha * 255f), 0, 255);
         return (alphaChannel << 24) | 0x00FFFFFF;
     }
-
     private static Identifier getMobEffectSprite(Holder<MobEffect> effect) {
         return effect.unwrapKey().map(ResourceKey::identifier).map(identifier -> identifier.withPrefix("mob_effect/")).orElseGet(MissingTextureAtlasSprite::getLocation);
     }
-
     private static String formatEffectNameWithAmplifier(MobEffectInstance effectInstance, boolean includeAmplifier) {
         String effectName = effectInstance.getEffect().value().getDisplayName().getString();
         if (!includeAmplifier) {
@@ -85,12 +83,48 @@ public class StatusEffectsModule extends HudModule {
         String levelText = translatedLevel.equals(levelKey) ? Integer.toString(level) : translatedLevel;
         return effectName + " " + levelText;
     }
-
     private static String compactText(String effectName, String durationText, boolean includeDuration) {
         if (!includeDuration || durationText == null || durationText.isBlank()) {
             return effectName;
         }
         return effectName + " " + durationText;
+    }
+    private final BooleanSetting showAmplifier = BooleanSetting.builder().id("show_amplifier").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showDuration = BooleanSetting.builder().id("show_duration").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final SliderSetting flashTimeWhenEnding = SliderSetting.builder().id("flash_time_when_ending").defaultValue(10f).minValue(0f).maxValue(30f).step(1f).valueFormatter(value -> {
+        int seconds = Math.round(value.floatValue());
+        return seconds <= 0 ? "Off" : seconds + "s";
+    }).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final EnumSetting<SortMode> sortMode = EnumSetting.<SortMode>builder().id("sort_mode").defaultValue(SortMode.REMAINING_TIME).valueFormatter(SortMode::displayName).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final EnumSetting<DisplayMode> displayMode = EnumSetting.<DisplayMode>builder().id("display_mode").defaultValue(DisplayMode.DETAILED).valueFormatter(DisplayMode::displayName).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+
+    private final Minecraft minecraft = Minecraft.getInstance();
+
+    private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
+
+    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
+
+    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
+
+    private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
+
+    private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
+
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
+
+    public StatusEffectsModule() {
+        super("status_effects", "Status Effects", 56f);
+        addSetting(showBackground);
+        addSetting(roundedCorners);
+        addSetting(showBorder);
+        addSetting(roundingRadius);
+        addSetting(borderThickness);
+        addSetting(padding);
+        addSetting(showAmplifier);
+        addSetting(showDuration);
+        addSetting(flashTimeWhenEnding);
+        addSetting(sortMode);
+        addSetting(displayMode);
     }
 
     @Override
@@ -125,8 +159,9 @@ public class StatusEffectsModule extends HudModule {
         }
 
         float contentHeight = effectRows.size() * rowHeight + Math.max(0f, effectRows.size() - 1f) * ROW_GAP;
-        float layoutWidth = Math.max(1f, Math.max(getMinWidth(), HORIZONTAL_PADDING * 2f + maxRowWidth));
-        float layoutHeight = Math.max(1f, VERTICAL_PADDING * 2f + contentHeight);
+        float padding = getPadding();
+        float layoutWidth = Math.max(1f, Math.max(getMinWidth(), padding * 2f + maxRowWidth));
+        float layoutHeight = Math.max(1f, padding * 2f + contentHeight);
 
         getHudState().setLastLayoutWidth(layoutWidth);
         getHudState().setLastLayoutHeight(layoutHeight);
@@ -136,12 +171,12 @@ public class StatusEffectsModule extends HudModule {
         return () -> {
             drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
 
-            float innerWidth = layoutWidth - HORIZONTAL_PADDING * 2f;
-            float innerHeight = layoutHeight - VERTICAL_PADDING * 2f;
-            float cursorY = VERTICAL_PADDING + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, contentHeight, hudContentVerticalAlignment());
+            float innerWidth = layoutWidth - padding * 2f;
+            float innerHeight = layoutHeight - padding * 2f;
+            float cursorY = padding + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, contentHeight, hudContentVerticalAlignment());
             boolean rightAligned = hudContentHorizontalAlignment() == HudAnchorContentAlignment.Horizontal.RIGHT;
 
-            float sharedIconXWhenRight = HORIZONTAL_PADDING + innerWidth - ICON_SIZE;
+            float sharedIconXWhenRight = padding + innerWidth - ICON_SIZE;
             float textRightEdgeWhenRight = sharedIconXWhenRight - ICON_TEXT_GAP;
 
             for (int rowIndex = 0; rowIndex < effectRows.size(); rowIndex++) {
@@ -169,7 +204,7 @@ public class StatusEffectsModule extends HudModule {
                 }
                 else {
                     float rowWidth = ICON_SIZE + ICON_TEXT_GAP + textWidths[rowIndex];
-                    float rowStartX = HORIZONTAL_PADDING + HudAnchorLayout.horizontalOffsetInInnerBand(innerWidth, rowWidth, HudAnchorContentAlignment.Horizontal.LEFT);
+                    float rowStartX = padding + HudAnchorLayout.horizontalOffsetInInnerBand(innerWidth, rowWidth, HudAnchorContentAlignment.Horizontal.LEFT);
                     float iconX = rowStartX;
                     float textX = rowStartX + ICON_SIZE + ICON_TEXT_GAP;
                     glRenderer.drawSprite(effectRow.effectSprite(), iconX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(effectRow.iconAlpha()));
@@ -240,34 +275,4 @@ public class StatusEffectsModule extends HudModule {
         }
         return rows;
     }
-
-    private enum SortMode {
-        REMAINING_TIME("Remaining Time"), ALPHABETICAL("Alphabetical");
-
-        private final String displayName;
-
-        SortMode(String displayName) {
-            this.displayName = displayName;
-        }
-
-        private String displayName() {
-            return displayName;
-        }
-    }
-
-    private enum DisplayMode {
-        DETAILED("Detailed"), COMPACT("Compact");
-
-        private final String displayName;
-
-        DisplayMode(String displayName) {
-            this.displayName = displayName;
-        }
-
-        private String displayName() {
-            return displayName;
-        }
-    }
-
-    private record EffectRow(Identifier effectSprite, String nameText, String durationText, float iconAlpha) {}
 }

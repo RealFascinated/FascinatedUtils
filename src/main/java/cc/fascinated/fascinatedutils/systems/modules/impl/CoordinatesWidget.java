@@ -13,11 +13,11 @@ import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.systems.hud.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.hud.HudAnchorLayout;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -26,8 +26,6 @@ import net.minecraft.world.phys.Vec3;
 
 public class CoordinatesWidget extends HudModule {
     private static final float COLUMN_GAP = 10f;
-    private static final float HORIZONTAL_PADDING = UITheme.PADDING_SM;
-    private static final float VERTICAL_PADDING = UITheme.PADDING_SM;
     private static final float LINE_GAP_PX = 1f;
     private static final String[] COMPASS_CARDINALS = {"S", "E", "N", "W"};
     private static String biomeColoredMiniMessage(String biomeIdRaw) {
@@ -53,12 +51,14 @@ public class CoordinatesWidget extends HudModule {
     private final SliderSetting blockPrecision = SliderSetting.builder().id("block_precision")
 
             .defaultValue(0f).minValue(0f).maxValue(3f).step(1f).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting showBackground = BooleanSetting.builder().id(SETTING_SHOW_BACKGROUND).defaultValue(true).translationKeyPath("fascinatedutils.module.show_hud_background").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting showBorder = BooleanSetting.builder().id(SETTING_SHOW_BORDER).defaultValue(false).translationKeyPath("fascinatedutils.module.show_border").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
+    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
+    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
+    private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
 
-    private final SliderSetting borderThickness = SliderSetting.builder().id(SETTING_BORDER_THICKNESS).defaultValue(2f).minValue(1f).maxValue(3f).step(1f).translationKeyPath("fascinatedutils.module.border_thickness").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
 
-    private final SliderSetting padding = SliderSetting.builder().id(SETTING_PADDING).defaultValue(6f).minValue(0f).maxValue(16f).step(1f).translationKeyPath("fascinatedutils.module.padding").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
 
     public CoordinatesWidget() {
         super("coordinates", "Coordinates", 56f, HudDefaults.builder()
@@ -70,7 +70,9 @@ public class CoordinatesWidget extends HudModule {
         );
         addSetting(blockPrecision);
         addSetting(showBackground);
+        addSetting(roundedCorners);
         addSetting(showBorder);
+        addSetting(roundingRadius);
         addSetting(borderThickness);
         addSetting(padding);
     }
@@ -109,8 +111,9 @@ public class CoordinatesWidget extends HudModule {
         float facingWidth = glRenderer.measureMiniMessageTextWidth(facingKey);
         float innerHeight = lineCount * lineHeight + Math.max(0, lineCount - 1) * LINE_GAP_PX;
         float innerWidth = leftColumnWidth + COLUMN_GAP + facingWidth;
-        float layoutWidth = Math.max(1f, Math.max(getMinWidth(), innerWidth + 2f * HORIZONTAL_PADDING));
-        float layoutHeight = Math.max(1f, innerHeight + 2f * VERTICAL_PADDING);
+        float padding = getPadding();
+        float layoutWidth = Math.max(1f, Math.max(getMinWidth(), innerWidth + 2f * padding));
+        float layoutHeight = Math.max(1f, innerHeight + 2f * padding);
         getHudState().setLastLayoutWidth(layoutWidth);
         getHudState().setLastLayoutHeight(layoutHeight);
         getHudState().setCommittedLayoutWidth(layoutWidth);
@@ -119,10 +122,9 @@ public class CoordinatesWidget extends HudModule {
         float capturedLeftColumnWidth = leftColumnWidth;
         return () -> {
             drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
-            float pad = HORIZONTAL_PADDING;
-            float availableInnerWidth = layoutWidth - 2f * pad;
-            float blockStartX = pad + HudAnchorLayout.horizontalOffsetInInnerBand(availableInnerWidth, innerWidth, hudContentHorizontalAlignment());
-            float innerTop = VERTICAL_PADDING;
+            float availableInnerWidth = layoutWidth - 2f * padding;
+            float blockStartX = padding + HudAnchorLayout.horizontalOffsetInInnerBand(availableInnerWidth, innerWidth, hudContentHorizontalAlignment());
+            float innerTop = padding;
             float cursorY = innerTop;
             for (int index = 0; index < lineCount; index++) {
                 glRenderer.drawMiniMessageText(leftLines.get(index), blockStartX, cursorY, false);

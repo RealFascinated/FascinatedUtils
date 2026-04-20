@@ -178,6 +178,7 @@ public class FEnumSettingRowWidget extends FWidget {
         float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), chipH);
         float bodyTop = y() + padY;
         float titleOriginY = bodyTop + (innerHeight - titleRowHeight) * 0.5f;
+
         float labelRightEdge = chip[0] - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP;
         float labelMaxWidth = Math.max(0f, labelRightEdge - bodyLeft);
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
@@ -208,11 +209,11 @@ public class FEnumSettingRowWidget extends FWidget {
         float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
         float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float bodyLeft = x() + padX;
-        float chipH = SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H;
+        float chipH = SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN;
         float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), chipH);
         float bodyTop = y() + padY;
         float titleOriginY = bodyTop + (innerHeight - titleRowHeight) * 0.5f;
-        float contentRight = x() + w();
+        float contentRight = x() + outerWidth;
         float resetLeft = SettingRowResetLayout.trailingResetLeftX(contentRight);
         float gapBeforeReset = SettingRowResetLayout.resetGapBesideControlPx();
         float chipRight = resetLeft - gapBeforeReset;
@@ -239,7 +240,7 @@ public class FEnumSettingRowWidget extends FWidget {
     private float[] inlineResetSquare() {
         float[] chip = valueChipBounds();
         float chipH = chip[3];
-        float contentRight = x() + w();
+        float contentRight = x() + outerWidth;
         float resetLeft = SettingRowResetLayout.trailingResetLeftX(contentRight);
         float resetTop = SettingRowResetLayout.verticallyCenteredTop(chip[1], chipH);
         float box = SettingRowResetLayout.glyphBoxPx();

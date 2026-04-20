@@ -249,12 +249,12 @@ public class FSliderSettingRowWidget extends FWidget {
     }
 
     private float sliderTrackWidth() {
-        float right = x() + w() - SettingRowResetLayout.trailingResetReservePx();
+        float right = x() + outerWidth - SettingRowResetLayout.trailingResetReservePx();
         return Math.max(25f, right - sliderTrackLeft());
     }
 
     private float[] inlineResetSquare() {
-        float contentRight = x() + w();
+        float contentRight = x() + outerWidth;
         float resetLeft = SettingRowResetLayout.trailingResetLeftX(contentRight);
         float box = SettingRowResetLayout.glyphBoxPx();
         float sliderMidY = computeTrackTop() + computeTrackHeight() * 0.5f;

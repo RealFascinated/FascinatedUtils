@@ -21,6 +21,8 @@ public abstract class HudModule extends Module implements HudRenderableModule {
 
     public static final String APPEARANCE_CATEGORY_DISPLAY_KEY = "Appearance";
     public static final String SETTING_SHOW_BACKGROUND = "show_hud_background";
+    public static final String SETTING_ROUNDED_CORNERS = "rounded_corners";
+    public static final String SETTING_ROUNDING_RADIUS = "rounding_radius";
     public static final String SETTING_SHOW_BORDER = "show_border";
     public static final String SETTING_BORDER_THICKNESS = "border_thickness";
     public static final String SETTING_PADDING = "padding";
@@ -255,11 +257,20 @@ public abstract class HudModule extends Module implements HudRenderableModule {
         return getSetting(SliderSetting.class, SETTING_PADDING).map(setting -> setting.getValue().floatValue()).orElse(HUDPanelBackground.HORIZONTAL_PADDING);
     }
 
+    public float getCornerRadius() {
+        boolean rounded = getSetting(BooleanSetting.class, SETTING_ROUNDED_CORNERS).map(BooleanSetting::isEnabled).orElse(false);
+        if (!rounded) {
+            return 0f;
+        }
+        return getSetting(SliderSetting.class, SETTING_ROUNDING_RADIUS).map(setting -> setting.getValue().floatValue()).orElse(4f);
+    }
+
     public void drawHUDPanelBackground(GuiRenderer glRenderer, float layoutWidth, float layoutHeight) {
         boolean showBg = getSetting(BooleanSetting.class, SETTING_SHOW_BACKGROUND).map(BooleanSetting::isEnabled).orElse(false);
         boolean showBorder = getSetting(BooleanSetting.class, SETTING_SHOW_BORDER).map(BooleanSetting::isEnabled).orElse(false);
         float thickness = getSetting(SliderSetting.class, SETTING_BORDER_THICKNESS).map(setting -> setting.getValue().floatValue()).orElse(2f);
-        HUDPanelBackground.drawPanelChrome(glRenderer, layoutWidth, layoutHeight, showBg, thickness, showBorder);
+        float cornerRadius = getCornerRadius();
+        HUDPanelBackground.drawPanelChrome(glRenderer, layoutWidth, layoutHeight, showBg, thickness, showBorder, cornerRadius);
     }
 
     @Override

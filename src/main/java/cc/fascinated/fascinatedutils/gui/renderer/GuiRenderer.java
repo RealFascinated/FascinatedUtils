@@ -1,5 +1,10 @@
 package cc.fascinated.fascinatedutils.gui.renderer;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
+
 import cc.fascinated.fascinatedutils.gui.GuiTheme;
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.renderer.operations.GuiRenderOperation;
@@ -16,11 +21,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
 
 /**
  * GUI orchestrator: root {@link GuiGraphics} scope, nested scissors with segment flushes, deferred text
@@ -210,13 +210,12 @@ public class GuiRenderer implements UIRenderer {
 
     @Override
     public void fillRoundedRect(float positionX, float positionY, float width, float height, float cornerRadius, int fillArgb, int cornerRoundMask) {
-        backend.drawRect(positionX, positionY, width, height, fillArgb);
+        backend.fillRoundedRect(positionX, positionY, width, height, cornerRadius, fillArgb, cornerRoundMask);
     }
 
     @Override
     public void fillRoundedRectFrame(float positionX, float positionY, float width, float height, float cornerRadius, int borderArgb, int fillArgb, float borderThicknessX, float borderThicknessY, int cornerRoundMask) {
-        backend.drawRect(positionX, positionY, width, height, fillArgb);
-        backend.drawBorder(positionX, positionY, width, height, Math.max(borderThicknessX, borderThicknessY), borderArgb);
+        backend.fillRoundedRectFrame(positionX, positionY, width, height, cornerRadius, borderArgb, fillArgb, borderThicknessX, borderThicknessY, cornerRoundMask);
     }
 
     /**
@@ -234,7 +233,7 @@ public class GuiRenderer implements UIRenderer {
      * @param cornerRoundMask which corners are rounded
      */
     public void fillRoundedRectBorderRing(float positionX, float positionY, float width, float height, float cornerRadius, float ringStrokePx, int borderArgb, int cornerRoundMask) {
-        backend.drawBorder(positionX, positionY, width, height, ringStrokePx, borderArgb);
+        backend.fillRoundedRectBorderRing(positionX, positionY, width, height, cornerRadius, ringStrokePx, borderArgb, cornerRoundMask);
     }
 
     /**

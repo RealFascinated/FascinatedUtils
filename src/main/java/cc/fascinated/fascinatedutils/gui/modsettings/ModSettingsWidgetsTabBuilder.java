@@ -1,29 +1,50 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.function.Consumer;
+
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
-import cc.fascinated.fascinatedutils.common.setting.impl.*;
+import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.*;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.*;
+import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FMinWidthHostWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FScrollColumnWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FTheme;
+import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanSettingGridCellWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanSettingRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FColorSettingRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FEnumSettingRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FGlobalHudBooleanApplyRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FGlobalHudColorApplyRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FGlobalHudSliderApplyRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FHudWidgetVisibilityCardWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FKeybindSettingWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FModSettingsDetailHeaderCardWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FSliderSettingRowWidget;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudAppearanceBulkApply;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.function.Consumer;
 
 public class ModSettingsWidgetsTabBuilder {
 
@@ -162,7 +183,7 @@ public class ModSettingsWidgetsTabBuilder {
         scrollBody.addChild(ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(paddedInnerWidth, heading)));
         scrollBody.addChild(new FSpacerWidget(settingsContentWidth, SettingsUiMetrics.CATEGORY_AFTER_HEADER_ROW_GAP));
         appendGlobalHudAppearanceApplyRow(scrollBody, settingsContentWidth, settingsInnerWidth, paddedInnerWidth, sortedWidgets, booleanRowHeight, false, "show_hud_background", "fascinatedutils.module.show_hud_background", true);
-        appendGlobalHudAppearanceApplyRow(scrollBody, settingsContentWidth, settingsInnerWidth, paddedInnerWidth, sortedWidgets, booleanRowHeight, true, "round_hud_background", "fascinatedutils.module.round_hud_background", false);
+        appendGlobalHudAppearanceApplyRow(scrollBody, settingsContentWidth, settingsInnerWidth, paddedInnerWidth, sortedWidgets, booleanRowHeight, true, "rounded_corners", "fascinatedutils.module.rounded_corners", false);
         appendGlobalHudAppearanceApplyRow(scrollBody, settingsContentWidth, settingsInnerWidth, paddedInnerWidth, sortedWidgets, booleanRowHeight, true, "show_border", "fascinatedutils.module.show_border", false);
         appendGlobalHudAppearanceApplySliderRow(scrollBody, settingsContentWidth, settingsInnerWidth, paddedInnerWidth, sortedWidgets, true, "border_thickness", "fascinatedutils.module.border_thickness");
         appendGlobalHudAppearanceApplySliderRow(scrollBody, settingsContentWidth, settingsInnerWidth, paddedInnerWidth, sortedWidgets, true, "rounding_radius", "fascinatedutils.module.rounding_radius");

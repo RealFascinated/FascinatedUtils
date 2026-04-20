@@ -212,7 +212,7 @@ public class FKeybindSettingWidget extends FWidget {
     }
 
     private float[] inlineResetSquare() {
-        float contentRight = x() + w();
+        float contentRight = x() + outerWidth;
         float rowTop = titleRowOriginY();
         float rowHeight = titleRowHeightPx();
         float box = SettingRowResetLayout.glyphBoxPx();

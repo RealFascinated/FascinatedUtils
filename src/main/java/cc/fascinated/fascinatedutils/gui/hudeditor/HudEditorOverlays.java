@@ -6,7 +6,6 @@ import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.jspecify.annotations.Nullable;
 
 public class HudEditorOverlays {
 
@@ -15,14 +14,18 @@ public class HudEditorOverlays {
     private static final float BRANDING_TITLE_TO_MODS_GAP = 16f;
     private static final float MODS_BUTTON_PAD_X = 32f;
     private static final float MODS_BUTTON_PAD_Y = 9f;
-    @Nullable
-    private static BrandingHit brandingHit;
+
+    private static float modsLeft;
+    private static float modsTop;
+    private static float modsWidth;
+    private static float modsHeight;
+    private static boolean modsHitValid;
 
     /**
      * Clears the last published MODS button hit region before a new HUD editor frame is drawn.
      */
     public static void clearBrandingHitLayout() {
-        brandingHit = null;
+        modsHitValid = false;
     }
 
     /**
@@ -33,8 +36,9 @@ public class HudEditorOverlays {
      * @return true when the MODS hit region exists and contains the point
      */
     public static boolean hitTestModsButton(float pointerX, float pointerY) {
-        BrandingHit hit = brandingHit;
-        return hit != null && hit.containsMods(pointerX, pointerY);
+        return modsHitValid
+                && pointerX >= modsLeft && pointerY >= modsTop
+                && pointerX <= modsLeft + modsWidth && pointerY <= modsTop + modsHeight;
     }
 
     /**
@@ -58,11 +62,14 @@ public class HudEditorOverlays {
         float blockTop = (canvasHeight - stackHeight) * 0.5f;
         float centerX = canvasWidth * 0.5f;
         float titleLeft = centerX - titleWidth * 0.5f;
-        float modsLeft = centerX - modsButtonWidth * 0.5f;
-        float modsTop = blockTop + lineHeight + BRANDING_TITLE_TO_MODS_GAP;
-        BrandingHit hitLayout = new BrandingHit(modsLeft, modsTop, modsButtonWidth, modsButtonHeight);
-        brandingHit = hitLayout;
-        boolean modsHovered = hitLayout.containsMods(pointerX, pointerY);
+        float btnLeft = centerX - modsButtonWidth * 0.5f;
+        float btnTop = blockTop + lineHeight + BRANDING_TITLE_TO_MODS_GAP;
+        modsLeft = btnLeft;
+        modsTop = btnTop;
+        modsWidth = modsButtonWidth;
+        modsHeight = modsButtonHeight;
+        modsHitValid = true;
+        boolean modsHovered = hitTestModsButton(pointerX, pointerY);
         glRenderer.drawMiniMessageText(titleMiniMessage, titleLeft, blockTop, false);
         float borderThicknessX = UITheme.BORDER_THICKNESS_PX;
         float borderThicknessY = UITheme.BORDER_THICKNESS_PX;
@@ -70,9 +77,9 @@ public class HudEditorOverlays {
         float themedCorner = glRenderer.theme().cardCornerRadius();
         float modsCornerRadius = Mth.clamp(themedCorner, 0.5f, Math.max(0.5f, maxCornerRadius - Math.min(borderThicknessX, borderThicknessY) * 0.5f));
         int modsBorderColor = modsHovered ? glRenderer.theme().borderHover() : glRenderer.theme().border();
-        glRenderer.fillRoundedRectFrame(modsLeft, modsTop, modsButtonWidth, modsButtonHeight, modsCornerRadius, modsBorderColor, glRenderer.theme().surface(), borderThicknessX, borderThicknessY, RectCornerRoundMask.ALL);
-        float modsTextY = modsTop + MODS_BUTTON_PAD_Y;
-        glRenderer.drawCenteredText(modsLabel, centerX, modsTextY, glRenderer.theme().textPrimary(), false, true);
+        glRenderer.fillRoundedRectFrame(btnLeft, btnTop, modsButtonWidth, modsButtonHeight, modsCornerRadius, modsBorderColor, glRenderer.theme().surface(), borderThicknessX, borderThicknessY, RectCornerRoundMask.ALL);
+        float modsTextY = btnTop + MODS_BUTTON_PAD_Y;
+        glRenderer.drawCenteredText(modsLabel, centerX, modsTextY, glRenderer.theme().textPrimary(), false, false);
     }
 
     /**
@@ -92,12 +99,6 @@ public class HudEditorOverlays {
         if (Float.isFinite(snapGuideY)) {
             float guideY = Mth.clamp(snapGuideY, 0f, canvasHeight);
             glRenderer.drawRect(0f, guideY, canvasWidth, SNAP_GUIDE_THICKNESS, SNAP_GUIDE_COLOR);
-        }
-    }
-
-    private record BrandingHit(float modsLeft, float modsTop, float modsWidth, float modsHeight) {
-        boolean containsMods(float pointerX, float pointerY) {
-            return pointerX >= modsLeft && pointerY >= modsTop && pointerX <= modsLeft + modsWidth && pointerY <= modsTop + modsHeight;
         }
     }
 }

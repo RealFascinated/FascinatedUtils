@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.screens;
 
+import java.util.List;
+
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.hudeditor.HudEditorChrome;
 import cc.fascinated.fascinatedutils.gui.hudeditor.HudEditorOverlays;
@@ -17,8 +19,6 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
-import java.util.List;
-
 public class HUDEditorScreen extends WidgetScreen {
 
     private final HudEditorPointerSession pointerSession = new HudEditorPointerSession();
@@ -30,6 +30,11 @@ public class HUDEditorScreen extends WidgetScreen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public boolean shouldCloseOnEsc() {
+        return true;
     }
 
     public void renderBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
@@ -46,7 +51,6 @@ public class HUDEditorScreen extends WidgetScreen {
         pointerSession.syncEditorCanvas(canvasWidth, canvasHeight);
         GuiRenderer guiRenderer = new GuiRenderer(graphics, FascinatedGuiTheme.INSTANCE);
         guiRenderer.begin(canvasWidth, canvasHeight);
-        HudEditorOverlays.clearBrandingHitLayout();
         float deltaSeconds = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaTicks() / 20f;
         if (deltaSeconds <= 0f || Float.isNaN(deltaSeconds)) {
             deltaSeconds = partialTick / 20f;
@@ -55,17 +59,16 @@ public class HUDEditorScreen extends WidgetScreen {
         guiRenderer.drawRect(0f, 0f, canvasWidth, canvasHeight, UiColor.argb("#66000000"));
 
         List<HudModule> widgetList = HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets());
-        HudModule dragging = pointerSession.dragging();
-        HudModule scalingWidget = pointerSession.scalingWidget();
         HudModule selected = pointerSession.selected();
         for (HudModule widget : widgetList) {
-            boolean reposition = widget != dragging && widget != scalingWidget;
-            HudEditorChrome.drawWidgetEditorChrome(guiRenderer, widget, selected, deltaSeconds, canvasWidth, canvasHeight, reposition);
+            HudEditorChrome.drawWidgetEditorChrome(guiRenderer, widget, selected, deltaSeconds, canvasWidth, canvasHeight, false);
         }
         HudEditorOverlays.drawSnapGuides(guiRenderer, canvasWidth, canvasHeight, pointerSession.snapGuideX(), pointerSession.snapGuideY());
-        boolean idleHudSelection = pointerSession.selected() == null && pointerSession.dragging() == null && pointerSession.scalingWidget() == null;
+        boolean idleHudSelection = pointerSession.dragging() == null && pointerSession.scalingWidget() == null;
         if (idleHudSelection) {
             HudEditorOverlays.drawBrandingCenterOverlay(guiRenderer, canvasWidth, canvasHeight, UIScale.uiPointerX(), UIScale.uiPointerY());
+        } else {
+            HudEditorOverlays.clearBrandingHitLayout();
         }
         guiRenderer.end();
     }

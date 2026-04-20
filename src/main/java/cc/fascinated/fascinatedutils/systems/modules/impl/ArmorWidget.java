@@ -8,6 +8,7 @@ import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.hud.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
@@ -21,39 +22,11 @@ public class ArmorWidget extends HudModule {
     private static final int ROW_COUNT = 6;
     private static final EquipmentSlot[] ARMOR_SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
     private static final String SLOTS_CATEGORY_DISPLAY_KEY = "Slots";
-    private final BooleanSetting[] slotRowVisibility = {BooleanSetting.builder().id("show_head").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_chest").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_legs").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_feet").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_main_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_off_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build()};
-    private final BooleanSetting hideUnbreakableDurability = BooleanSetting.builder().id("hide_unbreakable_durability").defaultValue(false).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting showTotalInventoryCount = BooleanSetting.builder().id("show_total_item_count").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting showBackground = BooleanSetting.builder().id(SETTING_SHOW_BACKGROUND).defaultValue(true).translationKeyPath("fascinatedutils.module.show_hud_background").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting showBorder = BooleanSetting.builder().id(SETTING_SHOW_BORDER).defaultValue(false).translationKeyPath("fascinatedutils.module.show_border").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final SliderSetting borderThickness = SliderSetting.builder().id(SETTING_BORDER_THICKNESS).defaultValue(2f).minValue(1f).maxValue(3f).step(1f).translationKeyPath("fascinatedutils.module.border_thickness").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final SliderSetting padding = SliderSetting.builder().id(SETTING_PADDING).defaultValue(6f).minValue(0f).maxValue(16f).step(1f).translationKeyPath("fascinatedutils.module.padding").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-
-    public ArmorWidget() {
-        super("armor_hud", "Armor HUD", 0f, HudDefaults.builder()
-                .defaultState(true)
-                .defaultAnchor(HUDWidgetAnchor.BOTTOM_RIGHT)
-                .defaultXOffset(5)
-                .defaultYOffset(5)
-                .build()
-        );
-        addSetting(showBackground);
-        addSetting(showBorder);
-        addSetting(borderThickness);
-        addSetting(padding);
-        for (int slotIndex = 0; slotIndex < ROW_COUNT; slotIndex++) {
-            addSetting(slotRowVisibility[slotIndex]);
-        }
-        addSetting(hideUnbreakableDurability);
-        addSetting(showTotalInventoryCount);
-    }
-
     private static ItemStack previewStack(Item item, int damage) {
         ItemStack stack = new ItemStack(item);
         stack.setDamageValue(damage);
         return stack;
     }
-
     private static ItemStack editorPreviewStackForRow(int rowIndex) {
         return switch (rowIndex) {
             case 0 -> previewStack(Items.DIAMOND_HELMET, 120);
@@ -65,7 +38,6 @@ public class ArmorWidget extends HudModule {
             default -> ItemStack.EMPTY;
         };
     }
-
     private static ItemStack stackForRow(Player player, int rowIndex) {
         if (rowIndex < ARMOR_SLOTS.length) {
             return player.getItemBySlot(ARMOR_SLOTS[rowIndex]);
@@ -77,6 +49,39 @@ public class ArmorWidget extends HudModule {
             return player.getOffhandItem();
         }
         return ItemStack.EMPTY;
+    }
+    private final BooleanSetting[] slotRowVisibility = {BooleanSetting.builder().id("show_head").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_chest").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_legs").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_feet").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_main_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_off_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build()};
+    private final BooleanSetting hideUnbreakableDurability = BooleanSetting.builder().id("hide_unbreakable_durability").defaultValue(false).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showTotalInventoryCount = BooleanSetting.builder().id("show_total_item_count").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
+    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
+    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
+
+    private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
+
+    private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
+
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
+
+    public ArmorWidget() {
+        super("armor_hud", "Armor HUD", 0f, HudDefaults.builder()
+                .defaultState(true)
+                .defaultAnchor(HUDWidgetAnchor.BOTTOM_RIGHT)
+                .defaultXOffset(5)
+                .defaultYOffset(5)
+                .build()
+        );
+        addSetting(showBackground);
+        addSetting(roundedCorners);
+        addSetting(showBorder);
+        addSetting(roundingRadius);
+        addSetting(borderThickness);
+        addSetting(padding);
+        for (int slotIndex = 0; slotIndex < ROW_COUNT; slotIndex++) {
+            addSetting(slotRowVisibility[slotIndex]);
+        }
+        addSetting(hideUnbreakableDurability);
+        addSetting(showTotalInventoryCount);
     }
 
     @Override

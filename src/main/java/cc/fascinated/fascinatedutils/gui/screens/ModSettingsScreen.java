@@ -1,11 +1,23 @@
 package cc.fascinated.fascinatedutils.gui.screens;
 
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
+
+import org.jspecify.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.UiSounds;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.input.UiCursorController;
-import cc.fascinated.fascinatedutils.gui.modsettings.*;
+import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellFrame;
+import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellFrameResult;
+import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellHitRegions;
+import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellLayout;
+import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellPointer;
+import cc.fascinated.fascinatedutils.gui.modsettings.ModulesTabElement;
+import cc.fascinated.fascinatedutils.gui.modsettings.SettingsTabElement;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FShellTabStripWidget;
@@ -24,14 +36,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
-import org.jspecify.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
-
-import java.util.function.IntConsumer;
-import java.util.function.IntSupplier;
 
 public class ModSettingsScreen extends WidgetScreen {
 
+    private enum ShellContentTab {
+        MODULES, SETTINGS
+    }
     private static final ModSettingsShellHitRegions EMPTY_SHELL_HIT = new ModSettingsShellHitRegions(new ModSettingsShellLayout.ShellBounds(0f, 0f, 0f, 0f), new ModSettingsShellLayout.ShellBounds(0f, 0f, 0f, 0f), new ModSettingsShellLayout.ShellBounds(0f, 0f, 0f, 0f), 0f, 0f, 0f, 0f);
     private final FWidgetHost root = new FWidgetHost();
     private final FWidgetHost topBarTabsHost = new FWidgetHost();
@@ -51,6 +61,7 @@ public class ModSettingsScreen extends WidgetScreen {
     private float bodyCacheHeight = -1f;
     private ShellContentTab bodyCacheShellTab = ShellContentTab.MODULES;
     private boolean bodyRebuildDirty = true;
+
     private boolean navigateToModuleDetailApplied;
 
     public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId) {
@@ -359,9 +370,5 @@ public class ModSettingsScreen extends WidgetScreen {
 
     private void openHudLayoutEditor() {
         HUDManager.INSTANCE.setEditMode(true);
-    }
-
-    private enum ShellContentTab {
-        MODULES, SETTINGS
     }
 }

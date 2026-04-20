@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 
@@ -11,26 +12,33 @@ public class HUDPanelBackground {
     public static final float LINE_GAP_PX = 1f;
 
     /**
-     * Paints optional translucent HUD panel fill and/or border; rounded fill plus border flushes mesh between fill and ring.
+     * Paints optional translucent HUD panel fill and/or border with optional rounded corners.
      * Uses global HUD color settings from the settings registry.
      */
-    public static void drawPanelChrome(GuiRenderer glRenderer, float width, float height, boolean showBackground, float borderThickness, boolean showBorder) {
+    public static void drawPanelChrome(GuiRenderer glRenderer, float width, float height, boolean showBackground, float borderThickness, boolean showBorder, float cornerRadius) {
         if (!showBackground && !showBorder) {
             return;
         }
         float strokePx = Math.max(1f, borderThickness);
         int borderArgb = SettingsRegistry.INSTANCE.getSettings().getHudBorderColor().getResolvedArgb();
         int backgroundArgb = SettingsRegistry.INSTANCE.getSettings().getHudBackgroundColor().getResolvedArgb();
-        if (showBackground && showBorder) {
-            glRenderer.drawRect(0f, 0f, width, height, backgroundArgb);
-            glRenderer.endRenderSegment();
-            glRenderer.drawBorder(0f, 0f, width, height, strokePx, borderArgb);
-        }
-        else if (showBackground) {
-            glRenderer.drawRect(0f, 0f, width, height, backgroundArgb);
-        }
-        else {
-            glRenderer.drawBorder(0f, 0f, width, height, strokePx, borderArgb);
+        if (cornerRadius > 0f) {
+            if (showBackground) {
+                glRenderer.fillRoundedRect(0f, 0f, width, height, cornerRadius, backgroundArgb, RectCornerRoundMask.ALL);
+            }
+            if (showBorder) {
+                glRenderer.fillRoundedRectBorderRing(0f, 0f, width, height, cornerRadius, strokePx, borderArgb, RectCornerRoundMask.ALL);
+            }
+        } else {
+            if (showBackground && showBorder) {
+                glRenderer.drawRect(0f, 0f, width, height, backgroundArgb);
+                glRenderer.endRenderSegment();
+                glRenderer.drawBorder(0f, 0f, width, height, strokePx, borderArgb);
+            } else if (showBackground) {
+                glRenderer.drawRect(0f, 0f, width, height, backgroundArgb);
+            } else {
+                glRenderer.drawBorder(0f, 0f, width, height, strokePx, borderArgb);
+            }
         }
     }
 

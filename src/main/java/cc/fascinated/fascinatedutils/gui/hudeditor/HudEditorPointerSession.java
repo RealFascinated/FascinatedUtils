@@ -1,5 +1,11 @@
 package cc.fascinated.fascinatedutils.gui.hudeditor;
 
+import java.util.List;
+import java.util.function.BooleanSupplier;
+
+import org.jspecify.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+
 import cc.fascinated.fascinatedutils.client.ModBranding;
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.core.UiFocusIds;
@@ -13,11 +19,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
-import org.jspecify.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
-
-import java.util.List;
-import java.util.function.BooleanSupplier;
 
 public class HudEditorPointerSession {
 
@@ -110,6 +111,8 @@ public class HudEditorPointerSession {
                 return true;
             }
             if (HudEditorChrome.closeButtonContainsPoint(widget, pointerX, pointerY)) {
+                widget.setEnabled(false);
+                HUDManager.INSTANCE.saveAll();
                 selected = null;
                 return true;
             }
@@ -237,6 +240,10 @@ public class HudEditorPointerSession {
     public boolean onKeyPressed(KeyEvent event, BooleanSupplier delegateSuper) {
         if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
             HUDManager.INSTANCE.setEditMode(false);
+            Minecraft minecraftClient = Minecraft.getInstance();
+            if (minecraftClient != null && minecraftClient.screen instanceof HUDEditorScreen) {
+                minecraftClient.setScreen(null);
+            }
             return true;
         }
 
