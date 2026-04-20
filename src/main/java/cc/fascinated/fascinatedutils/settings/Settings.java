@@ -2,10 +2,8 @@ package cc.fascinated.fascinatedutils.settings;
 
 import cc.fascinated.fascinatedutils.client.keybind.Keybinds;
 import cc.fascinated.fascinatedutils.common.ClientUtils;
-import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import lombok.Getter;
 
@@ -31,10 +29,6 @@ public class Settings {
 
     private final BooleanSetting turboParticles = BooleanSetting.builder().id("turbo_particles").defaultValue(false).categoryDisplayKey("Performance").build();
 
-    private final ColorSetting hudBackgroundColor = ColorSetting.builder().id("hud_background_color").defaultValue(new SettingColor(0, 0, 0, 85)).translationKeyPath("fascinatedutils.setting.hud_background_color").categoryDisplayKey("HUD").build();
-
-    private final ColorSetting hudBorderColor = ColorSetting.builder().id("hud_border_color").defaultValue(new SettingColor(208, 215, 225, 192)).translationKeyPath("fascinatedutils.setting.hud_border_color").categoryDisplayKey("HUD").build();
-
     public Settings() {
         addSetting(shellOpenKeybind);
         addSetting(showSelfNameplate);
@@ -43,8 +37,6 @@ public class Settings {
         addSetting(reduceMacOSResolution);
         addSetting(turboEntities);
         addSetting(turboParticles);
-        addSetting(hudBackgroundColor);
-        addSetting(hudBorderColor);
 
         // ensure it's only enabled on macOS
         if (!ClientUtils.isMacOS() && reduceMacOSResolution.isEnabled()) {

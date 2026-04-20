@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.gui.screens;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -156,9 +157,7 @@ public class ModSettingsScreen extends WidgetScreen {
     @Override
     public void removed() {
         Minecraft minecraftClient = Minecraft.getInstance();
-        if (minecraftClient != null) {
-            UiCursorController.apply(minecraftClient.getWindow().handle(), UiPointerCursor.DEFAULT);
-        }
+        UiCursorController.apply(minecraftClient.getWindow().handle(), UiPointerCursor.DEFAULT);
         root.dispose();
         topBarTabsHost.dispose();
         hudLayoutButtonHost.dispose();
@@ -177,7 +176,7 @@ public class ModSettingsScreen extends WidgetScreen {
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubled) {
         ModSettingsShellPointer.LayoutPoint pointer = ModSettingsShellPointer.layoutPointInShellSpace();
         float layoutX = pointer.layoutPositionX();
         float layoutY = pointer.layoutPositionY();
@@ -203,7 +202,7 @@ public class ModSettingsScreen extends WidgetScreen {
     }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
+    public boolean mouseReleased(@NonNull MouseButtonEvent event) {
         ModSettingsShellPointer.LayoutPoint pointer = ModSettingsShellPointer.layoutPointInShellSpace();
         float layoutX = pointer.layoutPositionX();
         float layoutY = pointer.layoutPositionY();
@@ -224,7 +223,7 @@ public class ModSettingsScreen extends WidgetScreen {
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+    public boolean mouseDragged(@NonNull MouseButtonEvent event, double dragX, double dragY) {
         ModSettingsShellPointer.LayoutPoint pointer = ModSettingsShellPointer.layoutPointInShellSpace();
         float layoutX = pointer.layoutPositionX();
         float layoutY = pointer.layoutPositionY();

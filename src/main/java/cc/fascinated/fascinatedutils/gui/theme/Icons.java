@@ -23,6 +23,10 @@ public class Icons {
         paintSquareChromeIcon(renderer, ModUiTextures.TRASH, positionX, positionY, width, height, tintArgb);
     }
 
+    public static void paintSubSettingsChevron(UIRenderer renderer, float positionX, float positionY, float width, float height, int tintArgb, boolean expanded) {
+        paintSquareChromeIcon(renderer, expanded ? ModUiTextures.CHEVRON_DOWN : ModUiTextures.CHEVRON_RIGHT, positionX, positionY, width, height, tintArgb);
+    }
+
     private static void paintSquareChromeIcon(UIRenderer renderer, ModUiTextures chrome, float positionX, float positionY, float width, float height, int tintArgb) {
         float box = Math.min(width, height);
         if (box < 2f) {

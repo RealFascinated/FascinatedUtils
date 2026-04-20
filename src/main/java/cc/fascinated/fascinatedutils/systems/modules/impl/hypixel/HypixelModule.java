@@ -16,7 +16,7 @@ public class HypixelModule extends Module {
     private final BooleanSetting autoGG = BooleanSetting.builder().id("auto_gg").defaultValue(false).build();
 
     public HypixelModule() {
-        super("Hypixel", ModuleCategory.MISC);
+        super("Hypixel", ModuleCategory.GENERAL);
         addSetting(autoGG);
 
         new AutoGG(this);

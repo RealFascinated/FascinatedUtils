@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.gui.modsettings;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
@@ -12,7 +13,12 @@ import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.*;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanSettingRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanWithSubSettingsWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FColorSettingRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FEnumSettingRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FKeybindSettingWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FSliderSettingRowWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import lombok.experimental.UtilityClass;
@@ -20,11 +26,12 @@ import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 @UtilityClass
 public class ModSettingsModuleDetailBuilder {
 
-    public static FWidget buildModuleSettingsDetail(float paneWidth, float paneHeight, Module module, Runnable onBack, Ref<Float> settingsPaneScrollYRef) {
+    public static FWidget buildModuleSettingsDetail(float paneWidth, float paneHeight, Module module, Runnable onBack, Ref<Float> settingsPaneScrollYRef, Consumer<ColorSetting> openColorPicker) {
         float settingsContentWidth = Math.max(28f, paneWidth);
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
         float gap = 3f;
@@ -45,7 +52,7 @@ public class ModSettingsModuleDetailBuilder {
         for (SettingCategory category : module.getSettingCategories()) {
             categoryBlocks.add(new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), List.copyOf(category.settings())));
         }
-        ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, module.getSettings(), (setting, innerWidth, sliderValueColumnStartX) -> editorForModuleSetting(module, setting, innerWidth, sliderValueColumnStartX), (booleanSetting, cellWidth, cellHeight) -> new FBooleanSettingGridCellWidget(booleanSetting, cellWidth, cellHeight, () -> ModConfig.saveActiveModule(module)));
+        ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, module.getSettings(), (setting, innerWidth, sliderValueColumnStartX) -> editorForModuleSetting(module, setting, innerWidth, sliderValueColumnStartX, openColorPicker));
         scrollBody.addChild(new FSpacerWidget(settingsContentWidth, ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET));
         return wrapScrollClip(scrollBody, gap, settingsPaneScrollYRef);
     }
@@ -61,7 +68,11 @@ public class ModSettingsModuleDetailBuilder {
         return clip;
     }
 
-    private static FWidget editorForModuleSetting(Module module, Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX) {
+    private static FWidget editorForModuleSetting(Module module, Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX, Consumer<ColorSetting> openColorPicker) {
+        if (setting instanceof BooleanSetting booleanSetting && booleanSetting.hasSubSettings()) {
+            float editorHeight = SettingsUiMetrics.booleanOuterHeight();
+            return new FBooleanWithSubSettingsWidget(booleanSetting, () -> ModConfig.saveActiveModule(module), settingsInnerWidth, editorHeight, sliderValueColumnStartX, (sub, subW, subColX) -> editorForModuleSetting(module, sub, subW, subColX, openColorPicker));
+        }
         if (setting instanceof BooleanSetting booleanSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
             return new FBooleanSettingRowWidget(module, booleanSetting, settingsInnerWidth, editorHeight, sliderValueColumnStartX);
@@ -77,6 +88,10 @@ public class ModSettingsModuleDetailBuilder {
         if (setting instanceof EnumSetting<?> enumSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
             return new FEnumSettingRowWidget(module, enumSetting, settingsInnerWidth, editorHeight, sliderValueColumnStartX);
+        }
+        if (setting instanceof ColorSetting colorSetting) {
+            float editorHeight = SettingsUiMetrics.booleanOuterHeight();
+            return new FColorSettingRowWidget(colorSetting, settingsInnerWidth, editorHeight, () -> ModConfig.saveActiveModule(module), sliderValueColumnStartX, openColorPicker);
         }
         return null;
     }

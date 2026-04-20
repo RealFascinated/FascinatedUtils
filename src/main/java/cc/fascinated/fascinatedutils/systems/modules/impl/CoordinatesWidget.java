@@ -11,6 +11,7 @@ import cc.fascinated.fascinatedutils.common.NumberUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HUDWidgetAnchor;
@@ -55,8 +56,9 @@ public class CoordinatesWidget extends HudModule {
     private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
     private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
-
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
+    private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
+    private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
 
     public CoordinatesWidget() {
         super("coordinates", "Coordinates", 56f, HudDefaults.builder()
@@ -72,6 +74,12 @@ public class CoordinatesWidget extends HudModule {
         addSetting(showBorder);
         addSetting(roundingRadius);
         addSetting(borderThickness);
+        addSetting(backgroundColor);
+        addSetting(borderColor);
+        showBackground.addSubSetting(backgroundColor);
+        roundedCorners.addSubSetting(roundingRadius);
+        showBorder.addSubSetting(borderThickness);
+        showBorder.addSubSetting(borderColor);
     }
 
     @Override

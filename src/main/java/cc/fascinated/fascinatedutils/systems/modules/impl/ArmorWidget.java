@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.hud.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
@@ -31,6 +32,8 @@ public class ArmorWidget extends HudModule {
     private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
+    private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
+    private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
 
     public ArmorWidget() {
         super("armor_hud", "Armor HUD", 0f, HudDefaults.builder()
@@ -45,6 +48,12 @@ public class ArmorWidget extends HudModule {
         addSetting(showBorder);
         addSetting(roundingRadius);
         addSetting(borderThickness);
+        addSetting(backgroundColor);
+        addSetting(borderColor);
+        showBackground.addSubSetting(backgroundColor);
+        roundedCorners.addSubSetting(roundingRadius);
+        showBorder.addSubSetting(borderThickness);
+        showBorder.addSubSetting(borderColor);
         for (int slotIndex = 0; slotIndex < ROW_COUNT; slotIndex++) {
             addSetting(slotRowVisibility[slotIndex]);
         }

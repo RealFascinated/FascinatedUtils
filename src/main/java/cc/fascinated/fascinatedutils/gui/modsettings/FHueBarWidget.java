@@ -23,6 +23,10 @@ public class FHueBarWidget extends FWidget {
         this.onHueChanged = onHueChanged;
     }
 
+    public void setHue(float hue) {
+        this.hue = hue;
+    }
+
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
@@ -73,7 +77,8 @@ public class FHueBarWidget extends FWidget {
 
         float markerX = x() + (hue / 360f) * w();
         float markerW = 2f;
-        graphics.drawRect(markerX - markerW * 0.5f, y() - 1f, markerW, h() + 2f, 0xFFFFFFFF);
+        graphics.drawRect(markerX - markerW * 0.5f - 1f, y() - 1f, markerW + 2f, h() + 2f, 0xFF000000);
+        graphics.drawRect(markerX - markerW * 0.5f, y(), markerW, h(), 0xFFFFFFFF);
         graphics.drawBorder(x(), y(), w(), h(), 1f, graphics.theme().border());
     }
 

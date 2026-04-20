@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import cc.fascinated.fascinatedutils.common.color.SettingColor;
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import java.util.List;
 
 import cc.fascinated.fascinatedutils.gui.core.Callback;
@@ -34,6 +36,7 @@ public class FModulesTabElement extends FWidget {
     private Module settingsScrollAnchorModule;
     private boolean needsRebuild = true;
     private boolean showCreateProfilePopup;
+    private ColorSetting colorPickerSetting;
     private float lastLayoutWidth = -1f;
     private float lastLayoutHeight = -1f;
     private Module lastBuiltDetailModule;
@@ -88,6 +91,7 @@ public class FModulesTabElement extends FWidget {
         moduleDetailModule = null;
         settingsScrollAnchorModule = null;
         showCreateProfilePopup = false;
+        colorPickerSetting = null;
         profilePopupController.reset();
         needsRebuild = true;
         lastLayoutWidth = -1f;
@@ -119,13 +123,24 @@ public class FModulesTabElement extends FWidget {
         splitDivider.setFillColorArgb(FascinatedGuiTheme.INSTANCE.borderMuted());
         splitLayout.addChild(splitDivider);
 
-        FWidget modulesPane = ModSettingsModulesTabBuilder.buildModulesTab(modulesPanelWidth, height, List.copyOf(ModuleRegistry.INSTANCE.getModules()), modulesGridScrollRef, moduleDetailModule, this::closeModuleDetail, openModuleSettings, moduleSettingsScrollRef, moduleSearchRef, moduleCategoryFilterRef, this::onModuleFiltersChanged);
+        FWidget modulesPane = ModSettingsModulesTabBuilder.buildModulesTab(modulesPanelWidth, height, List.copyOf(ModuleRegistry.INSTANCE.getModules()), modulesGridScrollRef, moduleDetailModule, this::closeModuleDetail, openModuleSettings, moduleSettingsScrollRef, moduleSearchRef, moduleCategoryFilterRef, this::onModuleFiltersChanged, this::openColorPicker);
         splitLayout.addChild(modulesPane);
 
         FAbsoluteStackWidget rootStack = new FAbsoluteStackWidget();
         rootStack.addChild(splitLayout);
         if (showCreateProfilePopup) {
             rootStack.addChild(new FProfileCreatePopupWidget(newProfileNameRef, copyDefaultProfileSettingsRef, this::closeCreateProfilePopup, this::submitCreateProfilePopup));
+        }
+        if (colorPickerSetting != null) {
+            rootStack.addChild(new FColorPickerPopupWidget(colorPickerSetting.getValue(), newColor -> {
+                colorPickerSetting.setValue(newColor);
+                ModConfig.saveAllModuleSettings();
+                colorPickerSetting = null;
+                needsRebuild = true;
+            }, () -> {
+                colorPickerSetting = null;
+                needsRebuild = true;
+            }));
         }
         profilePopupController.appendOverlaysTo(rootStack);
         inner = rootStack;
@@ -135,6 +150,11 @@ public class FModulesTabElement extends FWidget {
         lastLayoutWidth = width;
         lastLayoutHeight = height;
         lastBuiltDetailModule = moduleDetailModule;
+    }
+
+    private void openColorPicker(ColorSetting setting) {
+        colorPickerSetting = setting;
+        needsRebuild = true;
     }
 
     private void openCreateProfilePopup() {

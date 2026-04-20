@@ -4,14 +4,6 @@ import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import lombok.Getter;
-import net.minecraft.client.ClientClockManager;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
-import net.minecraft.util.datafix.fixes.WorldBorderWarningTimeFix;
-import net.minecraft.world.clock.ClockNetworkState;
-import net.minecraft.world.clock.ClockState;
-import net.minecraft.world.clock.WorldClock;
 
 @Getter
 public class TimeChangerModule extends Module {
@@ -23,7 +15,7 @@ public class TimeChangerModule extends Module {
     }).build();
 
     public TimeChangerModule() {
-        super("Time Changer", ModuleCategory.MISC);
+        super("Time Changer", ModuleCategory.GENERAL);
         addSetting(worldTime);
     }
 }

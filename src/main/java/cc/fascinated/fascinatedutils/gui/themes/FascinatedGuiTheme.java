@@ -38,7 +38,7 @@ public class FascinatedGuiTheme extends GuiTheme {
     private static final int HINT_BORDER = UiColor.argb("#806d28d9");
     private static final int HINT_TEXT = UiColor.argb("#e5e5e5");
     private static final int SECTION_HEADER_BACKGROUND = UiColor.argb("#00000000");
-    private static final int SECTION_HEADER_TEXT = UiColor.argb("#f6f8fa");
+    private static final int SECTION_HEADER_TEXT = UiColor.argb("#8b949e");
     private static final int WIDGET_STATE_ENABLED_FILL = UiColor.argb("#882d8f6e");
     private static final int WIDGET_STATE_ENABLED_FILL_HOVER = UiColor.argb("#9934a67e");
     private static final int WIDGET_STATE_ENABLED_BORDER = UiColor.argb("#887dd4b4");

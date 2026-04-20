@@ -28,7 +28,7 @@ public class FreelookModule extends Module {
     private CameraType savedCameraType = null;
 
     public FreelookModule() {
-        super("Freelook", ModuleCategory.MISC, ModuleDefaults.builder().defaultState(true).build());
+        super("Freelook", ModuleCategory.GENERAL, ModuleDefaults.builder().defaultState(true).build());
         addSetting(freelookKeySetting);
     }
 

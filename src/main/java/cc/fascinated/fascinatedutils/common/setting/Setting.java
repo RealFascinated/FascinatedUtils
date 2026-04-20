@@ -6,6 +6,9 @@ import lombok.Setter;
 import net.minecraft.client.resources.language.I18n;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -20,6 +23,8 @@ public class Setting<T> {
     private final @Nullable String translationKeyPath;
     private String translationKeyPrefix = "fascinatedutils.setting";
     private T value;
+    private final List<Setting<?>> subSettings = new ArrayList<>();
+    private boolean subSetting;
 
     protected Setting(Builder<T, ?> builder) {
         this.settingKey = Objects.requireNonNull(builder.id, "setting id is required");
@@ -77,6 +82,36 @@ public class Setting<T> {
      */
     public void resetToDefault() {
         this.value = this.defaultValue;
+    }
+
+    /**
+     * Adds a child setting that is logically subordinate to this one (e.g., a radius slider under a rounded-corners
+     * toggle). The child is marked as a sub-setting so UI builders can skip it from the flat setting list and render
+     * it only inside the parent's expanded sub-panel.
+     *
+     * @param sub the child setting
+     */
+    public void addSubSetting(Setting<?> sub) {
+        sub.subSetting = true;
+        subSettings.add(sub);
+    }
+
+    /**
+     * Returns an unmodifiable view of child settings registered via {@link #addSubSetting}.
+     *
+     * @return sub-settings, may be empty
+     */
+    public List<Setting<?>> getSubSettings() {
+        return Collections.unmodifiableList(subSettings);
+    }
+
+    /**
+     * Whether this setting has any child settings registered via {@link #addSubSetting}.
+     *
+     * @return true when sub-settings exist
+     */
+    public boolean hasSubSettings() {
+        return !subSettings.isEmpty();
     }
 
     /**

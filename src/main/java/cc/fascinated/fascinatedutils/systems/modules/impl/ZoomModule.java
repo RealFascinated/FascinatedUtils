@@ -37,7 +37,7 @@ public class ZoomModule extends Module {
     private float appliedZoomScaleTickStart = 1f;
 
     public ZoomModule() {
-        super("Zoom", ModuleCategory.MISC, ModuleDefaults.builder().defaultState(true).build());
+        super("Zoom", ModuleCategory.GENERAL, ModuleDefaults.builder().defaultState(true).build());
         addSetting(zoomKeySetting);
         addSetting(zoomLevel);
         addSetting(scrollToZoom);

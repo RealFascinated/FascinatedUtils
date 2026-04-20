@@ -3,7 +3,6 @@ package cc.fascinated.fascinatedutils.systems.hud;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 
 public class HUDPanelBackground {
 
@@ -13,15 +12,15 @@ public class HUDPanelBackground {
 
     /**
      * Paints optional translucent HUD panel fill and/or border with optional rounded corners.
-     * Uses global HUD color settings from the settings registry.
+     *
+     * @param backgroundArgb packed ARGB fill color
+     * @param borderArgb     packed ARGB border color
      */
-    public static void drawPanelChrome(GuiRenderer glRenderer, float width, float height, boolean showBackground, float borderThickness, boolean showBorder, float cornerRadius) {
+    public static void drawPanelChrome(GuiRenderer glRenderer, float width, float height, boolean showBackground, float borderThickness, boolean showBorder, float cornerRadius, int backgroundArgb, int borderArgb) {
         if (!showBackground && !showBorder) {
             return;
         }
         float strokePx = Math.max(1f, borderThickness);
-        int borderArgb = SettingsRegistry.INSTANCE.getSettings().getHudBorderColor().getResolvedArgb();
-        int backgroundArgb = SettingsRegistry.INSTANCE.getSettings().getHudBackgroundColor().getResolvedArgb();
         if (cornerRadius > 0f) {
             if (showBackground) {
                 glRenderer.fillRoundedRect(0f, 0f, width, height, cornerRadius, backgroundArgb, RectCornerRoundMask.ALL);

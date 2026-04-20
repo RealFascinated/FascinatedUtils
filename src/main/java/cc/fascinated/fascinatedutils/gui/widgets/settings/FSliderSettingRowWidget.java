@@ -5,21 +5,15 @@ import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
-import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 
-public class FSliderSettingRowWidget extends FWidget {
+public class FSliderSettingRowWidget extends FSettingRowWidget {
     private final SliderSetting sliderSetting;
-    private final float outerWidth;
-    private final float outerHeight;
-    private final Runnable onPersist;
-    private final float valueColumnStartX;
     private boolean dragging;
     private boolean hoveredTrack;
     private boolean hoveredReset;
@@ -29,11 +23,8 @@ public class FSliderSettingRowWidget extends FWidget {
     }
 
     public FSliderSettingRowWidget(SliderSetting sliderSetting, float outerWidth, float outerHeight, Runnable onPersist, float valueColumnStartX) {
+        super(outerWidth, outerHeight, onPersist, valueColumnStartX);
         this.sliderSetting = sliderSetting;
-        this.outerWidth = outerWidth;
-        this.outerHeight = outerHeight;
-        this.onPersist = onPersist;
-        this.valueColumnStartX = Math.max(0f, valueColumnStartX);
     }
 
     private static float valueFromPointer(float pointerX, float trackLeft, float trackWidth, float thumbSize, float min, float max, float step) {
@@ -46,26 +37,6 @@ public class FSliderSettingRowWidget extends FWidget {
 
     private static boolean inTrack(float pointerX, float pointerY, float trackLeft, float trackTop, float trackWidth, float trackHeight) {
         return pointerX >= trackLeft && pointerY >= trackTop && pointerX < trackLeft + trackWidth && pointerY < trackTop + trackHeight;
-    }
-
-    @Override
-    public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-        return outerHeight;
-    }
-
-    @Override
-    public float intrinsicWidthForRow(UIRenderer measure, float heightBudget) {
-        return outerWidth;
-    }
-
-    @Override
-    public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-        setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-    }
-
-    @Override
-    public boolean wantsPointer() {
-        return true;
     }
 
     @Override

@@ -1,8 +1,10 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
@@ -36,9 +38,9 @@ public class ModSettingsModulesTabBuilder {
     private static final int MODULE_CARD_GRID_MAX_COLUMNS = 3;
     private static final int MODULES_SEARCH_FOCUS_ID = 5001;
 
-    public static FWidget buildModulesTab(float paneWidth, float paneHeight, List<Module> modules, Ref<Float> modulesGridScrollYRef, Module settingsModule, Runnable onBackFromModuleSettings, Callback<Module> onOpenModuleSettings, Ref<Float> moduleSettingsScrollYRef, Ref<String> moduleSearchRef, Ref<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged) {
+    public static FWidget buildModulesTab(float paneWidth, float paneHeight, List<Module> modules, Ref<Float> modulesGridScrollYRef, Module settingsModule, Runnable onBackFromModuleSettings, Callback<Module> onOpenModuleSettings, Ref<Float> moduleSettingsScrollYRef, Ref<String> moduleSearchRef, Ref<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged, Consumer<ColorSetting> openColorPicker) {
         if (settingsModule != null) {
-            return ModSettingsModuleDetailBuilder.buildModuleSettingsDetail(paneWidth, paneHeight, settingsModule, onBackFromModuleSettings, moduleSettingsScrollYRef);
+            return ModSettingsModuleDetailBuilder.buildModuleSettingsDetail(paneWidth, paneHeight, settingsModule, onBackFromModuleSettings, moduleSettingsScrollYRef, openColorPicker);
         }
         return buildModuleCardGrid(paneWidth, paneHeight, modules, modulesGridScrollYRef, onOpenModuleSettings, moduleSearchRef, moduleCategoryFilterRef, onFiltersChanged);
     }

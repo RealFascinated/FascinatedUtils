@@ -27,6 +27,7 @@ import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanSettingRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanWithSubSettingsWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FColorSettingRowWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FEnumSettingRowWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FKeybindSettingWidget;
@@ -49,6 +50,10 @@ public class ModSettingsWidgetsTabBuilder {
 
     public static FWidget editorForWidgetSetting(Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX, Consumer<ColorSetting> openColorPicker) {
         Runnable onValueChanged = HUDManager.INSTANCE::saveAll;
+        if (setting instanceof BooleanSetting booleanSetting && booleanSetting.hasSubSettings()) {
+            float editorHeight = SettingsUiMetrics.booleanOuterHeight();
+            return new FBooleanWithSubSettingsWidget(booleanSetting, onValueChanged, settingsInnerWidth, editorHeight, sliderValueColumnStartX, (sub, subW, subColX) -> editorForWidgetSetting(sub, subW, subColX, openColorPicker));
+        }
         if (setting instanceof BooleanSetting booleanSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
             return new FBooleanSettingRowWidget(booleanSetting, settingsInnerWidth, editorHeight, onValueChanged, sliderValueColumnStartX);
@@ -156,7 +161,7 @@ public class ModSettingsWidgetsTabBuilder {
         for (SettingCategory category : settingsWidget.getSettingCategories()) {
             categoryBlocks.add(new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), category.settings()));
         }
-        ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, settingsWidget.getSettings(), (setting, innerWidth, sliderStartX) -> editorForWidgetSetting(setting, innerWidth, sliderStartX, openColorPicker), (booleanSetting, cellWidth, cellHeight) -> new FBooleanSettingGridCellWidget(booleanSetting, cellWidth, cellHeight, HUDManager.INSTANCE::saveAll));
+        ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, settingsWidget.getSettings(), (setting, innerWidth, sliderStartX) -> editorForWidgetSetting(setting, innerWidth, sliderStartX, openColorPicker));
         scrollBody.addChild(new FSpacerWidget(settingsContentWidth, ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET));
     }
 

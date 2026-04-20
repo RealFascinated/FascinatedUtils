@@ -16,7 +16,7 @@ public class TabModule extends Module {
     private final SliderSetting maxPlayerSlots = SliderSetting.builder().id("max_player_slots").defaultValue(80f).minValue(80f).maxValue(180f).step(20f).valueFormatter((slots) -> NumberUtils.formatNumber(slots, 0) + " slots").build();
 
     public TabModule() {
-        super("Tab", ModuleCategory.MISC);
+        super("Tab", ModuleCategory.GENERAL);
         addSetting(pingMode);
         addSetting(coloredPing);
         addSetting(maxPlayerSlots);

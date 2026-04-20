@@ -6,7 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ModuleCategory {
-    HUD("HUD"), MISC("Misc");
+    GENERAL("General"),
+    HUD("HUD");
 
     private final String displayName;
 }

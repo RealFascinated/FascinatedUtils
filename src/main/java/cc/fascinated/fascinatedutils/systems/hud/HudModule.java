@@ -8,6 +8,7 @@ import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
@@ -20,11 +21,13 @@ import net.minecraft.util.Mth;
 public abstract class HudModule extends Module implements HudRenderableModule {
 
     public static final String APPEARANCE_CATEGORY_DISPLAY_KEY = "Appearance";
-    public static final String SETTING_SHOW_BACKGROUND = "show_hud_background";
+    public static final String SETTING_BACKGROUND = "background";
     public static final String SETTING_ROUNDED_CORNERS = "rounded_corners";
     public static final String SETTING_ROUNDING_RADIUS = "rounding_radius";
     public static final String SETTING_SHOW_BORDER = "show_border";
     public static final String SETTING_BORDER_THICKNESS = "border_thickness";
+    public static final String SETTING_BACKGROUND_COLOR = "hud_background_color";
+    public static final String SETTING_BORDER_COLOR = "hud_border_color";
 
     private final HudDefaults defaults;
 
@@ -265,11 +268,13 @@ public abstract class HudModule extends Module implements HudRenderableModule {
     }
 
     public void drawHUDPanelBackground(GuiRenderer glRenderer, float layoutWidth, float layoutHeight) {
-        boolean showBg = getSetting(BooleanSetting.class, SETTING_SHOW_BACKGROUND).map(BooleanSetting::isEnabled).orElse(false);
+        boolean showBg = getSetting(BooleanSetting.class, SETTING_BACKGROUND).map(BooleanSetting::isEnabled).orElse(false);
         boolean showBorder = getSetting(BooleanSetting.class, SETTING_SHOW_BORDER).map(BooleanSetting::isEnabled).orElse(false);
         float thickness = getSetting(SliderSetting.class, SETTING_BORDER_THICKNESS).map(setting -> setting.getValue().floatValue()).orElse(2f);
         float cornerRadius = getCornerRadius();
-        HUDPanelBackground.drawPanelChrome(glRenderer, layoutWidth, layoutHeight, showBg, thickness, showBorder, cornerRadius);
+        int backgroundArgb = getSetting(ColorSetting.class, SETTING_BACKGROUND_COLOR).map(ColorSetting::getResolvedArgb).orElse(0x55000000);
+        int borderArgb = getSetting(ColorSetting.class, SETTING_BORDER_COLOR).map(ColorSetting::getResolvedArgb).orElse(0xC0D0D7E1);
+        HUDPanelBackground.drawPanelChrome(glRenderer, layoutWidth, layoutHeight, showBg, thickness, showBorder, cornerRadius, backgroundArgb, borderArgb);
     }
 
     @Override

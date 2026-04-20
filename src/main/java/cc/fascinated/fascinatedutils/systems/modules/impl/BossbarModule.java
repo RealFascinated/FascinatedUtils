@@ -11,7 +11,7 @@ public class BossbarModule extends Module {
     private final BooleanSetting hideBossHealth = BooleanSetting.builder().id("hide_boss_health").defaultValue(false).build();
 
     public BossbarModule() {
-        super("Bossbar", ModuleCategory.MISC);
+        super("Bossbar", ModuleCategory.GENERAL);
         addSetting(hideBossHealth);
     }
 }

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 
@@ -21,6 +22,8 @@ public abstract class HudMiniMessageModule extends HudModule {
     private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
+    private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
+    private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
     private List<String> cachedMiniMessageLines;
 
     private long lastMiniMessageSampleNanos;
@@ -32,6 +35,12 @@ public abstract class HudMiniMessageModule extends HudModule {
         addSetting(showBorder);
         addSetting(roundingRadius);
         addSetting(borderThickness);
+        addSetting(backgroundColor);
+        addSetting(borderColor);
+        showBackground.addSubSetting(backgroundColor);
+        roundedCorners.addSubSetting(roundingRadius);
+        showBorder.addSubSetting(borderThickness);
+        showBorder.addSubSetting(borderColor);
     }
 
     protected abstract List<String> lines(float deltaSeconds);

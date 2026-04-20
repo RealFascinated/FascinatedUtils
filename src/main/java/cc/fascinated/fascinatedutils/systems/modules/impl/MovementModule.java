@@ -14,7 +14,7 @@ public class MovementModule extends Module {
     private final SliderSetting flightSpeedModifier = SliderSetting.builder().id("flight_speed_modifier").defaultValue(2f).minValue(2f).maxValue(10f).step(1f).categoryDisplayKey("Flight Speed").build();
 
     public MovementModule() {
-        super("Movement", ModuleCategory.MISC);
+        super("Movement", ModuleCategory.GENERAL);
         addSetting(enableFlightSpeedModifier);
         addSetting(flightSpeedModifier);
     }

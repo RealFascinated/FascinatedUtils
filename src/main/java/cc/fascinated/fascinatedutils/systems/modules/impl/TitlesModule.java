@@ -10,7 +10,7 @@ public class TitlesModule extends Module {
     private final SliderSetting scaleTitleAndSubtitle = SliderSetting.builder().id("scale_title_and_subtitle").defaultValue(1f).step(0.1f).minValue(0.1f).maxValue(1f).build();
 
     public TitlesModule() {
-        super("Titles", ModuleCategory.MISC);
+        super("Titles", ModuleCategory.GENERAL);
         addSetting(scaleTitleAndSubtitle);
     }
 }

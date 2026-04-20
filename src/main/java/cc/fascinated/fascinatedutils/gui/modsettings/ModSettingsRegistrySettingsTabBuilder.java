@@ -44,7 +44,7 @@ public class ModSettingsRegistrySettingsTabBuilder {
 
     private static final String PERFORMANCE_CATEGORY_DISPLAY_KEY = "Performance";
 
-    public static FWidget buildSettingsTab(float paneWidth, float paneHeight, Ref<Float> scrollYRef, Consumer<ColorSetting> openColorPicker, RegistrySettingsSubTab subTab) {
+    public static FWidget buildSettingsTab(float paneWidth, float paneHeight, Ref<Float> scrollYRef, RegistrySettingsSubTab subTab) {
         float settingsContentWidth = Math.max(28f, paneWidth);
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
         float gap = 3f;
@@ -72,7 +72,7 @@ public class ModSettingsRegistrySettingsTabBuilder {
             scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
             return wrapScrollClip(scrollBody, gap, scrollYRef);
         }
-        ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, topLevelSettings, (setting, innerWidth, sliderStartX) -> editorForRegistrySetting(setting, innerWidth, sliderStartX, openColorPicker), (booleanSetting, cellWidth, cellHeight) -> new FBooleanSettingGridCellWidget(booleanSetting, cellWidth, cellHeight, ModConfig::saveSettings));
+        ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, topLevelSettings, (setting, innerWidth, sliderStartX) -> editorForRegistrySetting(setting, innerWidth, sliderStartX));
         scrollBody.addChild(new FSpacerWidget(settingsContentWidth, ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET));
         return wrapScrollClip(scrollBody, gap, scrollYRef);
     }
@@ -96,7 +96,7 @@ public class ModSettingsRegistrySettingsTabBuilder {
         }
     }
 
-    private static FWidget editorForRegistrySetting(Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX, Consumer<ColorSetting> openColorPicker) {
+    private static FWidget editorForRegistrySetting(Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX) {
         if (setting instanceof KeybindSetting keybindSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
             return new FKeybindSettingWidget(keybindSetting, settingsInnerWidth, editorHeight, ModConfig::saveSettings);
@@ -112,10 +112,6 @@ public class ModSettingsRegistrySettingsTabBuilder {
         if (setting instanceof EnumSetting<?> enumSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
             return new FEnumSettingRowWidget(enumSetting, settingsInnerWidth, editorHeight, ModConfig::saveSettings, sliderValueColumnStartX);
-        }
-        if (setting instanceof ColorSetting colorSetting) {
-            float editorHeight = SettingsUiMetrics.booleanOuterHeight();
-            return new FColorSettingRowWidget(colorSetting, settingsInnerWidth, editorHeight, ModConfig::saveSettings, sliderValueColumnStartX, openColorPicker);
         }
         return null;
     }

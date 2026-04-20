@@ -11,7 +11,7 @@ public class HurtcamModule extends Module {
     private final BooleanSetting cancelHurtcamAnimation = BooleanSetting.builder().id("cancel_hurtcam_animation").defaultValue(false).build();
 
     public HurtcamModule() {
-        super("Hurtcam", ModuleCategory.MISC);
+        super("Hurtcam", ModuleCategory.GENERAL);
 
         addSetting(cancelHurtcamAnimation);
     }

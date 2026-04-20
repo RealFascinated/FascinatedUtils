@@ -6,22 +6,16 @@ import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
-import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 
-public class FEnumSettingRowWidget extends FWidget {
+public class FEnumSettingRowWidget extends FSettingRowWidget {
 
-    private final Runnable onPersist;
     private final EnumSetting<?> enumSetting;
-    private final float outerWidth;
-    private final float outerHeight;
-    private final float valueColumnStartX;
     private boolean hoveredChip;
     private boolean hoveredReset;
 
@@ -30,11 +24,8 @@ public class FEnumSettingRowWidget extends FWidget {
     }
 
     public FEnumSettingRowWidget(EnumSetting<?> enumSetting, float outerWidth, float outerHeight, Runnable onPersist, float valueColumnStartX) {
+        super(outerWidth, outerHeight, onPersist, valueColumnStartX);
         this.enumSetting = enumSetting;
-        this.onPersist = onPersist;
-        this.outerWidth = outerWidth;
-        this.outerHeight = outerHeight;
-        this.valueColumnStartX = Math.max(0f, valueColumnStartX);
     }
 
     public FEnumSettingRowWidget(Module module, EnumSetting<?> enumSetting, float outerWidth, float outerHeight) {
@@ -51,29 +42,6 @@ public class FEnumSettingRowWidget extends FWidget {
             return 0f;
         }
         return client.font.width(text);
-    }
-
-    private static boolean rectContains(float[] rect, float pointerX, float pointerY) {
-        float rectLeft = rect[0];
-        float rectTop = rect[1];
-        float rectW = rect[2];
-        float rectH = rect[3];
-        return pointerX >= rectLeft && pointerY >= rectTop && pointerX < rectLeft + rectW && pointerY < rectTop + rectH;
-    }
-
-    @Override
-    public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-        return outerHeight;
-    }
-
-    @Override
-    public float intrinsicWidthForRow(UIRenderer measure, float heightBudget) {
-        return outerWidth;
-    }
-
-    @Override
-    public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-        setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
     }
 
     @Override

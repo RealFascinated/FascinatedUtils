@@ -2,14 +2,19 @@ package cc.fascinated.fascinatedutils.systems.modules.impl;
 
 import java.util.List;
 
+import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import org.jspecify.annotations.Nullable;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.mixin.scoreboard.GuiScoreDisplayOrderAccessor;
+import cc.fascinated.fascinatedutils.systems.hud.HUDPanelBackground;
 import cc.fascinated.fascinatedutils.systems.hud.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -34,8 +39,15 @@ public class ScoreboardModule extends HudModule {
         new ScoreRow(Component.literal("Player4"), Component.empty(), 0)
     );
 
-    private final BooleanSetting hideScoreboardLines = BooleanSetting.builder().id("hide_scoreboard_lines").defaultValue(true).translationKeyPath("fascinatedutils.module.scoreboard.hide_scoreboard_lines").build();
-    
+    private final BooleanSetting hideScoreboardLines = BooleanSetting.builder().id("hide_scoreboard_lines").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
+    private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().defaultValue(SettingColor.fromArgb(0x55000000)).build();
+    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
+    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
+    private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
+    private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
+    private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+
     public ScoreboardModule() {
         super("scoreboard", "Scoreboard", 0f, HudDefaults.builder()
                 .defaultState(true)
@@ -45,6 +57,17 @@ public class ScoreboardModule extends HudModule {
                 .build()
         );
         addSetting(hideScoreboardLines);
+        addSetting(showBackground);
+        addSetting(roundedCorners);
+        addSetting(showBorder);
+        addSetting(roundingRadius);
+        addSetting(borderThickness);
+        addSetting(backgroundColor);
+        addSetting(borderColor);
+        showBackground.addSubSetting(backgroundColor);
+        roundedCorners.addSubSetting(roundingRadius);
+        showBorder.addSubSetting(borderThickness);
+        showBorder.addSubSetting(borderColor);
     }
 
     @Override
@@ -60,7 +83,7 @@ public class ScoreboardModule extends HudModule {
         float lineHeight = glRenderer.getFontHeight();
         if (objective == null) {
             if (editorMode) {
-                return buildScoreboardDraw(glRenderer, lineHeight, PREVIEW_TITLE, PREVIEW_ROWS, minecraft);
+                return buildScoreboardDraw(glRenderer, lineHeight, PREVIEW_TITLE, PREVIEW_ROWS);
             }
             recordHudContentSkipped();
             return null;
@@ -78,7 +101,7 @@ public class ScoreboardModule extends HudModule {
             return new ScoreRow(name, scoreText, scoreWidth);
         }).toList();
 
-        return buildScoreboardDraw(glRenderer, lineHeight, objective.getDisplayName(), rows, minecraft);
+        return buildScoreboardDraw(glRenderer, lineHeight, objective.getDisplayName(), rows);
     }
 
     @Override
@@ -86,8 +109,8 @@ public class ScoreboardModule extends HudModule {
         return null;
     }
 
-    private Runnable buildScoreboardDraw(GuiRenderer glRenderer, float lineHeight, Component title, List<ScoreRow> rows, Minecraft minecraft) {
-        Font font = minecraft.font;
+    private Runnable buildScoreboardDraw(GuiRenderer glRenderer, float lineHeight, Component title, List<ScoreRow> rows) {
+        Font font = Minecraft.getInstance().font;
         int titleWidth = font.width(title);
         int spacerWidth = font.width(Component.literal(": "));
         int widest = titleWidth;
@@ -95,31 +118,29 @@ public class ScoreboardModule extends HudModule {
             int rowWidth = font.width(row.name) + (row.scoreWidth > 0 ? spacerWidth + row.scoreWidth : 0);
             widest = Math.max(widest, rowWidth);
         }
-        float layoutWidth = Math.max(getMinWidth(), (float) widest + 4f);
-        float layoutHeight = Math.max(1f, (rows.size() + 1) * lineHeight);
+        float padX = HUDPanelBackground.HORIZONTAL_PADDING;
+        float padY = HUDPanelBackground.VERTICAL_PADDING;
+        float layoutWidth = Math.max(getMinWidth(), (float) widest + 2f * padX);
+        float layoutHeight = Math.max(1f, (rows.size() + 1) * lineHeight + 2f * padY);
         getHudState().setLastLayoutWidth(layoutWidth);
         getHudState().setLastLayoutHeight(layoutHeight);
         getHudState().setCommittedLayoutWidth(layoutWidth);
         getHudState().setCommittedLayoutHeight(layoutHeight);
 
-        int headerBackground = minecraft.options.getBackgroundColor(0.4F);
-        int bodyBackground = minecraft.options.getBackgroundColor(0.3F);
         int textColor = 0xFFFFFFFF;
         List<ScoreRow> rowsCopy = List.copyOf(rows);
         return () -> {
-            float innerLeft = 2f;
-            float innerRight = layoutWidth - 2f;
-            glRenderer.drawRect(innerLeft - 2f, 0f, innerRight - innerLeft + 4f, lineHeight, headerBackground);
-            glRenderer.drawRect(innerLeft - 2f, lineHeight, innerRight - innerLeft + 4f, layoutHeight - lineHeight, bodyBackground);
+            drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
             glRenderer.endRenderSegment();
-            float titleX = innerLeft + (innerRight - innerLeft - titleWidth) * 0.5f;
-            glRenderer.drawComponentText(title, titleX, 1f, textColor, false);
+            float contentRight = layoutWidth - padX;
+            float titleX = padX + (contentRight - padX - titleWidth) * 0.5f;
+            glRenderer.drawComponentText(title, titleX, padY, textColor, false);
             for (int index = 0; index < rowsCopy.size(); index++) {
                 ScoreRow row = rowsCopy.get(index);
-                float rowY = lineHeight + 1f + index * lineHeight;
-                glRenderer.drawComponentText(row.name, innerLeft, rowY, textColor, false);
+                float rowY = padY + (index + 1) * lineHeight;
+                glRenderer.drawComponentText(row.name, padX, rowY, textColor, false);
                 if (row.scoreWidth > 0) {
-                    glRenderer.drawComponentText(row.score, innerRight - row.scoreWidth, rowY, textColor, false);
+                    glRenderer.drawComponentText(row.score, contentRight - row.scoreWidth, rowY, textColor, false);
                 }
             }
         };

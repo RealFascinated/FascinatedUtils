@@ -6,38 +6,36 @@ import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.hooks.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
-import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import cc.fascinated.fascinatedutils.gui.theme.Icons;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.widgets.FAnimatable;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import net.minecraft.util.Mth;
+import org.jspecify.annotations.Nullable;
 
-public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
+import java.util.function.BooleanSupplier;
+
+public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnimatable {
 
     // Design px; same fillet scale for track and thumb so outer and inner rounding match (not a pill track + tiny thumb).
     private static final float TOGGLE_CORNER_FILLET_DESIGN = 2.5f;
-    private final Runnable onPersist;
     private final BooleanSetting booleanSetting;
-    private final float outerWidth;
-    private final float outerHeight;
-    private final float valueColumnStartX;
     private final AnimHandle toggleProgressAnim = new AnimHandle(0f).speed(26f);
     private boolean hoveredToggle;
     private boolean hoveredReset;
+    private boolean hoveredChevron;
+    private @Nullable BooleanSupplier expandedState;
+    private @Nullable Runnable onChevronToggle;
 
     public FBooleanSettingRowWidget(Module module, BooleanSetting booleanSetting, float outerWidth, float outerHeight, float valueColumnStartX) {
         this(booleanSetting, outerWidth, outerHeight, () -> ModConfig.saveActiveModule(module), valueColumnStartX);
     }
 
     public FBooleanSettingRowWidget(BooleanSetting booleanSetting, float outerWidth, float outerHeight, Runnable onPersist, float valueColumnStartX) {
+        super(outerWidth, outerHeight, onPersist, valueColumnStartX);
         this.booleanSetting = booleanSetting;
-        this.onPersist = onPersist;
-        this.outerWidth = outerWidth;
-        this.outerHeight = outerHeight;
-        this.valueColumnStartX = Math.max(0f, valueColumnStartX);
         float initial = booleanSetting.getValue() ? 1f : 0f;
         this.toggleProgressAnim.snap(initial);
     }
@@ -50,38 +48,23 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
         this(booleanSetting, outerWidth, outerHeight, onPersist, 0f);
     }
 
-    private static boolean rectContains(float[] rect, float pointerX, float pointerY) {
-        float rectLeft = rect[0];
-        float rectTop = rect[1];
-        float rectW = rect[2];
-        float rectH = rect[3];
-        return pointerX >= rectLeft && pointerY >= rectTop && pointerX < rectLeft + rectW && pointerY < rectTop + rectH;
-    }
-
-    @Override
-    public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-        return outerHeight;
-    }
-
-    @Override
-    public float intrinsicWidthForRow(UIRenderer measure, float heightBudget) {
-        return outerWidth;
-    }
-
-    @Override
-    public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-        setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-    }
-
-    @Override
-    public boolean wantsPointer() {
-        return true;
+    /**
+     * Wires a chevron button that controls an expand/collapse state. When set, a chevron icon is rendered between the
+     * toggle and the reset glyph; clicking it calls {@code onToggle}.
+     *
+     * @param expanded  supplier for whether the sub-panel is currently expanded
+     * @param onToggle  called when the user clicks the chevron
+     */
+    public void setChevronHandlers(BooleanSupplier expanded, Runnable onToggle) {
+        this.expandedState = expanded;
+        this.onChevronToggle = onToggle;
     }
 
     @Override
     public boolean mouseLeave(float pointerX, float pointerY) {
         hoveredToggle = false;
         hoveredReset = false;
+        hoveredChevron = false;
         return false;
     }
 
@@ -90,6 +73,10 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
         hoveredToggle = rectContains(toggleBounds(), pointerX, pointerY);
         float[] resetSquare = inlineResetSquare();
         hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, booleanSetting.isAtDefault());
+        if (expandedState != null) {
+            float[] chevron = chevronBounds();
+            hoveredChevron = SettingRowResetLayout.rectContains(chevron[0], chevron[1], chevron[2], pointerX, pointerY);
+        }
         return false;
     }
 
@@ -99,11 +86,17 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
             return false;
         }
         if (booleanSetting.isLocked()) {
-            return hoveredToggle || hoveredReset;
+            return hoveredToggle || hoveredReset || hoveredChevron;
         }
         float[] resetSquare = inlineResetSquare();
         if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, booleanSetting.isAtDefault())) {
             return true;
+        }
+        if (expandedState != null) {
+            float[] chevron = chevronBounds();
+            if (SettingRowResetLayout.rectContains(chevron[0], chevron[1], chevron[2], pointerX, pointerY)) {
+                return true;
+            }
         }
         return rectContains(toggleBounds(), pointerX, pointerY);
     }
@@ -114,7 +107,7 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
             return false;
         }
         if (booleanSetting.isLocked()) {
-            return hoveredToggle || hoveredReset;
+            return hoveredToggle || hoveredReset || hoveredChevron;
         }
         float[] resetSquare = inlineResetSquare();
         if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, booleanSetting.isAtDefault())) {
@@ -122,6 +115,13 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
             toggleProgressAnim.target(booleanSetting.getValue() ? 1f : 0f);
             onPersist.run();
             return true;
+        }
+        if (expandedState != null && onChevronToggle != null) {
+            float[] chevron = chevronBounds();
+            if (SettingRowResetLayout.rectContains(chevron[0], chevron[1], chevron[2], pointerX, pointerY)) {
+                onChevronToggle.run();
+                return true;
+            }
         }
         if (rectContains(toggleBounds(), pointerX, pointerY)) {
             booleanSetting.setValue(!booleanSetting.getValue());
@@ -140,7 +140,7 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
 
     @Override
     public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        if (hoveredToggle || hoveredReset) {
+        if (hoveredToggle || hoveredReset || hoveredChevron) {
             WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, booleanSetting, hoveredReset);
         }
     }
@@ -190,6 +190,13 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
 
         float[] resetSquare = inlineResetSquare();
         SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], toggleH, hoveredReset && !locked, booleanSetting.isAtDefault());
+
+        if (expandedState != null) {
+            float[] chevron = chevronBounds();
+            boolean expanded = expandedState.getAsBoolean();
+            int chevronColor = hoveredChevron && !locked ? graphics.theme().textPrimary() : graphics.theme().textMuted();
+            Icons.paintSubSettingsChevron(graphics, chevron[0], chevron[1], chevron[2], chevron[2], chevronColor, expanded);
+        }
     }
 
     private float[] toggleBounds() {
@@ -202,9 +209,21 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
         float titleOriginY = titleRowTop(innerHeight, padY, titleRowHeight);
         float bodyLeft = x() + padX;
         float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + outerWidth);
-        float maxToggleLeft = Math.max(bodyLeft, resetLeft - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - toggleW);
+        // Always reserve chevron space so plain and chevron booleans cap at the same X.
+        float chevronReserve = SettingRowResetLayout.glyphBoxPx() + SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP;
+        float maxToggleLeft = Math.max(bodyLeft, resetLeft - chevronReserve - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - toggleW);
         float toggleLeft = Mth.clamp(bodyLeft + valueColumnStartX, bodyLeft, maxToggleLeft);
         return new float[]{toggleLeft, titleOriginY, toggleW, toggleH};
+    }
+
+    private float[] chevronBounds() {
+        float[] toggle = toggleBounds();
+        float toggleH = toggle[3];
+        float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + outerWidth);
+        float box = SettingRowResetLayout.glyphBoxPx();
+        float chevronLeft = resetLeft - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - box;
+        float chevronTop = SettingRowResetLayout.verticallyCenteredTop(toggle[1], toggleH);
+        return new float[]{chevronLeft, chevronTop, box};
     }
 
     private float[] inlineResetSquare() {

@@ -17,7 +17,7 @@ public class VibrancyModule extends Module {
     public static final Identifier POST_EFFECT_ID = Identifier.fromNamespaceAndPath("fascinatedutils", "vibrancy");
 
     public VibrancyModule() {
-        super("Vibrancy", ModuleCategory.MISC);
+        super("Vibrancy", ModuleCategory.GENERAL);
     }
 
     @EventHandler

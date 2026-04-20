@@ -9,6 +9,7 @@ import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.gui.widgets.SelectableButtonWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import net.minecraft.client.resources.language.I18n;
+import org.jspecify.annotations.NonNull;
 
 import java.util.function.Consumer;
 
@@ -20,9 +21,6 @@ public class FSettingsTabElement extends FWidget {
     private boolean dirty = true;
     private float cachedWidth = -1f;
     private float cachedHeight = -1f;
-
-    private boolean showColorPicker;
-    private ColorSetting activeColorSetting;
 
     @Override
     public boolean fillsVerticalInColumn() {
@@ -56,13 +54,10 @@ public class FSettingsTabElement extends FWidget {
         dirty = true;
         cachedWidth = -1f;
         cachedHeight = -1f;
-        showColorPicker = false;
-        activeColorSetting = null;
         clearChildren();
     }
 
     private void rebuild(float width, float height) {
-        Consumer<ColorSetting> openColorPicker = this::openColorPicker;
         float controlsHeight = SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN;
         float columnGap = 4f;
         float tabStripTopInset = 4f;
@@ -82,6 +77,43 @@ public class FSettingsTabElement extends FWidget {
             }
         };
 
+        FRowWidget tabRow = getFRowWidget(controlsHeight);
+
+        FRowWidget paddedTabStrip = new FRowWidget(0f, Align.START) {
+            @Override
+            public boolean fillsHorizontalInRow() {
+                return true;
+            }
+
+            @Override
+            public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
+                return controlsHeight;
+            }
+        };
+        paddedTabStrip.addChild(new FSpacerWidget(horizontalInset, 0f));
+        FMinWidthHostWidget tabRowHost = new FMinWidthHostWidget(tabStripInnerWidth, tabRow);
+        tabRowHost.setCellConstraints(new FCellConstraints().setExpandHorizontal(true));
+        paddedTabStrip.addChild(tabRowHost);
+        paddedTabStrip.addChild(new FSpacerWidget(horizontalInset, 0f));
+
+        mainColumn.addChild(new FSpacerWidget(width, tabStripTopInset));
+        mainColumn.addChild(paddedTabStrip);
+
+        Ref<Float> activeScroll = registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL ? generalRegistryScrollRef : performanceRegistryScrollRef;
+        float settingsPaneHeight = Math.max(1f, height - tabStripHeight);
+        FWidget settingsContent = ModSettingsRegistrySettingsTabBuilder.buildSettingsTab(width, settingsPaneHeight, activeScroll, registrySubTabRef.getValue());
+        settingsContent.setCellConstraints(new FCellConstraints().setExpandVertical(true));
+        mainColumn.addChild(settingsContent);
+
+        FAbsoluteStackWidget rootStack = new FAbsoluteStackWidget();
+        rootStack.addChild(mainColumn);
+
+        inner = rootStack;
+        clearChildren();
+        addChild(inner);
+    }
+
+    private @NonNull FRowWidget getFRowWidget(float controlsHeight) {
         FRowWidget tabRow = new FRowWidget(3f, Align.CENTER) {
             @Override
             public boolean fillsHorizontalInRow() {
@@ -120,65 +152,6 @@ public class FSettingsTabElement extends FWidget {
 
         tabRow.addChild(generalTabButton);
         tabRow.addChild(performanceTabButton);
-
-        FRowWidget paddedTabStrip = new FRowWidget(0f, Align.START) {
-            @Override
-            public boolean fillsHorizontalInRow() {
-                return true;
-            }
-
-            @Override
-            public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-                return controlsHeight;
-            }
-        };
-        paddedTabStrip.addChild(new FSpacerWidget(horizontalInset, 0f));
-        FMinWidthHostWidget tabRowHost = new FMinWidthHostWidget(tabStripInnerWidth, tabRow);
-        tabRowHost.setCellConstraints(new FCellConstraints().setExpandHorizontal(true));
-        paddedTabStrip.addChild(tabRowHost);
-        paddedTabStrip.addChild(new FSpacerWidget(horizontalInset, 0f));
-
-        mainColumn.addChild(new FSpacerWidget(width, tabStripTopInset));
-        mainColumn.addChild(paddedTabStrip);
-
-        Ref<Float> activeScroll = registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL ? generalRegistryScrollRef : performanceRegistryScrollRef;
-        float settingsPaneHeight = Math.max(1f, height - tabStripHeight);
-        FWidget settingsContent = ModSettingsRegistrySettingsTabBuilder.buildSettingsTab(width, settingsPaneHeight, activeScroll, openColorPicker, registrySubTabRef.getValue());
-        settingsContent.setCellConstraints(new FCellConstraints().setExpandVertical(true));
-        mainColumn.addChild(settingsContent);
-
-        FAbsoluteStackWidget rootStack = new FAbsoluteStackWidget();
-        rootStack.addChild(mainColumn);
-
-        if (showColorPicker && activeColorSetting != null) {
-            ColorSetting captured = activeColorSetting;
-            rootStack.addChild(new FColorPickerPopupWidget(captured.getValue(), newColor -> {
-                captured.setValue(newColor);
-                ModConfig.saveSettings();
-                closeColorPicker();
-            }, this::closeColorPicker));
-        }
-
-        inner = rootStack;
-        clearChildren();
-        addChild(inner);
-    }
-
-    private void openColorPicker(ColorSetting colorSetting) {
-        if (showColorPicker) {
-            return;
-        }
-        activeColorSetting = colorSetting;
-        showColorPicker = true;
-        dirty = true;
-    }
-
-    private void closeColorPicker() {
-        if (!showColorPicker) {
-            return;
-        }
-        showColorPicker = false;
-        activeColorSetting = null;
-        dirty = true;
+        return tabRow;
     }
 }

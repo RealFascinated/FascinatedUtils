@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 
@@ -30,6 +31,11 @@ public class FSvPickerAreaWidget extends FWidget {
 
     public void setHue(float hue) {
         this.hue = hue;
+    }
+
+    public void setSaturationValue(float saturation, float value) {
+        this.saturation = saturation;
+        this.value = value;
     }
 
     @Override
@@ -83,9 +89,10 @@ public class FSvPickerAreaWidget extends FWidget {
 
         float crossX = x() + saturation * w();
         float crossY = y() + (1f - value) * h();
-        float crossSize = 3f;
-        graphics.drawRect(crossX - crossSize, crossY - 0.5f, crossSize * 2f, 1f, 0xFFFFFFFF);
-        graphics.drawRect(crossX - 0.5f, crossY - crossSize, 1f, crossSize * 2f, 0xFFFFFFFF);
+        float outerR = 4f;
+        float innerR = 3f;
+        graphics.fillRoundedRect(crossX - outerR, crossY - outerR, outerR * 2f, outerR * 2f, outerR, 0xFF000000, RectCornerRoundMask.ALL);
+        graphics.fillRoundedRect(crossX - innerR, crossY - innerR, innerR * 2f, innerR * 2f, innerR, 0xFFFFFFFF, RectCornerRoundMask.ALL);
         graphics.drawBorder(x(), y(), w(), h(), 1f, graphics.theme().border());
     }
 

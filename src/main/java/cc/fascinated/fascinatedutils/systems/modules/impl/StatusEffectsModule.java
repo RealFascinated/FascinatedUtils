@@ -8,6 +8,7 @@ import org.jspecify.annotations.Nullable;
 
 import cc.fascinated.fascinatedutils.common.DateUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -110,6 +111,10 @@ public class StatusEffectsModule extends HudModule {
 
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
 
+    private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
+
+    private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+
     public StatusEffectsModule() {
         super("status_effects", "Status Effects", 56f);
         addSetting(showBackground);
@@ -117,6 +122,12 @@ public class StatusEffectsModule extends HudModule {
         addSetting(showBorder);
         addSetting(roundingRadius);
         addSetting(borderThickness);
+        addSetting(backgroundColor);
+        addSetting(borderColor);
+        showBackground.addSubSetting(backgroundColor);
+        roundedCorners.addSubSetting(roundingRadius);
+        showBorder.addSubSetting(borderThickness);
+        showBorder.addSubSetting(borderColor);
         addSetting(showAmplifier);
         addSetting(showDuration);
         addSetting(flashTimeWhenEnding);

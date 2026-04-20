@@ -11,7 +11,7 @@ public class FogCustomizerModule extends Module {
     private final SliderSetting atmosphericFogStrength = SliderSetting.builder().id("atmospheric_fog").defaultValue(1f).minValue(0f).maxValue(1.5f).step(0.1f).categoryDisplayKey("Fog Density").build();
 
     public FogCustomizerModule() {
-        super("Fog Customizer", ModuleCategory.MISC);
+        super("Fog Customizer", ModuleCategory.GENERAL);
         addSetting(atmosphericFogStrength);
     }
 }

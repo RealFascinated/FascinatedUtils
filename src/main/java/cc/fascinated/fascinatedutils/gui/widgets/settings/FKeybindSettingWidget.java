@@ -5,61 +5,29 @@ import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
-import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
-public class FKeybindSettingWidget extends FWidget {
+public class FKeybindSettingWidget extends FSettingRowWidget {
     private static final float KEY_CHIP_WIDTH_DESIGN = 84f;
     private static final float KEY_CHIP_HEIGHT_DESIGN = 13f;
     private final KeybindSetting keybindSetting;
-    private final float outerWidth;
-    private final float outerHeight;
-    private final Runnable onPersist;
     private boolean hovered;
     private boolean hoveredReset;
     private boolean listening;
 
     public FKeybindSettingWidget(KeybindSetting keybindSetting, float outerWidth, float outerHeight, Runnable onPersist) {
+        super(outerWidth, outerHeight, onPersist == null ? () -> {} : onPersist);
         this.keybindSetting = keybindSetting;
-        this.outerWidth = outerWidth;
-        this.outerHeight = outerHeight;
-        this.onPersist = onPersist == null ? () -> {
-        } : onPersist;
-    }
-
-    private static boolean rectContains(float[] rect, float pointerX, float pointerY) {
-        return pointerX >= rect[0] && pointerY >= rect[1] && pointerX < rect[0] + rect[2] && pointerY < rect[1] + rect[3];
     }
 
     @Override
     public int focusId() {
         return keybindSetting.getSettingKey().hashCode();
-    }
-
-    @Override
-    public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-        return outerHeight;
-    }
-
-    @Override
-    public float intrinsicWidthForRow(UIRenderer measure, float heightBudget) {
-        return outerWidth;
-    }
-
-    @Override
-    public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-        setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-    }
-
-    @Override
-    public boolean wantsPointer() {
-        return true;
     }
 
     @Override

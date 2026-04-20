@@ -64,9 +64,8 @@ public class ModSettingsCategoryRows {
      * @param categories             category blocks after top-level settings
      * @param topLevelSettings       module/widget settings registered outside categories
      * @param editorFactory          editor for a single setting row
-     * @param booleanGridCellFactory compact cell used when two or more booleans are grouped
      */
-    public static void appendTopLevelThenCategories(FColumnWidget scrollBody, float settingsContentWidth, float settingsInnerWidth, List<CategoryBlock> categories, List<Setting<?>> topLevelSettings, SettingRowEditorFactory editorFactory, ModSettingsBooleanTwoColumnGridBuilder.CellFactory booleanGridCellFactory) {
+    public static void appendTopLevelThenCategories(FColumnWidget scrollBody, float settingsContentWidth, float settingsInnerWidth, List<CategoryBlock> categories, List<Setting<?>> topLevelSettings, SettingRowEditorFactory editorFactory) {
         List<Setting<?>> allForMeasure = new ArrayList<>(topLevelSettings);
         for (CategoryBlock category : categories) {
             allForMeasure.addAll(category.settings());
@@ -75,7 +74,7 @@ public class ModSettingsCategoryRows {
         float settingRowsPaddedInnerWidth = settingsDetailPaddedInnerWidth(settingsInnerWidth, SettingsUiMetrics.SETTINGS_DETAIL_CATEGORY_CONTENT_LEFT_INSET_X_DESIGN, SettingsUiMetrics.SETTINGS_DETAIL_CATEGORY_CONTENT_RIGHT_INSET_X_DESIGN);
         float categoryTitlePaddedInnerWidth = settingsDetailPaddedInnerWidth(settingsInnerWidth, SettingsUiMetrics.SETTINGS_DETAIL_CATEGORY_TITLE_LEFT_INSET_X_DESIGN, SettingsUiMetrics.SETTINGS_DETAIL_CATEGORY_CONTENT_RIGHT_INSET_X_DESIGN);
         boolean[] placedAnyRow = {false};
-        appendSequencedSettings(scrollBody, settingsContentWidth, settingsInnerWidth, settingRowsPaddedInnerWidth, sliderValueColumnStartX, topLevelSettings, editorFactory, booleanGridCellFactory, placedAnyRow);
+        appendSequencedSettings(scrollBody, settingsContentWidth, settingsInnerWidth, settingRowsPaddedInnerWidth, sliderValueColumnStartX, topLevelSettings, editorFactory, placedAnyRow);
         for (CategoryBlock category : categories) {
             if (!categoryBlockHasRenderableSetting(category)) {
                 continue;
@@ -91,7 +90,7 @@ public class ModSettingsCategoryRows {
                 scrollBody.addChild(wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(categoryTitlePaddedInnerWidth, categoryLabel), SettingsUiMetrics.SETTINGS_DETAIL_CATEGORY_TITLE_LEFT_INSET_X_DESIGN, SettingsUiMetrics.SETTINGS_DETAIL_CATEGORY_CONTENT_RIGHT_INSET_X_DESIGN));
                 scrollBody.addChild(new FSpacerWidget(settingsContentWidth, SettingsUiMetrics.CATEGORY_AFTER_HEADER_ROW_GAP));
             }
-            appendSequencedSettings(scrollBody, settingsContentWidth, settingsInnerWidth, settingRowsPaddedInnerWidth, sliderValueColumnStartX, category.settings(), editorFactory, booleanGridCellFactory, placedAnyRow);
+            appendSequencedSettings(scrollBody, settingsContentWidth, settingsInnerWidth, settingRowsPaddedInnerWidth, sliderValueColumnStartX, category.settings(), editorFactory, placedAnyRow);
         }
     }
 
@@ -100,40 +99,23 @@ public class ModSettingsCategoryRows {
         for (Setting<?> setting : settings) {
             String labelText = setting.getTranslatedDisplayName();
             maxLabelWidth = Math.max(maxLabelWidth, measureSettingLabelWidth(labelText));
+            for (Setting<?> subSetting : setting.getSubSettings()) {
+                String subLabel = subSetting.getTranslatedDisplayName();
+                maxLabelWidth = Math.max(maxLabelWidth, measureSettingLabelWidth(subLabel));
+            }
         }
         float baseOffset = 35f;
         return maxLabelWidth + baseOffset;
     }
 
-    private static void appendSequencedSettings(FColumnWidget scrollBody, float settingsContentWidth, float settingsInnerWidth, float widthForEditors, float sliderValueColumnStartX, List<Setting<?>> sequence, SettingRowEditorFactory editorFactory, ModSettingsBooleanTwoColumnGridBuilder.CellFactory booleanGridCellFactory, boolean[] placedAnyRow) {
-        List<BooleanSetting> booleanRun = new ArrayList<>();
+    private static void appendSequencedSettings(FColumnWidget scrollBody, float settingsContentWidth, float settingsInnerWidth, float widthForEditors, float sliderValueColumnStartX, List<Setting<?>> sequence, SettingRowEditorFactory editorFactory, boolean[] placedAnyRow) {
         for (Setting<?> setting : sequence) {
-            if (setting instanceof BooleanSetting booleanSetting && isRenderableSetting(booleanSetting)) {
-                booleanRun.add(booleanSetting);
-                continue;
-            }
-            flushBooleanRun(scrollBody, settingsContentWidth, settingsInnerWidth, widthForEditors, sliderValueColumnStartX, booleanRun, editorFactory, booleanGridCellFactory, placedAnyRow);
-            booleanRun.clear();
-            if (!isRenderableSetting(setting)) {
+            if (setting.isSubSetting() || !isRenderableSetting(setting)) {
                 continue;
             }
             FWidget editor = editorFactory.create(setting, widthForEditors, sliderValueColumnStartX);
             appendSingleWrappedEditor(scrollBody, settingsContentWidth, settingsInnerWidth, editor, placedAnyRow);
         }
-        flushBooleanRun(scrollBody, settingsContentWidth, settingsInnerWidth, widthForEditors, sliderValueColumnStartX, booleanRun, editorFactory, booleanGridCellFactory, placedAnyRow);
-    }
-
-    private static void flushBooleanRun(FColumnWidget scrollBody, float settingsContentWidth, float settingsInnerWidth, float widthForEditors, float sliderValueColumnStartX, List<BooleanSetting> booleanRun, SettingRowEditorFactory editorFactory, ModSettingsBooleanTwoColumnGridBuilder.CellFactory booleanGridCellFactory, boolean[] placedAnyRow) {
-        if (booleanRun.isEmpty()) {
-            return;
-        }
-        float cellHeight = SettingsUiMetrics.booleanOuterHeight();
-        FWidget grid = ModSettingsBooleanTwoColumnGridBuilder.build(widthForEditors, booleanRun, cellHeight, booleanGridCellFactory);
-        if (placedAnyRow[0]) {
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, SettingsUiMetrics.SETTING_GROUP_GAP));
-        }
-        placedAnyRow[0] = true;
-        scrollBody.addChild(wrapSettingRowShellMargin(settingsContentWidth, settingsInnerWidth, grid));
     }
 
     private static void appendSingleWrappedEditor(FColumnWidget scrollBody, float settingsContentWidth, float settingsInnerWidth, @Nullable FWidget editor, boolean[] placedAnyRow) {
