@@ -9,6 +9,7 @@
     "CameraMixin",
     "ChatComponentMixin",
     "ClientPlayerEntityMixin",
+    "ConnectionMixin",
     "ClientPlayerInteractionManagerAccessorMixin",
     "GameMenuScreenMixin",
     "GameRendererMixin",

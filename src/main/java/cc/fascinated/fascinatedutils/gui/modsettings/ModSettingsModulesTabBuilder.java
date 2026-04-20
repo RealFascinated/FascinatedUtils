@@ -8,7 +8,7 @@ import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FModuleVisibilityCardWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.SelectableButtonWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
@@ -65,61 +65,25 @@ public class ModSettingsModulesTabBuilder {
             }
         };
         categoryButtonsRow.setCellConstraints(new FCellConstraints().setExpandVertical(true));
-        FButtonWidget allCategoriesButton = new FButtonWidget(() -> {
+        FButtonWidget allCategoriesButton = new SelectableButtonWidget(() -> {
             moduleCategoryFilterRef.setValue(null);
             onFiltersChanged.run();
-        }, () -> "All", 62f, 1, 1f, 6f, 1.12f, 7f, 2f) {
+        }, () -> "All", 62f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> moduleCategoryFilterRef.getValue() == null) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
-            }
-
-            @Override
-            protected int resolveButtonFillColorArgb(boolean hovered) {
-                boolean activeCategory = moduleCategoryFilterRef.getValue() == null;
-                if (activeCategory) {
-                    return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRowSelected();
-                }
-                return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRow();
-            }
-
-            @Override
-            protected int resolveButtonBorderColorArgb(boolean hovered) {
-                boolean activeCategory = moduleCategoryFilterRef.getValue() == null;
-                if (activeCategory) {
-                    return hovered ? FascinatedGuiTheme.INSTANCE.borderHover() : FascinatedGuiTheme.INSTANCE.borderMuted();
-                }
-                return super.resolveButtonBorderColorArgb(hovered);
             }
         };
         allCategoriesButton.setCellConstraints(new FCellConstraints().setExpandVertical(true));
         categoryButtonsRow.addChild(allCategoriesButton);
         for (ModuleCategory moduleCategory : ModuleCategory.values()) {
-            FButtonWidget categoryButton = new FButtonWidget(() -> {
+            FButtonWidget categoryButton = new SelectableButtonWidget(() -> {
                 moduleCategoryFilterRef.setValue(moduleCategory);
                 onFiltersChanged.run();
-            }, moduleCategory::getDisplayName, 62f, 1, 1f, 6f, 1.12f, 7f, 2f) {
+            }, moduleCategory::getDisplayName, 62f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> moduleCategory == moduleCategoryFilterRef.getValue()) {
                 @Override
                 public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                     return controlsHeight;
-                }
-
-                @Override
-                protected int resolveButtonFillColorArgb(boolean hovered) {
-                    boolean activeCategory = moduleCategory == moduleCategoryFilterRef.getValue();
-                    if (activeCategory) {
-                        return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRowSelected();
-                    }
-                    return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRow();
-                }
-
-                @Override
-                protected int resolveButtonBorderColorArgb(boolean hovered) {
-                    boolean activeCategory = moduleCategory == moduleCategoryFilterRef.getValue();
-                    if (activeCategory) {
-                        return hovered ? FascinatedGuiTheme.INSTANCE.borderHover() : FascinatedGuiTheme.INSTANCE.borderMuted();
-                    }
-                    return super.resolveButtonBorderColorArgb(hovered);
                 }
             };
             categoryButton.setCellConstraints(new FCellConstraints().setExpandVertical(true));
@@ -187,36 +151,7 @@ public class ModSettingsModulesTabBuilder {
     }
 
     private static FWidget buildModulesPaneLayout(FWidget controlsRowHost, FScrollColumnWidget modulesScrollClip) {
-        return new FWidget() {
-            {
-                addChild(controlsRowHost);
-                addChild(modulesScrollClip);
-            }
-
-            @Override
-            public boolean fillsVerticalInColumn() {
-                return true;
-            }
-
-            @Override
-            public boolean fillsHorizontalInRow() {
-                return true;
-            }
-
-            @Override
-            public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-                setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-                float topInset = 4f;
-                float bottomInset = 4f;
-                float sectionGap = 4f;
-                float controlsHeight = controlsRowHost.intrinsicHeightForColumn(measure, layoutWidth);
-                float controlsY = layoutY + topInset;
-                controlsRowHost.layout(measure, layoutX, controlsY, layoutWidth, controlsHeight);
-                float scrollY = controlsY + controlsHeight + sectionGap;
-                float scrollHeight = Math.max(0f, layoutY + layoutHeight - bottomInset - scrollY);
-                modulesScrollClip.layout(measure, layoutX, scrollY, layoutWidth, scrollHeight);
-            }
-        };
+        return new FModulesPaneLayoutWidget(controlsRowHost, modulesScrollClip);
     }
 
     private static FScrollColumnWidget createModulesGridScrollClip(FColumnWidget scrollBody, float gapY, Ref<Float> modulesGridScrollYRef) {

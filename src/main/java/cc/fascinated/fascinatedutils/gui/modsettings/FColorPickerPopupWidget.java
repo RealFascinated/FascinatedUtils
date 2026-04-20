@@ -23,7 +23,7 @@ public class FColorPickerPopupWidget extends FPopupWidget {
     private final SettingColor editingColor;
     private final Consumer<SettingColor> onApply;
     private final Runnable onCancel;
-    private final SvPickerAreaWidget svPickerArea;
+    private final FSvPickerAreaWidget svPickerArea;
     private final FHueBarWidget hueBar;
     private final FButtonWidget applyButton;
     private final FButtonWidget cancelButton;
@@ -45,7 +45,7 @@ public class FColorPickerPopupWidget extends FPopupWidget {
         this.saturation = hsv[1];
         this.value = hsv[2];
 
-        svPickerArea = new SvPickerAreaWidget(hue, saturation, value, (newSaturation, newValue) -> {
+        svPickerArea = new FSvPickerAreaWidget(hue, saturation, value, (newSaturation, newValue) -> {
             saturation = newSaturation;
             value = newValue;
             syncEditingColor();

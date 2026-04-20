@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class ProfileContextMenuWidget extends FWidget {
+public class FProfileContextMenuWidget extends FWidget {
     private final Runnable onClose;
     private final MenuItemWidget renameItem;
     private final MenuItemWidget deleteItem;
@@ -20,15 +20,15 @@ public class ProfileContextMenuWidget extends FWidget {
     private float menuWidth;
     private float menuHeight;
 
-    public ProfileContextMenuWidget(float posX, float posY, Runnable onClose, Consumer<String> onAction) {
+    public FProfileContextMenuWidget(float posX, float posY, Runnable onClose, Consumer<ProfileContextMenuAction> onAction) {
         this.onClose = onClose;
 
         renameItem = new MenuItemWidget(() -> {
-            onAction.accept("rename");
+            onAction.accept(ProfileContextMenuAction.RENAME);
             onClose.run();
         }, () -> Component.translatable("fascinatedutils.setting.shell.profile_context_rename").getString());
         deleteItem = new MenuItemWidget(() -> {
-            onAction.accept("delete");
+            onAction.accept(ProfileContextMenuAction.DELETE);
             onClose.run();
         }, () -> Component.translatable("fascinatedutils.setting.shell.profile_context_delete").getString());
 

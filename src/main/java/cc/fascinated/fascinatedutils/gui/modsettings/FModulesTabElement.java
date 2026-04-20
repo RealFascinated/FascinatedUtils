@@ -116,7 +116,7 @@ public class FModulesTabElement extends FWidget {
         FAbsoluteStackWidget rootStack = new FAbsoluteStackWidget();
         rootStack.addChild(splitLayout);
         if (showCreateProfilePopup) {
-            rootStack.addChild(new ProfileCreatePopupWidget(newProfileNameRef, copyDefaultProfileSettingsRef, this::closeCreateProfilePopup, this::submitCreateProfilePopup));
+            rootStack.addChild(new FProfileCreatePopupWidget(newProfileNameRef, copyDefaultProfileSettingsRef, this::closeCreateProfilePopup, this::submitCreateProfilePopup));
         }
         profilePopupController.appendOverlaysTo(rootStack);
         inner = rootStack;

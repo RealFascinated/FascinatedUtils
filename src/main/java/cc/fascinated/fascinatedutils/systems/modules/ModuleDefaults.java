@@ -8,5 +8,6 @@ import lombok.experimental.Accessors;
 @Getter
 @Builder(toBuilder = true) @Accessors(fluent = true)
 public class ModuleDefaults {
+    @Builder.Default
     private boolean defaultState = false;
 }

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.widgets.settings;
+package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
@@ -11,6 +11,8 @@ import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.widgets.FAnimatable;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.SettingRowResetLayout;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.WSettingTooltip;
 import net.minecraft.util.Mth;
 
 /**

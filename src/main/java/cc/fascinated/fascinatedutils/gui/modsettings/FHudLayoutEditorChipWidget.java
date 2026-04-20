@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.widgets.settings;
+package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;

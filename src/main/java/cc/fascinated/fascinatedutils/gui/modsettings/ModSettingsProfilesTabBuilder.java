@@ -7,6 +7,7 @@ import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
+import cc.fascinated.fascinatedutils.gui.widgets.SelectableButtonWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.config.profiles.Profile;
 import net.minecraft.network.chat.Component;
@@ -47,20 +48,10 @@ public class ModSettingsProfilesTabBuilder {
 
         FColumnWidget scrollBody = new FColumnWidget(gap, Align.CENTER);
 
-        FButtonWidget createProfileButton = new FButtonWidget(onOpenCreateProfilePopup, () -> Component.translatable("fascinatedutils.setting.shell.new_profile_button").getString(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f) {
+        FButtonWidget createProfileButton = new SelectableButtonWidget(onOpenCreateProfilePopup, () -> Component.translatable("fascinatedutils.setting.shell.new_profile_button").getString(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f, () -> false) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
-            }
-
-            @Override
-            protected int resolveButtonFillColorArgb(boolean hovered) {
-                return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRow();
-            }
-
-            @Override
-            protected int resolveButtonBorderColorArgb(boolean hovered) {
-                return super.resolveButtonBorderColorArgb(hovered);
             }
         };
         createProfileButton.setCellConstraints(new FCellConstraints().setExpandVertical(true).setMinHeight(controlsHeight).setMaxHeight(controlsHeight));
@@ -86,14 +77,14 @@ public class ModSettingsProfilesTabBuilder {
             boolean isActiveProfile = activeProfileId.isPresent() && activeProfileId.get().equals(profileId);
             boolean isDefaultProfile = ModConfig.isDefaultProfile(profileId);
 
-            FButtonWidget profileActionButton = new FButtonWidget(() -> {
+            FButtonWidget profileActionButton = new SelectableButtonWidget(() -> {
                 if (isActiveProfile) {
                     return;
                 }
                 if (ModConfig.switchActiveProfile(profileId)) {
                     onProfilesChanged.run();
                 }
-            }, () -> profileEntry.getProfileName(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f) {
+            }, () -> profileEntry.getProfileName(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f, () -> isActiveProfile) {
                 @Override
                 public boolean mouseDown(float pointerX, float pointerY, int button) {
                     if (button == 1 && !isDefaultProfile) {
@@ -101,22 +92,6 @@ public class ModSettingsProfilesTabBuilder {
                         return true;
                     }
                     return super.mouseDown(pointerX, pointerY, button);
-                }
-
-                @Override
-                protected int resolveButtonFillColorArgb(boolean hovered) {
-                    if (isActiveProfile) {
-                        return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRowSelected();
-                    }
-                    return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRow();
-                }
-
-                @Override
-                protected int resolveButtonBorderColorArgb(boolean hovered) {
-                    if (isActiveProfile) {
-                        return hovered ? FascinatedGuiTheme.INSTANCE.borderHover() : FascinatedGuiTheme.INSTANCE.borderMuted();
-                    }
-                    return super.resolveButtonBorderColorArgb(hovered);
                 }
             };
 
@@ -126,62 +101,11 @@ public class ModSettingsProfilesTabBuilder {
         FWidget profilesScrollClip = wrapScrollClip(scrollBody, gap, scrollYRef);
         FWidget bottomHudButtonRow = null;
         if (onOpenHudLayoutEditor != null) {
-            FButtonWidget editHudLayoutButton = new FButtonWidget(onOpenHudLayoutEditor, () -> Component.translatable("fascinatedutils.setting.shell.edit_hud_layout").getString(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f) {
-                @Override
-                protected int resolveButtonFillColorArgb(boolean hovered) {
-                    return hovered ? FascinatedGuiTheme.INSTANCE.moduleListRowHover() : FascinatedGuiTheme.INSTANCE.moduleListRow();
-                }
-
-                @Override
-                protected int resolveButtonBorderColorArgb(boolean hovered) {
-                    return super.resolveButtonBorderColorArgb(hovered);
-                }
-            };
+            FButtonWidget editHudLayoutButton = new SelectableButtonWidget(onOpenHudLayoutEditor, () -> Component.translatable("fascinatedutils.setting.shell.edit_hud_layout").getString(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f, () -> false);
             bottomHudButtonRow = wrapWithSidePad(settingsContentWidth, settingsInnerWidth, editHudLayoutButton);
         }
 
-        final FWidget finalBottomHudButtonRow = bottomHudButtonRow;
-        FWidget pane = new FWidget() {
-            {
-                addChild(topCreateButtonRow);
-                addChild(profilesScrollClip);
-                if (finalBottomHudButtonRow != null) {
-                    addChild(finalBottomHudButtonRow);
-                }
-            }
-
-            @Override
-            public boolean fillsVerticalInColumn() {
-                return true;
-            }
-
-            @Override
-            public boolean fillsHorizontalInRow() {
-                return true;
-            }
-
-            @Override
-            public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-                setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-                float topInset = 4f;
-                float bottomInset = ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X;
-                float sectionGap = 3f;
-                float createButtonHeight = topCreateButtonRow.intrinsicHeightForColumn(measure, layoutWidth);
-                topCreateButtonRow.layout(measure, layoutX, layoutY + topInset, layoutWidth, createButtonHeight);
-                float reservedTopHeight = topInset + createButtonHeight + sectionGap;
-                float reservedBottomHeight = 0f;
-                if (finalBottomHudButtonRow != null) {
-                    float buttonHeight = finalBottomHudButtonRow.intrinsicHeightForColumn(measure, layoutWidth);
-                    float buttonY = layoutY + Math.max(0f, layoutHeight - bottomInset - buttonHeight);
-                    finalBottomHudButtonRow.layout(measure, layoutX, buttonY, layoutWidth, buttonHeight);
-                    reservedBottomHeight = buttonHeight + bottomInset + sectionGap;
-                }
-                float scrollPad = 2f;
-                float scrollHeight = Math.max(0f, layoutHeight - reservedTopHeight - reservedBottomHeight - 2f * scrollPad);
-                profilesScrollClip.layout(measure, layoutX, layoutY + reservedTopHeight + scrollPad, layoutWidth, scrollHeight);
-            }
-        };
-        return pane;
+        return new FProfilesPaneLayoutWidget(topCreateButtonRow, profilesScrollClip, bottomHudButtonRow);
     }
 
     private static FWidget wrapWithSidePad(float contentWidth, float innerWidth, FWidget inner) {

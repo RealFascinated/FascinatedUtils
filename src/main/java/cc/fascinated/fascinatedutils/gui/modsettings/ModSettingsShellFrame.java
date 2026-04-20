@@ -9,7 +9,6 @@ import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FShellTabStripWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FHudLayoutEditorChipWidget;
 import cc.fascinated.fascinatedutils.renderer.Renderer2D;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;

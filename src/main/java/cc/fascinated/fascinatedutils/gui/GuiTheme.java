@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui;
 
-import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.renderer.text.TextRenderer;
 import cc.fascinated.fascinatedutils.renderer.text.VanillaTextRenderer;
 import net.minecraft.client.gui.GuiGraphicsExtractor;

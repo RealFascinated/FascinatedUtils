@@ -16,8 +16,8 @@ import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellFrameResult
 import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellHitRegions;
 import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellLayout;
 import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellPointer;
-import cc.fascinated.fascinatedutils.gui.modsettings.ModulesTabElement;
-import cc.fascinated.fascinatedutils.gui.modsettings.SettingsTabElement;
+import cc.fascinated.fascinatedutils.gui.modsettings.FModulesTabElement;
+import cc.fascinated.fascinatedutils.gui.modsettings.FSettingsTabElement;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FShellTabStripWidget;
@@ -48,8 +48,8 @@ public class ModSettingsScreen extends WidgetScreen {
     private final FWidgetHost hudLayoutButtonHost = new FWidgetHost();
     private final IntConsumer setFocusId;
     private final FShellTabStripWidget topBarTabStrip;
-    private final ModulesTabElement modulesTabElement;
-    private final SettingsTabElement settingsTabElement;
+    private final FModulesTabElement modulesTabElement;
+    private final FSettingsTabElement settingsTabElement;
     private final @Nullable Module navigateToModuleDetailOnOpen;
     private float scrollAccum;
     private boolean appliedPersistedShellTab;
@@ -75,8 +75,8 @@ public class ModSettingsScreen extends WidgetScreen {
         root.setFocusSync(getFocusId, setFocusId);
         topBarTabStrip = new FShellTabStripWidget(this::onShellTabSelected);
         topBarTabsHost.setRoot(topBarTabStrip);
-        modulesTabElement = new ModulesTabElement(this::onProfilesChanged, this::openHudLayoutEditor);
-        settingsTabElement = new SettingsTabElement();
+        modulesTabElement = new FModulesTabElement(this::onProfilesChanged, this::openHudLayoutEditor);
+        settingsTabElement = new FSettingsTabElement();
     }
 
     public void renderBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
