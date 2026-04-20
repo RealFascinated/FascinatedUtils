@@ -1,15 +1,5 @@
 package cc.fascinated.fascinatedutils.updater;
 
-import cc.fascinated.fascinatedutils.common.types.GitHubAsset;
-import cc.fascinated.fascinatedutils.common.types.GitHubRelease;
-import cc.fascinated.fascinatedutils.common.types.ReleaseVersionInfo;
-import com.google.gson.*;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.client.Minecraft;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -31,23 +21,26 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import cc.fascinated.fascinatedutils.common.types.GitHubAsset;
+import cc.fascinated.fascinatedutils.common.types.GitHubRelease;
+import cc.fascinated.fascinatedutils.common.types.ReleaseVersionInfo;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.minecraft.client.Minecraft;
+
 public class UpdateChecker {
     private static final Logger LOG = LoggerFactory.getLogger(UpdateChecker.class);
     private static final String GITHUB_LATEST_API = "https://api.github.com/repos/RealFascinated/FascinatedUtils/releases/latest";
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
-    private final HttpClient client;
-    private final Gson gson;
-    private ScheduledExecutorService scheduler;
-
-    public UpdateChecker() {
-        this.client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
-        this.gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
-    }
-
-    public static void checkForUpdatesAsync() {
-        new UpdateChecker().startPeriodicChecks();
-    }
-
     private static String sha256Hex(Path path) throws IOException {
         MessageDigest digest;
         try {
@@ -64,13 +57,22 @@ public class UpdateChecker {
         }
         return hexLower(digest.digest());
     }
-
     private static String hexLower(byte[] digestBytes) {
         StringBuilder builder = new StringBuilder(digestBytes.length * 2);
         for (byte singleByte : digestBytes) {
             builder.append(String.format(Locale.ROOT, "%02x", singleByte));
         }
         return builder.toString();
+    }
+    private final HttpClient client;
+
+    private final Gson gson;
+
+    private ScheduledExecutorService scheduler;
+
+    public UpdateChecker() {
+        this.client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
+        this.gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
     }
 
     public void startPeriodicChecks() {

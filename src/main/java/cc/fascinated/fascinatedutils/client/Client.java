@@ -1,5 +1,8 @@
 package cc.fascinated.fascinatedutils.client;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.fascinated.fascinatedutils.FascinatedUtils;
 import cc.fascinated.fascinatedutils.client.command.ClientCommandBootstrap;
 import cc.fascinated.fascinatedutils.client.keybind.Keybinds;
@@ -19,8 +22,6 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Client implements ClientModInitializer {
     public static final Logger LOG = LoggerFactory.getLogger(FascinatedUtils.MOD_ID);
