@@ -163,5 +163,7 @@
   "fascinatedutils.module.hypixel.auto_gg.display_name": "Auto GG",
   "fascinatedutils.module.hypixel.auto_gg.description": "Automatically sends gg on game-end.",
   "fascinatedutils.module.hurtcam.cancel_hurtcam_animation.display_name": "Cancel Hurt Camera Animation",
-  "fascinatedutils.module.hurtcam.cancel_hurtcam_animation.description": "Cancels the camera tilt animation when taking damage."
+  "fascinatedutils.module.hurtcam.cancel_hurtcam_animation.description": "Cancels the camera tilt animation when taking damage.",
+  "fascinatedutils.module.timechanger.world_time.display_name": "World Time",
+  "fascinatedutils.module.timechanger.world_time.description": "Changes the current world time."
 }

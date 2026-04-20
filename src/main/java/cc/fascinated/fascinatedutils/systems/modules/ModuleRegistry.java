@@ -58,6 +58,7 @@ public class ModuleRegistry {
         modules.add(new PingWidget());
         modules.add(new ArmorWidget());
         modules.add(new WawlaWidget());
+        modules.add(new TimeChangerModule());
 
         for (Module module : modules) {
             FascinatedEventBus.INSTANCE.subscribe(module);
