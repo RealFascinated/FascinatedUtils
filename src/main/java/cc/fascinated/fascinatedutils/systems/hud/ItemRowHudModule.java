@@ -12,7 +12,6 @@ public abstract class ItemRowHudModule extends HudModule {
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
     private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
-    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
 
     protected ItemRowHudModule(String widgetId, String name, float minWidth) {
         super(widgetId, name, minWidth);
@@ -21,7 +20,6 @@ public abstract class ItemRowHudModule extends HudModule {
         addSetting(showBorder);
         addSetting(roundingRadius);
         addSetting(borderThickness);
-        addSetting(padding);
     }
 
     protected abstract List<HudContent.ItemRow> rows(float deltaSeconds);

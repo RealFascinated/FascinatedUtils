@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import java.util.List;
+
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -12,8 +14,7 @@ import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-
-import java.util.List;
+import net.minecraft.client.animation.definitions.RabbitAnimation;
 
 public class FModulesTabElement extends FWidget {
     private static final float PROFILES_PANEL_WIDTH_DESIGN = 118f;
@@ -94,6 +95,15 @@ public class FModulesTabElement extends FWidget {
         lastLayoutHeight = -1f;
         lastBuiltDetailModule = null;
         clearChildren();
+    }
+
+    /**
+     * Opens the modules tab detail view for the given module (used when entering settings from elsewhere, e.g. HUD editor).
+     *
+     * @param module module whose settings page should be shown
+     */
+    public void navigateToModuleSettingsPage(Module module) {
+        openModuleDetail(module);
     }
 
     private void rebuild(float width, float height) {
@@ -179,15 +189,6 @@ public class FModulesTabElement extends FWidget {
         moduleSettingsScrollRef.setValue(0f);
         settingsScrollAnchorModule = module;
         needsRebuild = true;
-    }
-
-    /**
-     * Opens the modules tab detail view for the given module (used when entering settings from elsewhere, e.g. HUD editor).
-     *
-     * @param module module whose settings page should be shown
-     */
-    public void navigateToModuleSettingsPage(Module module) {
-        openModuleDetail(module);
     }
 
     private void closeModuleDetail() {

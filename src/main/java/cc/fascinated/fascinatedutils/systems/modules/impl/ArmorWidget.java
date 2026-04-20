@@ -61,8 +61,6 @@ public class ArmorWidget extends HudModule {
 
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
 
-    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
-
     public ArmorWidget() {
         super("armor_hud", "Armor HUD", 0f, HudDefaults.builder()
                 .defaultState(true)
@@ -76,7 +74,6 @@ public class ArmorWidget extends HudModule {
         addSetting(showBorder);
         addSetting(roundingRadius);
         addSetting(borderThickness);
-        addSetting(padding);
         for (int slotIndex = 0; slotIndex < ROW_COUNT; slotIndex++) {
             addSetting(slotRowVisibility[slotIndex]);
         }

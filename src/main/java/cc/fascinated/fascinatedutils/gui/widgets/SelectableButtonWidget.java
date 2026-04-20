@@ -1,8 +1,8 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
-import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-
 import java.util.function.Supplier;
+
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 
 /**
  * A {@link FButtonWidget} variant that toggles between a "selected" and "unselected" visual state

@@ -1,26 +1,36 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
-import cc.fascinated.fascinatedutils.common.setting.impl.*;
-import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
-import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.*;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.*;
+import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FScrollColumnWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanSettingRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FColorSettingRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FEnumSettingRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FKeybindSettingWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.FSliderSettingRowWidget;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import lombok.experimental.UtilityClass;
 import net.minecraft.network.chat.Component;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 
 @UtilityClass
 public class ModSettingsRegistrySettingsTabBuilder {
@@ -56,13 +66,6 @@ public class ModSettingsRegistrySettingsTabBuilder {
             return wrapScrollClip(scrollBody, gap, scrollYRef);
         }
         ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, topLevelSettings, (setting, innerWidth, sliderStartX) -> editorForRegistrySetting(setting, innerWidth, sliderStartX, openColorPicker), (booleanSetting, cellWidth, cellHeight) -> new FBooleanSettingGridCellWidget(booleanSetting, cellWidth, cellHeight, ModConfig::saveSettings));
-        if (subTab == RegistrySettingsSubTab.GENERAL) {
-            List<HudModule> allWidgets = new ArrayList<>(HUDManager.INSTANCE.getWidgets());
-            allWidgets.sort((left, right) -> String.CASE_INSENSITIVE_ORDER.compare(left.getName(), right.getName()));
-            if (!allWidgets.isEmpty()) {
-                ModSettingsWidgetsTabBuilder.appendGlobalHudAppearanceBulkSection(scrollBody, settingsContentWidth, settingsInnerWidth, allWidgets, openColorPicker, false);
-            }
-        }
         scrollBody.addChild(new FSpacerWidget(settingsContentWidth, ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET));
         return wrapScrollClip(scrollBody, gap, scrollYRef);
     }

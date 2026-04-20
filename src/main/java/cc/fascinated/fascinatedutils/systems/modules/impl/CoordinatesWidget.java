@@ -58,8 +58,6 @@ public class CoordinatesWidget extends HudModule {
 
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
 
-    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
-
     public CoordinatesWidget() {
         super("coordinates", "Coordinates", 56f, HudDefaults.builder()
                 .defaultState(true)
@@ -74,7 +72,6 @@ public class CoordinatesWidget extends HudModule {
         addSetting(showBorder);
         addSetting(roundingRadius);
         addSetting(borderThickness);
-        addSetting(padding);
     }
 
     @Override

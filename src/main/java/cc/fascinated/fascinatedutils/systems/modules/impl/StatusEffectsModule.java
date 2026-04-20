@@ -110,8 +110,6 @@ public class StatusEffectsModule extends HudModule {
 
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
 
-    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
-
     public StatusEffectsModule() {
         super("status_effects", "Status Effects", 56f);
         addSetting(showBackground);
@@ -119,7 +117,6 @@ public class StatusEffectsModule extends HudModule {
         addSetting(showBorder);
         addSetting(roundingRadius);
         addSetting(borderThickness);
-        addSetting(padding);
         addSetting(showAmplifier);
         addSetting(showDuration);
         addSetting(flashTimeWhenEnding);

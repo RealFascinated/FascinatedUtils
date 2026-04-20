@@ -1,5 +1,8 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import org.joml.Matrix3x2fStack;
+import org.lwjgl.glfw.GLFW;
+
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.gui.input.MouseButtons;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -14,10 +17,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.joml.Matrix3x2fStack;
-import org.lwjgl.glfw.GLFW;
 
 public class ModSettingsShellFrame {
+
+    @FunctionalInterface
+    public interface ShellBodyMounter {
+        void beforeBodyLayout(float bodyWidth, float bodyHeight);
+    }
 
     /**
      * Lays out hosted widgets, draws scrim and shell chrome, and renders the three widget hosts.
@@ -145,10 +151,5 @@ public class ModSettingsShellFrame {
         float closeButtonX = Mth.floor(topBar.positionX() + topBar.width() - shellBorderThickness - closeButtonInset - closeButtonSize);
         float closeButtonY = Mth.floor(innerTitleTop + (innerTitleHeight - closeButtonSize) * 0.5f + 0.5f);
         return new ModSettingsShellLayout.ShellBounds(closeButtonX, closeButtonY, closeButtonSize, closeButtonSize);
-    }
-
-    @FunctionalInterface
-    public interface ShellBodyMounter {
-        void beforeBodyLayout(float bodyWidth, float bodyHeight);
     }
 }

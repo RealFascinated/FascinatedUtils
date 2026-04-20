@@ -1,8 +1,8 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
-import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
-
 import java.util.function.Consumer;
+
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 
 public class FGlobalHudColorApplyRowWidget extends FColorSettingRowWidget {
 

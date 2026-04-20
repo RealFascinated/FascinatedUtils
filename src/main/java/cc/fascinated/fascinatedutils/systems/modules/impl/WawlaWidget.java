@@ -72,8 +72,6 @@ public class WawlaWidget extends HudModule {
 
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
 
-    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
-
     @Nullable
     private BlockPos activeBreakingPos;
 
@@ -86,7 +84,6 @@ public class WawlaWidget extends HudModule {
         addSetting(showBorder);
         addSetting(roundingRadius);
         addSetting(borderThickness);
-        addSetting(padding);
     }
 
     @Override

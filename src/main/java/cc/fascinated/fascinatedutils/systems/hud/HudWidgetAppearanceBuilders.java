@@ -51,14 +51,5 @@ public class HudWidgetAppearanceBuilders {
                 .categoryDisplayKey(HudModule.APPEARANCE_CATEGORY_DISPLAY_KEY);
     }
 
-    public static SliderSetting.Builder padding() {
-        return SliderSetting.builder()
-                .id(HudModule.SETTING_PADDING)
-                .defaultValue(6f)
-                .minValue(0f)
-                .maxValue(16f)
-                .step(1f)
-                .translationKeyPath("fascinatedutils.module.padding")
-                .categoryDisplayKey(HudModule.APPEARANCE_CATEGORY_DISPLAY_KEY);
-    }
 }
+

@@ -20,19 +20,6 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
     private static final float CARD_PAD_Y_DESIGN = 3f;
     private static final float BACK_SIZE_DESIGN = 14f;
 
-    private final Runnable onBack;
-    private final String titleText;
-    private final float rowWidthPixels;
-    private final boolean showBackButton;
-    private boolean hoverBack;
-
-    private FModSettingsDetailHeaderCardWidget(Runnable onBack, String titleText, float rowWidthPixels, boolean showBackButton) {
-        this.onBack = onBack;
-        this.titleText = titleText == null ? "" : titleText;
-        this.rowWidthPixels = Math.max(0f, rowWidthPixels);
-        this.showBackButton = showBackButton;
-    }
-
     public static FWidget centeredInContentRow(float settingsContentWidth, float settingsInnerWidth, Runnable onBack, String titleText) {
         float inner = Math.max(0f, settingsInnerWidth);
         float content = Math.max(0f, settingsContentWidth);
@@ -43,7 +30,6 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
         row.addChild(new FSpacerWidget(slack, 0f));
         return row;
     }
-
     /**
      * Same centered shell row as {@link #centeredInContentRow}, but without a back control (title card only).
      *
@@ -62,6 +48,20 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
         }, titleText, inner, false));
         row.addChild(new FSpacerWidget(slack, 0f));
         return row;
+    }
+    private final Runnable onBack;
+    private final String titleText;
+    private final float rowWidthPixels;
+
+    private final boolean showBackButton;
+
+    private boolean hoverBack;
+
+    private FModSettingsDetailHeaderCardWidget(Runnable onBack, String titleText, float rowWidthPixels, boolean showBackButton) {
+        this.onBack = onBack;
+        this.titleText = titleText == null ? "" : titleText;
+        this.rowWidthPixels = Math.max(0f, rowWidthPixels);
+        this.showBackButton = showBackButton;
     }
 
     @Override
@@ -116,22 +116,6 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
         return false;
     }
 
-    private boolean hitBack(float pointerX, float pointerY) {
-        if (!showBackButton) {
-            return false;
-        }
-        float[] bounds = backButtonBounds();
-        return pointerX >= bounds[0] && pointerY >= bounds[1] && pointerX < bounds[0] + bounds[2] && pointerY < bounds[1] + bounds[3];
-    }
-
-    private float[] backButtonBounds() {
-        float padX = CARD_PAD_X_DESIGN;
-        float backSize = BACK_SIZE_DESIGN;
-        float backX = x() + padX;
-        float backY = y() + (h() - backSize) * 0.5f;
-        return new float[]{backX, backY, backSize, backSize};
-    }
-
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
         float corner = graphics.theme().cardCornerRadius();
@@ -147,5 +131,21 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
             int backIconTint = hoverBack ? graphics.theme().textPrimary() : graphics.theme().textMuted();
             Icons.paintModSettingsBackIcon(graphics, Mth.floor(back[0]), Mth.floor(back[1]), back[2], back[3], backIconTint);
         }
+    }
+
+    private boolean hitBack(float pointerX, float pointerY) {
+        if (!showBackButton) {
+            return false;
+        }
+        float[] bounds = backButtonBounds();
+        return pointerX >= bounds[0] && pointerY >= bounds[1] && pointerX < bounds[0] + bounds[2] && pointerY < bounds[1] + bounds[3];
+    }
+
+    private float[] backButtonBounds() {
+        float padX = CARD_PAD_X_DESIGN;
+        float backSize = BACK_SIZE_DESIGN;
+        float backX = x() + padX;
+        float backY = y() + (h() - backSize) * 0.5f;
+        return new float[]{backX, backY, backSize, backSize};
     }
 }

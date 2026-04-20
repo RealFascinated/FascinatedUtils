@@ -23,6 +23,17 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     private static final float ACTION_STRIP_HEIGHT_DESIGN = 20f;
     private static final int TITLE_MAX_LINES = 2;
     private static final int ACTION_STRIP_COUNT = 2;
+    public static float stackedCellOuterHeightPx() {
+        float titleTopPad = TITLE_PAD_TOP_DESIGN;
+        float titleBottomPad = TITLE_PAD_BOTTOM_DESIGN;
+        float buttonBand = ACTION_STRIP_HEIGHT_DESIGN;
+        float lineHeight = Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());
+        float titleBlock = TITLE_MAX_LINES * lineHeight;
+        return titleTopPad + titleBlock + titleBottomPad + ACTION_STRIP_COUNT * buttonBand;
+    }
+    private static boolean pointerInStrip(float[] strip, float pointerX, float pointerY) {
+        return pointerX >= strip[0] && pointerY >= strip[1] && pointerX < strip[0] + strip[2] && pointerY < strip[1] + strip[3];
+    }
     private final float cardWidthLogical;
     private final float cardHeightLogical;
     private final Supplier<String> titleSupplier;
@@ -31,7 +42,9 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     private final Supplier<Boolean> enabledSupplier;
     private final Callback<Boolean> onEnabledChange;
     private final AnimHandle toggleStripProgressAnim = new AnimHandle(0f).speed(22f);
+
     private boolean hoverSettingsStrip;
+
     private boolean hoverToggleStrip;
 
     public FVisibilityCardWidget(float layoutWidth, float layoutHeight, Supplier<String> titleSupplier, Supplier<Boolean> settingsAvailableSupplier, Runnable onOpenSettings, Supplier<Boolean> enabledSupplier, Callback<Boolean> onEnabledChange) {
@@ -44,19 +57,6 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
         this.onEnabledChange = onEnabledChange;
         float initialProgress = enabledSupplier.get() ? 1f : 0f;
         this.toggleStripProgressAnim.snap(initialProgress);
-    }
-
-    public static float stackedCellOuterHeightPx() {
-        float titleTopPad = TITLE_PAD_TOP_DESIGN;
-        float titleBottomPad = TITLE_PAD_BOTTOM_DESIGN;
-        float buttonBand = ACTION_STRIP_HEIGHT_DESIGN;
-        float lineHeight = Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());
-        float titleBlock = TITLE_MAX_LINES * lineHeight;
-        return titleTopPad + titleBlock + titleBottomPad + ACTION_STRIP_COUNT * buttonBand;
-    }
-
-    private static boolean pointerInStrip(float[] strip, float pointerX, float pointerY) {
-        return pointerX >= strip[0] && pointerY >= strip[1] && pointerX < strip[0] + strip[2] && pointerY < strip[1] + strip[3];
     }
 
     @Override

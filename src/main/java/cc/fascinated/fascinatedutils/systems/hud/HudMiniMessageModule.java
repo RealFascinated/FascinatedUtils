@@ -21,8 +21,6 @@ public abstract class HudMiniMessageModule extends HudModule {
     private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
-
-    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
     private List<String> cachedMiniMessageLines;
 
     private long lastMiniMessageSampleNanos;
@@ -34,7 +32,6 @@ public abstract class HudMiniMessageModule extends HudModule {
         addSetting(showBorder);
         addSetting(roundingRadius);
         addSetting(borderThickness);
-        addSetting(padding);
     }
 
     protected abstract List<String> lines(float deltaSeconds);

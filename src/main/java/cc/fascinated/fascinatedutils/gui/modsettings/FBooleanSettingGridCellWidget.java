@@ -24,12 +24,20 @@ import net.minecraft.util.Mth;
 public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatable {
 
     private static final float TOGGLE_CORNER_FILLET_DESIGN = 2.5f;
+    private static boolean rectContains(float[] rect, float pointerX, float pointerY) {
+        float rectLeft = rect[0];
+        float rectTop = rect[1];
+        float rectW = rect[2];
+        float rectH = rect[3];
+        return pointerX >= rectLeft && pointerY >= rectTop && pointerX < rectLeft + rectW && pointerY < rectTop + rectH;
+    }
     private final Runnable onPersist;
     private final BooleanSetting booleanSetting;
     private final float outerWidth;
     private final float outerHeight;
     private final AnimHandle toggleProgressAnim = new AnimHandle(0f).speed(26f);
     private boolean hoveredToggle;
+
     private boolean hoveredReset;
 
     public FBooleanSettingGridCellWidget(BooleanSetting booleanSetting, float outerWidth, float outerHeight, Runnable onPersist) {
@@ -39,14 +47,6 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
         this.outerHeight = outerHeight;
         float initial = booleanSetting.getValue() ? 1f : 0f;
         this.toggleProgressAnim.snap(initial);
-    }
-
-    private static boolean rectContains(float[] rect, float pointerX, float pointerY) {
-        float rectLeft = rect[0];
-        float rectTop = rect[1];
-        float rectW = rect[2];
-        float rectH = rect[3];
-        return pointerX >= rectLeft && pointerY >= rectTop && pointerX < rectLeft + rectW && pointerY < rectTop + rectH;
     }
 
     @Override

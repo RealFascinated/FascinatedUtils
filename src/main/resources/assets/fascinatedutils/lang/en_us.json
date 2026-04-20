@@ -130,8 +130,6 @@
   "fascinatedutils.module.show_border.description": "Draws an outline around the HUD panel.",
   "fascinatedutils.module.border_thickness.display_name": "Border Thickness",
   "fascinatedutils.module.border_thickness.description": "Sets the thickness of the HUD panel border.",
-  "fascinatedutils.module.padding.display_name": "Padding",
-  "fascinatedutils.module.padding.description": "Sets the inner padding around the HUD panel content.",
   "fascinatedutils.module.armor_hud.show_head.display_name": "Show Helmet",
   "fascinatedutils.module.armor_hud.show_head.description": "Shows the helmet slot in the armor widget.",
   "fascinatedutils.module.armor_hud.show_chest.display_name": "Show Chestplate",

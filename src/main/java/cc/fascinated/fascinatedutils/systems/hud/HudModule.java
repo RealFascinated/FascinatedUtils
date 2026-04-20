@@ -25,7 +25,6 @@ public abstract class HudModule extends Module implements HudRenderableModule {
     public static final String SETTING_ROUNDING_RADIUS = "rounding_radius";
     public static final String SETTING_SHOW_BORDER = "show_border";
     public static final String SETTING_BORDER_THICKNESS = "border_thickness";
-    public static final String SETTING_PADDING = "padding";
 
     private final HudDefaults defaults;
 
@@ -254,7 +253,7 @@ public abstract class HudModule extends Module implements HudRenderableModule {
     }
 
     public float getPadding() {
-        return getSetting(SliderSetting.class, SETTING_PADDING).map(setting -> setting.getValue().floatValue()).orElse(HUDPanelBackground.HORIZONTAL_PADDING);
+        return HUDPanelBackground.HORIZONTAL_PADDING;
     }
 
     public float getCornerRadius() {

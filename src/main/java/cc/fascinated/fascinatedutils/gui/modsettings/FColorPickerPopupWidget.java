@@ -1,5 +1,9 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import java.util.function.Consumer;
+
+import org.lwjgl.glfw.GLFW;
+
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -8,9 +12,6 @@ import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FIconCheckboxWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FPopupWidget;
-import org.lwjgl.glfw.GLFW;
-
-import java.util.function.Consumer;
 
 /**
  * HSV color picker popup with saturation/value area, hue bar, rainbow toggle, preview, and apply/cancel buttons.
