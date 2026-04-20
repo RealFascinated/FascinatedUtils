@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.input.MouseButtons;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -25,10 +24,8 @@ public class ModSettingsShellFrame {
      * Lays out hosted widgets, draws scrim and shell chrome, and renders the three widget hosts.
      *
      * @param graphics            draw context for matrix stack
-     * @param framebufferScaleX   framebuffer scale X
-     * @param framebufferScaleY   framebuffer scale Y
-     * @param canvasWidth         canvas width in physical pixels
-     * @param canvasHeight        canvas height in physical pixels
+     * @param canvasWidth         canvas width in UI pixels
+     * @param canvasHeight        canvas height in UI pixels
      * @param glUiRenderer        GUI renderer for this pass
      * @param titleStr            window title string
      * @param pointerScreenX      pointer X in screen space for shell mapping
@@ -43,22 +40,21 @@ public class ModSettingsShellFrame {
      * @param mountBodyIfNeeded   callback that mounts the body root when dimensions or tab require a rebuild
      * @return hit regions and layout pointer coordinates for this frame
      */
-    public static ModSettingsShellFrameResult render(GuiGraphicsExtractor graphics, float framebufferScaleX, float framebufferScaleY, float canvasWidth, float canvasHeight, GuiRenderer glUiRenderer, String titleStr, float pointerScreenX, float pointerScreenY, float deltaSeconds, Minecraft minecraftClient, FShellTabStripWidget topBarTabStrip, String selectedShellTabKey, FWidgetHost bodyHost, FWidgetHost topBarTabsHost, FWidgetHost hudLayoutButtonHost, ShellBodyMounter mountBodyIfNeeded) {
+    public static ModSettingsShellFrameResult render(GuiGraphicsExtractor graphics, float canvasWidth, float canvasHeight, GuiRenderer glUiRenderer, String titleStr, float pointerScreenX, float pointerScreenY, float deltaSeconds, Minecraft minecraftClient, FShellTabStripWidget topBarTabStrip, String selectedShellTabKey, FWidgetHost bodyHost, FWidgetHost topBarTabsHost, FWidgetHost hudLayoutButtonHost, ShellBodyMounter mountBodyIfNeeded) {
         ModSettingsShellLayout.ShellBounds shell = ModSettingsShellLayout.computeShell(canvasWidth, canvasHeight);
         ModSettingsShellLayout.ShellPointerMapping shellMapping = ModSettingsShellLayout.computePointMapping(shell);
         float pointerLayoutX = shellMapping.layoutX(pointerScreenX);
         float pointerLayoutY = shellMapping.layoutY(pointerScreenY);
-        float topBarHeight = GuiDesignSpace.pxY(ModSettingsTheme.TOPBAR_HEIGHT);
+        float topBarHeight = ModSettingsTheme.TOPBAR_HEIGHT;
         ModSettingsShellLayout.ShellBounds topBar = new ModSettingsShellLayout.ShellBounds(shell.positionX(), shell.positionY(), shell.width(), topBarHeight);
-        float shellStrokeRequest = GuiDesignSpace.pxUniform(UITheme.BORDER_THICKNESS_PX);
+        float shellStrokeRequest = UITheme.BORDER_THICKNESS_PX;
         float shellBorderThickness = Renderer2D.roundedRectFrameBorderThickness(shellStrokeRequest, shellStrokeRequest);
         float innerTitleTop = topBar.positionY() + shellBorderThickness;
         float innerTitleHeight = Math.max(0f, topBar.height() - shellBorderThickness);
-        float shellCornerRadius = GuiDesignSpace.pxUniform(ModSettingsTheme.SHELL_CORNER_RADIUS);
-        float closeButtonInset = GuiDesignSpace.pxUniform(4f);
+        float shellCornerRadius = ModSettingsTheme.SHELL_CORNER_RADIUS;
+        float closeButtonInset = 4f;
         float closeButtonSize = ModSettingsTheme.titleBarSquareControlSizePx();
-        ModSettingsShellLayout.ShellBounds closeButtonRect = closeButtonBoundsForTopBar(
-                topBar, shellBorderThickness, innerTitleTop, innerTitleHeight, closeButtonInset, closeButtonSize);
+        ModSettingsShellLayout.ShellBounds closeButtonRect = closeButtonBoundsForTopBar(topBar, shellBorderThickness, innerTitleTop, innerTitleHeight, closeButtonInset, closeButtonSize);
         float bodyTop = shell.positionY() + topBarHeight;
         float bodyHeight = Math.max(0f, shell.height() - topBarHeight - shellBorderThickness);
         float bodyPositionX = shell.positionX() + shellBorderThickness;
@@ -68,15 +64,15 @@ public class ModSettingsShellFrame {
         int closeBg = closePress ? glUiRenderer.theme().moduleListRowHover() : closeOver ? glUiRenderer.theme().surfaceElevated() : glUiRenderer.theme().surface();
         int closeBorder = closeOver ? glUiRenderer.theme().borderHover() : glUiRenderer.theme().border();
         int closeText = closeOver ? glUiRenderer.theme().textPrimary() : glUiRenderer.theme().textMuted();
-        float titleLeftInset = GuiDesignSpace.pxX(7f);
+        float titleLeftInset = 7f;
         int titleTextWidth = glUiRenderer.measureTextWidth(titleStr, false);
         boolean showHudLayoutChip = hudLayoutButtonHost.root() != null;
         ModSettingsShellLayout.ShellBounds hudLayoutButtonRect;
         if (showHudLayoutChip) {
             String hudLayoutLabel = Component.translatable("fascinatedutils.setting.shell.edit_hud_layout").getString();
-            float hudButtonW = Math.max(GuiDesignSpace.pxX(34f), glUiRenderer.measureTextWidth(hudLayoutLabel, false) + 2f * GuiDesignSpace.pxX(FHudLayoutEditorChipWidget.HORIZONTAL_TEXT_PAD_DESIGN));
+            float hudButtonW = Math.max(34f, glUiRenderer.measureTextWidth(hudLayoutLabel, false) + 2f * FHudLayoutEditorChipWidget.HORIZONTAL_TEXT_PAD_DESIGN);
             float hudButtonH = FHudLayoutEditorChipWidget.chipHeightPx();
-            float betweenHudAndClose = GuiDesignSpace.pxX(3f);
+            float betweenHudAndClose = 3f;
             float hudButtonX = closeButtonRect.positionX() - betweenHudAndClose - hudButtonW;
             float hudButtonY = innerTitleTop + (innerTitleHeight - hudButtonH) * 0.5f;
             hudLayoutButtonRect = new ModSettingsShellLayout.ShellBounds(hudButtonX, hudButtonY, hudButtonW, hudButtonH);
@@ -85,15 +81,13 @@ public class ModSettingsShellFrame {
             hudLayoutButtonRect = new ModSettingsShellLayout.ShellBounds(0f, 0f, 0f, 0f);
         }
         float titleStartX = topBar.positionX() + shellBorderThickness + titleLeftInset;
-        float topBarTabsLeft = titleStartX + titleTextWidth + GuiDesignSpace.pxX(10f);
-        float topBarTabsRight = showHudLayoutChip ? hudLayoutButtonRect.positionX() - GuiDesignSpace.pxX(6f) : closeButtonRect.positionX() - GuiDesignSpace.pxX(6f);
+        float topBarTabsLeft = titleStartX + titleTextWidth + 10f;
+        float topBarTabsRight = showHudLayoutChip ? hudLayoutButtonRect.positionX() - 6f : closeButtonRect.positionX() - 6f;
         float topBarTabsWidth = Math.max(0f, topBarTabsRight - topBarTabsLeft);
-        ModSettingsShellLayout.ShellBounds topBarTabsRect =
-                new ModSettingsShellLayout.ShellBounds(topBarTabsLeft, innerTitleTop, topBarTabsWidth, innerTitleHeight);
+        ModSettingsShellLayout.ShellBounds topBarTabsRect = new ModSettingsShellLayout.ShellBounds(topBarTabsLeft, innerTitleTop, topBarTabsWidth, innerTitleHeight);
         float scrimAlpha = 1f;
         Matrix3x2fStack drawMatrices = graphics.pose();
         drawMatrices.pushMatrix();
-        drawMatrices.scale(1f / framebufferScaleX, 1f / framebufferScaleY);
         try {
             glUiRenderer.setMultiplyAlpha(scrimAlpha);
             glUiRenderer.drawRect(0f, 0f, canvasWidth, canvasHeight, ModSettingsTheme.SCRIM);
@@ -111,7 +105,7 @@ public class ModSettingsShellFrame {
                     hudLayoutButtonHost.layoutOnly(glUiRenderer, hudLayoutButtonRect.positionX(), hudLayoutButtonRect.positionY(), hudLayoutButtonRect.width(), hudLayoutButtonRect.height());
                 }
                 glUiRenderer.setMultiplyAlpha(1f, 1f);
-                float closeButtonCornerRadius = Math.min(GuiDesignSpace.pxUniform(4f), closeButtonRect.height() * 0.5f - 0.01f);
+                float closeButtonCornerRadius = Math.min(4f, closeButtonRect.height() * 0.5f - 0.01f);
                 glUiRenderer.fillRoundedRectFrame(shell.positionX(), shell.positionY(), shell.width(), shell.height(), shellCornerRadius, ModSettingsTheme.SHELL_BORDER, glUiRenderer.theme().surface(), shellBorderThickness, shellBorderThickness, RectCornerRoundMask.ALL);
                 float titleFillX = topBar.positionX() + shellBorderThickness;
                 float titleFillY = topBar.positionY() + shellBorderThickness;
@@ -119,13 +113,9 @@ public class ModSettingsShellFrame {
                 float titleFillH = topBar.height() - shellBorderThickness;
                 float titleBarInnerCornerRadius = Math.min(Math.max(0f, shellCornerRadius - shellBorderThickness), Math.min(titleFillW, titleFillH) * 0.5f - 0.01f);
                 glUiRenderer.fillRoundedRect(titleFillX, titleFillY, titleFillW, titleFillH, titleBarInnerCornerRadius, glUiRenderer.theme().background(), RectCornerRoundMask.TOP);
-                glUiRenderer.fillRoundedRectFrame(closeButtonRect.positionX(), closeButtonRect.positionY(), closeButtonRect.width(), closeButtonRect.height(), closeButtonCornerRadius, closeBorder, closeBg, GuiDesignSpace.pxUniform(UITheme.BORDER_THICKNESS_PX), GuiDesignSpace.pxUniform(UITheme.BORDER_THICKNESS_PX), RectCornerRoundMask.ALL);
+                glUiRenderer.fillRoundedRectFrame(closeButtonRect.positionX(), closeButtonRect.positionY(), closeButtonRect.width(), closeButtonRect.height(), closeButtonCornerRadius, closeBorder, closeBg, UITheme.BORDER_THICKNESS_PX, UITheme.BORDER_THICKNESS_PX, RectCornerRoundMask.ALL);
                 Icons.paintModSettingsCloseIcon(glUiRenderer, closeButtonRect.positionX(), closeButtonRect.positionY(), closeButtonRect.width(), closeButtonRect.height(), closeText);
-                glUiRenderer.drawMiniMessageText(
-                        "<color:" + ColorUtils.rgbHex(glUiRenderer.theme().textPrimary()) + ">" + titleStr + "</color>",
-                        titleStartX,
-                        innerTitleTop + (innerTitleHeight - glUiRenderer.getFontHeight()) * 0.5f,
-                        false);
+                glUiRenderer.drawMiniMessageText("<color:" + ColorUtils.rgbHex(glUiRenderer.theme().textPrimary()) + ">" + titleStr + "</color>", titleStartX, innerTitleTop + (innerTitleHeight - glUiRenderer.getFontHeight()) * 0.5f, false);
                 topBarTabsHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);
                 if (showHudLayoutChip) {
                     hudLayoutButtonHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);
@@ -152,17 +142,9 @@ public class ModSettingsShellFrame {
         return mask;
     }
 
-    private static ModSettingsShellLayout.ShellBounds closeButtonBoundsForTopBar(
-            ModSettingsShellLayout.ShellBounds topBar,
-            float shellBorderThickness,
-            float innerTitleTop,
-            float innerTitleHeight,
-            float closeButtonInset,
-            float closeButtonSize) {
-        float closeButtonX =
-                Mth.floor(topBar.positionX() + topBar.width() - shellBorderThickness - closeButtonInset - closeButtonSize);
-        float closeButtonY =
-                Mth.floor(innerTitleTop + (innerTitleHeight - closeButtonSize) * 0.5f + 0.5f);
+    private static ModSettingsShellLayout.ShellBounds closeButtonBoundsForTopBar(ModSettingsShellLayout.ShellBounds topBar, float shellBorderThickness, float innerTitleTop, float innerTitleHeight, float closeButtonInset, float closeButtonSize) {
+        float closeButtonX = Mth.floor(topBar.positionX() + topBar.width() - shellBorderThickness - closeButtonInset - closeButtonSize);
+        float closeButtonY = Mth.floor(innerTitleTop + (innerTitleHeight - closeButtonSize) * 0.5f + 0.5f);
         return new ModSettingsShellLayout.ShellBounds(closeButtonX, closeButtonY, closeButtonSize, closeButtonSize);
     }
 

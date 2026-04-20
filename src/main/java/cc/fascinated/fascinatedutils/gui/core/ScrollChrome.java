@@ -1,21 +1,20 @@
 package cc.fascinated.fascinatedutils.gui.core;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import net.minecraft.util.Mth;
 
 public class ScrollChrome {
 
     public static float scrollbarReservedWidthPx() {
-        return GuiDesignSpace.isActive() ? GuiDesignSpace.pxX(UITheme.SCROLLBAR_RESERVED_W) : UITheme.SCROLLBAR_RESERVED_W;
+        return UITheme.SCROLLBAR_RESERVED_W;
     }
 
     public static float scrollbarThumbWidthPx() {
-        return GuiDesignSpace.isActive() ? GuiDesignSpace.pxX(UITheme.SCROLLBAR_THUMB_W) : UITheme.SCROLLBAR_THUMB_W;
+        return UITheme.SCROLLBAR_THUMB_W;
     }
 
     public static float scrollbarMinThumbHeightPx() {
-        return GuiDesignSpace.isActive() ? GuiDesignSpace.pxY(UITheme.SCROLLBAR_MIN_THUMB_H) : UITheme.SCROLLBAR_MIN_THUMB_H;
+        return UITheme.SCROLLBAR_MIN_THUMB_H;
     }
 
     public static float innerWidthInsetForScrollbarPx(float totalContentHeight, float viewportInnerHeight) {

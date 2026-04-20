@@ -4,6 +4,8 @@ import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
+import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
+import cc.fascinated.fascinatedutils.systems.modules.ModuleDefaults;
 import com.mojang.blaze3d.platform.InputConstants;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
@@ -26,7 +28,7 @@ public class FreelookModule extends Module {
     private CameraType savedCameraType = null;
 
     public FreelookModule() {
-        super("Freelook");
+        super("Freelook", ModuleCategory.MISC, ModuleDefaults.builder().defaultState(true).build());
         addSetting(freelookKeySetting);
     }
 

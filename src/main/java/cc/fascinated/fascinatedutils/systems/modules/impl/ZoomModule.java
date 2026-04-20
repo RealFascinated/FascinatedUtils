@@ -9,6 +9,8 @@ import cc.fascinated.fascinatedutils.event.impl.mouse.MouseScrollEvent;
 import cc.fascinated.fascinatedutils.event.impl.render.ClientFovEvent;
 import cc.fascinated.fascinatedutils.event.impl.render.FirstPersonHeldItemRenderEvent;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
+import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
+import cc.fascinated.fascinatedutils.systems.modules.ModuleDefaults;
 import com.mojang.blaze3d.platform.InputConstants;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
@@ -35,7 +37,7 @@ public class ZoomModule extends Module {
     private float appliedZoomScaleTickStart = 1f;
 
     public ZoomModule() {
-        super("Zoom");
+        super("Zoom", ModuleCategory.MISC, ModuleDefaults.builder().defaultState(true).build());
         addSetting(zoomKeySetting);
         addSetting(zoomLevel);
         addSetting(scrollToZoom);

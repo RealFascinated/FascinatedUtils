@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.hooks.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -149,18 +148,18 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
         boolean locked = booleanSetting.isLocked();
-        float innerHeight = Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
-        float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
-        float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
+        float innerHeight = Math.max(0f, h() - 2f * SettingsUiMetrics.SETTING_ROW_PADDING_Y);
+        float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
+        float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float bodyLeft = x() + padX;
         String label = booleanSetting.getTranslatedDisplayName();
         float[] toggle = toggleBounds();
-        float toggleW = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_W);
-        float toggleH = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H);
-        float titleRowHeight = Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), toggleH);
+        float toggleW = SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_W;
+        float toggleH = SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H;
+        float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), toggleH);
         float titleOriginY = titleRowTop(innerHeight, padY, titleRowHeight);
         float labelX = bodyLeft;
-        float labelMaxWidth = Math.max(0f, toggle[0] - GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP) - labelX);
+        float labelMaxWidth = Math.max(0f, toggle[0] - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - labelX);
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         float labelY = titleOriginY + Math.max(0f, (toggleH - graphics.getFontHeight()) * 0.5f);
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
@@ -174,8 +173,8 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
             trackFill = WSettingTooltip.dimColor(trackFill, 0.45f);
             trackBorder = WSettingTooltip.dimColor(trackBorder, 0.6f);
         }
-        float borderThickness = GuiDesignSpace.pxUniform(1f);
-        float filletRadius = GuiDesignSpace.pxUniform(TOGGLE_CORNER_FILLET_DESIGN);
+        float borderThickness = 1f;
+        float filletRadius = TOGGLE_CORNER_FILLET_DESIGN;
         float maxTrackCornerRadius = Math.max(0.5f, Math.min(toggleH * 0.5f - borderThickness * 0.5f, toggleW * 0.5f - borderThickness * 0.5f));
         float trackCornerRadius = Mth.clamp(filletRadius, 0.5f, maxTrackCornerRadius);
         graphics.fillRoundedRectFrame(toggle[0], titleOriginY, toggleW, toggleH, trackCornerRadius, trackBorder, trackFill, borderThickness, borderThickness, RectCornerRoundMask.ALL);
@@ -194,16 +193,16 @@ public class FBooleanSettingRowWidget extends FWidget implements FAnimatable {
     }
 
     private float[] toggleBounds() {
-        float innerHeight = Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
-        float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
-        float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
-        float toggleW = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_W);
-        float toggleH = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H);
-        float titleRowHeight = Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), toggleH);
+        float innerHeight = Math.max(0f, h() - 2f * SettingsUiMetrics.SETTING_ROW_PADDING_Y);
+        float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
+        float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
+        float toggleW = SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_W;
+        float toggleH = SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H;
+        float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), toggleH);
         float titleOriginY = titleRowTop(innerHeight, padY, titleRowHeight);
         float bodyLeft = x() + padX;
         float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + w());
-        float maxToggleLeft = Math.max(bodyLeft, resetLeft - GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP) - toggleW);
+        float maxToggleLeft = Math.max(bodyLeft, resetLeft - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - toggleW);
         float toggleLeft = Mth.clamp(bodyLeft + valueColumnStartX, bodyLeft, maxToggleLeft);
         return new float[]{toggleLeft, titleOriginY, toggleW, toggleH};
     }

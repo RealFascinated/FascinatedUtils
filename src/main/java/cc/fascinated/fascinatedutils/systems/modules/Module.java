@@ -15,16 +15,21 @@ public abstract class Module {
     private final String displayName;
     private final List<Setting<?>> settings = new ArrayList<>();
     private final ModuleCategory category;
-    private boolean enabled = false;
 
-    protected Module(String displayName, ModuleCategory category) {
+    private final ModuleDefaults defaults;
+
+    // settings
+    private boolean enabled;
+
+    protected Module(String displayName, ModuleCategory category, ModuleDefaults defaults) {
         this.moduleKey = idFromModuleClass(getClass());
         this.displayName = displayName;
         this.category = category;
+        this.defaults = defaults;
     }
 
-    protected Module(String displayName) {
-        this(displayName, ModuleCategory.MISC);
+    protected Module(String displayName, ModuleCategory category) {
+        this(displayName, category, ModuleDefaults.builder().build());
     }
 
     /**
@@ -58,7 +63,7 @@ public abstract class Module {
      * @return an unmodifiable view of all settings
      */
     public List<Setting<?>> getAllSettings() {
-        return Collections.unmodifiableList(new ArrayList<>(settings));
+        return List.copyOf(settings);
     }
 
     /**
@@ -95,23 +100,6 @@ public abstract class Module {
             }
         }
         return Optional.empty();
-    }
-
-    /**
-     * Reads the current value of a typed setting.
-     *
-     * @param settingType expected concrete setting class
-     * @param settingId   persisted setting key
-     * @param <T>         value type held by the setting
-     * @param <S>         setting implementation type
-     * @return the current value, or empty when the setting is missing
-     */
-    public <T, S extends Setting<T>> Optional<T> getSettingState(Class<S> settingType, String settingId) {
-        return getSetting(settingType, settingId).map(Setting::getValue);
-    }
-
-    public boolean isHidden() {
-        return false;
     }
 
     public void setEnabled(boolean enabled) {

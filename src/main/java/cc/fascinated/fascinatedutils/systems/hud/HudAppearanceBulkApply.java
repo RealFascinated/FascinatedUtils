@@ -19,8 +19,8 @@ public final class HudAppearanceBulkApply {
      * Returns the shared boolean value when every HUD module that exposes the setting agrees; empty when none carry it
      * or values differ.
      *
-     * @param hudWidgets        widgets to scan
-     * @param booleanSettingId  persisted boolean setting key (for example {@code show_hud_background})
+     * @param hudWidgets       widgets to scan
+     * @param booleanSettingId persisted boolean setting key (for example {@code show_hud_background})
      * @return consensus value, or empty when mixed or absent
      */
     public static Optional<Boolean> booleanConsensus(List<HudModule> hudWidgets, String booleanSettingId) {
@@ -43,15 +43,15 @@ public final class HudAppearanceBulkApply {
         if (matchedWidgets == 0) {
             return Optional.empty();
         }
-        return Optional.of(Boolean.TRUE.equals(consensus));
+        return Optional.of(consensus);
     }
 
     /**
      * Returns the shared slider value when every HUD module that exposes the setting agrees; empty when none carry it
      * or values differ.
      *
-     * @param hudWidgets       widgets to scan
-     * @param sliderSettingId  persisted slider setting key (for example {@code border_thickness})
+     * @param hudWidgets      widgets to scan
+     * @param sliderSettingId persisted slider setting key (for example {@code border_thickness})
      * @return consensus value, or empty when mixed or absent
      */
     public static Optional<Float> floatSliderConsensus(List<HudModule> hudWidgets, String sliderSettingId) {
@@ -80,9 +80,9 @@ public final class HudAppearanceBulkApply {
     /**
      * Writes the boolean to every HUD module that defines the setting, then persists all module settings.
      *
-     * @param hudWidgets        widgets to update
-     * @param booleanSettingId  persisted boolean setting key
-     * @param newValue          value to assign
+     * @param hudWidgets       widgets to update
+     * @param booleanSettingId persisted boolean setting key
+     * @param newValue         value to assign
      */
     public static void applyBooleanToAllHudModules(List<HudModule> hudWidgets, String booleanSettingId, boolean newValue) {
         for (HudModule widget : hudWidgets) {
@@ -94,9 +94,9 @@ public final class HudAppearanceBulkApply {
     /**
      * Writes the slider value to every HUD module that defines the setting, then persists all module settings.
      *
-     * @param hudWidgets       widgets to update
-     * @param sliderSettingId  persisted slider setting key
-     * @param newValue         snapped value to assign
+     * @param hudWidgets      widgets to update
+     * @param sliderSettingId persisted slider setting key
+     * @param newValue        snapped value to assign
      */
     public static void applySliderToAllHudModules(List<HudModule> hudWidgets, String sliderSettingId, float newValue) {
         for (HudModule widget : hudWidgets) {
@@ -108,8 +108,8 @@ public final class HudAppearanceBulkApply {
     /**
      * Copies the staged color into a registry-backed {@link ColorSetting}, then persists global settings.
      *
-     * @param registryColor  persisted color from the global settings registry
-     * @param stagingColor   UI-only staging color whose value is copied
+     * @param registryColor persisted color from the global settings registry
+     * @param stagingColor  UI-only staging color whose value is copied
      */
     public static void applyRegistryColorFromStaging(ColorSetting registryColor, ColorSetting stagingColor) {
         registryColor.setValue(stagingColor.getValue().copy());

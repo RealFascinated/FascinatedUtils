@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
@@ -35,14 +34,14 @@ public class ModSettingsModulesTabBuilder {
     }
 
     private static FWidget buildModuleCardGrid(float paneWidth, float paneHeight, List<Module> modules, Ref<Float> modulesGridScrollYRef, Callback<Module> onOpenModuleSettings, Ref<String> moduleSearchRef, Ref<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged) {
-        float gridMarginX = GuiDesignSpace.pxX(GRID_MARGIN_X_DESIGN);
+        float gridMarginX = GRID_MARGIN_X_DESIGN;
         float paddedInnerWidth = Math.max(0f, paneWidth - 2f * gridMarginX);
-        float settingsContentWidth = Math.max(GuiDesignSpace.pxX(28f), paddedInnerWidth);
+        float settingsContentWidth = Math.max(28f, paddedInnerWidth);
         float settingsInnerWidth = settingsContentWidth;
-        float gapY = GuiDesignSpace.pxY(6f);
-        float gapX = GuiDesignSpace.pxX(3f);
-        float minCellWidth = GuiDesignSpace.pxX(GRID_MIN_CELL_WIDTH_DESIGN);
-        float controlsHeight = GuiDesignSpace.pxY(SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN);
+        float gapY = 6f;
+        float gapX = 3f;
+        float minCellWidth = GRID_MIN_CELL_WIDTH_DESIGN;
+        float controlsHeight = SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN;
         int columnCount = computeCardGridColumnCount(settingsContentWidth, gapX, minCellWidth);
         float cellWidth = (settingsContentWidth - gapX * Math.max(0, columnCount - 1)) / Math.max(1, columnCount);
         float cellHeight = FModuleVisibilityCardWidget.stackedCellOuterHeightPx();
@@ -56,13 +55,13 @@ public class ModSettingsModulesTabBuilder {
         });
         searchInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
-        FRowWidget controlsRow = new FRowWidget(GuiDesignSpace.pxX(3f), Align.CENTER) {
+        FRowWidget controlsRow = new FRowWidget(3f, Align.CENTER) {
             @Override
             public boolean fillsHorizontalInRow() {
                 return true;
             }
         };
-        FRowWidget categoryButtonsRow = new FRowWidget(GuiDesignSpace.pxX(2f), Align.CENTER) {
+        FRowWidget categoryButtonsRow = new FRowWidget(2f, Align.CENTER) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
@@ -72,7 +71,7 @@ public class ModSettingsModulesTabBuilder {
         FButtonWidget allCategoriesButton = new FButtonWidget(() -> {
             moduleCategoryFilterRef.setValue(null);
             onFiltersChanged.run();
-        }, () -> "All", GuiDesignSpace.pxX(62f), 1, 1f, 6f, 1.12f, 7f, 2f) {
+        }, () -> "All", 62f, 1, 1f, 6f, 1.12f, 7f, 2f) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
@@ -102,7 +101,7 @@ public class ModSettingsModulesTabBuilder {
             FButtonWidget categoryButton = new FButtonWidget(() -> {
                 moduleCategoryFilterRef.setValue(moduleCategory);
                 onFiltersChanged.run();
-            }, moduleCategory::getDisplayName, GuiDesignSpace.pxX(62f), 1, 1f, 6f, 1.12f, 7f, 2f) {
+            }, moduleCategory::getDisplayName, 62f, 1, 1f, 6f, 1.12f, 7f, 2f) {
                 @Override
                 public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                     return controlsHeight;
@@ -135,11 +134,11 @@ public class ModSettingsModulesTabBuilder {
         rightPushSpacer.setCellConstraints(new FCellConstraints().setExpandHorizontal(true));
         controlsRow.addChild(rightPushSpacer);
 
-        FMinWidthHostWidget searchHost = new FMinWidthHostWidget(GuiDesignSpace.pxX(210f), searchInput);
+        FMinWidthHostWidget searchHost = new FMinWidthHostWidget(210f, searchInput);
         controlsRow.addChild(searchHost);
 
-        float horizontalInset = GuiDesignSpace.pxX(SettingsUiMetrics.SETTINGS_DETAIL_CONTENT_INSET_X_DESIGN);
-        float controlsInnerWidth = Math.max(GuiDesignSpace.pxX(14f), settingsInnerWidth - 2f * horizontalInset);
+        float horizontalInset = SettingsUiMetrics.SETTINGS_DETAIL_CONTENT_INSET_X_DESIGN;
+        float controlsInnerWidth = Math.max(14f, settingsInnerWidth - 2f * horizontalInset);
         FRowWidget paddedControlsRow = new FRowWidget(0f, Align.START) {
             @Override
             public boolean fillsHorizontalInRow() {
@@ -160,13 +159,13 @@ public class ModSettingsModulesTabBuilder {
         FColumnWidget scrollBody = new FColumnWidget(gapY, Align.CENTER);
 
         if (filteredModules.isEmpty()) {
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(2f)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 2f));
             FLabelWidget empty = new FLabelWidget();
             empty.setText(Component.translatable("fascinatedutils.setting.shell.empty_modules").getString());
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.CENTER);
             scrollBody.addChild(empty);
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(4f)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
             return buildModulesPaneLayout(controlsRowHost, createModulesGridScrollClip(scrollBody, gapY, modulesGridScrollYRef));
         }
         List<Module> sortedModules = new ArrayList<>(filteredModules);
@@ -186,7 +185,7 @@ public class ModSettingsModulesTabBuilder {
             }
             scrollBody.addChild(row);
         }
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(4f)));
+        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
         return buildModulesPaneLayout(controlsRowHost, createModulesGridScrollClip(scrollBody, gapY, modulesGridScrollYRef));
     }
 
@@ -210,9 +209,9 @@ public class ModSettingsModulesTabBuilder {
             @Override
             public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
                 setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-                float topInset = GuiDesignSpace.pxY(4f);
-                float bottomInset = GuiDesignSpace.pxY(4f);
-                float sectionGap = GuiDesignSpace.pxY(4f);
+                float topInset = 4f;
+                float bottomInset = 4f;
+                float sectionGap = 4f;
                 float controlsHeight = controlsRowHost.intrinsicHeightForColumn(measure, layoutWidth);
                 float controlsY = layoutY + topInset;
                 controlsRowHost.layout(measure, layoutX, controlsY, layoutWidth, controlsHeight);

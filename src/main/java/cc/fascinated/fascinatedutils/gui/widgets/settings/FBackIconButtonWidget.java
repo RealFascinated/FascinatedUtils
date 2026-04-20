@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -74,7 +73,7 @@ public class FBackIconButtonWidget extends FWidget {
         int fillColor = hovered ? graphics.theme().moduleListRowHover() : graphics.theme().surface();
         int borderColor = hovered ? graphics.theme().borderHover() : graphics.theme().border();
         int iconColor = hovered ? graphics.theme().textPrimary() : graphics.theme().textMuted();
-        float borderThickness = GuiDesignSpace.pxUniform(UITheme.BORDER_THICKNESS_PX);
+        float borderThickness = UITheme.BORDER_THICKNESS_PX;
         int drawX = Mth.floor(x());
         int drawY = Mth.floor(y());
         int size = Math.max(1, Math.min(Mth.floor(w()), Mth.floor(h())));

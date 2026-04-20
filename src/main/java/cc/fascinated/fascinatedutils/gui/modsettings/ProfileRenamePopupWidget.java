@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
@@ -60,8 +59,8 @@ public class ProfileRenamePopupWidget extends FPopupWidget {
         validationLabel.setOverflow(TextOverflow.WRAP);
         validationLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textAccent());
 
-        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_cancel").getString(), GuiDesignSpace.pxX(100f), 1, 2f, 8f, 1f, 8f);
-        renameButton = new FButtonWidget(this::submit, () -> Component.translatable("fascinatedutils.setting.shell.profile_rename_popup_confirm").getString(), GuiDesignSpace.pxX(100f), 1, 2f, 8f, 1f, 8f) {
+        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_cancel").getString(), 100f, 1, 2f, 8f, 1f, 8f);
+        renameButton = new FButtonWidget(this::submit, () -> Component.translatable("fascinatedutils.setting.shell.profile_rename_popup_confirm").getString(), 100f, 1, 2f, 8f, 1f, 8f) {
             @Override
             protected int resolveButtonBorderColorArgb(boolean hovered) {
                 if (!isInputValid()) {
@@ -83,10 +82,10 @@ public class ProfileRenamePopupWidget extends FPopupWidget {
 
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-        float popupWidth = Math.min(Math.max(GuiDesignSpace.pxX(240f), layoutWidth * 0.45f), GuiDesignSpace.pxX(360f));
-        float horizontalPadding = GuiDesignSpace.pxX(UITheme.PADDING_MD);
-        float verticalPadding = GuiDesignSpace.pxY(UITheme.PADDING_MD);
-        float rowGap = GuiDesignSpace.pxY(UITheme.GAP_SM);
+        float popupWidth = Math.min(Math.max(240f, layoutWidth * 0.45f), 360f);
+        float horizontalPadding = UITheme.PADDING_MD;
+        float verticalPadding = UITheme.PADDING_MD;
+        float rowGap = UITheme.GAP_SM;
         float bodyWidth = Math.max(0f, popupWidth - 2f * horizontalPadding);
         float titleHeight = titleLabel.intrinsicHeightForColumn(measure, bodyWidth);
         float descriptionHeight = descriptionLabel.intrinsicHeightForColumn(measure, bodyWidth);
@@ -99,7 +98,7 @@ public class ProfileRenamePopupWidget extends FPopupWidget {
         float actionsHeight = cancelButton.intrinsicHeightForColumn(measure, bodyWidth);
 
         float computedDialogHeight = verticalPadding + titleHeight + rowGap + descriptionHeight + rowGap + inputHeight + (hasValidationMessage ? rowGap + validationHeight : 0f) + rowGap + actionsHeight + verticalPadding;
-        float popupHeight = Math.max(GuiDesignSpace.pxY(136f), computedDialogHeight);
+        float popupHeight = Math.max(136f, computedDialogHeight);
         setDialogBounds(layoutX, layoutY, layoutWidth, layoutHeight, popupWidth, popupHeight);
 
         float cursorY = dialogY() + verticalPadding;
@@ -118,7 +117,7 @@ public class ProfileRenamePopupWidget extends FPopupWidget {
         }
 
         float actionsY = dialogY() + dialogHeight() - verticalPadding - actionsHeight;
-        float actionGap = GuiDesignSpace.pxX(UITheme.GAP_SM);
+        float actionGap = UITheme.GAP_SM;
         float actionWidth = Math.max(0f, (bodyWidth - actionGap) * 0.5f);
         cancelButton.layout(measure, dialogX() + horizontalPadding, actionsY, actionWidth, cancelButton.intrinsicHeightForColumn(measure, actionWidth));
         renameButton.layout(measure, dialogX() + horizontalPadding + actionWidth + actionGap, actionsY, actionWidth, renameButton.intrinsicHeightForColumn(measure, actionWidth));

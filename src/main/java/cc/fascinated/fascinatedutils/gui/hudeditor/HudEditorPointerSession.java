@@ -7,6 +7,7 @@ import cc.fascinated.fascinatedutils.gui.screens.HUDEditorScreen;
 import cc.fascinated.fascinatedutils.gui.screens.ModSettingsScreen;
 import cc.fascinated.fascinatedutils.systems.hud.HUDEditorSnap;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
+import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.KeyEvent;
@@ -24,8 +25,8 @@ public class HudEditorPointerSession {
      * Last canvas from {@link HUDEditorScreen#renderCustom}; used between frames so pointer math matches the same
      * bounds as paint.
      */
-    private float editorCanvasWidth = HudEditorChrome.clampCanvasExtent(UIScale.logicalWidth());
-    private float editorCanvasHeight = HudEditorChrome.clampCanvasExtent(UIScale.logicalHeight());
+    private float editorCanvasWidth = HudLayoutCanvas.width();
+    private float editorCanvasHeight = HudLayoutCanvas.height();
     @Nullable
     private HudModule dragging;
     private float dragOffsetX;
@@ -89,8 +90,8 @@ public class HudEditorPointerSession {
      */
     public boolean onMouseClicked(MouseButtonEvent event, boolean doubled, BooleanSupplier delegateSuper) {
         clearSnapGuides();
-        float pointerX = UIScale.logicalPointerX();
-        float pointerY = UIScale.logicalPointerY();
+        float pointerX = UIScale.uiPointerX();
+        float pointerY = UIScale.uiPointerY();
         if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && HudEditorOverlays.hitTestModsButton(pointerX, pointerY)) {
             Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id));
             return true;
@@ -109,7 +110,6 @@ public class HudEditorPointerSession {
                 return true;
             }
             if (HudEditorChrome.closeButtonContainsPoint(widget, pointerX, pointerY)) {
-                HUDManager.INSTANCE.setWidgetVisible(widget, false, true);
                 selected = null;
                 return true;
             }
@@ -144,8 +144,8 @@ public class HudEditorPointerSession {
      * @return whether the drag was consumed
      */
     public boolean onMouseDragged(MouseButtonEvent event, double dragX, double dragY, BooleanSupplier delegateSuper) {
-        float pointerX = UIScale.logicalPointerX();
-        float pointerY = UIScale.logicalPointerY();
+        float pointerX = UIScale.uiPointerX();
+        float pointerY = UIScale.uiPointerY();
         if (scalingWidget != null) {
             clearSnapGuides();
             float anchorX = scalingWidget.getHudState().getPositionX();

@@ -1,24 +1,28 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.jspecify.annotations.Nullable;
+
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.NumberUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
+import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
+import cc.fascinated.fascinatedutils.systems.hud.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.hud.HudAnchorLayout;
+import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
-import org.jspecify.annotations.Nullable;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class CoordinatesWidget extends HudModule {
     private static final float COLUMN_GAP = 10f;
@@ -26,15 +30,6 @@ public class CoordinatesWidget extends HudModule {
     private static final float VERTICAL_PADDING = UITheme.PADDING_SM;
     private static final float LINE_GAP_PX = 1f;
     private static final String[] COMPASS_CARDINALS = {"S", "E", "N", "W"};
-    private final SliderSetting blockPrecision = SliderSetting.builder().id("block_precision")
-
-            .defaultValue(0f).minValue(0f).maxValue(3f).step(1f).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-
-    public CoordinatesWidget() {
-        super("coordinates", "Coordinates", 56f);
-        addSetting(blockPrecision);
-    }
-
     private static String biomeColoredMiniMessage(String biomeIdRaw) {
         Identifier biomeId = Identifier.tryParse(biomeIdRaw);
         String path = biomeId == null ? biomeIdRaw : biomeId.getPath();
@@ -42,7 +37,6 @@ public class CoordinatesWidget extends HudModule {
         int biomeColorArgb = BiomeColors.colorForBiomeId(Identifier.tryParse(biomeIdRaw));
         return "<color:" + ColorUtils.rgbHex(biomeColorArgb) + ">" + label + "</color>";
     }
-
     private static String compass4FromLook(Vec3 look) {
         double horizontalX = look.x;
         double horizontalZ = look.z;
@@ -55,6 +49,30 @@ public class CoordinatesWidget extends HudModule {
         }
         int sector = (int) Math.floor((degrees + 45d) / 90d) & 3;
         return COMPASS_CARDINALS[sector];
+    }
+    private final SliderSetting blockPrecision = SliderSetting.builder().id("block_precision")
+
+            .defaultValue(0f).minValue(0f).maxValue(3f).step(1f).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showBackground = BooleanSetting.builder().id(SETTING_SHOW_BACKGROUND).defaultValue(true).translationKeyPath("fascinatedutils.module.show_hud_background").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showBorder = BooleanSetting.builder().id(SETTING_SHOW_BORDER).defaultValue(false).translationKeyPath("fascinatedutils.module.show_border").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+
+    private final SliderSetting borderThickness = SliderSetting.builder().id(SETTING_BORDER_THICKNESS).defaultValue(2f).minValue(1f).maxValue(3f).step(1f).translationKeyPath("fascinatedutils.module.border_thickness").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+
+    private final SliderSetting padding = SliderSetting.builder().id(SETTING_PADDING).defaultValue(6f).minValue(0f).maxValue(16f).step(1f).translationKeyPath("fascinatedutils.module.padding").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+
+    public CoordinatesWidget() {
+        super("coordinates", "Coordinates", 56f, HudDefaults.builder()
+                .defaultState(true)
+                .defaultAnchor(HUDWidgetAnchor.TOP_LEFT)
+                .defaultXOffset(5)
+                .defaultYOffset(5)
+                .build()
+        );
+        addSetting(blockPrecision);
+        addSetting(showBackground);
+        addSetting(showBorder);
+        addSetting(borderThickness);
+        addSetting(padding);
     }
 
     @Override

@@ -2,6 +2,8 @@ package cc.fascinated.fascinatedutils.systems.modules.impl;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;
+import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import cc.fascinated.fascinatedutils.mixin.ClientPlayerInteractionManagerAccessorMixin;
@@ -30,12 +32,20 @@ import java.util.Locale;
 public class WawlaWidget extends HudModule {
     private static final float PANEL_PADDING_X = 5f, PANEL_PADDING_Y = 4f, ICON_SIZE = 16f, ICON_TEXT_GAP = 5f, LINE_GAP = 1f, BREAK_BAR_GAP = 3f, BREAK_BAR_HEIGHT = 2f, BREAK_BAR_LERP_SPEED = 14f;
     private static final int TITLE_COLOR = UiColor.argb("#f2f6ff"), SOURCE_COLOR = UiColor.argb("#7f91ff"), BREAK_BAR_BACKGROUND = UiColor.argb("#44232a33"), BREAK_BAR_FILL = UiColor.argb("#ffffffff");
+    private final BooleanSetting showBackground = BooleanSetting.builder().id(SETTING_SHOW_BACKGROUND).defaultValue(true).translationKeyPath("fascinatedutils.module.show_hud_background").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showBorder = BooleanSetting.builder().id(SETTING_SHOW_BORDER).defaultValue(false).translationKeyPath("fascinatedutils.module.show_border").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final SliderSetting borderThickness = SliderSetting.builder().id(SETTING_BORDER_THICKNESS).defaultValue(2f).minValue(1f).maxValue(3f).step(1f).translationKeyPath("fascinatedutils.module.border_thickness").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final SliderSetting padding = SliderSetting.builder().id(SETTING_PADDING).defaultValue(6f).minValue(0f).maxValue(16f).step(1f).translationKeyPath("fascinatedutils.module.padding").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     @Nullable
     private BlockPos activeBreakingPos;
     private float smoothedBreakProgress;
 
     public WawlaWidget() {
         super("wawla", "WAWLA", 0f);
+        addSetting(showBackground);
+        addSetting(showBorder);
+        addSetting(borderThickness);
+        addSetting(padding);
     }
 
     private static String formatSourceName(String namespace) {
@@ -200,8 +210,8 @@ public class WawlaWidget extends HudModule {
         smoothedBreakProgress = 0f;
     }
 
-    private record TargetInfo(String displayName, String sourceName, ItemStack iconStack,
-                              boolean showEntityHealth, float breakProgress, boolean showBreakBar) {}
+    private record TargetInfo(String displayName, String sourceName, ItemStack iconStack, boolean showEntityHealth,
+                              float breakProgress, boolean showBreakBar) {}
 
     private record BreakingProgress(float progress, boolean active) {}
 }

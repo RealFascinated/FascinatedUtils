@@ -48,6 +48,31 @@ public class UpdateChecker {
         new UpdateChecker().startPeriodicChecks();
     }
 
+    private static String sha256Hex(Path path) throws IOException {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 not available", exception);
+        }
+        try (InputStream inputStream = Files.newInputStream(path)) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = inputStream.read(buffer)) >= 0) {
+                digest.update(buffer, 0, read);
+            }
+        }
+        return hexLower(digest.digest());
+    }
+
+    private static String hexLower(byte[] digestBytes) {
+        StringBuilder builder = new StringBuilder(digestBytes.length * 2);
+        for (byte singleByte : digestBytes) {
+            builder.append(String.format(Locale.ROOT, "%02x", singleByte));
+        }
+        return builder.toString();
+    }
+
     public void startPeriodicChecks() {
         if (this.scheduler != null && !this.scheduler.isShutdown()) {
             return;
@@ -107,7 +132,8 @@ public class UpdateChecker {
                 LOG.debug("Staged update jar already matches release artifact_sha256; skipping re-download.");
                 return;
             }
-        } else {
+        }
+        else {
             if (currentVersion.equals(tagName)) {
                 LOG.debug("Already on latest version: {}", currentVersion);
                 return;
@@ -214,31 +240,6 @@ public class UpdateChecker {
             LOG.debug("Could not scan mods directory for staged updates", exception);
         }
         return Optional.empty();
-    }
-
-    private static String sha256Hex(Path path) throws IOException {
-        MessageDigest digest;
-        try {
-            digest = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("SHA-256 not available", exception);
-        }
-        try (InputStream inputStream = Files.newInputStream(path)) {
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = inputStream.read(buffer)) >= 0) {
-                digest.update(buffer, 0, read);
-            }
-        }
-        return hexLower(digest.digest());
-    }
-
-    private static String hexLower(byte[] digestBytes) {
-        StringBuilder builder = new StringBuilder(digestBytes.length * 2);
-        for (byte singleByte : digestBytes) {
-            builder.append(String.format(Locale.ROOT, "%02x", singleByte));
-        }
-        return builder.toString();
     }
 
     private Path downloadToStaged(String downloadUrl, String tagName) throws Exception {

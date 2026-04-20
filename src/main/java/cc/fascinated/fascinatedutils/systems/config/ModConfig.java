@@ -92,10 +92,6 @@ public class ModConfig {
         applyModuleStateIfPresent(module, activeProfile.get().getSettings().get(module.getModuleKey()), ModSerializationGson.get());
     }
 
-    public static void saveModuleSettings(Module module) {
-        saveActiveModule(module);
-    }
-
     public static void loadActiveProfile() {
         Optional<Profile> activeProfile = resolveActiveProfile();
         if (activeProfile.isEmpty()) {
@@ -298,7 +294,7 @@ public class ModConfig {
         profiles = new ArrayList<>(repository.listProfiles());
         activeProfileId = repository.getActiveProfileId();
         if (!profiles.isEmpty() && (activeProfileId == null || profiles.stream().noneMatch(profile -> profile.getProfileId().equals(activeProfileId)))) {
-            activeProfileId = profiles.get(0).getProfileId();
+            activeProfileId = profiles.getFirst().getProfileId();
             repository.setActiveProfileId(activeProfileId);
         }
     }

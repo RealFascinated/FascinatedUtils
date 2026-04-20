@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import cc.fascinated.fascinatedutils.gui.UIScale;
 
 public class HudLayoutCanvas {
 
@@ -10,9 +10,8 @@ public class HudLayoutCanvas {
     /**
      * Clamps a width or height to a safe finite range for HUD layout and anchor math.
      *
-     * @param extent extent in logical pixels
-     *
-     * @return clamped extent in logical pixels, at least {@code 1f}
+     * @param extent extent in UI pixels
+     * @return clamped extent in UI pixels, at least {@code 1f}
      */
     public static float clampExtent(float extent) {
         if (!Float.isFinite(extent) || extent <= 0f) {
@@ -22,24 +21,20 @@ public class HudLayoutCanvas {
     }
 
     /**
-     * Logical canvas width for the active {@link GuiGraphicsExtractor} pass (matches vanilla HUD extract bounds).
+     * Canvas width for the current frame in fixed scale-2 UI pixels.
      *
-     * @param graphics current extract context
-     *
-     * @return clamped logical width for layout and anchors
+     * @return clamped UI canvas width
      */
-    public static float width(GuiGraphicsExtractor graphics) {
-        return clampExtent((float) graphics.guiWidth());
+    public static float width() {
+        return clampExtent(UIScale.uiWidth());
     }
 
     /**
-     * Logical canvas height for the active {@link GuiGraphicsExtractor} pass.
+     * Canvas height for the current frame in fixed scale-2 UI pixels.
      *
-     * @param graphics current extract context
-     *
-     * @return clamped logical height for layout and anchors
+     * @return clamped UI canvas height
      */
-    public static float height(GuiGraphicsExtractor graphics) {
-        return clampExtent((float) graphics.guiHeight());
+    public static float height() {
+        return clampExtent(UIScale.uiHeight());
     }
 }

@@ -8,6 +8,7 @@ import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.jspecify.annotations.NonNull;
 
 public record ModulePersistentState(JsonObject settings, Boolean enabled, JsonObject hud) {
     public ModulePersistentState {
@@ -32,9 +33,13 @@ public record ModulePersistentState(JsonObject settings, Boolean enabled, JsonOb
                 map.add(setting.getSettingKey(), serialized);
             }
         }
+        JsonObject hud = getModuleJson(module);
+        return new ModulePersistentState(map, module.isEnabled(), hud);
+    }
+
+    private static @NonNull JsonObject getModuleJson(Module module) {
         JsonObject hud = new JsonObject();
         if (module instanceof HudModule hudModule) {
-            hud.addProperty("visible", hudModule.getHudState().isVisible());
             hud.addProperty("scale", hudModule.getHudState().getScale());
             hud.addProperty("anchor", hudModule.getHudState().getHudAnchor().name());
             hud.addProperty("anchor_offset_x", hudModule.getHudState().getAnchorOffsetX());
@@ -42,7 +47,7 @@ public record ModulePersistentState(JsonObject settings, Boolean enabled, JsonOb
             hud.addProperty("last_layout_width", hudModule.getHudState().getLastLayoutWidth());
             hud.addProperty("last_layout_height", hudModule.getHudState().getLastLayoutHeight());
         }
-        return new ModulePersistentState(map, module.isEnabled(), hud);
+        return hud;
     }
 
     private static void applySettingValue(Setting<?> setting, JsonElement jsonElement) {
@@ -59,9 +64,6 @@ public record ModulePersistentState(JsonObject settings, Boolean enabled, JsonOb
             ModuleRegistry.INSTANCE.setModuleEnabled(module, enabled);
         }
         if (module instanceof HudModule hudModule) {
-            if (hud.has("visible")) {
-                hudModule.getHudState().setVisible(hud.get("visible").getAsBoolean());
-            }
             if (hud.has("scale")) {
                 hudModule.getHudState().setScale(hud.get("scale").getAsFloat());
             }

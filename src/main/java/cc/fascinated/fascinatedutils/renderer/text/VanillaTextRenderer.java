@@ -31,8 +31,7 @@ public class VanillaTextRenderer implements TextRenderer {
 
     @Override
     public double getHeight(boolean shadow) {
-        int h = font().lineHeight;
-        return shadow ? h : h - 1;
+        return font().lineHeight;
     }
 
     @Override

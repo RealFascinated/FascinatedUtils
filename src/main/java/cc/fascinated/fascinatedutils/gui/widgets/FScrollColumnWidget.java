@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.ScrollChrome;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -106,7 +105,7 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
 
     @Override
     public boolean applyScroll(float delta) {
-        float scaledDelta = delta * FTheme.scrollWheelScale() * GuiDesignSpace.scrollWheelScaleY();
+        float scaledDelta = delta * FTheme.scrollWheelScale() * 1f;
         float next = FColumnWidget.clampScrollOffset(contentHeight, h(), targetScrollOffsetY - scaledDelta);
         if (Math.abs(next - targetScrollOffsetY) < 1e-4f) {
             return false;

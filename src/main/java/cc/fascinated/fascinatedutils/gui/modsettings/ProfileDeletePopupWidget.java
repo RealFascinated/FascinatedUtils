@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -35,8 +34,8 @@ public class ProfileDeletePopupWidget extends FPopupWidget {
         messageLabel.setOverflow(TextOverflow.WRAP);
         messageLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
 
-        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_cancel").getString(), GuiDesignSpace.pxX(100f), 1, 2f, 8f, 1f, 8f);
-        deleteButton = new FButtonWidget(onConfirm, () -> Component.translatable("fascinatedutils.setting.shell.profile_delete_button").getString(), GuiDesignSpace.pxX(100f), 1, 2f, 8f, 1f, 8f) {
+        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_cancel").getString(), 100f, 1, 2f, 8f, 1f, 8f);
+        deleteButton = new FButtonWidget(onConfirm, () -> Component.translatable("fascinatedutils.setting.shell.profile_delete_button").getString(), 100f, 1, 2f, 8f, 1f, 8f) {
             @Override
             protected int resolveButtonFillColorArgb(boolean hovered) {
                 return hovered ? 0xFF7E2E2E : 0xFF692727;
@@ -56,17 +55,17 @@ public class ProfileDeletePopupWidget extends FPopupWidget {
 
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-        float popupWidth = Math.min(Math.max(GuiDesignSpace.pxX(240f), layoutWidth * 0.45f), GuiDesignSpace.pxX(360f));
-        float horizontalPadding = GuiDesignSpace.pxX(UITheme.PADDING_MD);
-        float verticalPadding = GuiDesignSpace.pxY(UITheme.PADDING_MD);
-        float rowGap = GuiDesignSpace.pxY(UITheme.GAP_SM);
+        float popupWidth = Math.min(Math.max(240f, layoutWidth * 0.45f), 360f);
+        float horizontalPadding = UITheme.PADDING_MD;
+        float verticalPadding = UITheme.PADDING_MD;
+        float rowGap = UITheme.GAP_SM;
         float bodyWidth = Math.max(0f, popupWidth - 2f * horizontalPadding);
         float titleHeight = titleLabel.intrinsicHeightForColumn(measure, bodyWidth);
         float messageHeight = messageLabel.intrinsicHeightForColumn(measure, bodyWidth);
         float actionsHeight = cancelButton.intrinsicHeightForColumn(measure, bodyWidth);
 
         float computedDialogHeight = verticalPadding + titleHeight + rowGap + messageHeight + rowGap + actionsHeight + verticalPadding;
-        float popupHeight = Math.max(GuiDesignSpace.pxY(110f), computedDialogHeight);
+        float popupHeight = Math.max(110f, computedDialogHeight);
         setDialogBounds(layoutX, layoutY, layoutWidth, layoutHeight, popupWidth, popupHeight);
 
         float cursorY = dialogY() + verticalPadding;
@@ -76,7 +75,7 @@ public class ProfileDeletePopupWidget extends FPopupWidget {
         messageLabel.layout(measure, dialogX() + horizontalPadding, cursorY, bodyWidth, messageHeight);
 
         float actionsY = dialogY() + dialogHeight() - verticalPadding - actionsHeight;
-        float actionGap = GuiDesignSpace.pxX(UITheme.GAP_SM);
+        float actionGap = UITheme.GAP_SM;
         float actionWidth = Math.max(0f, (bodyWidth - actionGap) * 0.5f);
         float actionButtonHeight = cancelButton.intrinsicHeightForColumn(measure, actionWidth);
         cancelButton.layout(measure, dialogX() + horizontalPadding, actionsY, actionWidth, actionButtonHeight);

@@ -1,13 +1,13 @@
 package cc.fascinated.fascinatedutils.systems.hud.content;
 
+import java.util.List;
+
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HUDPanelBackground;
 import cc.fascinated.fascinatedutils.systems.hud.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.HudAnchorLayout;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import net.minecraft.client.Minecraft;
-
-import java.util.List;
 
 public class HudContentRenderer {
 
@@ -43,8 +43,8 @@ public class HudContentRenderer {
             maxLineWidth = Math.max(maxLineWidth, width);
         }
 
-        float horizontalPadding = HUDPanelBackground.HORIZONTAL_PADDING;
-        float verticalPadding = HUDPanelBackground.VERTICAL_PADDING;
+        float horizontalPadding = module.getPadding();
+        float verticalPadding = module.getPadding();
         float innerTextHeight = HUDPanelBackground.innerTextHeightForLineCount(rawLines.size(), lineHeight);
         float layoutWidth = Math.max(1f, Math.max(module.getMinWidth(), maxLineWidth + 2f * horizontalPadding));
         float layoutHeight = Math.max(1f, innerTextHeight + 2f * verticalPadding);
@@ -84,8 +84,8 @@ public class HudContentRenderer {
             return null;
         }
 
-        float horizontalPadding = HUDPanelBackground.HORIZONTAL_PADDING;
-        float verticalPadding = HUDPanelBackground.VERTICAL_PADDING;
+        float horizontalPadding = module.getPadding();
+        float verticalPadding = module.getPadding();
         float lineHeight = glRenderer.getFontHeight();
         float itemIconSize = 16f;
         float iconTextGap = 4f;
@@ -93,13 +93,20 @@ public class HudContentRenderer {
 
         float maxStripWidth = 0f;
         float[] textWidths = new float[rows.size()];
+        float[] countOverlayLeftOverflow = new float[rows.size()];
+        float[] countOverlayRightOverflow = new float[rows.size()];
 
         for (int index = 0; index < rows.size(); index++) {
             HudContent.ItemRow row = rows.get(index);
             float textWidthPx = itemRowTextWidthPx(glRenderer, row.text());
             textWidths[index] = textWidthPx;
+            float leftOverflowPx = itemCountOverlayLeftOverflowPx(row.stack());
+            float rightOverflowPx = itemCountOverlayRightOverflowPx(row.stack());
+            countOverlayLeftOverflow[index] = leftOverflowPx;
+            countOverlayRightOverflow[index] = rightOverflowPx;
             float gapBeforeIcon = textWidthPx > 0f ? iconTextGap : 0f;
-            maxStripWidth = Math.max(maxStripWidth, textWidthPx + gapBeforeIcon + itemIconSize);
+            float iconBandWidth = leftOverflowPx + itemIconSize + rightOverflowPx;
+            maxStripWidth = Math.max(maxStripWidth, textWidthPx + gapBeforeIcon + iconBandWidth);
         }
 
         float rowHeight = Math.max(itemIconSize, lineHeight);
@@ -124,8 +131,11 @@ public class HudContentRenderer {
             for (int index = 0; index < rows.size(); index++) {
                 HudContent.ItemRow row = rows.get(index);
                 float textWidthPx = textWidths[index];
+                float leftOverflowPx = countOverlayLeftOverflow[index];
+                float rightOverflowPx = countOverlayRightOverflow[index];
                 float gapBeforeIcon = textWidthPx > 0f ? iconTextGap : 0f;
-                float stripWidth = textWidthPx + gapBeforeIcon + itemIconSize;
+                float iconBandWidth = leftOverflowPx + itemIconSize + rightOverflowPx;
+                float stripWidth = textWidthPx + gapBeforeIcon + iconBandWidth;
                 float stripLeft = horizontalPadding + (isOnRight ? innerRowBandWidth - stripWidth : HudAnchorLayout.horizontalOffsetInInnerBand(innerRowBandWidth, stripWidth, HudAnchorContentAlignment.Horizontal.LEFT));
 
                 float iconY = cursorY + (rowHeight - itemIconSize) * 0.5f;
@@ -134,7 +144,7 @@ public class HudContentRenderer {
                 boolean drawRowText = rowText != null && !rowText.isBlank();
 
                 if (isOnRight) {
-                    float iconX = stripLeft + textWidthPx + gapBeforeIcon;
+                    float iconX = stripLeft + textWidthPx + gapBeforeIcon + leftOverflowPx;
                     if (drawRowText) {
                         glRenderer.drawMiniMessageText(rowText, stripLeft, textY, false);
                     }
@@ -146,8 +156,8 @@ public class HudContentRenderer {
                     }
                 }
                 else {
-                    float iconX = stripLeft;
-                    float textX = stripLeft + itemIconSize + gapBeforeIcon;
+                    float iconX = stripLeft + leftOverflowPx;
+                    float textX = stripLeft + iconBandWidth + gapBeforeIcon;
                     if (minecraftClient.player != null) {
                         glRenderer.drawGuiItem(minecraftClient.player, row.stack(), iconX, iconY);
                     }
@@ -173,5 +183,21 @@ public class HudContentRenderer {
             return 0f;
         }
         return glRenderer.measureMiniMessageTextWidth(miniMessageText);
+    }
+
+    private static float itemCountOverlayLeftOverflowPx(net.minecraft.world.item.ItemStack stack) {
+        if (!hasVisibleStackCountOverlay(stack)) {
+            return 0f;
+        }
+        int amountTextWidth = Minecraft.getInstance().font.width(String.valueOf(stack.getCount()));
+        return Math.max(0f, amountTextWidth - 17f);
+    }
+
+    private static float itemCountOverlayRightOverflowPx(net.minecraft.world.item.ItemStack stack) {
+        return hasVisibleStackCountOverlay(stack) ? 1f : 0f;
+    }
+
+    private static boolean hasVisibleStackCountOverlay(net.minecraft.world.item.ItemStack stack) {
+        return !stack.isEmpty() && stack.getCount() != 1;
     }
 }

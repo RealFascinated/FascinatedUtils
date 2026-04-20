@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -72,13 +71,13 @@ public class FClickableTabSegmentWidget extends FWidget {
         int fillColor = selected ? graphics.theme().moduleListRowSelected() : hovered ? graphics.theme().moduleListRowHover() : graphics.theme().surface();
         int textColor = selected ? graphics.theme().textAccent() : hovered ? graphics.theme().textPrimary() : graphics.theme().textMuted();
         if (shellSegmentCornerRadius > 0.5f) {
-            float borderThickness = GuiDesignSpace.pxUniform(1f);
+            float borderThickness = 1f;
             int borderArgb = hovered ? graphics.theme().borderHover() : graphics.theme().border();
             graphics.fillRoundedRectFrame(x(), y(), w(), h(), shellSegmentCornerRadius, borderArgb, fillColor, borderThickness, borderThickness, shellSegmentCornerMask);
         }
         else {
             graphics.drawRect(x(), y(), w(), h(), fillColor);
-            float borderThickness = GuiDesignSpace.pxUniform(1f);
+            float borderThickness = 1f;
             int borderArgb = hovered ? graphics.theme().borderHover() : graphics.theme().border();
             graphics.drawBorder(x(), y(), w(), h(), borderThickness, borderArgb);
         }

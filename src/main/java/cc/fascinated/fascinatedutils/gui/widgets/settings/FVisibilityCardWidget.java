@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.core.TextLayoutMetrics;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
@@ -48,10 +47,10 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     }
 
     public static float stackedCellOuterHeightPx() {
-        float titleTopPad = GuiDesignSpace.pxUniform(TITLE_PAD_TOP_DESIGN);
-        float titleBottomPad = GuiDesignSpace.pxUniform(TITLE_PAD_BOTTOM_DESIGN);
-        float buttonBand = GuiDesignSpace.pxY(ACTION_STRIP_HEIGHT_DESIGN);
-        float lineHeight = Math.max(1f, GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()));
+        float titleTopPad = TITLE_PAD_TOP_DESIGN;
+        float titleBottomPad = TITLE_PAD_BOTTOM_DESIGN;
+        float buttonBand = ACTION_STRIP_HEIGHT_DESIGN;
+        float lineHeight = Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());
         float titleBlock = TITLE_MAX_LINES * lineHeight;
         return titleTopPad + titleBlock + titleBottomPad + ACTION_STRIP_COUNT * buttonBand;
     }
@@ -134,10 +133,10 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        float corner = GuiDesignSpace.pxUniform(graphics.theme().cardCornerRadius());
+        float corner = graphics.theme().cardCornerRadius();
         graphics.fillThemedSurfaceCardFrame(x(), y(), w(), h(), corner, RectCornerRoundMask.ALL);
-        float titleTopPad = GuiDesignSpace.pxUniform(TITLE_PAD_TOP_DESIGN);
-        float titleBottomPad = GuiDesignSpace.pxUniform(TITLE_PAD_BOTTOM_DESIGN);
+        float titleTopPad = TITLE_PAD_TOP_DESIGN;
+        float titleBottomPad = TITLE_PAD_BOTTOM_DESIGN;
         float[] settingsStrip = settingsStripBounds();
         float[] toggleStrip = toggleStripBounds();
         float titleRegionBottom = settingsStrip[1] - titleBottomPad;
@@ -145,7 +144,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
         float titleRegionHeight = Math.max(0f, titleRegionBottom - titleTop);
         String title = titleSupplier.get();
         float innerWidth = Math.max(0f, w() - 2f * titleTopPad);
-        float wrapBudget = GuiDesignSpace.guiTextWrapBudgetPx(innerWidth);
+        float wrapBudget = innerWidth;
         java.util.List<String> lines = TextLineLayout.wrapLines(title, wrapBudget, segment -> graphics.measureTextWidth(segment, false));
         float lineHeight = TextLayoutMetrics.layoutLineHeightPx(graphics);
         int lineCount = Math.min(TITLE_MAX_LINES, lines.size());
@@ -159,7 +158,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
             graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(graphics.theme().textPrimary()) + ">" + line + "</color>", lineX, cursorY, false);
             cursorY += lineHeight;
         }
-        float stripBorderThickness = GuiDesignSpace.pxUniform(1f);
+        float stripBorderThickness = 1f;
 
         float settingsStripX = settingsStrip[0];
         float settingsStripY = settingsStrip[1];
@@ -209,7 +208,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     }
 
     private float actionHeightPx() {
-        return GuiDesignSpace.pxY(ACTION_STRIP_HEIGHT_DESIGN);
+        return ACTION_STRIP_HEIGHT_DESIGN;
     }
 
     private float[] settingsStripBounds() {

@@ -4,7 +4,6 @@ import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
 import cc.fascinated.fascinatedutils.common.setting.impl.*;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
@@ -24,22 +23,14 @@ import java.util.function.Consumer;
 @UtilityClass
 public class ModSettingsRegistrySettingsTabBuilder {
 
-    /**
-     * Sub-panes for the registry Settings tab: general options versus performance-related options.
-     */
-    public enum RegistrySettingsSubTab {
-        GENERAL,
-        PERFORMANCE
-    }
-
     private static final String PERFORMANCE_CATEGORY_DISPLAY_KEY = "Performance";
 
     public static FWidget buildSettingsTab(float paneWidth, float paneHeight, Ref<Float> scrollYRef, Consumer<ColorSetting> openColorPicker, RegistrySettingsSubTab subTab) {
-        float settingsContentWidth = Math.max(GuiDesignSpace.pxX(28f), paneWidth);
-        float settingsInnerWidth = Math.max(GuiDesignSpace.pxX(14f), settingsContentWidth - 2f * GuiDesignSpace.pxX(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X));
-        float gap = GuiDesignSpace.pxY(3f);
+        float settingsContentWidth = Math.max(28f, paneWidth);
+        float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
+        float gap = 3f;
         FColumnWidget scrollBody = new FColumnWidget(gap, Align.CENTER);
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X)));
+        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X));
         List<Setting<?>> allSettings = SettingsRegistry.INSTANCE.getSettings().getSettings();
         if (allSettings.isEmpty()) {
             FLabelWidget empty = new FLabelWidget();
@@ -47,7 +38,7 @@ public class ModSettingsRegistrySettingsTabBuilder {
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.CENTER);
             scrollBody.addChild(empty);
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(4f)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
             return wrapScrollClip(scrollBody, gap, scrollYRef);
         }
         List<Setting<?>> topLevelSettings = new ArrayList<>();
@@ -59,11 +50,11 @@ public class ModSettingsRegistrySettingsTabBuilder {
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.CENTER);
             scrollBody.addChild(empty);
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(4f)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
             return wrapScrollClip(scrollBody, gap, scrollYRef);
         }
         ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, topLevelSettings, (setting, innerWidth, sliderStartX) -> editorForRegistrySetting(setting, innerWidth, sliderStartX, openColorPicker), (booleanSetting, cellWidth, cellHeight) -> new FBooleanSettingGridCellWidget(booleanSetting, cellWidth, cellHeight, ModConfig::saveSettings));
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET)));
+        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET));
         return wrapScrollClip(scrollBody, gap, scrollYRef);
     }
 
@@ -119,5 +110,12 @@ public class ModSettingsRegistrySettingsTabBuilder {
             clip.setScrollOffsetChangeListener(scrollYRef::setValue);
         }
         return clip;
+    }
+
+    /**
+     * Sub-panes for the registry Settings tab: general options versus performance-related options.
+     */
+    public enum RegistrySettingsSubTab {
+        GENERAL, PERFORMANCE
     }
 }

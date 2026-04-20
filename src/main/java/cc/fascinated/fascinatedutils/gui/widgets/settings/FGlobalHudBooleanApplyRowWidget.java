@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.hooks.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -130,18 +129,18 @@ public class FGlobalHudBooleanApplyRowWidget extends FWidget implements FAnimata
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
         boolean locked = stagingBoolean.isLocked();
-        float innerHeight = Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
-        float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
-        float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
+        float innerHeight = Math.max(0f, h() - 2f * SettingsUiMetrics.SETTING_ROW_PADDING_Y);
+        float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
+        float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float[] toggle = toggleBounds(padX, innerHeight, padY);
         float toggleW = toggle[2];
         float toggleH = toggle[3];
-        float titleRowHeight = Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), toggleH);
+        float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), toggleH);
         float titleOriginY = titleRowTop(innerHeight, padY, titleRowHeight);
         float[] apply = applyChipBounds(padX, innerHeight, padY, toggleH);
-        float labelGap = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP);
+        float labelGap = SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP;
         float labelX = toggle[0] + toggleW + labelGap;
-        float labelMaxWidth = Math.max(0f, apply[0] - GuiDesignSpace.pxX(APPLY_LABEL_GAP_DESIGN) - labelX);
+        float labelMaxWidth = Math.max(0f, apply[0] - APPLY_LABEL_GAP_DESIGN - labelX);
         String label = stagingBoolean.getTranslatedDisplayName();
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         float labelY = titleOriginY + Math.max(0f, (toggleH - graphics.getFontHeight()) * 0.5f);
@@ -156,8 +155,8 @@ public class FGlobalHudBooleanApplyRowWidget extends FWidget implements FAnimata
             trackFill = WSettingTooltip.dimColor(trackFill, 0.45f);
             trackBorder = WSettingTooltip.dimColor(trackBorder, 0.6f);
         }
-        float borderThickness = GuiDesignSpace.pxUniform(1f);
-        float filletRadius = GuiDesignSpace.pxUniform(TOGGLE_CORNER_FILLET_DESIGN);
+        float borderThickness = 1f;
+        float filletRadius = TOGGLE_CORNER_FILLET_DESIGN;
         float maxTrackCornerRadius = Math.max(0.5f, Math.min(toggleH * 0.5f - borderThickness * 0.5f, toggleW * 0.5f - borderThickness * 0.5f));
         float trackCornerRadius = Mth.clamp(filletRadius, 0.5f, maxTrackCornerRadius);
         graphics.fillRoundedRectFrame(toggle[0], titleOriginY, toggleW, toggleH, trackCornerRadius, trackBorder, trackFill, borderThickness, borderThickness, RectCornerRoundMask.ALL);
@@ -173,12 +172,12 @@ public class FGlobalHudBooleanApplyRowWidget extends FWidget implements FAnimata
 
         int fillColor = FascinatedGuiTheme.INSTANCE.surface();
         int outlineColor = hoveredApply ? FascinatedGuiTheme.INSTANCE.borderHover() : FascinatedGuiTheme.INSTANCE.border();
-        float chipBorderX = GuiDesignSpace.pxX(UITheme.BORDER_THICKNESS_PX);
-        float chipBorderY = GuiDesignSpace.pxY(UITheme.BORDER_THICKNESS_PX);
+        float chipBorderX = UITheme.BORDER_THICKNESS_PX;
+        float chipBorderY = UITheme.BORDER_THICKNESS_PX;
         float chipCorner = resolveApplyChipCornerRadius(graphics, apply[2], apply[3]);
         graphics.fillRoundedRectFrame(apply[0], apply[1], apply[2], apply[3], chipCorner, outlineColor, fillColor, chipBorderX, chipBorderY, RectCornerRoundMask.ALL);
         String applyLabel = I18n.get("fascinatedutils.setting.shell.global_hud_apply_all");
-        float wrapBudget = Math.max(1f, apply[2] - 2f * GuiDesignSpace.pxX(APPLY_HORIZONTAL_PAD_DESIGN));
+        float wrapBudget = Math.max(1f, apply[2] - 2f * APPLY_HORIZONTAL_PAD_DESIGN);
         applyLabel = TextLineLayout.ellipsize(applyLabel, wrapBudget, segment -> graphics.measureTextWidth(segment, false));
         float textX = apply[0] + (apply[2] - graphics.measureTextWidth(applyLabel, false)) * 0.5f;
         float textY = apply[1] + (apply[3] - graphics.getFontHeight()) * 0.5f;
@@ -187,31 +186,31 @@ public class FGlobalHudBooleanApplyRowWidget extends FWidget implements FAnimata
 
     private float resolveApplyChipCornerRadius(GuiRenderer graphics, float chipWidth, float chipHeight) {
         float maxRadius = Math.min(chipWidth, chipHeight) * 0.5f - 0.01f;
-        float themed = GuiDesignSpace.pxUniform(graphics.theme().cardCornerRadius());
+        float themed = graphics.theme().cardCornerRadius();
         return Math.max(0.5f, Math.min(themed, maxRadius));
     }
 
     private boolean rectContainsToggle(float pointerX, float pointerY) {
-        float innerHeight = Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
-        float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
-        float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
+        float innerHeight = Math.max(0f, h() - 2f * SettingsUiMetrics.SETTING_ROW_PADDING_Y);
+        float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
+        float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float[] toggle = toggleBounds(padX, innerHeight, padY);
         return rectContains(toggle[0], toggle[1], toggle[2], toggle[3], pointerX, pointerY);
     }
 
     private boolean rectContainsApply(float pointerX, float pointerY) {
-        float innerHeight = Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
-        float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
-        float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
-        float toggleH = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H);
+        float innerHeight = Math.max(0f, h() - 2f * SettingsUiMetrics.SETTING_ROW_PADDING_Y);
+        float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
+        float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
+        float toggleH = SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H;
         float[] apply = applyChipBounds(padX, innerHeight, padY, toggleH);
         return rectContains(apply[0], apply[1], apply[2], apply[3], pointerX, pointerY);
     }
 
     private float[] toggleBounds(float padX, float innerHeight, float padY) {
-        float toggleW = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_W);
-        float toggleH = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H);
-        float titleRowHeight = Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), toggleH);
+        float toggleW = SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_W;
+        float toggleH = SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H;
+        float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), toggleH);
         float titleOriginY = titleRowTop(innerHeight, padY, titleRowHeight);
         float toggleLeft = x() + padX;
         return new float[]{toggleLeft, titleOriginY, toggleW, toggleH};
@@ -221,8 +220,8 @@ public class FGlobalHudBooleanApplyRowWidget extends FWidget implements FAnimata
      * @return left, top, width, height of the apply chip in layout space
      */
     private float[] applyChipBounds(float padX, float innerHeight, float padY, float toggleHeight) {
-        float chipWidth = GuiDesignSpace.pxX(APPLY_CHIP_WIDTH_DESIGN);
-        float chipHeight = Math.max(toggleHeight, GuiDesignSpace.pxY(SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN));
+        float chipWidth = APPLY_CHIP_WIDTH_DESIGN;
+        float chipHeight = Math.max(toggleHeight, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN);
         chipHeight = Math.min(chipHeight, innerHeight);
         float bodyRight = x() + w() - padX;
         float chipLeft = bodyRight - chipWidth;

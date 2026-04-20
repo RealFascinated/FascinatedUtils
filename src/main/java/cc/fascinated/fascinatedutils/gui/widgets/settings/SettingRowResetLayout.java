@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.Icons;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
@@ -11,11 +10,11 @@ import lombok.experimental.UtilityClass;
 public class SettingRowResetLayout {
 
     public static float glyphBoxPx() {
-        return GuiDesignSpace.pxUniform(FascinatedGuiTheme.INSTANCE.resetGlyphSize());
+        return FascinatedGuiTheme.INSTANCE.resetGlyphSize();
     }
 
     public static float resetGapBesideControlPx() {
-        return GuiDesignSpace.pxX(UITheme.GAP_LG);
+        return UITheme.GAP_LG;
     }
 
     public static float trailingResetReservePx() {
@@ -58,12 +57,12 @@ public class SettingRowResetLayout {
      * <p>When {@code atDefault} is true, this returns false so the reserved trailing slot does not steal hovers,
      * clicks, or tooltips even though layout space is unchanged.
      *
-     * @param left       glyph square left
-     * @param top        glyph square top
-     * @param size       glyph square edge length
-     * @param pointerX   logical pointer X
-     * @param pointerY   logical pointer Y
-     * @param atDefault  whether the setting value already matches its default
+     * @param left      glyph square left
+     * @param top       glyph square top
+     * @param size      glyph square edge length
+     * @param pointerX  logical pointer X
+     * @param pointerY  logical pointer Y
+     * @param atDefault whether the setting value already matches its default
      * @return true when the reset glyph is interactable and the pointer lies inside its square
      */
     public static boolean resetGlyphHitActive(float left, float top, float size, float pointerX, float pointerY, boolean atDefault) {

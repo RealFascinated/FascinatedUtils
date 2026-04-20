@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -169,10 +168,10 @@ public class FGlobalHudSliderApplyRowWidget extends FWidget {
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
         boolean locked = stagingSlider.isLocked();
         float bodyLeft = x() + bodyPadX();
-        float textLineHeight = Math.max(1f, GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()));
+        float textLineHeight = Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());
         float textTop = innerMidY() - textLineHeight * 0.5f;
         float[] apply = applyChipBounds();
-        float labelMaxWidth = Math.max(0f, sliderValueTextX(bodyLeft) - GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP) - bodyLeft);
+        float labelMaxWidth = Math.max(0f, sliderValueTextX(bodyLeft) - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - bodyLeft);
         String label = TextLineLayout.ellipsize(stagingSlider.getTranslatedDisplayName(), labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
         graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, textTop, false);
@@ -199,12 +198,12 @@ public class FGlobalHudSliderApplyRowWidget extends FWidget {
 
         int fillColor = FascinatedGuiTheme.INSTANCE.surface();
         int outlineColor = hoveredApply ? FascinatedGuiTheme.INSTANCE.borderHover() : FascinatedGuiTheme.INSTANCE.border();
-        float chipBorderX = GuiDesignSpace.pxX(UITheme.BORDER_THICKNESS_PX);
-        float chipBorderY = GuiDesignSpace.pxY(UITheme.BORDER_THICKNESS_PX);
+        float chipBorderX = UITheme.BORDER_THICKNESS_PX;
+        float chipBorderY = UITheme.BORDER_THICKNESS_PX;
         float chipCorner = resolveApplyChipCornerRadius(graphics, apply[2], apply[3]);
         graphics.fillRoundedRectFrame(apply[0], apply[1], apply[2], apply[3], chipCorner, outlineColor, fillColor, chipBorderX, chipBorderY, RectCornerRoundMask.ALL);
         String applyLabel = I18n.get("fascinatedutils.setting.shell.global_hud_apply_all");
-        float wrapBudget = Math.max(1f, apply[2] - 2f * GuiDesignSpace.pxX(APPLY_HORIZONTAL_PAD_DESIGN));
+        float wrapBudget = Math.max(1f, apply[2] - 2f * APPLY_HORIZONTAL_PAD_DESIGN);
         applyLabel = TextLineLayout.ellipsize(applyLabel, wrapBudget, segment -> graphics.measureTextWidth(segment, false));
         float textX = apply[0] + (apply[2] - graphics.measureTextWidth(applyLabel, false)) * 0.5f;
         float textY = apply[1] + (apply[3] - graphics.getFontHeight()) * 0.5f;
@@ -213,7 +212,7 @@ public class FGlobalHudSliderApplyRowWidget extends FWidget {
 
     private float resolveApplyChipCornerRadius(GuiRenderer graphics, float chipWidth, float chipHeight) {
         float maxRadius = Math.min(chipWidth, chipHeight) * 0.5f - 0.01f;
-        float themed = GuiDesignSpace.pxUniform(graphics.theme().cardCornerRadius());
+        float themed = graphics.theme().cardCornerRadius();
         return Math.max(0.5f, Math.min(themed, maxRadius));
     }
 
@@ -228,11 +227,11 @@ public class FGlobalHudSliderApplyRowWidget extends FWidget {
     }
 
     private float bodyPadX() {
-        return GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
+        return SettingsUiMetrics.SETTING_ROW_PADDING_X;
     }
 
     private float bodyPadY() {
-        return GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
+        return SettingsUiMetrics.SETTING_ROW_PADDING_Y;
     }
 
     private float innerMidY() {
@@ -244,15 +243,15 @@ public class FGlobalHudSliderApplyRowWidget extends FWidget {
     }
 
     private float computeTrackHeight() {
-        return GuiDesignSpace.pxY(13f);
+        return 13f;
     }
 
     private float trackVisualThickness() {
-        return GuiDesignSpace.pxY(3f);
+        return 3f;
     }
 
     private float thumbDiameter() {
-        return GuiDesignSpace.pxUniform(7f);
+        return 7f;
     }
 
     private float sliderValueTextX(float bodyLeft) {
@@ -260,28 +259,28 @@ public class FGlobalHudSliderApplyRowWidget extends FWidget {
     }
 
     private float sliderValueColumnWidth() {
-        float minColumnWidth = GuiDesignSpace.pxX(SettingsUiMetrics.SLIDER_VALUE_COL_W);
+        float minColumnWidth = SettingsUiMetrics.SLIDER_VALUE_COL_W;
         Minecraft minecraftClient = Minecraft.getInstance();
         if (minecraftClient == null) {
             return minColumnWidth;
         }
         String valueText = stagingSlider.formatValueForDisplay();
-        float measuredValueWidth = GuiDesignSpace.pxX(minecraftClient.font.width(valueText));
-        float valuePadding = GuiDesignSpace.pxX(3f);
+        float measuredValueWidth = minecraftClient.font.width(valueText);
+        float valuePadding = 3f;
         return Math.max(minColumnWidth, measuredValueWidth + valuePadding);
     }
 
     private float applyChipLeftX() {
         float padX = bodyPadX();
-        float chipWidth = GuiDesignSpace.pxX(APPLY_CHIP_WIDTH_DESIGN);
+        float chipWidth = APPLY_CHIP_WIDTH_DESIGN;
         return x() + w() - padX - chipWidth;
     }
 
     private float[] applyChipBounds() {
         float padY = bodyPadY();
         float innerHeight = Math.max(0f, h() - 2f * padY);
-        float chipWidth = GuiDesignSpace.pxX(APPLY_CHIP_WIDTH_DESIGN);
-        float chipHeight = Math.max(computeTrackHeight(), GuiDesignSpace.pxY(SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN));
+        float chipWidth = APPLY_CHIP_WIDTH_DESIGN;
+        float chipHeight = Math.max(computeTrackHeight(), SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN);
         chipHeight = Math.min(chipHeight, innerHeight);
         float chipLeft = applyChipLeftX();
         float bodyTop = y() + padY;
@@ -297,13 +296,13 @@ public class FGlobalHudSliderApplyRowWidget extends FWidget {
     private float sliderTrackLeft() {
         float bodyLeft = x() + bodyPadX();
         float valueColumnWidth = sliderValueColumnWidth();
-        float gapAfterValue = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP);
+        float gapAfterValue = SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP;
         return sliderValueTextX(bodyLeft) + valueColumnWidth + gapAfterValue;
     }
 
     private float sliderTrackWidth() {
-        float gapBeforeApply = GuiDesignSpace.pxX(APPLY_LABEL_GAP_DESIGN);
+        float gapBeforeApply = APPLY_LABEL_GAP_DESIGN;
         float trackRight = applyChipLeftX() - gapBeforeApply;
-        return Math.max(GuiDesignSpace.pxX(25f), trackRight - sliderTrackLeft());
+        return Math.max(25f, trackRight - sliderTrackLeft());
     }
 }

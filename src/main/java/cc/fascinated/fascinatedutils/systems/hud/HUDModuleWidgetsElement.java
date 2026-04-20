@@ -34,8 +34,8 @@ public class HUDModuleWidgetsElement implements HudElement {
         if (deltaSeconds <= 0f || Float.isNaN(deltaSeconds)) {
             deltaSeconds = 1f / 20f;
         }
-        float canvasWidth = HudLayoutCanvas.width(graphics);
-        float canvasHeight = HudLayoutCanvas.height(graphics);
+        float canvasWidth = HudLayoutCanvas.width();
+        float canvasHeight = HudLayoutCanvas.height();
         guiRenderer.begin(canvasWidth, canvasHeight);
         hudManager.renderHUD(guiRenderer, canvasWidth, canvasHeight, Mth.clamp(deltaSeconds, 0f, 1f));
         guiRenderer.end();

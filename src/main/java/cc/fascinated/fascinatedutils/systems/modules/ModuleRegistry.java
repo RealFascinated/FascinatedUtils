@@ -105,10 +105,6 @@ public class ModuleRegistry {
     @EventHandler
     private void fascinatedutils$onModuleEnabledStateChanged(ModuleEnabledStateChangedEvent event) {
         Module module = event.module();
-        if (module instanceof HudModule hudModule) {
-            hudModule.getHudState().setVisible(module.isEnabled());
-            HUDManager.INSTANCE.onWidgetVisibilityStateChanged(hudModule);
-        }
         if (module.isEnabled()) {
             if (!enabledModules.contains(module)) {
                 enabledModules.add(module);

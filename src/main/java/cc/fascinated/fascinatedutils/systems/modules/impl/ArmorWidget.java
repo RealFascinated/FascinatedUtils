@@ -1,6 +1,12 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
+import cc.fascinated.fascinatedutils.systems.hud.HUDWidgetAnchor;
+import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import net.minecraft.client.Minecraft;
@@ -11,22 +17,35 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ArmorWidget extends HudModule {
     private static final int ROW_COUNT = 6;
     private static final EquipmentSlot[] ARMOR_SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
     private static final String SLOTS_CATEGORY_DISPLAY_KEY = "Slots";
     private final BooleanSetting[] slotRowVisibility = {BooleanSetting.builder().id("show_head").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_chest").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_legs").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_feet").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_main_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_off_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build()};
     private final BooleanSetting hideUnbreakableDurability = BooleanSetting.builder().id("hide_unbreakable_durability").defaultValue(false).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showTotalInventoryCount = BooleanSetting.builder().id("show_total_item_count").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showBackground = BooleanSetting.builder().id(SETTING_SHOW_BACKGROUND).defaultValue(true).translationKeyPath("fascinatedutils.module.show_hud_background").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showBorder = BooleanSetting.builder().id(SETTING_SHOW_BORDER).defaultValue(false).translationKeyPath("fascinatedutils.module.show_border").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final SliderSetting borderThickness = SliderSetting.builder().id(SETTING_BORDER_THICKNESS).defaultValue(2f).minValue(1f).maxValue(3f).step(1f).translationKeyPath("fascinatedutils.module.border_thickness").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final SliderSetting padding = SliderSetting.builder().id(SETTING_PADDING).defaultValue(6f).minValue(0f).maxValue(16f).step(1f).translationKeyPath("fascinatedutils.module.padding").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
     public ArmorWidget() {
-        super("armor_hud", "Armor HUD", 0f);
+        super("armor_hud", "Armor HUD", 0f, HudDefaults.builder()
+                .defaultState(true)
+                .defaultAnchor(HUDWidgetAnchor.BOTTOM_RIGHT)
+                .defaultXOffset(5)
+                .defaultYOffset(5)
+                .build()
+        );
+        addSetting(showBackground);
+        addSetting(showBorder);
+        addSetting(borderThickness);
+        addSetting(padding);
         for (int slotIndex = 0; slotIndex < ROW_COUNT; slotIndex++) {
             addSetting(slotRowVisibility[slotIndex]);
         }
         addSetting(hideUnbreakableDurability);
+        addSetting(showTotalInventoryCount);
     }
 
     private static ItemStack previewStack(Item item, int damage) {
@@ -60,16 +79,6 @@ public class ArmorWidget extends HudModule {
         return ItemStack.EMPTY;
     }
 
-    private String durabilityOnlyText(ItemStack stack) {
-        if (stack.isEmpty() || stack.getMaxDamage() <= 0) {
-            return "";
-        }
-        if (hideUnbreakableDurability.isEnabled() && stack.has(DataComponents.UNBREAKABLE)) {
-            return "";
-        }
-        return "<white>" + (stack.getMaxDamage() - stack.getDamageValue()) + "</white>";
-    }
-
     @Override
     protected HudContent produceContent(float deltaSeconds, boolean editorMode) {
         List<HudContent.ItemRow> rows = new ArrayList<>(ROW_COUNT);
@@ -98,10 +107,37 @@ public class ArmorWidget extends HudModule {
                 if (stack.isEmpty()) {
                     continue;
                 }
-                rows.add(new HudContent.ItemRow(stack, durabilityOnlyText(stack)));
+                rows.add(new HudContent.ItemRow(resolvedRowStack(stack, player), durabilityOnlyText(stack)));
             }
         }
         return rows.isEmpty() ? null : new HudContent.ItemRows(rows);
+    }
+
+    private ItemStack resolvedRowStack(ItemStack stack, Player player) {
+        if (showTotalInventoryCount.isEnabled() && stack.getMaxDamage() <= 0 && stack.getMaxStackSize() > 1) {
+            int count = 0;
+            var inventory = player.getInventory();
+            for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+                ItemStack slotStack = inventory.getItem(slot);
+                if (!slotStack.isEmpty() && slotStack.getItem() == stack.getItem()) {
+                    count += slotStack.getCount();
+                }
+            }
+            if (count > 0) {
+                return stack.copyWithCount(count);
+            }
+        }
+        return stack;
+    }
+
+    private String durabilityOnlyText(ItemStack stack) {
+        if (stack.isEmpty() || stack.getMaxDamage() <= 0) {
+            return "";
+        }
+        if (hideUnbreakableDurability.isEnabled() && stack.has(DataComponents.UNBREAKABLE)) {
+            return "";
+        }
+        return "<white>" + (stack.getMaxDamage() - stack.getDamageValue()) + "</white>";
     }
 
     private boolean isSlotRowShown(int rowIndex) {

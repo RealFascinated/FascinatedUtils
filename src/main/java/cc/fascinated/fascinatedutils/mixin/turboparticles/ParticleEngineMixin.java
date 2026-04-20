@@ -12,7 +12,6 @@ import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.state.level.ParticlesRenderState;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -23,19 +22,6 @@ import java.util.Map;
 
 @Mixin(ParticleEngine.class)
 public class ParticleEngineMixin {
-
-    @Unique
-    private void fascinatedutils$publishParticlesToTask(ParticleEngine engine, ParticleCullTask task) {
-        Map<ParticleRenderType, ParticleGroup<?>> map = ((ParticleEngineAccessor) engine).getParticles();
-        List<Particle> allParticles = new ArrayList<>();
-        for (ParticleGroup<?> group : map.values()) {
-            try {
-                allParticles.addAll(group.getAll());
-            } catch (Exception ignored) {
-            }
-        }
-        task.publishParticleCullSnapshot(allParticles);
-    }
 
     @Inject(method = "extract", at = @At("HEAD"))
     private void fascinatedutils$onExtractHead(ParticlesRenderState particlesRenderState, Frustum frustum, Camera camera, float partialTickTime, CallbackInfo ci) {
@@ -59,7 +45,16 @@ public class ParticleEngineMixin {
         cullTask.setCamera(camera.position());
         cullTask.setFrustum(frustum);
 
-        fascinatedutils$publishParticlesToTask((ParticleEngine) (Object) this, cullTask);
+        Map<ParticleRenderType, ParticleGroup<?>> map = ((ParticleEngineAccessor) this).getParticles();
+        List<Particle> allParticles = new ArrayList<>();
+        for (ParticleGroup<?> group : map.values()) {
+            try {
+                allParticles.addAll(group.getAll());
+            } catch (Exception ignored) {
+            }
+        }
+        cullTask.publishParticleCullSnapshot(allParticles);
+
         cullTask.requestCull();
     }
 }

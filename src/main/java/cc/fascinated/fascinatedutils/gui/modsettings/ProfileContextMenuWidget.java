@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -89,11 +88,11 @@ public class ProfileContextMenuWidget extends FWidget {
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
 
-        float paddingX = GuiDesignSpace.pxX(2f);
-        float paddingY = GuiDesignSpace.pxY(2f);
-        float gap = GuiDesignSpace.pxY(1f);
-        float rowWidth = GuiDesignSpace.pxX(112f);
-        float rowHeight = Math.max(GuiDesignSpace.pxY(13f), measure.getFontHeight() + GuiDesignSpace.pxY(6f));
+        float paddingX = 2f;
+        float paddingY = 2f;
+        float gap = 1f;
+        float rowWidth = 112f;
+        float rowHeight = Math.max(13f, measure.getFontHeight() + 6f);
 
         menuWidth = rowWidth + 2f * paddingX;
         menuHeight = 2f * rowHeight + gap + 2f * paddingY;
@@ -112,8 +111,8 @@ public class ProfileContextMenuWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        float cornerRadius = Math.max(0.5f, Math.min(GuiDesignSpace.pxUniform(6f), Math.min(menuWidth, menuHeight) * 0.5f - 0.01f));
-        float borderThickness = GuiDesignSpace.pxUniform(1f);
+        float cornerRadius = Math.max(0.5f, Math.min(6f, Math.min(menuWidth, menuHeight) * 0.5f - 0.01f));
+        float borderThickness = 1f;
         graphics.fillRoundedRectFrame(menuX, menuY, menuWidth, menuHeight, cornerRadius, graphics.theme().border(), graphics.theme().surface(), borderThickness, borderThickness, RectCornerRoundMask.ALL);
     }
 
@@ -170,7 +169,7 @@ public class ProfileContextMenuWidget extends FWidget {
         @Override
         protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
             if (hovered) {
-                float cornerRadius = Math.max(0.5f, Math.min(GuiDesignSpace.pxUniform(4f), Math.min(w(), h()) * 0.5f - 0.01f));
+                float cornerRadius = Math.max(0.5f, Math.min(4f, Math.min(w(), h()) * 0.5f - 0.01f));
                 graphics.fillRoundedRect(x(), y(), w(), h(), cornerRadius, graphics.theme().moduleListRowHover(), RectCornerRoundMask.ALL);
             }
 
@@ -178,7 +177,7 @@ public class ProfileContextMenuWidget extends FWidget {
             if (label == null) {
                 label = "";
             }
-            float leftPad = GuiDesignSpace.pxX(6f);
+            float leftPad = 6f;
             float textY = y() + (h() - graphics.getFontHeight()) * 0.5f;
             graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(graphics.theme().textPrimary()) + ">" + label + "</color>", x() + leftPad, textY, false);
         }

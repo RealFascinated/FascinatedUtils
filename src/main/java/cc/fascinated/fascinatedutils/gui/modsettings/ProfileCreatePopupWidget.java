@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
@@ -57,10 +56,10 @@ public class ProfileCreatePopupWidget extends FPopupWidget {
         validationLabel.setOverflow(TextOverflow.WRAP);
         validationLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textAccent());
 
-        copyDefaultToggleCheckbox = new FIconCheckboxWidget(Boolean.TRUE.equals(copyDefaultProfileSettingsRef.getValue()), checked -> copyDefaultProfileSettingsRef.setValue(checked), () -> Boolean.TRUE.equals(copyDefaultProfileSettingsRef.getValue()) ? Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_on").getString() : Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_off").getString(), GuiDesignSpace.pxX(154f));
+        copyDefaultToggleCheckbox = new FIconCheckboxWidget(Boolean.TRUE.equals(copyDefaultProfileSettingsRef.getValue()), checked -> copyDefaultProfileSettingsRef.setValue(checked), () -> Boolean.TRUE.equals(copyDefaultProfileSettingsRef.getValue()) ? Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_on").getString() : Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_off").getString(), 154f);
 
-        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_cancel").getString(), GuiDesignSpace.pxX(70f), 1, 1f, 6f, 1f, 6f);
-        createButton = new FButtonWidget(this::submit, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_create").getString(), GuiDesignSpace.pxX(70f), 1, 1f, 6f, 1f, 6f) {
+        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_cancel").getString(), 70f, 1, 1f, 6f, 1f, 6f);
+        createButton = new FButtonWidget(this::submit, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_create").getString(), 70f, 1, 1f, 6f, 1f, 6f) {
             @Override
             protected int resolveButtonBorderColorArgb(boolean hovered) {
                 if (!isInputValid()) {
@@ -94,10 +93,10 @@ public class ProfileCreatePopupWidget extends FPopupWidget {
 
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-        float popupWidth = Math.min(Math.max(GuiDesignSpace.pxX(168f), layoutWidth * 0.45f), GuiDesignSpace.pxX(252f));
-        float horizontalPadding = GuiDesignSpace.pxX(7f);
-        float verticalPadding = GuiDesignSpace.pxY(7f);
-        float rowGap = GuiDesignSpace.pxY(3f);
+        float popupWidth = Math.min(Math.max(168f, layoutWidth * 0.45f), 252f);
+        float horizontalPadding = 7f;
+        float verticalPadding = 7f;
+        float rowGap = 3f;
         float bodyWidth = Math.max(0f, popupWidth - 2f * horizontalPadding);
         float titleHeight = titleLabel.intrinsicHeightForColumn(measure, bodyWidth);
         float descriptionHeight = descriptionLabel.intrinsicHeightForColumn(measure, bodyWidth);
@@ -111,7 +110,7 @@ public class ProfileCreatePopupWidget extends FPopupWidget {
         float actionsHeight = cancelButton.intrinsicHeightForColumn(measure, bodyWidth);
 
         float computedDialogHeight = verticalPadding + titleHeight + rowGap + descriptionHeight + rowGap + inputHeight + (hasValidationMessage ? rowGap + validationHeight : 0f) + rowGap + toggleHeight + rowGap + actionsHeight + verticalPadding;
-        float popupHeight = Math.max(GuiDesignSpace.pxY(130f), computedDialogHeight);
+        float popupHeight = Math.max(130f, computedDialogHeight);
         setDialogBounds(layoutX, layoutY, layoutWidth, layoutHeight, popupWidth, popupHeight);
 
         float cursorY = dialogY() + verticalPadding;
@@ -137,7 +136,7 @@ public class ProfileCreatePopupWidget extends FPopupWidget {
         copyDefaultToggleCheckbox.layout(measure, dialogX() + horizontalPadding, cursorY, bodyWidth, toggleHeight);
 
         float actionsY = dialogY() + dialogHeight() - verticalPadding - actionsHeight;
-        float actionGap = GuiDesignSpace.pxX(3f);
+        float actionGap = 3f;
         float actionWidth = Math.max(0f, (bodyWidth - actionGap) * 0.5f);
         cancelButton.layout(measure, dialogX() + horizontalPadding, actionsY, actionWidth, cancelButton.intrinsicHeightForColumn(measure, actionWidth));
         createButton.layout(measure, dialogX() + horizontalPadding + actionWidth + actionGap, actionsY, actionWidth, createButton.intrinsicHeightForColumn(measure, actionWidth));

@@ -3,12 +3,10 @@ package cc.fascinated.fascinatedutils.renderer;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.common.LRUCache;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.GuiTheme;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.renderer.text.TextRenderer;
-import cc.fascinated.fascinatedutils.renderer.text.VanillaLineLayoutY;
 import net.kyori.adventure.platform.modcommon.MinecraftClientAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -210,12 +208,11 @@ public class Renderer2D {
      * @param shadow    whether to draw vanilla text shadow
      */
     public void drawTextImmediate(net.minecraft.network.chat.Component text, float positionX, float positionY, int color, boolean shadow) {
-        float baselineY = VanillaLineLayoutY.layoutLineTopToVanillaDrawTextYFloat(positionY, shadow);
         float sx = shellScaleX();
         float sy = shellScaleY();
         Matrix3x2fStack matrices = graphics.pose();
         int originX = Mth.floor(positionX);
-        int originY = Mth.floor(baselineY);
+        int originY = Mth.floor(positionY);
         if (Math.abs(sx - 1f) > 1e-4f || Math.abs(sy - 1f) > 1e-4f) {
             matrices.pushMatrix();
             matrices.translate(originX, originY);
@@ -301,21 +298,19 @@ public class Renderer2D {
      *
      * @param text      string content
      * @param positionX left origin in logical pixels
-     * @param positionY layout line top in logical pixels (top of the nominal line box; converted to vanilla
-     *                  {@link GuiGraphics#drawString} baseline coordinates before drawing)
+     * @param positionY top origin in logical pixels
      * @param color     packed ARGB color
      * @param shadow    whether vanilla text shadow is drawn
      * @param bold      whether bold styling is applied
      */
     public void drawTextImmediate(String text, float positionX, float positionY, int color, boolean shadow, boolean bold) {
         int argb = color;
-        float baselineY = VanillaLineLayoutY.layoutLineTopToVanillaDrawTextYFloat(positionY, shadow);
         float sx = shellScaleX();
         float sy = shellScaleY();
         Matrix3x2fStack matrices = graphics.pose();
         if (Math.abs(sx - 1f) > 1e-4f || Math.abs(sy - 1f) > 1e-4f) {
             int originX = Mth.floor(positionX);
-            int originY = Mth.floor(baselineY);
+            int originY = Mth.floor(positionY);
             matrices.pushMatrix();
             matrices.translate(originX, originY);
             matrices.scale(sx, sy);
@@ -329,7 +324,7 @@ public class Renderer2D {
         }
         else {
             int originX = Mth.floor(positionX);
-            int originY = Mth.floor(baselineY);
+            int originY = Mth.floor(positionY);
             if (!bold) {
                 guiTextRenderer.drawString(graphics, text, originX, originY, argb, shadow);
             }
@@ -391,11 +386,11 @@ public class Renderer2D {
     }
 
     private float shellScaleX() {
-        return GuiDesignSpace.isActive() ? GuiDesignSpace.scaleX() : 1f;
+        return 1f;
     }
 
     private float shellScaleY() {
-        return GuiDesignSpace.isActive() ? GuiDesignSpace.scaleY() : 1f;
+        return 1f;
     }
 
     private void flushMeshSegmentBeforeImmediateDraw() {
@@ -413,14 +408,19 @@ public class Renderer2D {
 
     /**
      * Queues {@code fui_rounded_rect} outer-ring mode (LUT): same path as {@link #fillRoundedRectBorderRing}; stroke is
-     * logical thickness scaled by the current pose for the shader.
+     * in logical pixels, constant in framebuffer pixels regardless of GUI scale (scales only with widget user scale).
      */
     private void enqueueLutBorderRing(float positionX, float positionY, float width, float height, float cornerRadius, float ringStrokeLogicalPx, int borderArgb, int cornerRoundMask) {
         if (width < 1e-3f || height < 1e-3f || ringStrokeLogicalPx <= 0f) {
             return;
         }
         Matrix3x2f poseSnapshot = new Matrix3x2f(graphics.pose());
-        float strokeForLut = ringStrokeLogicalPx * Math.max(0.001f, linearUniformScaleFromModelPose(poseSnapshot));
+        float poseScale = Math.max(0.001f, linearUniformScaleFromModelPose(poseSnapshot));
+        // The pose base scale from GuiRenderer.begin() is 2/guiScale; multiply by guiScale to cancel it,
+        // leaving widgetUserScale * 2 (since 1 logical px = 2 framebuffer pixels on the fixed scale-2 canvas).
+        Minecraft mc = Minecraft.getInstance();
+        float guiScale = mc.getWindow().getWidth() / Math.max(1f, (float) mc.getWindow().getGuiScaledWidth());
+        float strokeForLut = ringStrokeLogicalPx * poseScale * guiScale * 0.5f;
         MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, positionX, positionY, width, height, cornerRadius, borderArgb, borderArgb, cornerRoundMask, strokeForLut);
     }
 

@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -84,13 +83,13 @@ public class FOutlinedTextInputWidget extends FWidget {
 
     @Override
     public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-        return GuiDesignSpace.pxY(intrinsicHeightDesign);
+        return intrinsicHeightDesign;
     }
 
     @Override
     public boolean mouseDown(float pointerX, float pointerY, int button) {
         if (button == 0 && containsPoint(pointerX, pointerY)) {
-            float innerX = pointerX - (x() + GuiDesignSpace.pxX(UITheme.INPUT_PAD_X)) + scrollOffsetX;
+            float innerX = pointerX - (x() + UITheme.INPUT_PAD_X) + scrollOffsetX;
             int newIndex = 0;
             float bestDist = Float.MAX_VALUE;
             for (int i = 0; i <= value.length(); i++) {
@@ -276,8 +275,8 @@ public class FOutlinedTextInputWidget extends FWidget {
         boolean focused = fieldFocused();
         int borderArgb = focused ? graphics.theme().accentBright() : graphics.theme().border();
         int fillArgb = focused ? graphics.theme().surfaceElevated() : graphics.theme().surface();
-        float borderThickness = GuiDesignSpace.pxUniform(UITheme.BORDER_THICKNESS_PX);
-        float cornerRadius = Mth.clamp(GuiDesignSpace.pxUniform(3f), 0.5f, Math.min(w(), h()) * 0.5f - borderThickness * 0.5f - 0.01f);
+        float borderThickness = UITheme.BORDER_THICKNESS_PX;
+        float cornerRadius = Mth.clamp(3f, 0.5f, Math.min(w(), h()) * 0.5f - borderThickness * 0.5f - 0.01f);
         graphics.fillRoundedRectFrame(x(), y(), w(), h(), cornerRadius, borderArgb, fillArgb, borderThickness, borderThickness, RectCornerRoundMask.ALL);
 
         float pad = padX(graphics);
@@ -426,7 +425,7 @@ public class FOutlinedTextInputWidget extends FWidget {
     }
 
     private float padX(GuiRenderer g) {
-        return GuiDesignSpace.pxX(UITheme.INPUT_PAD_X);
+        return UITheme.INPUT_PAD_X;
     }
 
     private void scrollToCaret(GuiRenderer g) {

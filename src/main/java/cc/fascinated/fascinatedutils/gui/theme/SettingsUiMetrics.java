@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.theme;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -55,27 +54,27 @@ public class SettingsUiMetrics {
      * @return inner width for label and controls
      */
     public static float settingInnerBodyWidth(float widthProp) {
-        return Math.max(0f, widthProp - 2f * GuiDesignSpace.pxX(SETTING_ROW_PADDING_X));
+        return Math.max(0f, widthProp - 2f * SETTING_ROW_PADDING_X);
     }
 
     public static float floatTitleValueRowHeight() {
-        float titleLine = GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight());
-        return Math.max(GuiDesignSpace.pxUniform(BOOLEAN_TOGGLE_OUTER_H), titleLine);
+        float titleLine = ModSettingsTheme.shellDesignBodyLineHeight();
+        return Math.max(BOOLEAN_TOGGLE_OUTER_H, titleLine);
     }
 
     public static float booleanInnerHeight() {
-        return Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), GuiDesignSpace.pxUniform(BOOLEAN_TOGGLE_OUTER_H));
+        return Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), BOOLEAN_TOGGLE_OUTER_H);
     }
 
     public static float booleanOuterHeight() {
-        return booleanInnerHeight() + 2f * GuiDesignSpace.pxY(SETTING_ROW_PADDING_Y);
+        return booleanInnerHeight() + 2f * SETTING_ROW_PADDING_Y;
     }
 
     public static float floatInnerHeight() {
-        return Math.max(floatTitleValueRowHeight(), GuiDesignSpace.pxY(FLOAT_TRACK_SLOT_H));
+        return Math.max(floatTitleValueRowHeight(), FLOAT_TRACK_SLOT_H);
     }
 
     public static float floatOuterHeight() {
-        return floatInnerHeight() + 2f * GuiDesignSpace.pxY(SETTING_ROW_PADDING_Y);
+        return floatInnerHeight() + 2f * SETTING_ROW_PADDING_Y;
     }
 }

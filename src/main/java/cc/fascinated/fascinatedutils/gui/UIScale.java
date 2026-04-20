@@ -6,101 +6,61 @@ import net.minecraft.client.Minecraft;
 
 @UtilityClass
 public class UIScale {
+
     /**
-     * Framebuffer pixels per one horizontal GUI pixel (same convention as vanilla mouse scaling).
+     * Fixed UI canvas width: half the framebuffer width, unconditionally.
+     *
+     * @return canvas width in UI pixels
      */
-    public static float getUIScale() {
-        return framebufferScaleX();
+    public static float uiWidth() {
+        return Math.max(1f, Minecraft.getInstance().getWindow().getWidth() / 2f);
     }
 
     /**
-     * Horizontal ratio of framebuffer pixels to one GUI-scaled pixel.
+     * Fixed UI canvas height: half the framebuffer height, unconditionally.
+     *
+     * @return canvas height in UI pixels
      */
-    public static float framebufferScaleX() {
-        Window window = Minecraft.getInstance().getWindow();
-        return window.getWidth() / Math.max(1f, (float) window.getGuiScaledWidth());
+    public static float uiHeight() {
+        return Math.max(1f, Minecraft.getInstance().getWindow().getHeight() / 2f);
     }
 
     /**
-     * Vertical ratio of framebuffer pixels to one GUI-scaled pixel.
+     * Pointer X in fixed scale-2 UI space.
+     *
+     * @return pointer X in UI pixels
      */
-    public static float framebufferScaleY() {
-        Window window = Minecraft.getInstance().getWindow();
-        return window.getHeight() / Math.max(1f, (float) window.getGuiScaledHeight());
+    public static float uiPointerX() {
+        return hiResPointerX() / 2f;
     }
 
     /**
-     * Pointer X in framebuffer-aligned UI units (logical pointer times horizontal framebuffer scale).
+     * Pointer Y in fixed scale-2 UI space.
+     *
+     * @return pointer Y in UI pixels
+     */
+    public static float uiPointerY() {
+        return hiResPointerY() / 2f;
+    }
+
+    /**
+     * Pointer X in framebuffer-pixel-equivalent units (logical GUI pointer scaled by the framebuffer ratio).
+     *
+     * @return pointer X in framebuffer pixels
      */
     public static float hiResPointerX() {
-        return logicalPointerX() * framebufferScaleX();
+        Window window = Minecraft.getInstance().getWindow();
+        return (float) Minecraft.getInstance().mouseHandler.getScaledXPos(window) * (window.getWidth() / Math.max(1f, (float) window.getGuiScaledWidth()));
     }
 
     /**
-     * Pointer Y in framebuffer-aligned UI units (logical pointer times vertical framebuffer scale).
+     * Pointer Y in framebuffer-pixel-equivalent units (logical GUI pointer scaled by the framebuffer ratio).
+     *
+     * @return pointer Y in framebuffer pixels
      */
     public static float hiResPointerY() {
-        return logicalPointerY() * framebufferScaleY();
-    }
-
-    /**
-     * Width of the UI canvas in GUI-scaled pixels (matches {@link net.minecraft.client.gui.screens.Screen#width}).
-     */
-    public static float logicalWidth() {
-        return (float) Minecraft.getInstance().getWindow().getGuiScaledWidth();
-    }
-
-    /**
-     * Height of the UI canvas in GUI-scaled pixels (matches {@link net.minecraft.client.gui.screens.Screen#height}).
-     */
-    public static float logicalHeight() {
-        return (float) Minecraft.getInstance().getWindow().getGuiScaledHeight();
-    }
-
-    /**
-     * Physical framebuffer width ({@link Window#getWidth()}).
-     */
-    public static float physicalWidth() {
-        return (float) Minecraft.getInstance().getWindow().getWidth();
-    }
-
-    /**
-     * Physical framebuffer height ({@link Window#getHeight()}).
-     */
-    public static float physicalHeight() {
-        return (float) Minecraft.getInstance().getWindow().getHeight();
-    }
-
-    /**
-     * Converts a horizontal coordinate in the same space as {@link net.minecraft.client.MouseHandler#xpos()}
-     * to GUI-scaled logical X.
-     */
-    public static float toLogicalX(float physicalX) {
         Window window = Minecraft.getInstance().getWindow();
-        return physicalX * (float) window.getGuiScaledWidth() / Math.max(1f, (float) window.getScreenWidth());
+        return (float) Minecraft.getInstance().mouseHandler.getScaledYPos(window) * (window.getHeight() / Math.max(1f, (float) window.getGuiScaledHeight()));
     }
 
-    /**
-     * Converts a vertical coordinate in physical framebuffer space to GUI-scaled logical Y.
-     */
-    public static float toLogicalY(float physicalY) {
-        Window window = Minecraft.getInstance().getWindow();
-        return physicalY * (float) window.getGuiScaledHeight() / Math.max(1f, (float) window.getScreenHeight());
-    }
-
-    /**
-     * Mouse X in GUI-scaled pixels (matches vanilla screen hit testing).
-     */
-    public static float logicalPointerX() {
-        Minecraft minecraftClient = Minecraft.getInstance();
-        return (float) minecraftClient.mouseHandler.getScaledXPos(minecraftClient.getWindow());
-    }
-
-    /**
-     * Mouse Y in GUI-scaled pixels.
-     */
-    public static float logicalPointerY() {
-        Minecraft minecraftClient = Minecraft.getInstance();
-        return (float) minecraftClient.mouseHandler.getScaledYPos(minecraftClient.getWindow());
-    }
 }

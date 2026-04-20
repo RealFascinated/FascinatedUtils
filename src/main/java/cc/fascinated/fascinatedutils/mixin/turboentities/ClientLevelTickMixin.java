@@ -52,15 +52,15 @@ public class ClientLevelTickMixin {
         ++entity.tickCount;
         if (entity instanceof LivingEntity living) {
             living.aiStep();
-            if (living.hurtTime > 0)
+            if (living.hurtTime > 0) {
                 living.hurtTime--;
+            }
         }
         // the warden sounds are generated clientside instead of serverside, so simulate
         // that part of the code here.
         if (entity instanceof Warden warden) {
             if (minecraft.level.isClientSide() && !warden.isSilent() && warden.tickCount % getWardenHeartBeatDelay(warden) == 0) {
-                minecraft.level.playLocalSound(warden.getX(), warden.getY(), warden.getZ(), SoundEvents.WARDEN_HEARTBEAT, warden.getSoundSource(),
-                        5.0F, warden.getVoicePitch(), false);
+                minecraft.level.playLocalSound(warden.getX(), warden.getY(), warden.getZ(), SoundEvents.WARDEN_HEARTBEAT, warden.getSoundSource(), 5.0F, warden.getVoicePitch(), false);
             }
         }
         Client.TURBO_ENTITIES.incrementSkippedEntityTicks();

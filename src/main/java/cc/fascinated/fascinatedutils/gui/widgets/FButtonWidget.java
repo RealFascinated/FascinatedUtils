@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -53,14 +52,14 @@ public class FButtonWidget extends FWidget {
     }
 
     private static float modSettingsLabelLineHeightPxWithoutRenderer() {
-        if (!GuiDesignSpace.isActive()) {
-            return GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight());
+        if (false) {
+            return ModSettingsTheme.shellDesignBodyLineHeight();
         }
         Minecraft client = Minecraft.getInstance();
         if (client == null) {
-            return GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight());
+            return ModSettingsTheme.shellDesignBodyLineHeight();
         }
-        return Math.max(1f, GuiDesignSpace.pxY(client.font.lineHeight));
+        return Math.max(1f, client.font.lineHeight);
     }
 
     private static float labelLineHeightPx(UIRenderer measure) {
@@ -68,9 +67,9 @@ public class FButtonWidget extends FWidget {
     }
 
     private static float wrappedLabelChipHeightPxInner(int maxLabelLines, float labelLineGapDesign, float verticalPadDesign, float heightScale, float lineHeight) {
-        float betweenLines = GuiDesignSpace.pxY(labelLineGapDesign);
+        float betweenLines = labelLineGapDesign;
         float labelBlock = maxLabelLines * lineHeight + Math.max(0, maxLabelLines - 1) * betweenLines;
-        float fullHeight = labelBlock + GuiDesignSpace.pxY(verticalPadDesign);
+        float fullHeight = labelBlock + verticalPadDesign;
         return fullHeight * heightScale;
     }
 
@@ -140,29 +139,29 @@ public class FButtonWidget extends FWidget {
     protected float resolveCornerRadiusPx(GuiRenderer graphics) {
         float maxRadius = Math.min(w(), h()) * 0.5f - 0.01f;
         if (cornerRadiusDesign < 0f) {
-            return Mth.clamp(GuiDesignSpace.pxUniform(graphics.theme().cardCornerRadius()), 0.5f, maxRadius - Math.min(GuiDesignSpace.pxX(UITheme.BORDER_THICKNESS_PX), GuiDesignSpace.pxY(UITheme.BORDER_THICKNESS_PX)) * 0.5f);
+            return Mth.clamp(graphics.theme().cardCornerRadius(), 0.5f, maxRadius - Math.min(UITheme.BORDER_THICKNESS_PX, UITheme.BORDER_THICKNESS_PX) * 0.5f);
         }
-        return Math.max(0.5f, Math.min(GuiDesignSpace.pxUniform(cornerRadiusDesign), maxRadius));
+        return Math.max(0.5f, Math.min(cornerRadiusDesign, maxRadius));
     }
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
         int fillColor = resolveButtonFillColorArgb(hovered);
         int borderColor = resolveButtonBorderColorArgb(hovered);
-        float borderThicknessX = GuiDesignSpace.pxX(UITheme.BORDER_THICKNESS_PX);
-        float borderThicknessY = GuiDesignSpace.pxY(UITheme.BORDER_THICKNESS_PX);
+        float borderThicknessX = UITheme.BORDER_THICKNESS_PX;
+        float borderThicknessY = UITheme.BORDER_THICKNESS_PX;
         float cornerRadius = resolveCornerRadiusPx(graphics);
         graphics.fillRoundedRectFrame(x(), y(), w(), h(), cornerRadius, borderColor, fillColor, borderThicknessX, borderThicknessY, RectCornerRoundMask.ALL);
         String label = labelSupplier.get();
         if (label == null) {
             label = "";
         }
-        float wrapBudget = GuiDesignSpace.guiTextWrapBudgetPx(w() - 2f * GuiDesignSpace.pxX(horizontalTextPadDesign));
+        float wrapBudget = w() - 2f * horizontalTextPadDesign;
         java.util.List<String> lines = TextLineLayout.wrapLines(label, wrapBudget, segment -> graphics.measureTextWidth(segment, false));
         float lineHeight = labelLineHeightPx(graphics);
-        float betweenLines = GuiDesignSpace.pxY(labelLineGapDesign);
+        float betweenLines = labelLineGapDesign;
         float blockHeight = maxLabelLines * lineHeight + Math.max(0, maxLabelLines - 1) * betweenLines;
-        float blockHeightClamped = Math.min(blockHeight, Math.max(lineHeight, h() - GuiDesignSpace.pxY(4f)));
+        float blockHeightClamped = Math.min(blockHeight, Math.max(lineHeight, h() - 4f));
         float startY = y() + Math.max(0f, h() - blockHeightClamped) * 0.5f;
         float cursorY = startY;
         int lineCount = Math.min(maxLabelLines, lines.size());

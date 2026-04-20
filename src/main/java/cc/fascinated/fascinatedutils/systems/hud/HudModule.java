@@ -1,5 +1,9 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
+import java.util.List;
+
+import org.jspecify.annotations.NonNull;
+
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
@@ -12,46 +16,39 @@ import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import lombok.Getter;
 import net.minecraft.util.Mth;
-import org.jspecify.annotations.NonNull;
-
-import java.util.List;
 
 public abstract class HudModule extends Module implements HudRenderableModule {
 
     public static final String APPEARANCE_CATEGORY_DISPLAY_KEY = "Appearance";
+    public static final String SETTING_SHOW_BACKGROUND = "show_hud_background";
+    public static final String SETTING_SHOW_BORDER = "show_border";
+    public static final String SETTING_BORDER_THICKNESS = "border_thickness";
+    public static final String SETTING_PADDING = "padding";
+
+    private final HudDefaults defaults;
+
     @Getter
     private final String id;
     @Getter
     private final float minWidth;
     @Getter
     private final ModuleHudState hudState = new ModuleHudState();
-    private final BooleanSetting showBackground = BooleanSetting.builder().id("show_hud_background")
 
-            .defaultValue(true).translationKeyPath("fascinatedutils.module.show_hud_background").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting roundedBackground = BooleanSetting.builder().id("round_hud_background")
-
-            .defaultValue(false).translationKeyPath("fascinatedutils.module.round_hud_background").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting showBorder = BooleanSetting.builder().id("show_border")
-
-            .defaultValue(false).translationKeyPath("fascinatedutils.module.show_border").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final SliderSetting borderThickness = SliderSetting.builder().id("border_thickness")
-
-            .defaultValue(2f).minValue(1f).maxValue(3f).step(1f).translationKeyPath("fascinatedutils.module.border_thickness").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-
-    private final SliderSetting roundingRadius = SliderSetting.builder().id("rounding_radius")
-
-            .defaultValue(12f).minValue(4f).maxValue(24f).step(1f).translationKeyPath("fascinatedutils.module.rounding_radius").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-
-    protected HudModule(String widgetId, String displayName, float minWidth) {
+    protected HudModule(String widgetId, String displayName, float minWidth, HudDefaults defaults) {
         super(displayName, ModuleCategory.HUD);
+        this.defaults = defaults;
         this.id = widgetId;
         this.minWidth = minWidth;
 
-        addSetting(showBackground);
-        addSetting(roundedBackground);
-        addSetting(showBorder);
-        addSetting(borderThickness);
-        addSetting(roundingRadius);
+        this.hudState.setHudAnchor(defaults.defaultAnchor());
+        this.hudState.setAnchorOffsetX(defaults.defaultXOffset());
+        this.hudState.setAnchorOffsetY(defaults.defaultYOffset());
+        hudState.setPositionX(defaults.defaultXOffset());
+        hudState.setPositionY(defaults.defaultYOffset());
+    }
+
+    protected HudModule(String widgetId, String displayName, float minWidth) {
+        this(widgetId, displayName, minWidth, HudDefaults.builder().build() /* init with defaults */);
     }
 
     @Override
@@ -96,13 +93,15 @@ public abstract class HudModule extends Module implements HudRenderableModule {
     @Override
     public void resetToDefault() {
         super.resetToDefault();
-        hudState.setVisible(false);
+
+        this.setEnabled(defaults.defaultState());
         hudState.setScale(1.0f);
-        hudState.setHudAnchor(HUDWidgetAnchor.TOP_LEFT);
-        hudState.setAnchorOffsetX(5f);
-        hudState.setAnchorOffsetY(5f);
-        hudState.setPositionX(5f);
-        hudState.setPositionY(5f);
+        this.hudState.setHudAnchor(defaults.defaultAnchor());
+        this.hudState.setAnchorOffsetX(defaults.defaultXOffset());
+        this.hudState.setAnchorOffsetY(defaults.defaultYOffset());
+        hudState.setPositionX(defaults.defaultXOffset());
+        hudState.setPositionY(defaults.defaultYOffset());
+
         hudState.setLastLayoutWidth(-1f);
         hudState.setLastLayoutHeight(-1f);
     }
@@ -125,26 +124,6 @@ public abstract class HudModule extends Module implements HudRenderableModule {
     public float getScaledHeight() {
         float layoutHeight = layoutHeightForAnchoring();
         return layoutHeight * hudState.getScale();
-    }
-
-    private float layoutWidthForAnchoring() {
-        if (hudState.getCommittedLayoutWidth() >= 0f) {
-            return hudState.getCommittedLayoutWidth();
-        }
-        if (hudState.getLastLayoutWidth() >= 0f) {
-            return hudState.getLastLayoutWidth();
-        }
-        return minWidth;
-    }
-
-    private float layoutHeightForAnchoring() {
-        if (hudState.getCommittedLayoutHeight() >= 0f) {
-            return hudState.getCommittedLayoutHeight();
-        }
-        if (hudState.getLastLayoutHeight() >= 0f) {
-            return hudState.getLastLayoutHeight();
-        }
-        return minWidth;
     }
 
     public boolean containsPoint(float pointerX, float pointerY) {
@@ -272,8 +251,15 @@ public abstract class HudModule extends Module implements HudRenderableModule {
         }
     }
 
+    public float getPadding() {
+        return getSetting(SliderSetting.class, SETTING_PADDING).map(setting -> setting.getValue().floatValue()).orElse(HUDPanelBackground.HORIZONTAL_PADDING);
+    }
+
     public void drawHUDPanelBackground(GuiRenderer glRenderer, float layoutWidth, float layoutHeight) {
-        HUDPanelBackground.drawPanelChrome(glRenderer, layoutWidth, layoutHeight, showBackground.isEnabled(), borderThickness.getValue().floatValue(), showBorder.isEnabled(), roundedBackground.isEnabled(), roundingRadius.getValue().floatValue());
+        boolean showBg = getSetting(BooleanSetting.class, SETTING_SHOW_BACKGROUND).map(BooleanSetting::isEnabled).orElse(false);
+        boolean showBorder = getSetting(BooleanSetting.class, SETTING_SHOW_BORDER).map(BooleanSetting::isEnabled).orElse(false);
+        float thickness = getSetting(SliderSetting.class, SETTING_BORDER_THICKNESS).map(setting -> setting.getValue().floatValue()).orElse(2f);
+        HUDPanelBackground.drawPanelChrome(glRenderer, layoutWidth, layoutHeight, showBg, thickness, showBorder);
     }
 
     @Override
@@ -291,6 +277,26 @@ public abstract class HudModule extends Module implements HudRenderableModule {
      * @return the content to render, or {@code null} to skip rendering for this frame
      */
     protected abstract HudContent produceContent(float deltaSeconds, boolean editorMode);
+
+    private float layoutWidthForAnchoring() {
+        if (hudState.getCommittedLayoutWidth() >= 0f) {
+            return hudState.getCommittedLayoutWidth();
+        }
+        if (hudState.getLastLayoutWidth() >= 0f) {
+            return hudState.getLastLayoutWidth();
+        }
+        return minWidth;
+    }
+
+    private float layoutHeightForAnchoring() {
+        if (hudState.getCommittedLayoutHeight() >= 0f) {
+            return hudState.getCommittedLayoutHeight();
+        }
+        if (hudState.getLastLayoutHeight() >= 0f) {
+            return hudState.getLastLayoutHeight();
+        }
+        return minWidth;
+    }
 
     private @NonNull HUDWidgetAnchor getHudWidgetAnchor(float canvasWidth, float canvasHeight, float widgetWidth, float widgetHeight) {
         float centerX = hudState.getPositionX() + widgetWidth * 0.5f;

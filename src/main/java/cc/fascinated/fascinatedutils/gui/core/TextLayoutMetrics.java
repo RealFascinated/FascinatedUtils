@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.core;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 
 import java.util.List;
@@ -12,11 +11,11 @@ public class TextLayoutMetrics {
      * GuiDesignSpace#guiTextWrapBudgetPx(float)}.
      */
     public static float wrapBudgetForLayoutWidthPx(float layoutWidthPx) {
-        return GuiDesignSpace.guiTextWrapBudgetPx(layoutWidthPx);
+        return layoutWidthPx;
     }
 
     /**
-     * Line height used for layout and wrapped blocks, matching {@link GuiDesignSpace#layoutTextLineHeightPx(float)}.
+     * Line height used for layout and wrapped blocks, matching the layout line height.
      */
     public static float layoutLineHeightPx(UIRenderer renderer) {
         return Math.max(1f, (float) renderer.getFontHeight());

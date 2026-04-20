@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.GuiTheme;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -75,7 +74,7 @@ public class FIconCheckboxWidget extends FWidget {
 
     @Override
     public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-        float boxSize = GuiDesignSpace.pxUniform(CHECKBOX_SIZE_DESIGN);
+        float boxSize = CHECKBOX_SIZE_DESIGN;
         return Math.max(boxSize, measure.getFontHeight());
     }
 
@@ -134,10 +133,10 @@ public class FIconCheckboxWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        float boxSize = GuiDesignSpace.pxUniform(CHECKBOX_SIZE_DESIGN);
-        float boxCornerRadius = GuiDesignSpace.pxUniform(CHECKBOX_CORNER_RADIUS_DESIGN);
-        float borderPx = GuiDesignSpace.pxUniform(1f);
-        float labelGap = GuiDesignSpace.pxX(LABEL_GAP_DESIGN);
+        float boxSize = CHECKBOX_SIZE_DESIGN;
+        float boxCornerRadius = CHECKBOX_CORNER_RADIUS_DESIGN;
+        float borderPx = 1f;
+        float labelGap = LABEL_GAP_DESIGN;
         float boxX = x();
         float boxY = y() + (h() - boxSize) * 0.5f;
 
@@ -154,7 +153,7 @@ public class FIconCheckboxWidget extends FWidget {
         graphics.fillRoundedRectFrame(boxX, boxY, boxSize, boxSize, boxCornerRadius, borderColor, fillColor, borderPx, borderPx, RectCornerRoundMask.ALL);
 
         if (checked) {
-            float iconPad = GuiDesignSpace.pxUniform(1f);
+            float iconPad = 1f;
             graphics.drawTexture(checkedTextureId, boxX + iconPad, boxY + iconPad, boxSize - iconPad * 2f, boxSize - iconPad * 2f, disabled ? dimColor(0xFFFFFFFF, 0.6f) : 0xFFFFFFFF);
         }
 

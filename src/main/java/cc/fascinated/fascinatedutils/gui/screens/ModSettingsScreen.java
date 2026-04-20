@@ -1,7 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.screens;
 
-import cc.fascinated.fascinatedutils.common.ClientGuiUtils;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.UiSounds;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
@@ -15,6 +13,7 @@ import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
+import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -22,6 +21,7 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import org.jspecify.annotations.Nullable;
@@ -40,6 +40,7 @@ public class ModSettingsScreen extends WidgetScreen {
     private final FShellTabStripWidget topBarTabStrip;
     private final ModulesTabElement modulesTabElement;
     private final SettingsTabElement settingsTabElement;
+    private final @Nullable Module navigateToModuleDetailOnOpen;
     private float scrollAccum;
     private boolean appliedPersistedShellTab;
     private ShellContentTab shellContentTab = ShellContentTab.MODULES;
@@ -50,7 +51,6 @@ public class ModSettingsScreen extends WidgetScreen {
     private float bodyCacheHeight = -1f;
     private ShellContentTab bodyCacheShellTab = ShellContentTab.MODULES;
     private boolean bodyRebuildDirty = true;
-    private final @Nullable Module navigateToModuleDetailOnOpen;
     private boolean navigateToModuleDetailApplied;
 
     public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId) {
@@ -93,10 +93,8 @@ public class ModSettingsScreen extends WidgetScreen {
             appliedPersistedShellTab = true;
         }
         applyNavigateToModuleDetailIfPending();
-        float framebufferScaleX = UIScale.framebufferScaleX();
-        float framebufferScaleY = UIScale.framebufferScaleY();
-        float pointerScreenX = UIScale.hiResPointerX();
-        float pointerScreenY = UIScale.hiResPointerY();
+        float pointerScreenX = UIScale.uiPointerX();
+        float pointerScreenY = UIScale.uiPointerY();
         Minecraft minecraftClient = Minecraft.getInstance();
         ProfilerFiller profiler = Profiler.get();
         profiler.push("futils_settings_screen");
@@ -104,41 +102,42 @@ public class ModSettingsScreen extends WidgetScreen {
         if (deltaSeconds <= 0f || Float.isNaN(deltaSeconds)) {
             deltaSeconds = partialTick / 20f;
         }
-        float canvasWidth = UIScale.physicalWidth();
-        float canvasHeight = UIScale.physicalHeight();
-        ClientGuiUtils.unscaledProjection();
+        float canvasWidth = UIScale.uiWidth();
+        float canvasHeight = UIScale.uiHeight();
         try {
-            GuiDesignSpace.begin(framebufferScaleX, framebufferScaleY);
+            GuiRenderer guiRenderer = new GuiRenderer(graphics, FascinatedGuiTheme.INSTANCE);
+            guiRenderer.begin(canvasWidth, canvasHeight);
+            root.tickAnimations(deltaSeconds);
+            topBarTabsHost.tickAnimations(deltaSeconds);
+            hudLayoutButtonHost.tickAnimations(deltaSeconds);
+            ModSettingsShellFrameResult frameResult = ModSettingsShellFrame.render(graphics, canvasWidth, canvasHeight, guiRenderer, getTitle().getString(), pointerScreenX, pointerScreenY, deltaSeconds, minecraftClient, topBarTabStrip, selectedShellTabKey(), root, topBarTabsHost, hudLayoutButtonHost, this::beforeShellBodyLayout);
+            float hudCanvasWidth = HudLayoutCanvas.width();
+            float hudCanvasHeight = HudLayoutCanvas.height();
+            guiRenderer.begin(hudCanvasWidth, hudCanvasHeight);
             try {
-                GuiRenderer guiRenderer = new GuiRenderer(graphics, FascinatedGuiTheme.INSTANCE);
-                guiRenderer.begin(canvasWidth, canvasHeight);
-                root.tickAnimations(deltaSeconds);
-                topBarTabsHost.tickAnimations(deltaSeconds);
-                hudLayoutButtonHost.tickAnimations(deltaSeconds);
-                ModSettingsShellFrameResult frameResult = ModSettingsShellFrame.render(graphics, framebufferScaleX, framebufferScaleY, canvasWidth, canvasHeight, guiRenderer, getTitle().getString(), pointerScreenX, pointerScreenY, deltaSeconds, minecraftClient, topBarTabStrip, selectedShellTabKey(), root, topBarTabsHost, hudLayoutButtonHost, this::beforeShellBodyLayout);
-                shellHitRegions = frameResult.hitRegions();
-                lastBodyW = shellHitRegions.bodyWidth();
-                lastBodyH = shellHitRegions.bodyHeight();
-                float pointerX = frameResult.pointerLayoutX();
-                float pointerY = frameResult.pointerLayoutY();
-                topBarTabsHost.dispatchInput(new InputEvent.MouseMove(pointerX, pointerY));
-                hudLayoutButtonHost.dispatchInput(new InputEvent.MouseMove(pointerX, pointerY));
-                root.dispatchInput(new InputEvent.MouseMove(pointerX, pointerY));
-                UiPointerCursor topBarCursor = topBarTabsHost.pointerCursorAt(pointerX, pointerY);
-                UiPointerCursor hudLayoutCursor = hudLayoutButtonHost.pointerCursorAt(pointerX, pointerY);
-                UiPointerCursor shellCursor = root.pointerCursorAt(pointerX, pointerY);
-                UiPointerCursor topBarAreaCursor = topBarCursor != UiPointerCursor.DEFAULT ? topBarCursor : hudLayoutCursor != UiPointerCursor.DEFAULT ? hudLayoutCursor : shellCursor;
-                UiCursorController.apply(minecraftClient.getWindow().handle(), topBarAreaCursor);
-                if (scrollAccum != 0f) {
-                    root.dispatchInput(new InputEvent.MouseScroll(pointerX, pointerY, scrollAccum));
-                    scrollAccum = 0f;
-                }
-                setFocusId.accept(root.focusedId());
+                HUDManager.INSTANCE.renderHUD(guiRenderer, hudCanvasWidth, hudCanvasHeight, Mth.clamp(deltaSeconds, 0f, 1f));
             } finally {
-                GuiDesignSpace.end();
+                guiRenderer.end();
             }
+            shellHitRegions = frameResult.hitRegions();
+            lastBodyW = shellHitRegions.bodyWidth();
+            lastBodyH = shellHitRegions.bodyHeight();
+            float pointerX = frameResult.pointerLayoutX();
+            float pointerY = frameResult.pointerLayoutY();
+            topBarTabsHost.dispatchInput(new InputEvent.MouseMove(pointerX, pointerY));
+            hudLayoutButtonHost.dispatchInput(new InputEvent.MouseMove(pointerX, pointerY));
+            root.dispatchInput(new InputEvent.MouseMove(pointerX, pointerY));
+            UiPointerCursor topBarCursor = topBarTabsHost.pointerCursorAt(pointerX, pointerY);
+            UiPointerCursor hudLayoutCursor = hudLayoutButtonHost.pointerCursorAt(pointerX, pointerY);
+            UiPointerCursor shellCursor = root.pointerCursorAt(pointerX, pointerY);
+            UiPointerCursor topBarAreaCursor = topBarCursor != UiPointerCursor.DEFAULT ? topBarCursor : hudLayoutCursor != UiPointerCursor.DEFAULT ? hudLayoutCursor : shellCursor;
+            UiCursorController.apply(minecraftClient.getWindow().handle(), topBarAreaCursor);
+            if (scrollAccum != 0f) {
+                root.dispatchInput(new InputEvent.MouseScroll(pointerX, pointerY, scrollAccum));
+                scrollAccum = 0f;
+            }
+            setFocusId.accept(root.focusedId());
         } finally {
-            ClientGuiUtils.scaledProjection();
             profiler.pop();
         }
     }
@@ -168,100 +167,72 @@ public class ModSettingsScreen extends WidgetScreen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
-        float framebufferScaleX = UIScale.framebufferScaleX();
-        float framebufferScaleY = UIScale.framebufferScaleY();
-        GuiDesignSpace.begin(framebufferScaleX, framebufferScaleY);
-        try {
-            ModSettingsShellPointer.LayoutPoint pointer = ModSettingsShellPointer.layoutPointInShellSpace();
-            float layoutX = pointer.layoutPositionX();
-            float layoutY = pointer.layoutPositionY();
-            if (shellHitRegions.close().contains(layoutX, layoutY) && event.button() == 0) {
-                UiSounds.playButtonClick();
-                closeModSettingsShell();
-                return true;
-            }
-            if (shellHitRegions.topBarTabs().contains(layoutX, layoutY) && topBarTabsHost.dispatchInput(new InputEvent.MousePress(layoutX, layoutY, event.button()))) {
-                syncFocusFromRoot();
-                return true;
-            }
-            if (shellHitRegions.hudLayoutChip().contains(layoutX, layoutY) && hudLayoutButtonHost.dispatchInput(new InputEvent.MousePress(layoutX, layoutY, event.button()))) {
-                syncFocusFromRoot();
-                return true;
-            }
-            boolean handled = root.dispatchInput(new InputEvent.MousePress(layoutX, layoutY, event.button()));
-            syncFocusFromRoot();
-            if (handled) {
-                return true;
-            }
-            return super.mouseClicked(event, doubled);
-        } finally {
-            GuiDesignSpace.end();
+        ModSettingsShellPointer.LayoutPoint pointer = ModSettingsShellPointer.layoutPointInShellSpace();
+        float layoutX = pointer.layoutPositionX();
+        float layoutY = pointer.layoutPositionY();
+        if (shellHitRegions.close().contains(layoutX, layoutY) && event.button() == 0) {
+            UiSounds.playButtonClick();
+            closeModSettingsShell();
+            return true;
         }
+        if (shellHitRegions.topBarTabs().contains(layoutX, layoutY) && topBarTabsHost.dispatchInput(new InputEvent.MousePress(layoutX, layoutY, event.button()))) {
+            syncFocusFromRoot();
+            return true;
+        }
+        if (shellHitRegions.hudLayoutChip().contains(layoutX, layoutY) && hudLayoutButtonHost.dispatchInput(new InputEvent.MousePress(layoutX, layoutY, event.button()))) {
+            syncFocusFromRoot();
+            return true;
+        }
+        boolean handled = root.dispatchInput(new InputEvent.MousePress(layoutX, layoutY, event.button()));
+        syncFocusFromRoot();
+        if (handled) {
+            return true;
+        }
+        return super.mouseClicked(event, doubled);
     }
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        float framebufferScaleX = UIScale.framebufferScaleX();
-        float framebufferScaleY = UIScale.framebufferScaleY();
-        GuiDesignSpace.begin(framebufferScaleX, framebufferScaleY);
-        try {
-            ModSettingsShellPointer.LayoutPoint pointer = ModSettingsShellPointer.layoutPointInShellSpace();
-            float layoutX = pointer.layoutPositionX();
-            float layoutY = pointer.layoutPositionY();
-            if (shellHitRegions.topBarTabs().contains(layoutX, layoutY) && topBarTabsHost.dispatchInput(new InputEvent.MouseRelease(layoutX, layoutY, event.button()))) {
-                syncFocusFromRoot();
-                return true;
-            }
-            if (shellHitRegions.hudLayoutChip().contains(layoutX, layoutY) && hudLayoutButtonHost.dispatchInput(new InputEvent.MouseRelease(layoutX, layoutY, event.button()))) {
-                syncFocusFromRoot();
-                return true;
-            }
-            boolean handled = root.dispatchInput(new InputEvent.MouseRelease(layoutX, layoutY, event.button()));
+        ModSettingsShellPointer.LayoutPoint pointer = ModSettingsShellPointer.layoutPointInShellSpace();
+        float layoutX = pointer.layoutPositionX();
+        float layoutY = pointer.layoutPositionY();
+        if (shellHitRegions.topBarTabs().contains(layoutX, layoutY) && topBarTabsHost.dispatchInput(new InputEvent.MouseRelease(layoutX, layoutY, event.button()))) {
             syncFocusFromRoot();
-            if (handled) {
-                return true;
-            }
-            return super.mouseReleased(event);
-        } finally {
-            GuiDesignSpace.end();
+            return true;
         }
+        if (shellHitRegions.hudLayoutChip().contains(layoutX, layoutY) && hudLayoutButtonHost.dispatchInput(new InputEvent.MouseRelease(layoutX, layoutY, event.button()))) {
+            syncFocusFromRoot();
+            return true;
+        }
+        boolean handled = root.dispatchInput(new InputEvent.MouseRelease(layoutX, layoutY, event.button()));
+        syncFocusFromRoot();
+        if (handled) {
+            return true;
+        }
+        return super.mouseReleased(event);
     }
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
-        float framebufferScaleX = UIScale.framebufferScaleX();
-        float framebufferScaleY = UIScale.framebufferScaleY();
-        GuiDesignSpace.begin(framebufferScaleX, framebufferScaleY);
-        try {
-            ModSettingsShellPointer.LayoutPoint pointer = ModSettingsShellPointer.layoutPointInShellSpace();
-            float layoutX = pointer.layoutPositionX();
-            float layoutY = pointer.layoutPositionY();
-            topBarTabsHost.dispatchInput(new InputEvent.MouseMove(layoutX, layoutY));
-            hudLayoutButtonHost.dispatchInput(new InputEvent.MouseMove(layoutX, layoutY));
-            if (root.dispatchInput(new InputEvent.MouseMove(layoutX, layoutY))) {
-                return true;
-            }
-            return super.mouseDragged(event, dragX, dragY);
-        } finally {
-            GuiDesignSpace.end();
+        ModSettingsShellPointer.LayoutPoint pointer = ModSettingsShellPointer.layoutPointInShellSpace();
+        float layoutX = pointer.layoutPositionX();
+        float layoutY = pointer.layoutPositionY();
+        topBarTabsHost.dispatchInput(new InputEvent.MouseMove(layoutX, layoutY));
+        hudLayoutButtonHost.dispatchInput(new InputEvent.MouseMove(layoutX, layoutY));
+        if (root.dispatchInput(new InputEvent.MouseMove(layoutX, layoutY))) {
+            return true;
         }
+        return super.mouseDragged(event, dragX, dragY);
     }
 
     @Override
     public void mouseMoved(double mousePosX, double mousePosY) {
-        float framebufferScaleX = UIScale.framebufferScaleX();
-        float framebufferScaleY = UIScale.framebufferScaleY();
-        GuiDesignSpace.begin(framebufferScaleX, framebufferScaleY);
-        try {
-            ModSettingsShellPointer.LayoutPoint pointer = ModSettingsShellPointer.layoutPointInShellSpace();
-            float layoutX = pointer.layoutPositionX();
-            float layoutY = pointer.layoutPositionY();
-            topBarTabsHost.dispatchInput(new InputEvent.MouseMove(layoutX, layoutY));
-            hudLayoutButtonHost.dispatchInput(new InputEvent.MouseMove(layoutX, layoutY));
-            root.dispatchInput(new InputEvent.MouseMove(layoutX, layoutY));
-        } finally {
-            GuiDesignSpace.end();
-        }
+        ModSettingsShellPointer.LayoutPoint pointer = ModSettingsShellPointer.layoutPointInShellSpace();
+        float layoutX = pointer.layoutPositionX();
+        float layoutY = pointer.layoutPositionY();
+        topBarTabsHost.dispatchInput(new InputEvent.MouseMove(layoutX, layoutY));
+        hudLayoutButtonHost.dispatchInput(new InputEvent.MouseMove(layoutX, layoutY));
+        root.dispatchInput(new InputEvent.MouseMove(layoutX, layoutY));
         super.mouseMoved(mousePosX, mousePosY);
     }
 
@@ -273,41 +244,27 @@ public class ModSettingsScreen extends WidgetScreen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        float framebufferScaleX = UIScale.framebufferScaleX();
-        float framebufferScaleY = UIScale.framebufferScaleY();
-        GuiDesignSpace.begin(framebufferScaleX, framebufferScaleY);
-        try {
-            InputEvent.KeyPress keyPress = new InputEvent.KeyPress(event.key(), event.scancode(), event.modifiers());
-            boolean handled = root.dispatchInput(keyPress);
-            syncFocusFromRoot();
-            if (handled) {
-                return true;
-            }
-            if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
-                closeModSettingsShell();
-                return true;
-            }
-            return super.keyPressed(event);
-        } finally {
-            GuiDesignSpace.end();
+        InputEvent.KeyPress keyPress = new InputEvent.KeyPress(event.key(), event.scancode(), event.modifiers());
+        boolean handled = root.dispatchInput(keyPress);
+        syncFocusFromRoot();
+        if (handled) {
+            return true;
         }
+        if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+            closeModSettingsShell();
+            return true;
+        }
+        return super.keyPressed(event);
     }
 
     @Override
     public boolean charTyped(CharacterEvent event) {
         int codepoint = event.codepoint();
         if (codepoint >= 0 && codepoint <= 0xFFFF) {
-            float framebufferScaleX = UIScale.framebufferScaleX();
-            float framebufferScaleY = UIScale.framebufferScaleY();
-            GuiDesignSpace.begin(framebufferScaleX, framebufferScaleY);
-            try {
-                boolean handled = root.dispatchInput(new InputEvent.CharType((char) codepoint));
-                syncFocusFromRoot();
-                if (handled) {
-                    return true;
-                }
-            } finally {
-                GuiDesignSpace.end();
+            boolean handled = root.dispatchInput(new InputEvent.CharType((char) codepoint));
+            syncFocusFromRoot();
+            if (handled) {
+                return true;
             }
         }
         return super.charTyped(event);

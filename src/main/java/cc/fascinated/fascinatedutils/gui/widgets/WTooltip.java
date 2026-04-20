@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.common.MathUtils;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -39,18 +38,18 @@ public class WTooltip {
     private static void drawNow(GuiRenderer graphics, float mouseX, float mouseY, List<String> lines, int boldLineIndex) {
         graphics.resetMultiplyAlpha();
 
-        float padX = GuiDesignSpace.pxX(6f);
-        float padY = GuiDesignSpace.pxY(4f);
-        float viewportPadding = GuiDesignSpace.pxUniform(2f);
-        float horizontalOffset = GuiDesignSpace.pxX(10f);
-        float verticalOffset = GuiDesignSpace.pxY(8f);
+        float padX = 6f;
+        float padY = 4f;
+        float viewportPadding = 2f;
+        float horizontalOffset = 10f;
+        float verticalOffset = 8f;
         float lineHeight = graphics.getFontHeight();
-        float lineGap = GuiDesignSpace.pxY(1f);
+        float lineGap = 1f;
 
-        float canvasWidth = UIScale.logicalWidth() * GuiDesignSpace.scaleX();
-        float canvasHeight = UIScale.logicalHeight() * GuiDesignSpace.scaleY();
+        float canvasWidth = UIScale.uiWidth();
+        float canvasHeight = UIScale.uiHeight();
 
-        float maxTextWidth = Math.max(GuiDesignSpace.pxX(120f), Math.min(GuiDesignSpace.pxX(260f), canvasWidth * 0.45f));
+        float maxTextWidth = Math.max(120f, Math.min(260f, canvasWidth * 0.45f));
         List<TooltipLine> wrappedLines = new ArrayList<>();
         for (int lineIndex = 0; lineIndex < lines.size(); lineIndex++) {
             String line = lines.get(lineIndex);
@@ -114,9 +113,9 @@ public class WTooltip {
             panelY = MathUtils.clamp(belowPanelY, viewportPadding, Math.max(viewportPadding, maxPanelY));
         }
 
-        float cornerRadius = Math.max(GuiDesignSpace.pxUniform(2f), GuiDesignSpace.pxUniform(graphics.theme().cardCornerRadius() * 0.75f));
-        float borderThickness = GuiDesignSpace.pxUniform(1f);
-        float shadowOffset = GuiDesignSpace.pxUniform(1f);
+        float cornerRadius = Math.max(2f, graphics.theme().cardCornerRadius() * 0.75f);
+        float borderThickness = 1f;
+        float shadowOffset = 1f;
 
         int backgroundColor = graphics.theme().hintBackground();
         int borderColor = graphics.theme().hintBorder();

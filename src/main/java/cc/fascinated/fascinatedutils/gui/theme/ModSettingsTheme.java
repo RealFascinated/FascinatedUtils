@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.theme;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 
 public class ModSettingsTheme {
     /**
@@ -36,7 +35,7 @@ public class ModSettingsTheme {
     public static final float TITLEBAR_CLOSE_BUTTON_HEIGHT_FRAC = 0.58f;
     /**
      * Corner fillet radius for the mod settings window shell (shadow, gradient panel, title bar); logical px, scaled
-     * with {@link GuiDesignSpace#pxUniform(float)} when drawing.
+     * .
      */
     public static final float SHELL_CORNER_RADIUS = 6f;
     /**
@@ -69,7 +68,7 @@ public class ModSettingsTheme {
      * @return size in logical shell pixels, at least 1
      */
     public static float titleBarSquareControlSizePx() {
-        float topBarHeightPx = GuiDesignSpace.pxY(TOPBAR_HEIGHT);
+        float topBarHeightPx = TOPBAR_HEIGHT;
         return Math.max(1f, Math.round(topBarHeightPx * TITLEBAR_CLOSE_BUTTON_HEIGHT_FRAC));
     }
 

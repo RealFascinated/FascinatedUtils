@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -51,7 +50,7 @@ public class FEnumSettingRowWidget extends FWidget {
         if (text == null) {
             return 0f;
         }
-        return GuiDesignSpace.pxX(client.font.width(text));
+        return client.font.width(text);
     }
 
     private static boolean rectContains(float[] rect, float pointerX, float pointerY) {
@@ -169,31 +168,31 @@ public class FEnumSettingRowWidget extends FWidget {
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
         boolean locked = enumSetting.isLocked();
-        float innerHeight = Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
-        float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
-        float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
+        float innerHeight = Math.max(0f, h() - 2f * SettingsUiMetrics.SETTING_ROW_PADDING_Y);
+        float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
+        float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float bodyLeft = x() + padX;
         String label = enumSetting.getTranslatedDisplayName();
         float[] chip = valueChipBounds();
         float chipH = chip[3];
-        float titleRowHeight = Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), chipH);
+        float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), chipH);
         float bodyTop = y() + padY;
         float titleOriginY = bodyTop + (innerHeight - titleRowHeight) * 0.5f;
-        float labelRightEdge = chip[0] - GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP);
+        float labelRightEdge = chip[0] - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP;
         float labelMaxWidth = Math.max(0f, labelRightEdge - bodyLeft);
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         float labelY = titleOriginY + Math.max(0f, (chipH - graphics.getFontHeight()) * 0.5f);
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
         graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, labelY, false);
-        float chipCorner = Mth.clamp(GuiDesignSpace.pxUniform(graphics.theme().cardCornerRadius()), 0.5f, Math.min(chip[2], chipH) * 0.5f - 0.01f);
+        float chipCorner = Mth.clamp(graphics.theme().cardCornerRadius(), 0.5f, Math.min(chip[2], chipH) * 0.5f - 0.01f);
         int fill = graphics.theme().surface();
         int border = graphics.theme().border();
         if (locked) {
             fill = WSettingTooltip.dimColor(fill, 0.5f);
             border = WSettingTooltip.dimColor(border, 0.6f);
         }
-        graphics.fillRoundedRectFrame(chip[0], chip[1], chip[2], chipH, chipCorner, border, fill, GuiDesignSpace.pxUniform(1f), GuiDesignSpace.pxUniform(1f), RectCornerRoundMask.ALL);
-        float chipInnerTextWidth = Math.max(0f, chip[2] - GuiDesignSpace.pxX(8f));
+        graphics.fillRoundedRectFrame(chip[0], chip[1], chip[2], chipH, chipCorner, border, fill, 1f, 1f, RectCornerRoundMask.ALL);
+        float chipInnerTextWidth = Math.max(0f, chip[2] - 8f);
         String valueText = TextLineLayout.ellipsize(enumSetting.formatValueForDisplay(), chipInnerTextWidth, segment -> graphics.measureTextWidth(segment, false));
         float valueTextW = graphics.measureTextWidth(valueText, false);
         float valueDrawX = chip[0] + Math.max(0f, (chip[2] - valueTextW) * 0.5f);
@@ -205,20 +204,20 @@ public class FEnumSettingRowWidget extends FWidget {
     }
 
     private float[] valueChipBounds() {
-        float innerHeight = Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
-        float padY = GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
-        float padX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
+        float innerHeight = Math.max(0f, h() - 2f * SettingsUiMetrics.SETTING_ROW_PADDING_Y);
+        float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
+        float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float bodyLeft = x() + padX;
-        float chipH = GuiDesignSpace.pxUniform(SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H);
-        float titleRowHeight = Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), chipH);
+        float chipH = SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H;
+        float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), chipH);
         float bodyTop = y() + padY;
         float titleOriginY = bodyTop + (innerHeight - titleRowHeight) * 0.5f;
         float contentRight = x() + w();
         float resetLeft = SettingRowResetLayout.trailingResetLeftX(contentRight);
         float gapBeforeReset = SettingRowResetLayout.resetGapBesideControlPx();
         float chipRight = resetLeft - gapBeforeReset;
-        float minChipWidth = GuiDesignSpace.pxX(72f);
-        float desiredChipWidth = Math.max(minChipWidth, valueChipWidthEstimate() + GuiDesignSpace.pxX(16f));
+        float minChipWidth = 72f;
+        float desiredChipWidth = Math.max(minChipWidth, valueChipWidthEstimate() + 16f);
         float maxChipWidth = Math.max(minChipWidth, chipRight - bodyLeft);
         float chipW = Math.min(desiredChipWidth, maxChipWidth);
         float desiredChipLeft = bodyLeft + valueColumnStartX;
@@ -232,7 +231,7 @@ public class FEnumSettingRowWidget extends FWidget {
         float maxW = 0f;
         for (Enum<?> choice : choices) {
             String optionLabel = enumSetting.formatUntypedValueForDisplay(choice);
-            maxW = Math.max(maxW, GuiDesignSpace.pxX(8f) + estimateTextWidthLogical(optionLabel));
+            maxW = Math.max(maxW, 8f + estimateTextWidthLogical(optionLabel));
         }
         return maxW;
     }

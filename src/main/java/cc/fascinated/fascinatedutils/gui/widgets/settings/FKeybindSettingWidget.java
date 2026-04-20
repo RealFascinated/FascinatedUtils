@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -152,7 +151,7 @@ public class FKeybindSettingWidget extends FWidget {
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
         boolean locked = keybindSetting.isLocked();
-        float bodyPadX = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
+        float bodyPadX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float bodyLeft = x() + bodyPadX;
         float titleOriginY = titleRowOriginY();
         String label = keybindSetting.getTranslatedDisplayName();
@@ -165,8 +164,8 @@ public class FKeybindSettingWidget extends FWidget {
         float chipTop = chip[1];
         float chipWidth = chip[2];
         float chipHeight = chip[3];
-        float borderThickness = GuiDesignSpace.pxUniform(1f);
-        float corner = Mth.clamp(GuiDesignSpace.pxUniform(3f), 0.5f, Math.min(chipWidth, chipHeight) * 0.5f - borderThickness * 0.5f - 0.01f);
+        float borderThickness = 1f;
+        float corner = Mth.clamp(3f, 0.5f, Math.min(chipWidth, chipHeight) * 0.5f - borderThickness * 0.5f - 0.01f);
         int fillColor = listening && !locked ? graphics.theme().surfaceElevated() : hovered && !locked ? graphics.theme().moduleListRowHover() : graphics.theme().surface();
         int borderColor = listening && !locked ? graphics.theme().accentBright() : graphics.theme().border();
         if (locked) {
@@ -184,24 +183,24 @@ public class FKeybindSettingWidget extends FWidget {
     }
 
     private float[] chipBounds() {
-        float chipWidth = GuiDesignSpace.pxX(KEY_CHIP_WIDTH_DESIGN);
-        float chipHeight = GuiDesignSpace.pxY(KEY_CHIP_HEIGHT_DESIGN);
+        float chipWidth = KEY_CHIP_WIDTH_DESIGN;
+        float chipHeight = KEY_CHIP_HEIGHT_DESIGN;
         float chipTop = titleRowOriginY();
         float chipLeft = x() + w() - chipWidth - SettingRowResetLayout.trailingResetReservePx();
         return new float[]{chipLeft, chipTop, chipWidth, chipHeight};
     }
 
     private float innerBodyHeightPx() {
-        return Math.max(0f, h() - 2f * GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y));
+        return Math.max(0f, h() - 2f * SettingsUiMetrics.SETTING_ROW_PADDING_Y);
     }
 
     private float bodyPadYPx() {
-        return GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
+        return SettingsUiMetrics.SETTING_ROW_PADDING_Y;
     }
 
     private float titleRowHeightPx() {
-        float chipH = GuiDesignSpace.pxY(KEY_CHIP_HEIGHT_DESIGN);
-        return Math.max(GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()), chipH);
+        float chipH = KEY_CHIP_HEIGHT_DESIGN;
+        return Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), chipH);
     }
 
     private float titleRowOriginY() {

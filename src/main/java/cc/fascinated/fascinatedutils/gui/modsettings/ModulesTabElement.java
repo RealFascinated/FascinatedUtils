@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -112,8 +111,8 @@ public class ModulesTabElement extends FWidget {
     private void rebuild(float width, float height) {
         Callback<Module> openModuleSettings = this::openModuleDetail;
 
-        float splitDividerWidth = Math.max(1f, (float) Math.floor(GuiDesignSpace.pxX(SPLIT_DIVIDER_WIDTH_DESIGN)));
-        float profilesPanelWidth = Math.max(GuiDesignSpace.pxX(112f), Math.min(GuiDesignSpace.pxX(PROFILES_PANEL_WIDTH_DESIGN), width * 0.4f));
+        float splitDividerWidth = Math.max(1f, (float) Math.floor(SPLIT_DIVIDER_WIDTH_DESIGN));
+        float profilesPanelWidth = Math.max(112f, Math.min(PROFILES_PANEL_WIDTH_DESIGN, width * 0.4f));
         float modulesPanelWidth = Math.max(0f, width - profilesPanelWidth - splitDividerWidth);
 
         FSplitRowWithDividerWidget splitLayout = new FSplitRowWithDividerWidget(profilesPanelWidth, splitDividerWidth);

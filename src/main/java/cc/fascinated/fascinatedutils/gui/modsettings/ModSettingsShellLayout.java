@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import lombok.experimental.UtilityClass;
@@ -13,8 +12,8 @@ public class ModSettingsShellLayout {
      * Size and position the mod settings shell from canvas dimensions, snapping outer bounds to integer pixels.
      */
     public static ShellBounds computeShell(float canvasWidth, float canvasHeight) {
-        float maxW = Math.min(GuiDesignSpace.pxX(ModSettingsTheme.PANEL_MAX_W), canvasWidth * ModSettingsTheme.SHELL_MAX_WIDTH_FRAC);
-        float maxH = Math.min(GuiDesignSpace.pxY(ModSettingsTheme.PANEL_MAX_H), canvasHeight * ModSettingsTheme.SHELL_MAX_HEIGHT_FRAC);
+        float maxW = Math.min(ModSettingsTheme.PANEL_MAX_W, canvasWidth * ModSettingsTheme.SHELL_MAX_WIDTH_FRAC);
+        float maxH = Math.min(ModSettingsTheme.PANEL_MAX_H, canvasHeight * ModSettingsTheme.SHELL_MAX_HEIGHT_FRAC);
         float aspectWidth = ModSettingsTheme.PANEL_ASPECT_W;
         float aspectHeight = ModSettingsTheme.PANEL_ASPECT_H;
         float shellW = maxW;
@@ -46,7 +45,7 @@ public class ModSettingsShellLayout {
      * Shell layout mapping for the current window using {@link UIScale} canvas size.
      */
     public static ShellPointerMapping pointMappingForCanvas() {
-        ShellBounds shell = computeShell(UIScale.physicalWidth(), UIScale.physicalHeight());
+        ShellBounds shell = computeShell(UIScale.uiWidth(), UIScale.uiHeight());
         return computePointMapping(shell);
     }
 

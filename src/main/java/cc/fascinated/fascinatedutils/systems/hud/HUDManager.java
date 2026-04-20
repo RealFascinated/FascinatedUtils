@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.screens.HUDEditorScreen;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
+import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
@@ -22,7 +23,6 @@ public class HUDManager {
     public static final HUDManager INSTANCE = new HUDManager();
 
     private final List<HudModule> widgets = new ArrayList<>();
-    private final List<HudModule> visibleWidgets = new ArrayList<>();
     private boolean editMode;
     private boolean initialized;
     private volatile long lastRenderNanos = 0L;
@@ -36,7 +36,6 @@ public class HUDManager {
             return;
         }
         widgets.addAll(ModuleRegistry.INSTANCE.getHudModules());
-        rebuildVisibleWidgets();
         initialized = true;
     }
 
@@ -48,7 +47,7 @@ public class HUDManager {
         ProfilerFiller profiler = Profiler.get();
 
         long renderStart = System.nanoTime();
-        for (HudModule widget : visibleWidgets) {
+        for (HudModule widget : widgets.stream().filter(Module::isEnabled).toList()) {
             profiler.push("widget-" + widget.getId());
 
             Runnable draw = widget.prepareAndDraw(renderer, deltaSeconds, false);
@@ -98,44 +97,12 @@ public class HUDManager {
         return Collections.unmodifiableList(widgets);
     }
 
-    public void setWidgetVisible(HudModule widget, boolean visible, boolean persistImmediately) {
-        if (widget.getHudState().isVisible() == visible) {
-            return;
-        }
-        widget.getHudState().setVisible(visible);
-        widget.setEnabled(visible);
-        onWidgetVisibilityStateChanged(widget);
-        if (persistImmediately) {
-            saveAll();
-        }
-    }
-
-    public void onWidgetVisibilityStateChanged(HudModule widget) {
-        if (widget.getHudState().isVisible()) {
-            if (!visibleWidgets.contains(widget)) {
-                visibleWidgets.add(widget);
-            }
-            return;
-        }
-        visibleWidgets.remove(widget);
-    }
-
     public void saveAll() {
         ModConfig.saveAllModuleSettings();
     }
 
     public void loadAll() {
         ModConfig.loadAllModuleSettings();
-        rebuildVisibleWidgets();
-    }
-
-    private void rebuildVisibleWidgets() {
-        visibleWidgets.clear();
-        for (HudModule widget : widgets) {
-            if (widget.getHudState().isVisible()) {
-                visibleWidgets.add(widget);
-            }
-        }
     }
 
     @EventHandler

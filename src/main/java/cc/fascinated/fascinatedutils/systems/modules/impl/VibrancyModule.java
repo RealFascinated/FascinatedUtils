@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.systems.modules.impl;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.mixin.GameRendererPostProcessorAccessorMixin;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
+import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
@@ -16,7 +17,7 @@ public class VibrancyModule extends Module {
     public static final Identifier POST_EFFECT_ID = Identifier.fromNamespaceAndPath("fascinatedutils", "vibrancy");
 
     public VibrancyModule() {
-        super("Vibrancy");
+        super("Vibrancy", ModuleCategory.MISC);
     }
 
     @EventHandler

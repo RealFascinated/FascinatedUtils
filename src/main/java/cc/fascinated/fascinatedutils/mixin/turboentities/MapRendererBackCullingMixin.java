@@ -1,18 +1,16 @@
 package cc.fascinated.fascinatedutils.mixin.turboentities;
 
+import cc.fascinated.fascinatedutils.client.Client;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.MapRenderer;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.state.MapRenderState;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import com.mojang.blaze3d.vertex.PoseStack;
-
-import cc.fascinated.fascinatedutils.client.Client;
-import net.minecraft.client.renderer.MapRenderer;
-import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.state.MapRenderState;
 
 @Mixin(MapRenderer.class)
 public class MapRendererBackCullingMixin {

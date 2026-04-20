@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -53,12 +52,12 @@ public class ColorPickerPopupWidget extends FPopupWidget {
         this.saturation = hsv[1];
         this.value = hsv[2];
 
-        applyButton = new FButtonWidget(this::applyAndClose, () -> "Apply", GuiDesignSpace.pxX(56f), 1, 1f, 4f, 1f, 4f);
-        cancelButton = new FButtonWidget(onCancel, () -> "Cancel", GuiDesignSpace.pxX(56f), 1, 1f, 4f, 1f, 4f);
+        applyButton = new FButtonWidget(this::applyAndClose, () -> "Apply", 56f, 1, 1f, 4f, 1f, 4f);
+        cancelButton = new FButtonWidget(onCancel, () -> "Cancel", 56f, 1, 1f, 4f, 1f, 4f);
         rainbowToggleCheckbox = new FIconCheckboxWidget(rainbow, checked -> {
             rainbow = checked;
             syncEditingColor();
-        }, () -> "Rainbow", GuiDesignSpace.pxX(84f));
+        }, () -> "Rainbow", 84f);
         addChild(applyButton);
         addChild(cancelButton);
         addChild(rainbowToggleCheckbox);
@@ -74,17 +73,17 @@ public class ColorPickerPopupWidget extends FPopupWidget {
 
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-        float horizontalPadding = GuiDesignSpace.pxX(7f);
-        float verticalPadding = GuiDesignSpace.pxY(7f);
-        float rowGap = GuiDesignSpace.pxY(3f);
+        float horizontalPadding = 7f;
+        float verticalPadding = 7f;
+        float rowGap = 3f;
 
-        svAreaSize = GuiDesignSpace.pxUniform(SV_SIZE_DESIGN);
-        hueBarHeight = GuiDesignSpace.pxY(HUE_BAR_HEIGHT_DESIGN);
+        svAreaSize = SV_SIZE_DESIGN;
+        hueBarHeight = HUE_BAR_HEIGHT_DESIGN;
         float rainbowRowHeight = rainbowToggleCheckbox.intrinsicHeightForColumn(measure, svAreaSize);
         float actionsHeight = applyButton.intrinsicHeightForColumn(measure, svAreaSize);
 
         float popupWidth = svAreaSize + 2f * horizontalPadding;
-        float titleHeight = GuiDesignSpace.pxY(11f);
+        float titleHeight = 11f;
         float popupHeight = verticalPadding + titleHeight + rowGap + svAreaSize + rowGap + hueBarHeight + rowGap + rainbowRowHeight + rowGap + actionsHeight + verticalPadding;
 
         setDialogBounds(layoutX, layoutY, layoutWidth, layoutHeight, popupWidth, popupHeight);
@@ -107,7 +106,7 @@ public class ColorPickerPopupWidget extends FPopupWidget {
         rainbowToggleCheckbox.layout(measure, bodyLeft, cursorY, bodyWidth, rainbowRowHeight);
         cursorY += rainbowRowHeight + rowGap;
 
-        float actionGap = GuiDesignSpace.pxX(3f);
+        float actionGap = 3f;
         float actionWidth = Math.max(0f, (bodyWidth - actionGap) * 0.5f);
         float buttonHeight = applyButton.intrinsicHeightForColumn(measure, actionWidth);
         applyButton.layout(measure, bodyLeft, cursorY, actionWidth, buttonHeight);
@@ -172,10 +171,7 @@ public class ColorPickerPopupWidget extends FPopupWidget {
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
         super.renderSelf(graphics, mouseX, mouseY, deltaSeconds);
 
-        float horizontalPadding = GuiDesignSpace.pxX(7f);
-        float verticalPadding = GuiDesignSpace.pxY(7f);
-
-        float titleY = dialogY() + verticalPadding;
+        float titleY = dialogY() + 7f;
         graphics.drawCenteredText("Color Picker", dialogX() + dialogWidth() * 0.5f, titleY, graphics.theme().textPrimary(), false, true);
 
         renderSvPicker(graphics);
@@ -196,11 +192,11 @@ public class ColorPickerPopupWidget extends FPopupWidget {
 
         float crossX = svAreaX + saturation * svAreaSize;
         float crossY = svAreaY + (1f - value) * svAreaSize;
-        float crossSize = GuiDesignSpace.pxUniform(3f);
+        float crossSize = 3f;
         graphics.drawRect(crossX - crossSize, crossY - 0.5f, crossSize * 2f, 1f, 0xFFFFFFFF);
         graphics.drawRect(crossX - 0.5f, crossY - crossSize, 1f, crossSize * 2f, 0xFFFFFFFF);
 
-        graphics.drawBorder(svAreaX, svAreaY, svAreaSize, svAreaSize, GuiDesignSpace.pxUniform(1f), graphics.theme().border());
+        graphics.drawBorder(svAreaX, svAreaY, svAreaSize, svAreaSize, 1f, graphics.theme().border());
     }
 
     private void renderHueBar(GuiRenderer graphics) {
@@ -214,19 +210,19 @@ public class ColorPickerPopupWidget extends FPopupWidget {
         }
 
         float markerX = hueBarX + (hue / 360f) * hueBarWidth;
-        float markerW = GuiDesignSpace.pxUniform(2f);
+        float markerW = 2f;
         graphics.drawRect(markerX - markerW * 0.5f, hueBarY - 1f, markerW, hueBarHeight + 2f, 0xFFFFFFFF);
-        graphics.drawBorder(hueBarX, hueBarY, hueBarWidth, hueBarHeight, GuiDesignSpace.pxUniform(1f), graphics.theme().border());
+        graphics.drawBorder(hueBarX, hueBarY, hueBarWidth, hueBarHeight, 1f, graphics.theme().border());
     }
 
     private void renderPreview(GuiRenderer graphics) {
-        float previewSize = GuiDesignSpace.pxUniform(PREVIEW_SIZE_DESIGN);
+        float previewSize = PREVIEW_SIZE_DESIGN;
         float previewX = rainbowToggleCheckbox.x() + rainbowToggleCheckbox.w() - previewSize;
         float previewY = rainbowToggleCheckbox.y() + (rainbowToggleCheckbox.h() - previewSize) * 0.5f;
-        float borderPx = GuiDesignSpace.pxUniform(1f);
+        float borderPx = 1f;
 
         int previewArgb = rainbow ? RainbowColors.currentColor().getPackedArgb() | 0xFF000000 : editingColor.getPackedArgb();
-        graphics.fillRoundedRectFrame(previewX, previewY, previewSize, previewSize, GuiDesignSpace.pxUniform(3f), graphics.theme().border(), previewArgb, borderPx, borderPx, RectCornerRoundMask.ALL);
+        graphics.fillRoundedRectFrame(previewX, previewY, previewSize, previewSize, 3f, graphics.theme().border(), previewArgb, borderPx, borderPx, RectCornerRoundMask.ALL);
     }
 
     private void updateSvFromPointer(float pointerX, float pointerY) {

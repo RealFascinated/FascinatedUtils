@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -157,9 +156,9 @@ public class FSliderSettingRowWidget extends FWidget {
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
         boolean locked = sliderSetting.isLocked();
         float bodyLeft = x() + bodyPadX();
-        float textLineHeight = Math.max(1f, GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()));
+        float textLineHeight = Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());
         float textTop = innerMidY() - textLineHeight * 0.5f;
-        float labelMaxWidth = Math.max(0f, sliderValueTextX(bodyLeft) - GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP) - bodyLeft);
+        float labelMaxWidth = Math.max(0f, sliderValueTextX(bodyLeft) - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - bodyLeft);
         String label = TextLineLayout.ellipsize(sliderSetting.getTranslatedDisplayName(), labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
         graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, textTop, false);
@@ -184,7 +183,7 @@ public class FSliderSettingRowWidget extends FWidget {
         int thumbColor = locked ? WSettingTooltip.dimColor(graphics.theme().accentBright(), 0.5f) : graphics.theme().accentBright();
         graphics.fillRoundedRect(thumbCenterX - thumbSize * 0.5f, trackMidY - thumbSize * 0.5f, thumbSize, thumbSize, thumbSize * 0.5f, thumbColor, RectCornerRoundMask.ALL);
         float[] resetSquare = inlineResetSquare();
-        SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], Math.max(1f, GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight())), hoveredReset && !locked, sliderSetting.isAtDefault());
+        SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight()), hoveredReset && !locked, sliderSetting.isAtDefault());
     }
 
     private void applyPointer(float pointerX, float trackLeft, float trackWidth) {
@@ -199,11 +198,11 @@ public class FSliderSettingRowWidget extends FWidget {
     }
 
     private float bodyPadX() {
-        return GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_ROW_PADDING_X);
+        return SettingsUiMetrics.SETTING_ROW_PADDING_X;
     }
 
     private float bodyPadY() {
-        return GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_ROW_PADDING_Y);
+        return SettingsUiMetrics.SETTING_ROW_PADDING_Y;
     }
 
     private float innerMidY() {
@@ -215,15 +214,15 @@ public class FSliderSettingRowWidget extends FWidget {
     }
 
     private float computeTrackHeight() {
-        return GuiDesignSpace.pxY(13f);
+        return 13f;
     }
 
     private float trackVisualThickness() {
-        return GuiDesignSpace.pxY(3f);
+        return 3f;
     }
 
     private float thumbDiameter() {
-        return GuiDesignSpace.pxUniform(7f);
+        return 7f;
     }
 
     private float sliderValueTextX(float bodyLeft) {
@@ -231,27 +230,27 @@ public class FSliderSettingRowWidget extends FWidget {
     }
 
     private float sliderValueColumnWidth() {
-        float minColumnWidth = GuiDesignSpace.pxX(SettingsUiMetrics.SLIDER_VALUE_COL_W);
+        float minColumnWidth = SettingsUiMetrics.SLIDER_VALUE_COL_W;
         Minecraft minecraftClient = Minecraft.getInstance();
         if (minecraftClient == null) {
             return minColumnWidth;
         }
         String valueText = sliderSetting.formatValueForDisplay();
-        float measuredValueWidth = GuiDesignSpace.pxX(minecraftClient.font.width(valueText));
-        float valuePadding = GuiDesignSpace.pxX(3f);
+        float measuredValueWidth = minecraftClient.font.width(valueText);
+        float valuePadding = 3f;
         return Math.max(minColumnWidth, measuredValueWidth + valuePadding);
     }
 
     private float sliderTrackLeft() {
         float bodyLeft = x() + bodyPadX();
         float valueColumnWidth = sliderValueColumnWidth();
-        float gapAfterValue = GuiDesignSpace.pxX(SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP);
+        float gapAfterValue = SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP;
         return sliderValueTextX(bodyLeft) + valueColumnWidth + gapAfterValue;
     }
 
     private float sliderTrackWidth() {
         float right = x() + w() - SettingRowResetLayout.trailingResetReservePx();
-        return Math.max(GuiDesignSpace.pxX(25f), right - sliderTrackLeft());
+        return Math.max(25f, right - sliderTrackLeft());
     }
 
     private float[] inlineResetSquare() {

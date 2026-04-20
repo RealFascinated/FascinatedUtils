@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -41,10 +40,10 @@ public class ModSettingsProfilesTabBuilder {
     }
 
     public static FWidget buildProfilesPane(float paneWidth, float paneHeight, Ref<Float> scrollYRef, Runnable onOpenCreateProfilePopup, ProfileActionCallback onProfileAction, Runnable onProfilesChanged, Runnable onOpenHudLayoutEditor) {
-        float settingsContentWidth = Math.max(GuiDesignSpace.pxX(28f), paneWidth);
-        float settingsInnerWidth = Math.max(GuiDesignSpace.pxX(14f), settingsContentWidth - 2f * GuiDesignSpace.pxX(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X));
-        float controlsHeight = GuiDesignSpace.pxY(SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN);
-        float gap = GuiDesignSpace.pxY(3f);
+        float settingsContentWidth = Math.max(28f, paneWidth);
+        float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
+        float controlsHeight = SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN;
+        float gap = 3f;
 
         FColumnWidget scrollBody = new FColumnWidget(gap, Align.CENTER);
 
@@ -164,9 +163,9 @@ public class ModSettingsProfilesTabBuilder {
             @Override
             public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
                 setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-                float topInset = GuiDesignSpace.pxY(4f);
-                float bottomInset = GuiDesignSpace.pxY(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
-                float sectionGap = GuiDesignSpace.pxY(3f);
+                float topInset = 4f;
+                float bottomInset = ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X;
+                float sectionGap = 3f;
                 float createButtonHeight = topCreateButtonRow.intrinsicHeightForColumn(measure, layoutWidth);
                 topCreateButtonRow.layout(measure, layoutX, layoutY + topInset, layoutWidth, createButtonHeight);
                 float reservedTopHeight = topInset + createButtonHeight + sectionGap;
@@ -177,7 +176,7 @@ public class ModSettingsProfilesTabBuilder {
                     finalBottomHudButtonRow.layout(measure, layoutX, buttonY, layoutWidth, buttonHeight);
                     reservedBottomHeight = buttonHeight + bottomInset + sectionGap;
                 }
-                float scrollPad = GuiDesignSpace.pxY(2f);
+                float scrollPad = 2f;
                 float scrollHeight = Math.max(0f, layoutHeight - reservedTopHeight - reservedBottomHeight - 2f * scrollPad);
                 profilesScrollClip.layout(measure, layoutX, layoutY + reservedTopHeight + scrollPad, layoutWidth, scrollHeight);
             }
@@ -186,7 +185,7 @@ public class ModSettingsProfilesTabBuilder {
     }
 
     private static FWidget wrapWithSidePad(float contentWidth, float innerWidth, FWidget inner) {
-        float pad = GuiDesignSpace.pxX(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
+        float pad = ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X;
         FRowWidget row = new FRowWidget(0f, Align.START) {
             @Override
             public boolean fillsHorizontalInRow() {

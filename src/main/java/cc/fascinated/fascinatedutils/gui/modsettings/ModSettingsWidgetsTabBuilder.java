@@ -4,7 +4,6 @@ import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.impl.*;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
@@ -64,28 +63,28 @@ public class ModSettingsWidgetsTabBuilder {
     }
 
     private static FWidget buildWidgetCardGrid(float paneWidth, List<HudModule> hudWidgets, Ref<Float> widgetsPaneScrollYRef, Callback<HudModule> onOpenWidgetSettings, Consumer<ColorSetting> openColorPicker) {
-        float gridMarginX = GuiDesignSpace.pxX(GRID_MARGIN_X_DESIGN);
+        float gridMarginX = GRID_MARGIN_X_DESIGN;
         float paddedInnerWidth = Math.max(0f, paneWidth - 2f * gridMarginX);
-        float settingsContentWidth = Math.max(GuiDesignSpace.pxX(28f), paddedInnerWidth);
-        float settingsInnerWidth = Math.max(GuiDesignSpace.pxX(14f), settingsContentWidth - 2f * GuiDesignSpace.pxX(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X));
-        float gapY = GuiDesignSpace.pxY(6f);
-        float gapX = GuiDesignSpace.pxX(3f);
-        float minCellWidth = GuiDesignSpace.pxX(GRID_MIN_CELL_WIDTH_DESIGN);
+        float settingsContentWidth = Math.max(28f, paddedInnerWidth);
+        float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
+        float gapY = 6f;
+        float gapX = 3f;
+        float minCellWidth = GRID_MIN_CELL_WIDTH_DESIGN;
         int columnCount = computeCardGridColumnCount(settingsContentWidth, gapX, minCellWidth);
         float cellWidth = (settingsContentWidth - gapX * Math.max(0, columnCount - 1)) / Math.max(1, columnCount);
         float cellHeight = FHudWidgetVisibilityCardWidget.stackedCellOuterHeightPx();
 
         FColumnWidget scrollBody = new FColumnWidget(gapY, Align.CENTER);
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(4f)));
+        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
 
         if (hudWidgets == null || hudWidgets.isEmpty()) {
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(2f)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 2f));
             FLabelWidget empty = new FLabelWidget();
             empty.setText(Component.translatable("fascinatedutils.setting.shell.empty_widgets").getString());
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.CENTER);
             scrollBody.addChild(empty);
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(4f)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
             FScrollColumnWidget emptyClip = FTheme.components().createScrollColumn(scrollBody, gapY);
             emptyClip.setFillVerticalInColumn(true);
             if (widgetsPaneScrollYRef != null) {
@@ -105,14 +104,12 @@ public class ModSettingsWidgetsTabBuilder {
                     break;
                 }
                 HudModule widget = sortedWidgets.get(index);
-                row.addChild(FTheme.components().createHudWidgetVisibilityCard(widget, cellWidth, cellHeight, newVisibility -> {
-                    HUDManager.INSTANCE.setWidgetVisible(widget, newVisibility, true);
-                }, onOpenWidgetSettings));
+                row.addChild(FTheme.components().createHudWidgetVisibilityCard(widget, cellWidth, cellHeight, widget::setEnabled, onOpenWidgetSettings));
             }
             scrollBody.addChild(row);
         }
         appendGlobalHudAppearanceBulkSection(scrollBody, settingsContentWidth, settingsInnerWidth, sortedWidgets, openColorPicker);
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(4f)));
+        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
         FScrollColumnWidget clip = FTheme.components().createScrollColumn(scrollBody, gapY);
         clip.setFillVerticalInColumn(true);
         if (widgetsPaneScrollYRef != null) {
@@ -124,13 +121,13 @@ public class ModSettingsWidgetsTabBuilder {
     }
 
     private static FWidget buildWidgetSettingsDetail(float paneWidth, HudModule settingsWidget, Runnable onBackFromSettings, Ref<Float> widgetSettingsPaneScrollYRef, Consumer<ColorSetting> openColorPicker) {
-        float settingsContentWidth = Math.max(GuiDesignSpace.pxX(28f), paneWidth);
-        float settingsInnerWidth = Math.max(GuiDesignSpace.pxX(14f), settingsContentWidth - 2f * GuiDesignSpace.pxX(ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X));
-        float gap = GuiDesignSpace.pxY(3f);
+        float settingsContentWidth = Math.max(28f, paneWidth);
+        float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
+        float gap = 3f;
         FColumnWidget scrollBody = new FColumnWidget(gap, Align.START);
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(4f)));
+        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
         scrollBody.addChild(FModSettingsDetailHeaderCardWidget.centeredInContentRow(settingsContentWidth, settingsInnerWidth, onBackFromSettings, settingsWidget.getName()));
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(3f)));
+        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 3f));
         appendWidgetSettingsDetailRows(scrollBody, settingsWidget, settingsContentWidth, settingsInnerWidth, openColorPicker);
         return wrapScrollClip(scrollBody, gap, widgetSettingsPaneScrollYRef);
     }
@@ -138,7 +135,7 @@ public class ModSettingsWidgetsTabBuilder {
     private static void appendWidgetSettingsDetailRows(FColumnWidget scrollBody, HudModule settingsWidget, float settingsContentWidth, float settingsInnerWidth, Consumer<ColorSetting> openColorPicker) {
         List<Setting<?>> widgetAllSettings = settingsWidget.getAllSettings();
         if (widgetAllSettings.isEmpty()) {
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(2f)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 2f));
             FLabelWidget empty = new FLabelWidget();
             empty.setText(Component.translatable("fascinatedutils.setting.shell.widget_settings.empty").getString());
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
@@ -151,19 +148,19 @@ public class ModSettingsWidgetsTabBuilder {
             categoryBlocks.add(new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), category.settings()));
         }
         ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, settingsWidget.getSettings(), (setting, innerWidth, sliderStartX) -> editorForWidgetSetting(setting, innerWidth, sliderStartX, openColorPicker), (booleanSetting, cellWidth, cellHeight) -> new FBooleanSettingGridCellWidget(booleanSetting, cellWidth, cellHeight, HUDManager.INSTANCE::saveAll));
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET)));
+        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET));
     }
 
     private static void appendGlobalHudAppearanceBulkSection(FColumnWidget scrollBody, float settingsContentWidth, float settingsInnerWidth, List<HudModule> sortedWidgets, Consumer<ColorSetting> openColorPicker) {
         float paddedInnerWidth = ModSettingsCategoryRows.settingsDetailPaddedInnerWidth(settingsInnerWidth);
         float booleanRowHeight = SettingsUiMetrics.booleanOuterHeight();
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(SettingsUiMetrics.CATEGORY_SECTION_GAP)));
+        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, SettingsUiMetrics.CATEGORY_SECTION_GAP));
         FLabelWidget heading = new FLabelWidget();
         heading.setText(I18n.get("fascinatedutils.setting.shell.global_hud_appearance_section"));
         heading.setColorArgb(FascinatedGuiTheme.INSTANCE.sectionHeaderText());
         heading.setAlignX(Align.START);
         scrollBody.addChild(ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(paddedInnerWidth, heading)));
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(SettingsUiMetrics.CATEGORY_AFTER_HEADER_ROW_GAP)));
+        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, SettingsUiMetrics.CATEGORY_AFTER_HEADER_ROW_GAP));
         appendGlobalHudAppearanceApplyRow(scrollBody, settingsContentWidth, settingsInnerWidth, paddedInnerWidth, sortedWidgets, booleanRowHeight, false, "show_hud_background", "fascinatedutils.module.show_hud_background", true);
         appendGlobalHudAppearanceApplyRow(scrollBody, settingsContentWidth, settingsInnerWidth, paddedInnerWidth, sortedWidgets, booleanRowHeight, true, "round_hud_background", "fascinatedutils.module.round_hud_background", false);
         appendGlobalHudAppearanceApplyRow(scrollBody, settingsContentWidth, settingsInnerWidth, paddedInnerWidth, sortedWidgets, booleanRowHeight, true, "show_border", "fascinatedutils.module.show_border", false);
@@ -177,7 +174,7 @@ public class ModSettingsWidgetsTabBuilder {
 
     private static void appendGlobalHudAppearanceApplyRow(FColumnWidget scrollBody, float settingsContentWidth, float settingsInnerWidth, float paddedInnerWidth, List<HudModule> sortedWidgets, float rowHeight, boolean addGapAbove, String persistedSettingId, String translationKeyPath, boolean whenUnknown) {
         if (addGapAbove) {
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_GROUP_GAP)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, SettingsUiMetrics.SETTING_GROUP_GAP));
         }
         BooleanSetting staging = globalStagingBooleanForHudWidgets(sortedWidgets, persistedSettingId, translationKeyPath, whenUnknown);
         FGlobalHudBooleanApplyRowWidget row = new FGlobalHudBooleanApplyRowWidget(staging, paddedInnerWidth, rowHeight, () -> HudAppearanceBulkApply.applyBooleanToAllHudModules(sortedWidgets, persistedSettingId, Boolean.TRUE.equals(staging.getValue())));
@@ -186,7 +183,7 @@ public class ModSettingsWidgetsTabBuilder {
 
     private static void appendGlobalHudAppearanceApplySliderRow(FColumnWidget scrollBody, float settingsContentWidth, float settingsInnerWidth, float paddedInnerWidth, List<HudModule> sortedWidgets, boolean addGapAbove, String persistedSettingId, String translationKeyPath) {
         if (addGapAbove) {
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_GROUP_GAP)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, SettingsUiMetrics.SETTING_GROUP_GAP));
         }
         SliderSetting staging = globalStagingSliderForHudWidgets(sortedWidgets, persistedSettingId, translationKeyPath);
         float sliderValueColumnStartX = ModSettingsCategoryRows.computeValueColumnStartX(List.of(staging));
@@ -197,7 +194,7 @@ public class ModSettingsWidgetsTabBuilder {
 
     private static void appendGlobalHudAppearanceApplyRegistryColorRow(FColumnWidget scrollBody, float settingsContentWidth, float settingsInnerWidth, float paddedInnerWidth, ColorSetting registryColor, Consumer<ColorSetting> openColorPicker, boolean addGapAbove) {
         if (addGapAbove) {
-            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, GuiDesignSpace.pxY(SettingsUiMetrics.SETTING_GROUP_GAP)));
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, SettingsUiMetrics.SETTING_GROUP_GAP));
         }
         ColorSetting staging = globalStagingRegistryColor(registryColor);
         float sliderValueColumnStartX = ModSettingsCategoryRows.computeValueColumnStartX(List.of(staging));
@@ -209,26 +206,14 @@ public class ModSettingsWidgetsTabBuilder {
     private static BooleanSetting globalStagingBooleanForHudWidgets(List<HudModule> hudWidgets, String persistedSettingId, String translationKeyPath, boolean whenUnknown) {
         Optional<Boolean> consensus = HudAppearanceBulkApply.booleanConsensus(hudWidgets, persistedSettingId);
         boolean initial = consensus.orElse(whenUnknown);
-        return BooleanSetting.builder()
-                .id("widgets_global_staging_" + persistedSettingId)
-                .defaultValue(initial)
-                .value(initial)
-                .translationKeyPath(translationKeyPath)
-                .build();
+        return BooleanSetting.builder().id("widgets_global_staging_" + persistedSettingId).defaultValue(initial).value(initial).translationKeyPath(translationKeyPath).build();
     }
 
     private static SliderSetting globalStagingSliderForHudWidgets(List<HudModule> sortedWidgets, String persistedSettingId, String translationKeyPath) {
         SliderSetting template = sortedWidgets.get(0).getSetting(SliderSetting.class, persistedSettingId).orElseThrow();
         Optional<Float> consensus = HudAppearanceBulkApply.floatSliderConsensus(sortedWidgets, persistedSettingId);
         float initial = consensus.orElse(template.getDefaultValue().floatValue());
-        SliderSetting.Builder builder = SliderSetting.builder()
-                .id("widgets_global_staging_" + persistedSettingId)
-                .minValue(template.getMin())
-                .maxValue(template.getMax())
-                .step(template.getStep())
-                .defaultValue(initial)
-                .value(initial)
-                .translationKeyPath(translationKeyPath);
+        SliderSetting.Builder builder = SliderSetting.builder().id("widgets_global_staging_" + persistedSettingId).minValue(template.getMin()).maxValue(template.getMax()).step(template.getStep()).defaultValue(initial).value(initial).translationKeyPath(translationKeyPath);
         if (template.getValueFormatter() != null) {
             builder.valueFormatter(template.getValueFormatter());
         }
@@ -237,12 +222,7 @@ public class ModSettingsWidgetsTabBuilder {
 
     private static ColorSetting globalStagingRegistryColor(ColorSetting registryColor) {
         SettingColor initial = registryColor.getValue().copy();
-        return ColorSetting.builder()
-                .id("widgets_global_staging_" + registryColor.getSettingKey())
-                .defaultValue(initial.copy())
-                .value(initial.copy())
-                .translationKeyPath(registryColor.getTranslationKeyPath())
-                .build();
+        return ColorSetting.builder().id("widgets_global_staging_" + registryColor.getSettingKey()).defaultValue(initial.copy()).value(initial.copy()).translationKeyPath(registryColor.getTranslationKeyPath()).build();
     }
 
     private static FScrollColumnWidget wrapScrollClip(FColumnWidget body, float gap, Ref<Float> scrollYRef) {

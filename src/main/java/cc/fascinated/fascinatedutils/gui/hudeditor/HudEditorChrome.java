@@ -37,7 +37,7 @@ public class HudEditorChrome {
     public static List<HudModule> visibleLayoutWidgets(List<HudModule> registeredWidgets) {
         List<HudModule> visible = new ArrayList<>(registeredWidgets.size());
         for (HudModule widget : registeredWidgets) {
-            if (widget.getHudState().isVisible()) {
+            if (widget.isEnabled()) {
                 visible.add(widget);
             }
         }

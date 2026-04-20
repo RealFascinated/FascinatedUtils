@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.TextLayoutMetrics;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
@@ -76,9 +75,9 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
 
     @Override
     public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-        float padY = GuiDesignSpace.pxY(CARD_PAD_Y_DESIGN);
-        float backSize = GuiDesignSpace.pxUniform(BACK_SIZE_DESIGN);
-        float lineHeight = measure != null ? TextLayoutMetrics.layoutLineHeightPx(measure) : Math.max(1f, GuiDesignSpace.pxY(ModSettingsTheme.shellDesignBodyLineHeight()));
+        float padY = CARD_PAD_Y_DESIGN;
+        float backSize = BACK_SIZE_DESIGN;
+        float lineHeight = measure != null ? TextLayoutMetrics.layoutLineHeightPx(measure) : Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());
         return 2f * padY + Math.max(lineHeight, backSize);
     }
 
@@ -130,8 +129,8 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
     }
 
     private float[] backButtonBounds() {
-        float padX = GuiDesignSpace.pxX(CARD_PAD_X_DESIGN);
-        float backSize = GuiDesignSpace.pxUniform(BACK_SIZE_DESIGN);
+        float padX = CARD_PAD_X_DESIGN;
+        float backSize = BACK_SIZE_DESIGN;
         float backX = x() + padX;
         float backY = y() + (h() - backSize) * 0.5f;
         return new float[]{backX, backY, backSize, backSize};
@@ -139,8 +138,8 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        float corner = GuiDesignSpace.pxUniform(graphics.theme().cardCornerRadius());
-        float borderThickness = GuiDesignSpace.pxUniform(UITheme.BORDER_THICKNESS_PX);
+        float corner = graphics.theme().cardCornerRadius();
+        float borderThickness = UITheme.BORDER_THICKNESS_PX;
         graphics.fillRoundedRectFrame(x(), y(), w(), h(), corner, graphics.theme().border(), graphics.theme().surface(), borderThickness, borderThickness, RectCornerRoundMask.ALL);
         float lineHeight = TextLayoutMetrics.layoutLineHeightPx(graphics);
         float textWidth = graphics.measureTextWidth(titleText, false);

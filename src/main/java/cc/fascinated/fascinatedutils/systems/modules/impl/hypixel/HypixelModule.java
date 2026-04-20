@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.hypixel;
 import cc.fascinated.fascinatedutils.common.PatternHandler;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
+import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import cc.fascinated.fascinatedutils.systems.modules.impl.hypixel.feature.AutoGG;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
@@ -15,7 +16,7 @@ public class HypixelModule extends Module {
     private final BooleanSetting autoGG = BooleanSetting.builder().id("auto_gg").defaultValue(false).build();
 
     public HypixelModule() {
-        super("Hypixel");
+        super("Hypixel", ModuleCategory.MISC);
         addSetting(autoGG);
 
         new AutoGG(this);

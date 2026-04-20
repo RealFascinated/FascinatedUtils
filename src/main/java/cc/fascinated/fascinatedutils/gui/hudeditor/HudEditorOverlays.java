@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.hudeditor;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
@@ -16,7 +15,6 @@ public class HudEditorOverlays {
     private static final float BRANDING_TITLE_TO_MODS_GAP = 16f;
     private static final float MODS_BUTTON_PAD_X = 32f;
     private static final float MODS_BUTTON_PAD_Y = 9f;
-
     @Nullable
     private static BrandingHit brandingHit;
 
@@ -66,10 +64,10 @@ public class HudEditorOverlays {
         brandingHit = hitLayout;
         boolean modsHovered = hitLayout.containsMods(pointerX, pointerY);
         glRenderer.drawMiniMessageText(titleMiniMessage, titleLeft, blockTop, false);
-        float borderThicknessX = GuiDesignSpace.pxX(UITheme.BORDER_THICKNESS_PX);
-        float borderThicknessY = GuiDesignSpace.pxY(UITheme.BORDER_THICKNESS_PX);
+        float borderThicknessX = UITheme.BORDER_THICKNESS_PX;
+        float borderThicknessY = UITheme.BORDER_THICKNESS_PX;
         float maxCornerRadius = Math.min(modsButtonWidth, modsButtonHeight) * 0.5f - 0.01f;
-        float themedCorner = GuiDesignSpace.pxUniform(glRenderer.theme().cardCornerRadius());
+        float themedCorner = glRenderer.theme().cardCornerRadius();
         float modsCornerRadius = Mth.clamp(themedCorner, 0.5f, Math.max(0.5f, maxCornerRadius - Math.min(borderThicknessX, borderThicknessY) * 0.5f));
         int modsBorderColor = modsHovered ? glRenderer.theme().borderHover() : glRenderer.theme().border();
         glRenderer.fillRoundedRectFrame(modsLeft, modsTop, modsButtonWidth, modsButtonHeight, modsCornerRadius, modsBorderColor, glRenderer.theme().surface(), borderThicknessX, borderThicknessY, RectCornerRoundMask.ALL);

@@ -1,20 +1,12 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FCellConstraints;
-import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FMinWidthHostWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import net.minecraft.client.resources.language.I18n;
 
@@ -71,11 +63,11 @@ public class SettingsTabElement extends FWidget {
 
     private void rebuild(float width, float height) {
         Consumer<ColorSetting> openColorPicker = this::openColorPicker;
-        float controlsHeight = GuiDesignSpace.pxY(SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN);
-        float columnGap = GuiDesignSpace.pxY(4f);
-        float tabStripTopInset = GuiDesignSpace.pxY(4f);
-        float horizontalInset = GuiDesignSpace.pxX(SettingsUiMetrics.SETTINGS_DETAIL_CONTENT_INSET_X_DESIGN);
-        float tabStripInnerWidth = Math.max(GuiDesignSpace.pxX(14f), width - 2f * horizontalInset);
+        float controlsHeight = SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN;
+        float columnGap = 4f;
+        float tabStripTopInset = 4f;
+        float horizontalInset = SettingsUiMetrics.SETTINGS_DETAIL_CONTENT_INSET_X_DESIGN;
+        float tabStripInnerWidth = Math.max(14f, width - 2f * horizontalInset);
         float tabStripHeight = tabStripTopInset + controlsHeight + columnGap;
 
         FColumnWidget mainColumn = new FColumnWidget(columnGap, Align.CENTER) {
@@ -90,7 +82,7 @@ public class SettingsTabElement extends FWidget {
             }
         };
 
-        FRowWidget tabRow = new FRowWidget(GuiDesignSpace.pxX(3f), Align.CENTER) {
+        FRowWidget tabRow = new FRowWidget(3f, Align.CENTER) {
             @Override
             public boolean fillsHorizontalInRow() {
                 return true;
@@ -107,7 +99,7 @@ public class SettingsTabElement extends FWidget {
                 registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
                 dirty = true;
             }
-        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_general"), GuiDesignSpace.pxX(56f), 1, 1f, 6f, 1.12f, 7f, 2f) {
+        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_general"), 56f, 1, 1f, 6f, 1.12f, 7f, 2f) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
@@ -137,7 +129,7 @@ public class SettingsTabElement extends FWidget {
                 registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE);
                 dirty = true;
             }
-        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_performance"), GuiDesignSpace.pxX(92f), 1, 1f, 6f, 1.12f, 7f, 2f) {
+        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_performance"), 92f, 1, 1f, 6f, 1.12f, 7f, 2f) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
@@ -185,9 +177,7 @@ public class SettingsTabElement extends FWidget {
         mainColumn.addChild(new FSpacerWidget(width, tabStripTopInset));
         mainColumn.addChild(paddedTabStrip);
 
-        Ref<Float> activeScroll = registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL
-                ? generalRegistryScrollRef
-                : performanceRegistryScrollRef;
+        Ref<Float> activeScroll = registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL ? generalRegistryScrollRef : performanceRegistryScrollRef;
         float settingsPaneHeight = Math.max(1f, height - tabStripHeight);
         FWidget settingsContent = ModSettingsRegistrySettingsTabBuilder.buildSettingsTab(width, settingsPaneHeight, activeScroll, openColorPicker, registrySubTabRef.getValue());
         settingsContent.setCellConstraints(new FCellConstraints().setExpandVertical(true));

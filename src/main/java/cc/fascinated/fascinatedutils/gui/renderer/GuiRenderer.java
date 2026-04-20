@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.renderer;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.GuiTheme;
+import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.renderer.operations.GuiRenderOperation;
 import cc.fascinated.fascinatedutils.gui.renderer.operations.MiniMessageTextOperation;
 import cc.fascinated.fascinatedutils.gui.renderer.operations.TextOperation;
@@ -12,6 +12,7 @@ import cc.fascinated.fascinatedutils.renderer.MeshBuilder;
 import cc.fascinated.fascinatedutils.renderer.Renderer2D;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -45,6 +46,8 @@ public class GuiRenderer implements UIRenderer {
     private final List<Runnable> absolutePostTasks = new ArrayList<>();
     private final ArrayDeque<TextOperation> textOperationPool = new ArrayDeque<>();
     private final ArrayDeque<MiniMessageTextOperation> miniMessageOperationPool = new ArrayDeque<>();
+    private float savedVanillaW;
+    private float savedVanillaH;
 
     public GuiRenderer(GuiGraphicsExtractor drawContext, GuiTheme guiTheme) {
         this.drawContext = drawContext;
@@ -65,6 +68,13 @@ public class GuiRenderer implements UIRenderer {
      * @param clipHeight logical height of the root clip in pixels
      */
     public void begin(float clipWidth, float clipHeight) {
+        savedVanillaW = (float) minecraftClient.getWindow().getGuiScaledWidth();
+        savedVanillaH = (float) minecraftClient.getWindow().getGuiScaledHeight();
+        float poseScaleX = savedVanillaW / UIScale.uiWidth();
+        float poseScaleY = savedVanillaH / UIScale.uiHeight();
+        drawContext.pose().pushMatrix();
+        drawContext.pose().identity();
+        drawContext.pose().scale(poseScaleX, poseScaleY);
         MeshBuilder.INSTANCE.beginFrame(drawContext, minecraftClient);
         MeshBuilder.INSTANCE.beginSegment(drawContext);
         Scissor.Region root = new Scissor.Region(0f, 0f, clipWidth, clipHeight);
@@ -166,6 +176,7 @@ public class GuiRenderer implements UIRenderer {
         }
         absolutePostTasks.clear();
         MeshBuilder.INSTANCE.endFrame(drawContext);
+        drawContext.pose().popMatrix();
     }
 
     @Override
@@ -185,7 +196,7 @@ public class GuiRenderer implements UIRenderer {
 
     @Override
     public void fillRoundedGradientVertical(float positionX, float positionY, float width, float height, float cornerRadius, int colorTop, int colorBottom, int cornerRoundMask) {
-        backend.fillRoundedGradientVertical(positionX, positionY, width, height, cornerRadius, colorTop, colorBottom, cornerRoundMask);
+        backend.fillGradientVertical(positionX, positionY, width, height, colorTop, colorBottom);
     }
 
     /**
@@ -199,12 +210,13 @@ public class GuiRenderer implements UIRenderer {
 
     @Override
     public void fillRoundedRect(float positionX, float positionY, float width, float height, float cornerRadius, int fillArgb, int cornerRoundMask) {
-        backend.fillRoundedRect(positionX, positionY, width, height, cornerRadius, fillArgb, cornerRoundMask);
+        backend.drawRect(positionX, positionY, width, height, fillArgb);
     }
 
     @Override
     public void fillRoundedRectFrame(float positionX, float positionY, float width, float height, float cornerRadius, int borderArgb, int fillArgb, float borderThicknessX, float borderThicknessY, int cornerRoundMask) {
-        backend.fillRoundedRectFrame(positionX, positionY, width, height, cornerRadius, borderArgb, fillArgb, borderThicknessX, borderThicknessY, cornerRoundMask);
+        backend.drawRect(positionX, positionY, width, height, fillArgb);
+        backend.drawBorder(positionX, positionY, width, height, Math.max(borderThicknessX, borderThicknessY), borderArgb);
     }
 
     /**
@@ -222,7 +234,7 @@ public class GuiRenderer implements UIRenderer {
      * @param cornerRoundMask which corners are rounded
      */
     public void fillRoundedRectBorderRing(float positionX, float positionY, float width, float height, float cornerRadius, float ringStrokePx, int borderArgb, int cornerRoundMask) {
-        backend.fillRoundedRectBorderRing(positionX, positionY, width, height, cornerRadius, ringStrokePx, borderArgb, cornerRoundMask);
+        backend.drawBorder(positionX, positionY, width, height, ringStrokePx, borderArgb);
     }
 
     /**
@@ -238,8 +250,7 @@ public class GuiRenderer implements UIRenderer {
      * @param cornerRoundMask which corners are rounded
      */
     public void fillThemedSurfaceCardFrame(float positionX, float positionY, float width, float height, float cornerRadius, int cornerRoundMask) {
-        float strokePx = GuiDesignSpace.pxUniform(UITheme.BORDER_THICKNESS_PX);
-        fillRoundedRectFrame(positionX, positionY, width, height, cornerRadius, theme().border(), theme().surface(), strokePx, strokePx, cornerRoundMask);
+        fillRoundedRectFrame(positionX, positionY, width, height, cornerRadius, theme().border(), theme().surface(), UITheme.BORDER_THICKNESS_PX, UITheme.BORDER_THICKNESS_PX, cornerRoundMask);
     }
 
     @Override
@@ -305,6 +316,30 @@ public class GuiRenderer implements UIRenderer {
     @Override
     public int measureTextWidth(String text, boolean bold) {
         return backend.measureTextWidth(text, bold);
+    }
+
+    /**
+     * Width of a styled {@link Component} in logical pixels (matches {@link #drawComponentText}).
+     *
+     * @param text rich text to measure
+     * @return width in logical pixels, at least 1
+     */
+    public int measureTextWidth(Component text) {
+        return backend.measureTextWidth(text);
+    }
+
+    /**
+     * Draws a vanilla {@link Component} immediately. Call {@link #endRenderSegment()} once before the first of these if
+     * batched mesh was queued in the same segment.
+     *
+     * @param text      rich text to draw
+     * @param positionX left origin in logical pixels
+     * @param positionY layout line top in logical pixels
+     * @param color     packed ARGB text color
+     * @param shadow    whether to draw vanilla text shadow
+     */
+    public void drawComponentText(Component text, float positionX, float positionY, int color, boolean shadow) {
+        backend.drawTextImmediate(text, positionX, positionY, color, shadow);
     }
 
     @Override

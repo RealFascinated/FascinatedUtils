@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
-import cc.fascinated.fascinatedutils.gui.GuiDesignSpace;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -34,19 +33,19 @@ public class FShellTabStripWidget extends FWidget {
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-        float marginX = GuiDesignSpace.pxX(ModSettingsTheme.SHELL_TAB_STRIP_MARGIN_X);
-        float maxTrackWidth = GuiDesignSpace.pxX(ModSettingsTheme.SHELL_TAB_STRIP_MAX_WIDTH);
+        float marginX = ModSettingsTheme.SHELL_TAB_STRIP_MARGIN_X;
+        float maxTrackWidth = ModSettingsTheme.SHELL_TAB_STRIP_MAX_WIDTH;
         float trackWidth = Math.min(maxTrackWidth, Math.max(0f, layoutWidth - 2f * marginX));
         float trackHeight = ModSettingsTheme.titleBarSquareControlSizePx();
         float trackX = layoutX + marginX;
         float trackY = layoutY + Math.max(0f, (layoutHeight - trackHeight) * 0.5f);
-        float segmentGap = GuiDesignSpace.pxX(ModSettingsTheme.SHELL_TAB_STRIP_SEGMENT_GAP);
+        float segmentGap = ModSettingsTheme.SHELL_TAB_STRIP_SEGMENT_GAP;
         float segmentWidth = Math.max(0f, (trackWidth - segmentGap * (TAB_COUNT - 1)) / Math.max(1, TAB_COUNT));
         float segmentHeight = trackHeight;
         float segmentY = trackY;
         float modulesSegmentX = trackX;
         float settingsSegmentX = modulesSegmentX + segmentWidth + segmentGap;
-        float trackCornerRadius = Math.max(0.5f, Math.min(GuiDesignSpace.pxUniform(ModSettingsTheme.SHELL_TAB_STRIP_SEGMENT_CORNER_RADIUS), trackHeight * 0.5f - 0.5f));
+        float trackCornerRadius = Math.max(0.5f, Math.min(ModSettingsTheme.SHELL_TAB_STRIP_SEGMENT_CORNER_RADIUS, trackHeight * 0.5f - 0.5f));
         float segmentCornerMax = Math.max(0.5f, segmentWidth * 0.5f - 0.5f);
         float segmentCornerRadius = Mth.clamp(Math.min(trackCornerRadius - 0.5f, Math.min(segmentHeight * 0.5f - 0.5f, segmentCornerMax)), 0.5f, segmentCornerMax);
         modulesSegment.setShellSegmentFillet(segmentCornerRadius, RectCornerRoundMask.ALL);
@@ -57,6 +56,6 @@ public class FShellTabStripWidget extends FWidget {
 
     @Override
     public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-        return GuiDesignSpace.pxY(ModSettingsTheme.TOPBAR_HEIGHT);
+        return ModSettingsTheme.TOPBAR_HEIGHT;
     }
 }
