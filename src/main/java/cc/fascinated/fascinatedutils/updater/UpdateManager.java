@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.updater;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.SystemUtils;
+import cc.fascinated.fascinatedutils.updater.UpdateChecker;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 
@@ -14,6 +15,11 @@ public final class UpdateManager {
 
     public static void registerShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                new UpdateChecker().checkForUpdates();
+            } catch (Throwable t) {
+                Client.LOG.warn("Update check on exit failed", t);
+            }
             try {
                 Path modsDir = FabricLoader.getInstance().getGameDir().resolve("mods");
                 try (var stream = Files.list(modsDir)) {

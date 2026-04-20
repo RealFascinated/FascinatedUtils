@@ -13,7 +13,6 @@ import cc.fascinated.fascinatedutils.gui.ModUiClientEntry;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.turboentities.TurboEntities;
 import cc.fascinated.fascinatedutils.turboparticles.TurboParticles;
-import cc.fascinated.fascinatedutils.updater.UpdateChecker;
 import cc.fascinated.fascinatedutils.updater.UpdateManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -49,10 +48,9 @@ public class Client implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(_ -> KeybindsWrapper.dispatchRegisteredCallbacks());
         ClientTickEvents.END_CLIENT_TICK.register(client -> FascinatedEventBus.INSTANCE.post(new ClientTickEvent(client)));
 
-        // Register updater shutdown hook and kick off an async update check
+        // Register updater shutdown hook; check and download will run on game exit
         if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
             UpdateManager.registerShutdownHook();
-            UpdateChecker.checkForUpdatesAsync();
         }
     }
 }
