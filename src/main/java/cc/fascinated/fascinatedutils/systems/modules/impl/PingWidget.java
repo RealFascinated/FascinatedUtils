@@ -1,24 +1,19 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.PingColors;
-import cc.fascinated.fascinatedutils.common.ValueSmoother;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.event.impl.packet.PacketReceiveEvent;
-import cc.fascinated.fascinatedutils.event.impl.packet.PacketSendEvent;
 import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
-import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.protocol.common.ClientboundPingPacket;
-import net.minecraft.network.protocol.common.ServerboundPongPacket;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.PlayerInfo;
 
 public class PingWidget extends HudMiniMessageModule {
-    private final BooleanSetting usePingColor = BooleanSetting.builder().id("use_ping_color").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private static final long UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(1_000L);
 
-    private final ValueSmoother pingSmoother = new ValueSmoother(1000);
-    private volatile long pongSentNanos = 0;
-    private volatile int rawPingMs = 0;
+    private final BooleanSetting usePingColor = BooleanSetting.builder().id("use_ping_color").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
     public PingWidget() {
         super("ping", "Ping", 56f);
@@ -27,25 +22,28 @@ public class PingWidget extends HudMiniMessageModule {
 
     @Override
     protected List<String> lines(float deltaSeconds) {
-        int smoothedMs = (int) Math.round(pingSmoother.smooth(rawPingMs, deltaSeconds));
-        int color = usePingColor.getValue() ? PingColors.getPingColor(smoothedMs) : 0xFFFFFFFF;
-        return List.of("<color:" + ColorUtils.rgbHex(color) + ">" + smoothedMs + " ms</color>");
+        int pingMs = resolvedPingMs();
+        if (pingMs <= 0) {
+            return List.of("<yellow>... <white>ms");
+        }
+
+        int color = usePingColor.getValue() ? PingColors.getPingColor(pingMs) : 0xFFFFFFFF;
+        return List.of("<color:" + ColorUtils.rgbHex(color) + ">" + pingMs + "</color> ms");
     }
 
-    @EventHandler
-    private void onPacketReceive(PacketReceiveEvent event) {
-        if (event.packet() instanceof ClientboundPingPacket) {
-            long sent = pongSentNanos;
-            if (sent > 0) {
-                rawPingMs = (int) ((System.nanoTime() - sent) / 1_000_000L);
+    @Override
+    protected long hudMiniMessageUpdateIntervalNanos() {
+        return UPDATE_INTERVAL_NANOS;
+    }
+
+    private int resolvedPingMs() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player != null && minecraft.getConnection() != null) {
+            PlayerInfo info = minecraft.getConnection().getPlayerInfo(minecraft.player.getUUID());
+            if (info != null) {
+                return info.getLatency();
             }
         }
-    }
-
-    @EventHandler
-    private void onPacketSend(PacketSendEvent event) {
-        if (event.packet() instanceof ServerboundPongPacket) {
-            pongSentNanos = System.nanoTime();
-        }
+        return 0;
     }
 }
