@@ -36,14 +36,18 @@ public class MeshRenderer {
     }
 
     /**
-     * Pack ARGB so the alpha byte holds {@code min(255, round(cornerRadius))}; RGB comes from {@code argb}.
+     * Pack ARGB so the alpha byte holds the corner-radius fraction of the half-minimum side of the pixel quad.
+     * The shader reads {@code vertexColor.a * minSidePx * 0.5} to recover the screen-pixel radius, so the shape
+     * stays a perfect circle (or correctly-proportioned fillet) at any GUI scale.
      *
-     * @param argb         source color (alpha is replaced)
-     * @param cornerRadius corner fillet radius in logical pixels
+     * @param argb              source color (alpha is replaced)
+     * @param cornerRadius      corner fillet radius in logical pixels
+     * @param halfMinPixelSide  half of the smaller pixel-quad dimension after floor/ceil snapping
      * @return packed color for all four quad vertices (same alpha byte on each)
      */
-    public static int packArgbRadius(int argb, float cornerRadius) {
-        int radiusByte = Mth.clamp(Math.round(cornerRadius), 0, 255);
+    public static int packArgbRadius(int argb, float cornerRadius, float halfMinPixelSide) {
+        float fraction = halfMinPixelSide > 1e-4f ? cornerRadius / halfMinPixelSide : 0f;
+        int radiusByte = Mth.clamp(Math.round(fraction * 255f), 0, 255);
         return (argb & 0x00FFFFFF) | (radiusByte << 24);
     }
 
@@ -182,37 +186,36 @@ public class MeshRenderer {
         int y0 = Mth.floor(positionY);
         int x1 = Mth.ceil(positionX + width);
         int y1 = Mth.ceil(positionY + height);
-        // Float-square shapes (slider thumb) must stay square in pixel space; independent floor/ceil per axis can be 11×10.
+        // Square logical shapes (circle knobs, slider thumb) need a stable pixel-quad size across all animation
+        // frames. Independent floor/ceil per axis can produce a 6×5 quad for a logical 5×5 shape at fractional
+        // positions, making the circle appear to change size during animation. Round to a fixed size and center it.
         if (Math.abs(width - height) < 1e-3f) {
-            int pixelWidth = x1 - x0;
-            int pixelHeight = y1 - y0;
-            if (pixelWidth != pixelHeight) {
-                int side = Math.max(pixelWidth, pixelHeight);
-                float centerX = positionX + width * 0.5f;
-                float centerY = positionY + height * 0.5f;
-                x0 = Mth.floor(centerX - side * 0.5f);
-                x1 = x0 + side;
-                y0 = Mth.floor(centerY - side * 0.5f);
-                y1 = y0 + side;
-            }
+            int side = Math.round(Math.min(width, height));
+            float centerX = positionX + width * 0.5f;
+            float centerY = positionY + height * 0.5f;
+            x0 = Mth.floor(centerX - side * 0.5f);
+            x1 = x0 + side;
+            y0 = Mth.floor(centerY - side * 0.5f);
+            y1 = y0 + side;
         }
         int topAlpha = (colorTop >>> 24) & 0xFF;
         int bottomAlpha = (colorBottom >>> 24) & 0xFF;
         boolean presetOpaque = lutOuterRingStrokePx <= 0f && RectCornerRoundMask.isPresetMask(cornerRoundMask) && topAlpha == 255 && bottomAlpha == 255;
+        float halfMinPixelSide = Math.min(x1 - x0, y1 - y0) * 0.5f;
         RenderPipeline roundedPipeline;
         TextureSetup roundedTextureSetup;
         int topLeft;
         int bottomLeft;
         int bottomRight;
         int topRight;
-        int packedCornerRadii = RectCornerRoundMask.packedCornerRadiiBytes(cornerRadius, cornerRoundMask);
+        int packedCornerRadii = RectCornerRoundMask.packedCornerRadiiBytes(cornerRadius, cornerRoundMask, halfMinPixelSide);
         if (presetOpaque) {
             roundedPipeline = FascinatedUiPipelines.roundedRectPresetPipeline(cornerRoundMask);
             roundedTextureSetup = whiteSetup();
-            topLeft = packArgbRadius(colorTop, cornerRadius);
-            bottomLeft = packArgbRadius(colorBottom, cornerRadius);
-            bottomRight = packArgbRadius(colorBottom, cornerRadius);
-            topRight = packArgbRadius(colorTop, cornerRadius);
+            topLeft = packArgbRadius(colorTop, cornerRadius, halfMinPixelSide);
+            bottomLeft = packArgbRadius(colorBottom, cornerRadius, halfMinPixelSide);
+            bottomRight = packArgbRadius(colorBottom, cornerRadius, halfMinPixelSide);
+            topRight = packArgbRadius(colorTop, cornerRadius, halfMinPixelSide);
         }
         else {
             roundedPipeline = FascinatedUiPipelines.ROUNDED_RECT_TEX_LUT;

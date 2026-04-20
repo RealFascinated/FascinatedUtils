@@ -31,7 +31,7 @@ void main() {
     vec2 halfSizePx = vec2(widthPx, heightPx) * 0.5;
     vec2 pointPx = (uv - vec2(0.5)) * vec2(widthPx, heightPx);
     float minSidePx = min(widthPx, heightPx);
-    float rPx = clamp(vertexColor.a * 255.0, 0.0, minSidePx * 0.5);
+    float rPx = vertexColor.a * minSidePx * 0.5;
     vec4 rCorners = vec4(rPx, 0.0, 0.0, rPx);
     float signedDistance = sdRoundedRectCornersYDown(pointPx, halfSizePx, rCorners);
     float edgeWidth = max(fwidth(signedDistance), 1e-4);

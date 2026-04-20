@@ -35,14 +35,18 @@ public class RectCornerRoundMask {
     }
 
     /**
-     * Pack four per-corner fillet radii (0â€“255 logical pixels each) for the GPU rounded-rect LUT.
+     * Pack four per-corner fillet radii as fractions of the half-minimum pixel side for the GPU rounded-rect LUT.
+     * The shader reads {@code texelFetch(...).r * minSidePx * 0.5} to recover the screen-pixel radius, keeping the
+     * correct fillet proportion at any GUI scale.
      *
-     * @param cornerRadius    requested fillet radius when a corner bit is set
-     * @param cornerRoundMask bitmask of which corners use {@code cornerRadius}; others are sharp (0)
+     * @param cornerRadius     requested fillet radius in logical pixels when a corner bit is set
+     * @param cornerRoundMask  bitmask of which corners use {@code cornerRadius}; others are sharp (0)
+     * @param halfMinPixelSide half of the smaller pixel-quad dimension after floor/ceil snapping
      * @return packed bytes {@code (topLeft<<24)|(topRight<<16)|(bottomRight<<8)|bottomLeft}
      */
-    public static int packedCornerRadiiBytes(float cornerRadius, int cornerRoundMask) {
-        int radiusByte = Mth.clamp(Math.round(cornerRadius), 0, 255);
+    public static int packedCornerRadiiBytes(float cornerRadius, int cornerRoundMask, float halfMinPixelSide) {
+        float fraction = halfMinPixelSide > 1e-4f ? cornerRadius / halfMinPixelSide : 0f;
+        int radiusByte = Mth.clamp(Math.round(fraction * 255f), 0, 255);
         int topLeft = (cornerRoundMask & TOP_LEFT) != 0 ? radiusByte : 0;
         int topRight = (cornerRoundMask & TOP_RIGHT) != 0 ? radiusByte : 0;
         int bottomRight = (cornerRoundMask & BOTTOM_RIGHT) != 0 ? radiusByte : 0;

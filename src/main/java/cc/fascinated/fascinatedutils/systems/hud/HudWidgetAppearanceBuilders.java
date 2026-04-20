@@ -26,8 +26,19 @@ public class HudWidgetAppearanceBuilders {
     public static BooleanSetting.Builder roundedCorners() {
         return BooleanSetting.builder()
                 .id(HudModule.SETTING_ROUNDED_CORNERS)
-                .defaultValue(false)
+                .defaultValue(true)
                 .translationKeyPath("fascinatedutils.module.rounded_corners")
+                .categoryDisplayKey(HudModule.APPEARANCE_CATEGORY_DISPLAY_KEY);
+    }
+
+    public static SliderSetting.Builder roundingRadius() {
+        return SliderSetting.builder()
+                .id(HudModule.SETTING_ROUNDING_RADIUS)
+                .defaultValue(6f)
+                .minValue(1f)
+                .maxValue(12f)
+                .step(1f)
+                .translationKeyPath("fascinatedutils.module.rounding_radius")
                 .categoryDisplayKey(HudModule.APPEARANCE_CATEGORY_DISPLAY_KEY);
     }
 
@@ -36,17 +47,6 @@ public class HudWidgetAppearanceBuilders {
                 .id(HudModule.SETTING_SHOW_BORDER)
                 .defaultValue(false)
                 .translationKeyPath("fascinatedutils.module.show_border")
-                .categoryDisplayKey(HudModule.APPEARANCE_CATEGORY_DISPLAY_KEY);
-    }
-
-    public static SliderSetting.Builder roundingRadius() {
-        return SliderSetting.builder()
-                .id(HudModule.SETTING_ROUNDING_RADIUS)
-                .defaultValue(4f)
-                .minValue(1f)
-                .maxValue(16f)
-                .step(1f)
-                .translationKeyPath("fascinatedutils.module.rounding_radius")
                 .categoryDisplayKey(HudModule.APPEARANCE_CATEGORY_DISPLAY_KEY);
     }
 

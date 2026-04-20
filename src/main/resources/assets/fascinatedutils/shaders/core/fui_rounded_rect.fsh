@@ -33,10 +33,10 @@ void main() {
     vec2 halfSizePx = vec2(widthPx, heightPx) * 0.5;
     vec2 pointPx = (uv - vec2(0.5)) * vec2(widthPx, heightPx);
     float minSidePx = min(widthPx, heightPx);
-    float r_tl = clamp(texelFetch(Sampler1, ivec2(0, 0), 0).r * 255.0, 0.0, minSidePx * 0.5);
-    float r_tr = clamp(texelFetch(Sampler1, ivec2(1, 0), 0).r * 255.0, 0.0, minSidePx * 0.5);
-    float r_br = clamp(texelFetch(Sampler1, ivec2(2, 0), 0).r * 255.0, 0.0, minSidePx * 0.5);
-    float r_bl = clamp(texelFetch(Sampler1, ivec2(3, 0), 0).r * 255.0, 0.0, minSidePx * 0.5);
+    float r_tl = texelFetch(Sampler1, ivec2(0, 0), 0).r * minSidePx * 0.5;
+    float r_tr = texelFetch(Sampler1, ivec2(1, 0), 0).r * minSidePx * 0.5;
+    float r_br = texelFetch(Sampler1, ivec2(2, 0), 0).r * minSidePx * 0.5;
+    float r_bl = texelFetch(Sampler1, ivec2(3, 0), 0).r * minSidePx * 0.5;
     float ringStrokePx = texelFetch(Sampler1, ivec2(4, 0), 0).r * 255.0;
     vec4 rCorners = vec4(r_tl, r_tr, r_br, r_bl);
     float signedDistance = sdRoundedRectCornersYDown(pointPx, halfSizePx, rCorners);

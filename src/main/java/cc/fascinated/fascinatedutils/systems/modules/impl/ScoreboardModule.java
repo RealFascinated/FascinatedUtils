@@ -42,7 +42,7 @@ public class ScoreboardModule extends HudModule {
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().defaultValue(SettingColor.fromArgb(0x55000000)).build();
     private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().defaultValue(true).build();
-    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().defaultValue(16f).build();
+    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
