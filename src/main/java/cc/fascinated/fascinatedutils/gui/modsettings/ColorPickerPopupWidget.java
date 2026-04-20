@@ -82,7 +82,7 @@ public class ColorPickerPopupWidget extends FPopupWidget {
         float rainbowRowHeight = rainbowToggleCheckbox.intrinsicHeightForColumn(measure, svAreaSize);
         float actionsHeight = applyButton.intrinsicHeightForColumn(measure, svAreaSize);
 
-        float popupWidth = svAreaSize + 2f * horizontalPadding;
+        float popupWidth = svAreaSize + 50f * horizontalPadding;
         float titleHeight = 11f;
         float popupHeight = verticalPadding + titleHeight + rowGap + svAreaSize + rowGap + hueBarHeight + rowGap + rainbowRowHeight + rowGap + actionsHeight + verticalPadding;
 

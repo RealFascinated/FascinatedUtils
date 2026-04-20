@@ -5,12 +5,15 @@ import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import lombok.Setter;
 
 public class FClickableTabSegmentWidget extends FWidget {
     private final String tabKey;
     private final String labelText;
     private final Callback<String> onSelect;
+    @Setter
     private String selectedKey;
+    @Setter
     private boolean hovered;
     private float shellSegmentCornerRadius;
     private int shellSegmentCornerMask = RectCornerRoundMask.ALL;
@@ -19,14 +22,6 @@ public class FClickableTabSegmentWidget extends FWidget {
         this.tabKey = tabKey;
         this.labelText = labelText;
         this.onSelect = onSelect;
-    }
-
-    public void setSelectedKey(String selectedKey) {
-        this.selectedKey = selectedKey;
-    }
-
-    public void setHovered(boolean hovered) {
-        this.hovered = hovered;
     }
 
     public void setShellSegmentFillet(float cornerRadius, int cornerRoundMask) {

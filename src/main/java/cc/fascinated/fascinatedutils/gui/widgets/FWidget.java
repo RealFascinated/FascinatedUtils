@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.gui.core.UiFocusIds;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +13,7 @@ import java.util.List;
 public abstract class FWidget {
     private final ArrayList<FWidget> children = new ArrayList<>();
     private FWidget parent;
+    @Setter
     private boolean visible = true;
     private float positionX;
     private float positionY;
@@ -29,10 +31,6 @@ public abstract class FWidget {
 
     public boolean visible() {
         return visible;
-    }
-
-    public void setVisible(boolean visible) {
-        this.visible = visible;
     }
 
     public float x() {

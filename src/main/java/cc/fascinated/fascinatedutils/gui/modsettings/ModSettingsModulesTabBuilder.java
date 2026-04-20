@@ -6,7 +6,7 @@ import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
-import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FModuleVisibilityCardWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
@@ -34,15 +34,12 @@ public class ModSettingsModulesTabBuilder {
     }
 
     private static FWidget buildModuleCardGrid(float paneWidth, float paneHeight, List<Module> modules, Ref<Float> modulesGridScrollYRef, Callback<Module> onOpenModuleSettings, Ref<String> moduleSearchRef, Ref<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged) {
-        float gridMarginX = GRID_MARGIN_X_DESIGN;
-        float paddedInnerWidth = Math.max(0f, paneWidth - 2f * gridMarginX);
+        float paddedInnerWidth = Math.max(0f, paneWidth - 2f * GRID_MARGIN_X_DESIGN);
         float settingsContentWidth = Math.max(28f, paddedInnerWidth);
-        float settingsInnerWidth = settingsContentWidth;
         float gapY = 6f;
         float gapX = 3f;
-        float minCellWidth = GRID_MIN_CELL_WIDTH_DESIGN;
         float controlsHeight = SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN;
-        int columnCount = computeCardGridColumnCount(settingsContentWidth, gapX, minCellWidth);
+        int columnCount = computeCardGridColumnCount(settingsContentWidth, gapX, GRID_MIN_CELL_WIDTH_DESIGN);
         float cellWidth = (settingsContentWidth - gapX * Math.max(0, columnCount - 1)) / Math.max(1, columnCount);
         float cellHeight = FModuleVisibilityCardWidget.stackedCellOuterHeightPx();
 
@@ -138,7 +135,7 @@ public class ModSettingsModulesTabBuilder {
         controlsRow.addChild(searchHost);
 
         float horizontalInset = SettingsUiMetrics.SETTINGS_DETAIL_CONTENT_INSET_X_DESIGN;
-        float controlsInnerWidth = Math.max(14f, settingsInnerWidth - 2f * horizontalInset);
+        float controlsInnerWidth = Math.max(14f, settingsContentWidth - 2f * horizontalInset);
         FRowWidget paddedControlsRow = new FRowWidget(0f, Align.START) {
             @Override
             public boolean fillsHorizontalInRow() {

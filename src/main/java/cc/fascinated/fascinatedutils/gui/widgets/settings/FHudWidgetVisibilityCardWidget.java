@@ -8,8 +8,4 @@ public class FHudWidgetVisibilityCardWidget extends FVisibilityCardWidget<HudMod
     public FHudWidgetVisibilityCardWidget(HudModule widget, float layoutWidth, float layoutHeight, Callback<Boolean> onChange, Callback<HudModule> onOpenSettings) {
         super(layoutWidth, layoutHeight, widget::getName, () -> widget.getAllSettings() != null && !widget.getAllSettings().isEmpty(), () -> onOpenSettings.invoke(widget), widget::isEnabled, onChange);
     }
-
-    public static float stackedCellOuterHeightPx() {
-        return FVisibilityCardWidget.stackedCellOuterHeightPx();
-    }
 }

@@ -8,7 +8,7 @@ import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
-import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.*;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;

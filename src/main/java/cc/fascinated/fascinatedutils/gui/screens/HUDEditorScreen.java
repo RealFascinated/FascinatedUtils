@@ -8,7 +8,7 @@ import cc.fascinated.fascinatedutils.gui.hudeditor.HudEditorOverlays;
 import cc.fascinated.fascinatedutils.gui.hudeditor.HudEditorPointerSession;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
-import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;

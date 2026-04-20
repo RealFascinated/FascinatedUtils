@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.gui.widgets;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
-import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FHudWidgetVisibilityCardWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FModuleVisibilityCardWidget;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;

@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.gui.widgets.settings;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.Icons;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
-import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

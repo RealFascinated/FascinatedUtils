@@ -15,9 +15,6 @@ public class FInputDispatcher {
     private FWidget pressedOn;
     private boolean clickSoundPlayedOnPress;
 
-    public FInputDispatcher() {
-    }
-
     private static FWidget findScrollHost(FWidget leaf) {
         for (FWidget cursor = leaf; cursor != null; cursor = cursor.parent()) {
             if (cursor instanceof FScrollable) {

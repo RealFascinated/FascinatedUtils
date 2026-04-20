@@ -19,7 +19,7 @@ import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellPointer;
 import cc.fascinated.fascinatedutils.gui.modsettings.ModulesTabElement;
 import cc.fascinated.fascinatedutils.gui.modsettings.SettingsTabElement;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FShellTabStripWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;

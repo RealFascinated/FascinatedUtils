@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.themes.fascinated;
+package cc.fascinated.fascinatedutils.gui.themes;
 
 import cc.fascinated.fascinatedutils.gui.GuiTheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;

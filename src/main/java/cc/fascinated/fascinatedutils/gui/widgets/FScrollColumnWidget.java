@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.gui.core.ScrollChrome;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import lombok.Setter;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -20,6 +21,7 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
     private float scrollOffsetY;
     private float targetScrollOffsetY;
     private float contentHeight;
+    @Setter
     private boolean fillVerticalInColumn;
     private boolean fixedViewportHeightEnabled;
     private float fixedViewportHeightLogicalPixels;
@@ -42,10 +44,6 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
     private static int applyAlphaFactor(int argb, float factor) {
         int a = Math.round(((argb >>> 24) & 0xFF) * factor);
         return (argb & 0x00FFFFFF) | (a << 24);
-    }
-
-    public void setFillVerticalInColumn(boolean fillVerticalInColumn) {
-        this.fillVerticalInColumn = fillVerticalInColumn;
     }
 
     public void setFixedViewportHeight(float viewportHeightLogicalPixels) {
@@ -83,11 +81,6 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
     @Override
     public boolean clipChildren() {
         return true;
-    }
-
-    @Override
-    public float childPointerYOffset() {
-        return 0f;
     }
 
     @Override

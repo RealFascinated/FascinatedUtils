@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.*;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
-import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import lombok.experimental.UtilityClass;
 import net.minecraft.client.Minecraft;
@@ -24,9 +24,7 @@ public class ModSettingsCategoryRows {
     }
 
     public static float settingsDetailPaddedInnerWidth(float settingsInnerWidth, float leftInsetDesign, float rightInsetDesign) {
-        float leftPx = leftInsetDesign;
-        float rightPx = rightInsetDesign;
-        return Math.max(14f, settingsInnerWidth - leftPx - rightPx);
+        return Math.max(14f, settingsInnerWidth - leftInsetDesign - rightInsetDesign);
     }
 
     public static FWidget wrapSettingsDetailRowInShellMargin(float settingsContentWidth, float settingsInnerWidth, FWidget inner) {
@@ -34,9 +32,7 @@ public class ModSettingsCategoryRows {
     }
 
     public static FWidget wrapSettingsDetailRowInShellMargin(float settingsContentWidth, float settingsInnerWidth, FWidget inner, float leftInsetDesign, float rightInsetDesign) {
-        float leftInset = leftInsetDesign;
-        float rightInset = rightInsetDesign;
-        if (leftInset <= 0f && rightInset <= 0f) {
+        if (leftInsetDesign <= 0f && rightInsetDesign <= 0f) {
             return new FMinWidthHostWidget(settingsContentWidth, inner);
         }
         float paddedInnerWidth = settingsDetailPaddedInnerWidth(settingsInnerWidth, leftInsetDesign, rightInsetDesign);
@@ -46,11 +42,11 @@ public class ModSettingsCategoryRows {
                 return true;
             }
         };
-        row.addChild(new FSpacerWidget(leftInset, 0f));
+        row.addChild(new FSpacerWidget(leftInsetDesign, 0f));
         FMinWidthHostWidget innerHost = new FMinWidthHostWidget(paddedInnerWidth, inner);
         innerHost.setCellConstraints(new FCellConstraints().setExpandHorizontal(true));
         row.addChild(innerHost);
-        row.addChild(new FSpacerWidget(rightInset, 0f));
+        row.addChild(new FSpacerWidget(rightInsetDesign, 0f));
         return new FMinWidthHostWidget(settingsContentWidth, row);
     }
 
@@ -160,7 +156,7 @@ public class ModSettingsCategoryRows {
             return false;
         }
         String resolved = I18n.get(displayNameKey);
-        return resolved != null && !resolved.isBlank();
+        return !resolved.isBlank();
     }
 
     private static boolean categoryBlockHasRenderableSetting(CategoryBlock category) {
@@ -177,9 +173,6 @@ public class ModSettingsCategoryRows {
             return 0f;
         }
         Minecraft minecraftClient = Minecraft.getInstance();
-        if (minecraftClient == null) {
-            return 17f;
-        }
         return minecraftClient.font.width(labelText);
     }
 

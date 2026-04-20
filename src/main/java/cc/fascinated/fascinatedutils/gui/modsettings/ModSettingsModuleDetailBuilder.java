@@ -10,7 +10,7 @@ import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
-import cc.fascinated.fascinatedutils.gui.themes.fascinated.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
@@ -62,22 +62,21 @@ public class ModSettingsModuleDetailBuilder {
     }
 
     private static FWidget editorForModuleSetting(Module module, Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX) {
-        float bodyWidth = settingsInnerWidth;
         if (setting instanceof BooleanSetting booleanSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
-            return new FBooleanSettingRowWidget(module, booleanSetting, bodyWidth, editorHeight, sliderValueColumnStartX);
+            return new FBooleanSettingRowWidget(module, booleanSetting, settingsInnerWidth, editorHeight, sliderValueColumnStartX);
         }
         if (setting instanceof SliderSetting sliderSetting) {
             float editorHeight = SettingsUiMetrics.floatOuterHeight();
-            return new FSliderSettingRowWidget(module, sliderSetting, bodyWidth, editorHeight, sliderValueColumnStartX);
+            return new FSliderSettingRowWidget(module, sliderSetting, settingsInnerWidth, editorHeight, sliderValueColumnStartX);
         }
         if (setting instanceof KeybindSetting keybindSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
-            return new FKeybindSettingWidget(keybindSetting, bodyWidth, editorHeight, () -> ModConfig.saveActiveModule(module));
+            return new FKeybindSettingWidget(keybindSetting, settingsInnerWidth, editorHeight, () -> ModConfig.saveActiveModule(module));
         }
         if (setting instanceof EnumSetting<?> enumSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
-            return new FEnumSettingRowWidget(module, enumSetting, bodyWidth, editorHeight, sliderValueColumnStartX);
+            return new FEnumSettingRowWidget(module, enumSetting, settingsInnerWidth, editorHeight, sliderValueColumnStartX);
         }
         return null;
     }

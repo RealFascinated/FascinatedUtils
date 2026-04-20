@@ -24,8 +24,7 @@ public class FRowWidget extends FWidget {
         }
         float sum = 0f;
         Map<String, Float> groupedWidths = new HashMap<>();
-        for (int childIndex = 0; childIndex < kids.size(); childIndex++) {
-            FWidget child = kids.get(childIndex);
+        for (FWidget child : kids) {
             FCellConstraints constraints = child.cellConstraints();
             float intrinsicWidth = child.intrinsicWidthForRow(measure, heightBudget);
             if (constraints.widthGroupKey() != null && !constraints.widthGroupKey().isEmpty()) {

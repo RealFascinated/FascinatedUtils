@@ -6,6 +6,8 @@ import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.resources.Identifier;
 
 import java.util.Objects;
@@ -20,7 +22,11 @@ public class FIconCheckboxWidget extends FWidget {
     private Supplier<String> labelSupplier;
     private Identifier checkedTextureId = ModUiTextures.CHECK.getId();
     private float outerWidth;
+    @Setter
+    @Getter
     private boolean checked;
+    @Setter
+    @Getter
     private boolean disabled;
     private boolean hovered;
 
@@ -42,22 +48,6 @@ public class FIconCheckboxWidget extends FWidget {
         int dimmedGreen = Math.round(green * clampedFactor);
         int dimmedBlue = Math.round(blue * clampedFactor);
         return (dimmedAlpha << 24) | (dimmedRed << 16) | (dimmedGreen << 8) | dimmedBlue;
-    }
-
-    public boolean isChecked() {
-        return checked;
-    }
-
-    public void setChecked(boolean checked) {
-        this.checked = checked;
-    }
-
-    public boolean isDisabled() {
-        return disabled;
-    }
-
-    public void setDisabled(boolean disabled) {
-        this.disabled = disabled;
     }
 
     public void setCheckedTextureId(Identifier checkedTextureId) {

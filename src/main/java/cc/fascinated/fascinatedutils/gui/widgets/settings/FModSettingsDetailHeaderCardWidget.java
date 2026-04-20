@@ -26,10 +26,6 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
     private final boolean showBackButton;
     private boolean hoverBack;
 
-    public FModSettingsDetailHeaderCardWidget(Runnable onBack, String titleText, float rowWidthPixels) {
-        this(onBack, titleText, rowWidthPixels, true);
-    }
-
     private FModSettingsDetailHeaderCardWidget(Runnable onBack, String titleText, float rowWidthPixels, boolean showBackButton) {
         this.onBack = onBack;
         this.titleText = titleText == null ? "" : titleText;

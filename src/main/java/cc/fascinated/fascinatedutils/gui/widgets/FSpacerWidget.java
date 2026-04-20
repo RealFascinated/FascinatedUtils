@@ -17,11 +17,11 @@ public class FSpacerWidget extends FWidget {
 
     @Override
     public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-        return spacerHeight > 0f ? spacerHeight : 0f;
+        return Math.max(spacerHeight, 0f);
     }
 
     @Override
     public float intrinsicWidthForRow(UIRenderer measure, float heightBudget) {
-        return spacerWidth > 0f ? spacerWidth : 0f;
+        return Math.max(spacerWidth, 0f);
     }
 }
