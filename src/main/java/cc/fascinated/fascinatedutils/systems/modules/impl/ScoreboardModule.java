@@ -81,7 +81,7 @@ public class ScoreboardModule extends HudModule {
             widest = Math.max(widest, rowWidth);
         }
         float layoutWidth = Math.max(getMinWidth(), (float) widest + 4f);
-        float layoutHeight = Math.max(1f, (rows.size() + 1) * lineHeight + 1f);
+        float layoutHeight = Math.max(1f, (rows.size() + 1) * lineHeight);
         getHudState().setLastLayoutWidth(layoutWidth);
         getHudState().setLastLayoutHeight(layoutHeight);
         getHudState().setCommittedLayoutWidth(layoutWidth);
@@ -94,8 +94,8 @@ public class ScoreboardModule extends HudModule {
         return () -> {
             float innerLeft = 2f;
             float innerRight = layoutWidth - 2f;
-            glRenderer.drawRect(innerLeft - 2f, 0f, innerRight - innerLeft + 4f, lineHeight + 1f, headerBackground);
-            glRenderer.drawRect(innerLeft - 2f, lineHeight + 1f, innerRight - innerLeft + 4f, layoutHeight - lineHeight - 1f, bodyBackground);
+            glRenderer.drawRect(innerLeft - 2f, 0f, innerRight - innerLeft + 4f, lineHeight, headerBackground);
+            glRenderer.drawRect(innerLeft - 2f, lineHeight, innerRight - innerLeft + 4f, layoutHeight - lineHeight, bodyBackground);
             glRenderer.endRenderSegment();
             float titleX = innerLeft + (innerRight - innerLeft - titleWidth) * 0.5f;
             glRenderer.drawComponentText(objectiveTitle, titleX, 1f, textColor, false);
