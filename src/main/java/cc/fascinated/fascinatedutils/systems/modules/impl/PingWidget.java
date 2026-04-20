@@ -15,8 +15,7 @@ import net.minecraft.network.protocol.common.ServerboundPongPacket;
 public class PingWidget extends HudMiniMessageModule {
     private final BooleanSetting usePingColor = BooleanSetting.builder().id("use_ping_color").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
-    private volatile long pingReceivedNanos = 0;
-    private volatile int pingReceivedId = Integer.MIN_VALUE;
+    private volatile long pongSentNanos = 0;
     private volatile int pingMs = 0;
 
     public PingWidget() {
@@ -32,19 +31,18 @@ public class PingWidget extends HudMiniMessageModule {
 
     @EventHandler
     private void onPacketReceive(PacketReceiveEvent event) {
-        if (event.packet() instanceof ClientboundPingPacket ping) {
-            pingReceivedNanos = System.nanoTime();
-            pingReceivedId = ping.getId();
+        if (event.packet() instanceof ClientboundPingPacket) {
+            long sent = pongSentNanos;
+            if (sent > 0) {
+                pingMs = (int) ((System.nanoTime() - sent) / 1_000_000L);
+            }
         }
     }
 
     @EventHandler
     private void onPacketSend(PacketSendEvent event) {
-        if (event.packet() instanceof ServerboundPongPacket pong && pong.getId() == pingReceivedId) {
-            long receivedNanos = pingReceivedNanos;
-            if (receivedNanos > 0) {
-                pingMs = (int) ((System.nanoTime() - receivedNanos) / 1_000_000L);
-            }
+        if (event.packet() instanceof ServerboundPongPacket) {
+            pongSentNanos = System.nanoTime();
         }
     }
 }
