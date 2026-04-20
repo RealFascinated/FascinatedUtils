@@ -14,7 +14,6 @@ import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import net.minecraft.client.animation.definitions.RabbitAnimation;
 
 public class FModulesTabElement extends FWidget {
     private static final float PROFILES_PANEL_WIDTH_DESIGN = 118f;

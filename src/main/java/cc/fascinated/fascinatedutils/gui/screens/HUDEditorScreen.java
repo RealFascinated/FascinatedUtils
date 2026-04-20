@@ -61,7 +61,8 @@ public class HUDEditorScreen extends WidgetScreen {
         List<HudModule> widgetList = HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets());
         HudModule selected = pointerSession.selected();
         for (HudModule widget : widgetList) {
-            HudEditorChrome.drawWidgetEditorChrome(guiRenderer, widget, selected, deltaSeconds, canvasWidth, canvasHeight, false);
+            boolean repositionFromAnchor = widget != pointerSession.dragging() && widget != pointerSession.scalingWidget();
+            HudEditorChrome.drawWidgetEditorChrome(guiRenderer, widget, selected, deltaSeconds, canvasWidth, canvasHeight, repositionFromAnchor);
         }
         HudEditorOverlays.drawSnapGuides(guiRenderer, canvasWidth, canvasHeight, pointerSession.snapGuideX(), pointerSession.snapGuideY());
         boolean idleHudSelection = pointerSession.dragging() == null && pointerSession.scalingWidget() == null;

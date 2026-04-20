@@ -35,6 +35,13 @@ import net.minecraft.network.chat.Component;
 @UtilityClass
 public class ModSettingsRegistrySettingsTabBuilder {
 
+    /**
+     * Sub-panes for the registry Settings tab: general options versus performance-related options.
+     */
+    public enum RegistrySettingsSubTab {
+        GENERAL, PERFORMANCE
+    }
+
     private static final String PERFORMANCE_CATEGORY_DISPLAY_KEY = "Performance";
 
     public static FWidget buildSettingsTab(float paneWidth, float paneHeight, Ref<Float> scrollYRef, Consumer<ColorSetting> openColorPicker, RegistrySettingsSubTab subTab) {
@@ -122,12 +129,5 @@ public class ModSettingsRegistrySettingsTabBuilder {
             clip.setScrollOffsetChangeListener(scrollYRef::setValue);
         }
         return clip;
-    }
-
-    /**
-     * Sub-panes for the registry Settings tab: general options versus performance-related options.
-     */
-    public enum RegistrySettingsSubTab {
-        GENERAL, PERFORMANCE
     }
 }
