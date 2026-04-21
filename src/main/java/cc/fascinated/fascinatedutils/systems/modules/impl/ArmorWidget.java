@@ -1,8 +1,5 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
@@ -18,6 +15,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ArmorWidget extends HudModule {
     private static final int ROW_COUNT = 6;
@@ -36,13 +36,7 @@ public class ArmorWidget extends HudModule {
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
 
     public ArmorWidget() {
-        super("armor_hud", "Armor HUD", 0f, HudDefaults.builder()
-                .defaultState(true)
-                .defaultAnchor(HUDWidgetAnchor.BOTTOM_RIGHT)
-                .defaultXOffset(5)
-                .defaultYOffset(5)
-                .build()
-        );
+        super("armor_hud", "Armor HUD", 0f, HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.BOTTOM_RIGHT).defaultXOffset(5).defaultYOffset(5).build());
         addSetting(showBackground);
         addSetting(roundedCorners);
         addSetting(showBorder);
@@ -59,6 +53,37 @@ public class ArmorWidget extends HudModule {
         }
         addSetting(hideUnbreakableDurability);
         addSetting(showTotalInventoryCount);
+    }
+
+    private static ItemStack previewStack(Item item, int damage) {
+        ItemStack stack = new ItemStack(item);
+        stack.setDamageValue(damage);
+        return stack;
+    }
+
+    private static ItemStack editorPreviewStackForRow(int rowIndex) {
+        return switch (rowIndex) {
+            case 0 -> previewStack(Items.DIAMOND_HELMET, 120);
+            case 1 -> previewStack(Items.DIAMOND_CHESTPLATE, 240);
+            case 2 -> previewStack(Items.DIAMOND_LEGGINGS, 180);
+            case 3 -> previewStack(Items.DIAMOND_BOOTS, 90);
+            case 4 -> previewStack(Items.DIAMOND_SWORD, 200);
+            case 5 -> previewStack(Items.SHIELD, 150);
+            default -> ItemStack.EMPTY;
+        };
+    }
+
+    private static ItemStack stackForRow(Player player, int rowIndex) {
+        if (rowIndex < ARMOR_SLOTS.length) {
+            return player.getItemBySlot(ARMOR_SLOTS[rowIndex]);
+        }
+        if (rowIndex == ARMOR_SLOTS.length) {
+            return player.getMainHandItem();
+        }
+        if (rowIndex == ARMOR_SLOTS.length + 1) {
+            return player.getOffhandItem();
+        }
+        return ItemStack.EMPTY;
     }
 
     @Override
@@ -134,37 +159,6 @@ public class ArmorWidget extends HudModule {
             }
         }
         return false;
-    }
-
-    private static ItemStack previewStack(Item item, int damage) {
-        ItemStack stack = new ItemStack(item);
-        stack.setDamageValue(damage);
-        return stack;
-    }
-
-    private static ItemStack editorPreviewStackForRow(int rowIndex) {
-        return switch (rowIndex) {
-            case 0 -> previewStack(Items.DIAMOND_HELMET, 120);
-            case 1 -> previewStack(Items.DIAMOND_CHESTPLATE, 240);
-            case 2 -> previewStack(Items.DIAMOND_LEGGINGS, 180);
-            case 3 -> previewStack(Items.DIAMOND_BOOTS, 90);
-            case 4 -> previewStack(Items.DIAMOND_SWORD, 200);
-            case 5 -> previewStack(Items.SHIELD, 150);
-            default -> ItemStack.EMPTY;
-        };
-    }
-
-    private static ItemStack stackForRow(Player player, int rowIndex) {
-        if (rowIndex < ARMOR_SLOTS.length) {
-            return player.getItemBySlot(ARMOR_SLOTS[rowIndex]);
-        }
-        if (rowIndex == ARMOR_SLOTS.length) {
-            return player.getMainHandItem();
-        }
-        if (rowIndex == ARMOR_SLOTS.length + 1) {
-            return player.getOffhandItem();
-        }
-        return ItemStack.EMPTY;
     }
 
 }

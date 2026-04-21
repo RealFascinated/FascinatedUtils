@@ -22,7 +22,7 @@ import cc.fascinated.fascinatedutils.gui.widgets.FTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.SelectableButtonWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
-import cc.fascinated.fascinatedutils.systems.config.profiles.Profile;
+import cc.fascinated.fascinatedutils.systems.config.impl.profiles.Profile;
 import net.minecraft.network.chat.Component;
 
 public class ModSettingsProfilesTabBuilder {
@@ -36,10 +36,10 @@ public class ModSettingsProfilesTabBuilder {
             if (requestedName == null || requestedName.isBlank()) {
                 return;
             }
-            if (ModConfig.profileNameExists(requestedName)) {
+            if (ModConfig.profiles().profileNameExists(requestedName)) {
                 return;
             }
-            ModConfig.createProfile(requestedName, false);
+            ModConfig.profiles().createProfile(requestedName, false);
             newProfileNameRef.setValue("");
             onProfilesChanged.run();
         }, onProfileAction, onProfilesChanged, onOpenHudLayoutEditor);
@@ -66,13 +66,13 @@ public class ModSettingsProfilesTabBuilder {
         createProfileButton.setCellConstraints(new FCellConstraints().setExpandVertical(true).setMinHeight(controlsHeight).setMaxHeight(controlsHeight));
         FWidget topCreateButtonRow = wrapWithSidePad(settingsContentWidth, settingsInnerWidth, createProfileButton);
 
-        List<Profile> profileEntries = ModConfig.listProfiles();
+        List<Profile> profileEntries = new java.util.ArrayList<>(ModConfig.profiles().listProfiles());
         profileEntries.sort((a, b) -> {
-            boolean aIsDefault = ModConfig.isDefaultProfile(a.getProfileId());
-            boolean bIsDefault = ModConfig.isDefaultProfile(b.getProfileId());
+            boolean aIsDefault = ModConfig.profiles().isDefaultProfile(a.getProfileId());
+            boolean bIsDefault = ModConfig.profiles().isDefaultProfile(b.getProfileId());
             return Boolean.compare(bIsDefault, aIsDefault);
         });
-        Optional<UUID> activeProfileId = ModConfig.getActiveProfileId();
+        Optional<UUID> activeProfileId = ModConfig.profiles().getActiveProfileId();
         if (profileEntries.isEmpty()) {
             FLabelWidget emptyLabel = new FLabelWidget();
             emptyLabel.setText(Component.translatable("fascinatedutils.setting.shell.profiles_empty").getString());
@@ -84,13 +84,13 @@ public class ModSettingsProfilesTabBuilder {
         for (Profile profileEntry : profileEntries) {
             UUID profileId = profileEntry.getProfileId();
             boolean isActiveProfile = activeProfileId.isPresent() && activeProfileId.get().equals(profileId);
-            boolean isDefaultProfile = ModConfig.isDefaultProfile(profileId);
+            boolean isDefaultProfile = ModConfig.profiles().isDefaultProfile(profileId);
 
             FButtonWidget profileActionButton = new SelectableButtonWidget(() -> {
                 if (isActiveProfile) {
                     return;
                 }
-                if (ModConfig.switchActiveProfile(profileId)) {
+                if (ModConfig.profiles().switchActiveProfile(profileId)) {
                     onProfilesChanged.run();
                 }
             }, () -> profileEntry.getProfileName(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f, () -> isActiveProfile) {

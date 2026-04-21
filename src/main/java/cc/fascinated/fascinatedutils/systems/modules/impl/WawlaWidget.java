@@ -1,9 +1,5 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import java.util.Locale;
-
-import org.jspecify.annotations.Nullable;
-
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
@@ -31,13 +27,38 @@ import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Locale;
 
 public class WawlaWidget extends HudModule {
-    private record TargetInfo(String displayName, String sourceName, ItemStack iconStack, boolean showEntityHealth,
-                              float breakProgress, boolean showBreakBar) {}
-    private record BreakingProgress(float progress, boolean active) {}
     private static final float ICON_SIZE = 16f, ICON_TEXT_GAP = 5f, LINE_GAP = 1f, BREAK_BAR_GAP = 3f, BREAK_BAR_HEIGHT = 2f, BREAK_BAR_LERP_SPEED = 14f;
     private static final int TITLE_COLOR = UiColor.argb("#f2f6ff"), SOURCE_COLOR = UiColor.argb("#7f91ff"), BREAK_BAR_BACKGROUND = UiColor.argb("#44232a33"), BREAK_BAR_FILL = UiColor.argb("#ffffffff");
+    private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
+    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
+    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
+    private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
+    private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
+    private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
+    private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+    @Nullable
+    private BlockPos activeBreakingPos;
+    private float smoothedBreakProgress;
+    public WawlaWidget() {
+        super("wawla", "WAWLA", 0f);
+        addSetting(showBackground);
+        addSetting(roundedCorners);
+        addSetting(showBorder);
+        addSetting(roundingRadius);
+        addSetting(borderThickness);
+        addSetting(backgroundColor);
+        addSetting(borderColor);
+        showBackground.addSubSetting(backgroundColor);
+        roundedCorners.addSubSetting(roundingRadius);
+        showBorder.addSubSetting(borderThickness);
+        showBorder.addSubSetting(borderColor);
+    }
+
     private static String formatSourceName(String namespace) {
         if (namespace == null || namespace.isBlank()) {
             return "Minecraft";
@@ -52,9 +73,11 @@ public class WawlaWidget extends HudModule {
         }
         return builder.toString();
     }
+
     private static String formatHealthLine(LivingEntity livingEntity) {
         return formatNumber(livingEntity.getHealth()) + "/" + formatNumber(livingEntity.getMaxHealth());
     }
+
     private static String formatNumber(float value) {
         if (!Float.isFinite(value)) {
             return "0";
@@ -64,33 +87,6 @@ public class WawlaWidget extends HudModule {
             return Integer.toString(Math.round(rounded));
         }
         return Float.toString(rounded);
-    }
-    private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
-    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
-    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
-    private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
-    private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
-    private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
-    private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
-
-    @Nullable
-    private BlockPos activeBreakingPos;
-
-    private float smoothedBreakProgress;
-
-    public WawlaWidget() {
-        super("wawla", "WAWLA", 0f);
-        addSetting(showBackground);
-        addSetting(roundedCorners);
-        addSetting(showBorder);
-        addSetting(roundingRadius);
-        addSetting(borderThickness);
-        addSetting(backgroundColor);
-        addSetting(borderColor);
-        showBackground.addSubSetting(backgroundColor);
-        roundedCorners.addSubSetting(roundingRadius);
-        showBorder.addSubSetting(borderThickness);
-        showBorder.addSubSetting(borderColor);
     }
 
     @Override
@@ -225,4 +221,9 @@ public class WawlaWidget extends HudModule {
         activeBreakingPos = null;
         smoothedBreakProgress = 0f;
     }
+
+    private record TargetInfo(String displayName, String sourceName, ItemStack iconStack, boolean showEntityHealth,
+                              float breakProgress, boolean showBreakBar) {}
+
+    private record BreakingProgress(float progress, boolean active) {}
 }

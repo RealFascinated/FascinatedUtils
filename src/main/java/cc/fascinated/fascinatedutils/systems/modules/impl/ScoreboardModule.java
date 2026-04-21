@@ -1,10 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import java.util.List;
-
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
-import org.jspecify.annotations.Nullable;
-
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
@@ -24,20 +20,14 @@ import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
+import org.jspecify.annotations.Nullable;
+
+import java.util.List;
 
 public class ScoreboardModule extends HudModule {
 
-    private record ScoreRow(Component name, Component score, int scoreWidth) {}
-
     private static final Component PREVIEW_TITLE = Component.literal("My Server");
-
-    private static final List<ScoreRow> PREVIEW_ROWS = List.of(
-        new ScoreRow(Component.literal("Player1"), Component.empty(), 0),
-        new ScoreRow(Component.literal("Player2"), Component.empty(), 0),
-        new ScoreRow(Component.literal("Player3"), Component.empty(), 0),
-        new ScoreRow(Component.literal("Player4"), Component.empty(), 0)
-    );
-
+    private static final List<ScoreRow> PREVIEW_ROWS = List.of(new ScoreRow(Component.literal("Player1"), Component.empty(), 0), new ScoreRow(Component.literal("Player2"), Component.empty(), 0), new ScoreRow(Component.literal("Player3"), Component.empty(), 0), new ScoreRow(Component.literal("Player4"), Component.empty(), 0));
     private final BooleanSetting hideScoreboardLines = BooleanSetting.builder().id("hide_scoreboard_lines").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().defaultValue(SettingColor.fromArgb(0x55000000)).build();
@@ -46,15 +36,8 @@ public class ScoreboardModule extends HudModule {
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
-
     public ScoreboardModule() {
-        super("scoreboard", "Scoreboard", 0f, HudDefaults.builder()
-                .defaultState(true)
-                .defaultAnchor(HUDWidgetAnchor.RIGHT)
-                .defaultXOffset(0)
-                .defaultYOffset(0)
-                .build()
-        );
+        super("scoreboard", "Scoreboard", 0f, HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.RIGHT).defaultXOffset(0).defaultYOffset(0).build());
         addSetting(hideScoreboardLines);
         addSetting(showBackground);
         addSetting(roundedCorners);
@@ -73,12 +56,12 @@ public class ScoreboardModule extends HudModule {
     public Runnable prepareAndDraw(GuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null) {
-          return null;
+            return null;
         }
 
         Scoreboard board = minecraft.level.getScoreboard();
         Objective objective = board.getDisplayObjective(DisplaySlot.SIDEBAR);
-        
+
         float lineHeight = glRenderer.getFontHeight();
         if (objective == null) {
             if (editorMode) {
@@ -144,4 +127,6 @@ public class ScoreboardModule extends HudModule {
             }
         };
     }
+
+    private record ScoreRow(Component name, Component score, int scoreWidth) {}
 }

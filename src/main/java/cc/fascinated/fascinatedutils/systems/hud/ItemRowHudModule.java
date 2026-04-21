@@ -1,11 +1,11 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import java.util.List;
-
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
+
+import java.util.List;
 
 public abstract class ItemRowHudModule extends HudModule {
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();

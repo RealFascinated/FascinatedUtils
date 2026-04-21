@@ -1,22 +1,15 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 public abstract class HudMiniMessageModule extends HudModule {
     private static final long DEFAULT_UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
-
-    private static List<String> normalizeMiniMessageLines(List<String> rawLines) {
-        if (rawLines == null || rawLines.isEmpty()) {
-            return List.of("");
-        }
-        return List.copyOf(rawLines);
-    }
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
     private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
     private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
@@ -25,7 +18,6 @@ public abstract class HudMiniMessageModule extends HudModule {
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
     private List<String> cachedMiniMessageLines;
-
     private long lastMiniMessageSampleNanos;
 
     protected HudMiniMessageModule(String widgetId, String name, float minWidth) {
@@ -41,6 +33,13 @@ public abstract class HudMiniMessageModule extends HudModule {
         roundedCorners.addSubSetting(roundingRadius);
         showBorder.addSubSetting(borderThickness);
         showBorder.addSubSetting(borderColor);
+    }
+
+    private static List<String> normalizeMiniMessageLines(List<String> rawLines) {
+        if (rawLines == null || rawLines.isEmpty()) {
+            return List.of("");
+        }
+        return List.copyOf(rawLines);
     }
 
     protected abstract List<String> lines(float deltaSeconds);

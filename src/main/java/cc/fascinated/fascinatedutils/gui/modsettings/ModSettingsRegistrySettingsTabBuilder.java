@@ -2,13 +2,11 @@ package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
@@ -23,7 +21,6 @@ import cc.fascinated.fascinatedutils.gui.widgets.FScrollColumnWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanSettingRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FColorSettingRowWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FEnumSettingRowWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FKeybindSettingWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FSliderSettingRowWidget;
@@ -97,21 +94,22 @@ public class ModSettingsRegistrySettingsTabBuilder {
     }
 
     private static FWidget editorForRegistrySetting(Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX) {
+        Runnable saveSettings = () -> ModConfig.config().save();
         if (setting instanceof KeybindSetting keybindSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
-            return new FKeybindSettingWidget(keybindSetting, settingsInnerWidth, editorHeight, ModConfig::saveSettings);
+            return new FKeybindSettingWidget(keybindSetting, settingsInnerWidth, editorHeight, saveSettings);
         }
         if (setting instanceof BooleanSetting booleanSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
-            return new FBooleanSettingRowWidget(booleanSetting, settingsInnerWidth, editorHeight, ModConfig::saveSettings, sliderValueColumnStartX);
+            return new FBooleanSettingRowWidget(booleanSetting, settingsInnerWidth, editorHeight, saveSettings, sliderValueColumnStartX);
         }
         if (setting instanceof SliderSetting sliderSetting) {
             float editorHeight = SettingsUiMetrics.floatOuterHeight();
-            return new FSliderSettingRowWidget(sliderSetting, settingsInnerWidth, editorHeight, ModConfig::saveSettings, sliderValueColumnStartX);
+            return new FSliderSettingRowWidget(sliderSetting, settingsInnerWidth, editorHeight, saveSettings, sliderValueColumnStartX);
         }
         if (setting instanceof EnumSetting<?> enumSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
-            return new FEnumSettingRowWidget(enumSetting, settingsInnerWidth, editorHeight, ModConfig::saveSettings, sliderValueColumnStartX);
+            return new FEnumSettingRowWidget(enumSetting, settingsInnerWidth, editorHeight, saveSettings, sliderValueColumnStartX);
         }
         return null;
     }

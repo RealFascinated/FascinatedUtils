@@ -148,7 +148,7 @@ public class FProfileRenamePopupWidget extends FPopupWidget {
         if (normalizedName.equalsIgnoreCase(normalizedCurrentName)) {
             return "";
         }
-        if (ModConfig.profileNameExists(normalizedName)) {
+        if (ModConfig.profiles().profileNameExists(normalizedName)) {
             return Component.translatable("fascinatedutils.setting.shell.profile_name_error_duplicate_rename").getString();
         }
         return "";

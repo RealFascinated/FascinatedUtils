@@ -85,7 +85,7 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
         if (normalizedName.isEmpty()) {
             return Component.translatable("fascinatedutils.setting.shell.profile_name_error_empty").getString();
         }
-        if (ModConfig.profileNameExists(normalizedName)) {
+        if (ModConfig.profiles().profileNameExists(normalizedName)) {
             return Component.translatable("fascinatedutils.setting.shell.profile_name_error_duplicate_create").getString();
         }
         return "";

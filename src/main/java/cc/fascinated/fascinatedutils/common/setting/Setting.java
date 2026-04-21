@@ -1,6 +1,9 @@
 package cc.fascinated.fascinatedutils.common.setting;
 
+import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.resources.language.I18n;
@@ -14,7 +17,7 @@ import java.util.function.Supplier;
 
 @Getter
 @Setter
-public class Setting<T> {
+public class Setting<T> implements GsonSerializable<Setting<T>> {
     private final String settingKey;
     private final T defaultValue;
     private final @Nullable String categoryDisplayKey;
@@ -131,6 +134,18 @@ public class Setting<T> {
      * @param json the JSON element to deserialize from
      */
     public void deserializeValue(@Nullable JsonElement json) {
+    }
+
+    @Override
+    public JsonElement serialize(Gson gson) {
+        JsonElement serialized = serializeValue();
+        return serialized != null ? serialized : JsonNull.INSTANCE;
+    }
+
+    @Override
+    public Setting<T> deserialize(JsonElement data, Gson gson) {
+        deserializeValue(data);
+        return this;
     }
 
     public static abstract class Builder<T, B extends Builder<T, B>> {

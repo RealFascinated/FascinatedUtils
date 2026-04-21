@@ -1,11 +1,5 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.jspecify.annotations.Nullable;
-
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.NumberUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;
@@ -14,41 +8,22 @@ import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.systems.hud.HUDWidgetAnchor;
-import cc.fascinated.fascinatedutils.systems.hud.HudAnchorLayout;
-import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
-import cc.fascinated.fascinatedutils.systems.hud.HudModule;
-import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
+import cc.fascinated.fascinatedutils.systems.hud.*;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class CoordinatesWidget extends HudModule {
     private static final float COLUMN_GAP = 10f;
     private static final float LINE_GAP_PX = 1f;
     private static final String[] COMPASS_CARDINALS = {"S", "E", "N", "W"};
-    private static String biomeColoredMiniMessage(String biomeIdRaw) {
-        Identifier biomeId = Identifier.tryParse(biomeIdRaw);
-        String path = biomeId == null ? biomeIdRaw : biomeId.getPath();
-        String label = Arrays.stream(path.replace("_", " ").split(" ")).map(StringUtils::capitalize).collect(Collectors.joining(" "));
-        int biomeColorArgb = BiomeColors.colorForBiomeId(Identifier.tryParse(biomeIdRaw));
-        return "<color:" + ColorUtils.rgbHex(biomeColorArgb) + ">" + label + "</color>";
-    }
-    private static String compass4FromLook(Vec3 look) {
-        double horizontalX = look.x;
-        double horizontalZ = look.z;
-        if (Math.hypot(horizontalX, horizontalZ) < 1e-5d) {
-            return "—";
-        }
-        double degrees = Math.toDegrees(Math.atan2(horizontalX, horizontalZ));
-        if (degrees < 0d) {
-            degrees += 360d;
-        }
-        int sector = (int) Math.floor((degrees + 45d) / 90d) & 3;
-        return COMPASS_CARDINALS[sector];
-    }
     private final SliderSetting blockPrecision = SliderSetting.builder().id("block_precision")
 
             .defaultValue(0f).minValue(0f).maxValue(3f).step(1f).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
@@ -59,15 +34,8 @@ public class CoordinatesWidget extends HudModule {
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
-
     public CoordinatesWidget() {
-        super("coordinates", "Coordinates", 56f, HudDefaults.builder()
-                .defaultState(true)
-                .defaultAnchor(HUDWidgetAnchor.TOP_LEFT)
-                .defaultXOffset(5)
-                .defaultYOffset(5)
-                .build()
-        );
+        super("coordinates", "Coordinates", 56f, HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.TOP_LEFT).defaultXOffset(5).defaultYOffset(5).build());
         addSetting(blockPrecision);
         addSetting(showBackground);
         addSetting(roundedCorners);
@@ -80,6 +48,28 @@ public class CoordinatesWidget extends HudModule {
         roundedCorners.addSubSetting(roundingRadius);
         showBorder.addSubSetting(borderThickness);
         showBorder.addSubSetting(borderColor);
+    }
+
+    private static String biomeColoredMiniMessage(String biomeIdRaw) {
+        Identifier biomeId = Identifier.tryParse(biomeIdRaw);
+        String path = biomeId == null ? biomeIdRaw : biomeId.getPath();
+        String label = Arrays.stream(path.replace("_", " ").split(" ")).map(StringUtils::capitalize).collect(Collectors.joining(" "));
+        int biomeColorArgb = BiomeColors.colorForBiomeId(Identifier.tryParse(biomeIdRaw));
+        return "<color:" + ColorUtils.rgbHex(biomeColorArgb) + ">" + label + "</color>";
+    }
+
+    private static String compass4FromLook(Vec3 look) {
+        double horizontalX = look.x;
+        double horizontalZ = look.z;
+        if (Math.hypot(horizontalX, horizontalZ) < 1e-5d) {
+            return "—";
+        }
+        double degrees = Math.toDegrees(Math.atan2(horizontalX, horizontalZ));
+        if (degrees < 0d) {
+            degrees += 360d;
+        }
+        int sector = (int) Math.floor((degrees + 45d) / 90d) & 3;
+        return COMPASS_CARDINALS[sector];
     }
 
     @Override

@@ -20,7 +20,7 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
     private boolean hoveredReset;
 
     public FEnumSettingRowWidget(Module module, EnumSetting<?> enumSetting, float outerWidth, float outerHeight, float valueColumnStartX) {
-        this(enumSetting, outerWidth, outerHeight, () -> ModConfig.saveActiveModule(module), valueColumnStartX);
+        this(enumSetting, outerWidth, outerHeight, () -> ModConfig.profiles().saveModule(module), valueColumnStartX);
     }
 
     public FEnumSettingRowWidget(EnumSetting<?> enumSetting, float outerWidth, float outerHeight, Runnable onPersist, float valueColumnStartX) {

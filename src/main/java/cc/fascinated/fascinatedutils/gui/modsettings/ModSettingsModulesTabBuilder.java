@@ -153,7 +153,7 @@ public class ModSettingsModulesTabBuilder {
                 Module module = sortedModules.get(index);
                 row.addChild(FTheme.components().createModuleVisibilityCard(module, cellWidth, cellHeight, onOpenModuleSettings, enabled -> {
                     ModuleRegistry.INSTANCE.setModuleEnabled(module, enabled);
-                    ModConfig.saveActiveModule(module);
+                    ModConfig.profiles().saveModule(module);
                 }));
             }
             scrollBody.addChild(row);

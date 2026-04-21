@@ -3,14 +3,23 @@ package cc.fascinated.fascinatedutils.systems.modules;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
+import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.module.ModuleEnabledStateChangedEvent;
+import cc.fascinated.fascinatedutils.systems.config.ConfigVersion;
+import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import lombok.Getter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 @Getter
-public abstract class Module {
+public abstract class Module implements GsonSerializable<Module> {
     private final String moduleKey;
     private final String displayName;
     private final List<Setting<?>> settings = new ArrayList<>();
@@ -30,6 +39,17 @@ public abstract class Module {
 
     protected Module(String displayName, ModuleCategory category) {
         this(displayName, category, ModuleDefaults.builder().build());
+    }
+
+    /**
+     * Returns the config version of this module.
+     * Reads the {@link ConfigVersion} annotation on the concrete class; defaults to {@code 1} if absent.
+     *
+     * @return the module config version
+     */
+    public int getVersion() {
+        ConfigVersion annotation = getClass().getAnnotation(ConfigVersion.class);
+        return annotation != null ? annotation.value() : 1;
     }
 
     /**
@@ -113,10 +133,50 @@ public abstract class Module {
     }
 
     public void resetToDefault() {
-        setEnabled(false);
+        setEnabled(defaults.defaultState());
         for (Setting<?> setting : settings) {
             setting.resetToDefault();
         }
+    }
+
+    @Override
+    public JsonElement serialize(Gson gson) {
+        JsonObject root = new JsonObject();
+        root.addProperty("enabled", enabled);
+        JsonObject settingsJson = new JsonObject();
+        for (Setting<?> setting : settings) {
+            if (setting instanceof KeybindSetting) {
+                continue;
+            }
+            JsonElement serialized = setting.serialize(gson);
+            if (!serialized.isJsonNull()) {
+                settingsJson.add(setting.getSettingKey(), serialized);
+            }
+        }
+        root.add("settings", settingsJson);
+        return root;
+    }
+
+    @Override
+    public Module deserialize(JsonElement data, Gson gson) {
+        if (!data.isJsonObject()) {
+            return this;
+        }
+        JsonObject root = data.getAsJsonObject();
+        if (root.has("enabled")) {
+            JsonElement enabledEl = root.get("enabled");
+            if (enabledEl.isJsonPrimitive()) {
+                setEnabled(enabledEl.getAsBoolean());
+            }
+        }
+        JsonObject settingsJson = root.has("settings") && root.get("settings").isJsonObject() ? root.get("settings").getAsJsonObject() : new JsonObject();
+        for (Setting<?> setting : settings) {
+            JsonElement value = settingsJson.get(setting.getSettingKey());
+            if (value != null && !value.isJsonNull()) {
+                setting.deserialize(value, gson);
+            }
+        }
+        return this;
     }
 
     protected String settingTranslationKeyPrefix(Setting<?> setting) {

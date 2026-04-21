@@ -98,11 +98,11 @@ public class HUDManager {
     }
 
     public void saveAll() {
-        ModConfig.saveAllModuleSettings();
+        ModConfig.profiles().saveActiveProfile();
     }
 
     public void loadAll() {
-        ModConfig.loadAllModuleSettings();
+        ModConfig.profiles().loadActiveProfile();
     }
 
     @EventHandler

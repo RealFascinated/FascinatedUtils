@@ -28,14 +28,17 @@ public class HUDPanelBackground {
             if (showBorder) {
                 glRenderer.fillRoundedRectBorderRing(0f, 0f, width, height, cornerRadius, strokePx, borderArgb, RectCornerRoundMask.ALL);
             }
-        } else {
+        }
+        else {
             if (showBackground && showBorder) {
                 glRenderer.drawRect(0f, 0f, width, height, backgroundArgb);
                 glRenderer.endRenderSegment();
                 glRenderer.drawBorder(0f, 0f, width, height, strokePx, borderArgb);
-            } else if (showBackground) {
+            }
+            else if (showBackground) {
                 glRenderer.drawRect(0f, 0f, width, height, backgroundArgb);
-            } else {
+            }
+            else {
                 glRenderer.drawBorder(0f, 0f, width, height, strokePx, borderArgb);
             }
         }

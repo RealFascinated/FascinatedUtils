@@ -103,7 +103,7 @@ public class ProfilePopupController {
         UUID selectedProfileId = contextMenuProfileId;
         closeContextMenu();
         if (action == ProfileContextMenuAction.RENAME && selectedProfileId != null) {
-            ModConfig.listProfiles().stream()
+            ModConfig.profiles().listProfiles().stream()
                     .filter(profile -> profile.getProfileId().equals(selectedProfileId))
                     .findFirst()
                     .ifPresent(profile -> {
@@ -113,7 +113,7 @@ public class ProfilePopupController {
                         markDirty.run();
                     });
         } else if (action == ProfileContextMenuAction.DELETE && selectedProfileId != null) {
-            ModConfig.listProfiles().stream()
+            ModConfig.profiles().listProfiles().stream()
                     .filter(profile -> profile.getProfileId().equals(selectedProfileId))
                     .findFirst()
                     .ifPresent(profile -> {
@@ -144,7 +144,7 @@ public class ProfilePopupController {
         deleteConfirmProfileId = null;
         deleteConfirmProfileName = null;
         markDirty.run();
-        if (ModConfig.deleteProfile(idToDelete)) {
+        if (ModConfig.profiles().deleteProfile(idToDelete)) {
             onScrollReset.run();
             onProfilesChanged.run();
         }
@@ -169,10 +169,10 @@ public class ProfilePopupController {
             return;
         }
         String normalizedCurrentName = renameProfileName == null ? "" : renameProfileName.trim();
-        if (ModConfig.profileNameExists(normalizedName) && !normalizedName.equalsIgnoreCase(normalizedCurrentName)) {
+        if (ModConfig.profiles().profileNameExists(normalizedName) && !normalizedName.equalsIgnoreCase(normalizedCurrentName)) {
             return;
         }
-        if (!ModConfig.renameProfile(renameProfileId, normalizedName)) {
+        if (!ModConfig.profiles().renameProfile(renameProfileId, normalizedName)) {
             return;
         }
         showRenameProfilePopup = false;

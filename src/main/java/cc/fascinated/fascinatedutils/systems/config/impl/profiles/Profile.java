@@ -1,6 +1,6 @@
-package cc.fascinated.fascinatedutils.systems.config.profiles;
+package cc.fascinated.fascinatedutils.systems.config.impl.profiles;
 
-import cc.fascinated.fascinatedutils.systems.config.serialization.GsonSerializable;
+import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -51,8 +51,7 @@ public class Profile implements GsonSerializable<Profile> {
         UUID parsedId = UUID.fromString(idText);
         String name = root.has(PROFILE_NAME_FIELD) ? root.get(PROFILE_NAME_FIELD).getAsString() : "Profile";
         int version = root.has(PROFILE_VERSION_FIELD) ? root.get(PROFILE_VERSION_FIELD).getAsInt() : 1;
-        JsonObject parsedSettings = root.has(SETTINGS_FIELD) && root.get(SETTINGS_FIELD).isJsonObject()
-                ? root.get(SETTINGS_FIELD).getAsJsonObject() : new JsonObject();
+        JsonObject parsedSettings = root.has(SETTINGS_FIELD) && root.get(SETTINGS_FIELD).isJsonObject() ? root.get(SETTINGS_FIELD).getAsJsonObject() : new JsonObject();
         return new Profile(parsedId, name, version, parsedSettings);
     }
 

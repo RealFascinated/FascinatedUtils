@@ -30,7 +30,7 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
     private @Nullable Runnable onChevronToggle;
 
     public FBooleanSettingRowWidget(Module module, BooleanSetting booleanSetting, float outerWidth, float outerHeight, float valueColumnStartX) {
-        this(booleanSetting, outerWidth, outerHeight, () -> ModConfig.saveActiveModule(module), valueColumnStartX);
+        this(booleanSetting, outerWidth, outerHeight, () -> ModConfig.profiles().saveModule(module), valueColumnStartX);
     }
 
     public FBooleanSettingRowWidget(BooleanSetting booleanSetting, float outerWidth, float outerHeight, Runnable onPersist, float valueColumnStartX) {

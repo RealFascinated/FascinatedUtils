@@ -45,6 +45,7 @@ public class ModuleRegistry {
         modules.add(new VibrancyModule());
         modules.add(new HurtcamModule());
         modules.add(new BossbarModule());
+        modules.add(new InventoryTweaksModule());
         modules.add(new HypixelModule());
         modules.add(new FogCustomizerModule());
         modules.add(new FpsWidget());
@@ -67,9 +68,9 @@ public class ModuleRegistry {
             }
         }
 
-        ModConfig.loadAllModuleSettings();
+        ModConfig.profiles().loadActiveProfile();
         rebuildEnabledModules();
-        ModConfig.loadSettings();
+        ModConfig.config().load();
         HUDManager.INSTANCE.init();
 
         initialized = true;

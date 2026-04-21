@@ -91,7 +91,7 @@ public class ModSettingsScreen extends WidgetScreen {
     public void renderCustom(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         if (!appliedPersistedShellTab) {
             ShellContentTab previousTab = shellContentTab;
-            ModConfig.loadLastShellContentTabKey().ifPresent(tabKey -> {
+            ModConfig.uiState().loadLastShellContentTabKey().ifPresent(tabKey -> {
                 switch (tabKey) {
                     case FShellTabStripWidget.TAB_KEY_SETTINGS -> shellContentTab = ShellContentTab.SETTINGS;
                     case FShellTabStripWidget.TAB_KEY_PROFILES -> shellContentTab = ShellContentTab.MODULES;
@@ -322,7 +322,7 @@ public class ModSettingsScreen extends WidgetScreen {
             if (shellContentTab != ShellContentTab.SETTINGS) {
                 shellContentTab = ShellContentTab.SETTINGS;
                 bodyRebuildDirty = true;
-                ModConfig.saveLastShellContentTabKey(tabKey);
+                ModConfig.uiState().saveLastShellContentTabKey(tabKey);
             }
             return;
         }
@@ -330,7 +330,7 @@ public class ModSettingsScreen extends WidgetScreen {
             if (shellContentTab != ShellContentTab.MODULES) {
                 shellContentTab = ShellContentTab.MODULES;
                 bodyRebuildDirty = true;
-                ModConfig.saveLastShellContentTabKey(tabKey);
+                ModConfig.uiState().saveLastShellContentTabKey(tabKey);
             }
         }
         topBarTabStrip.setSelectedKey(selectedShellTabKey());

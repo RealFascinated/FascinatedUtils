@@ -1,13 +1,13 @@
 package cc.fascinated.fascinatedutils.systems.hud.content;
 
-import java.util.List;
-
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HUDPanelBackground;
 import cc.fascinated.fascinatedutils.systems.hud.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.HudAnchorLayout;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import net.minecraft.client.Minecraft;
+
+import java.util.List;
 
 public class HudContentRenderer {
 

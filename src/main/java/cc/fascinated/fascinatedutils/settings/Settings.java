@@ -5,13 +5,17 @@ import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
+import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class Settings {
+public class Settings implements GsonSerializable<Settings> {
 
     private final List<Setting<?>> settings = new ArrayList<>();
 
@@ -47,5 +51,32 @@ public class Settings {
     private void addSetting(Setting<?> setting) {
         setting.setTranslationKeyPrefix("fascinatedutils.setting");
         this.settings.add(setting);
+    }
+
+    @Override
+    public JsonElement serialize(Gson gson) {
+        JsonObject root = new JsonObject();
+        for (Setting<?> setting : settings) {
+            JsonElement serialized = setting.serialize(gson);
+            if (!serialized.isJsonNull()) {
+                root.add(setting.getSettingKey(), serialized);
+            }
+        }
+        return root;
+    }
+
+    @Override
+    public Settings deserialize(JsonElement data, Gson gson) {
+        if (!data.isJsonObject()) {
+            return this;
+        }
+        JsonObject root = data.getAsJsonObject();
+        for (Setting<?> setting : settings) {
+            JsonElement element = root.get(setting.getSettingKey());
+            if (element != null && !element.isJsonNull()) {
+                setting.deserialize(element, gson);
+            }
+        }
+        return this;
     }
 }

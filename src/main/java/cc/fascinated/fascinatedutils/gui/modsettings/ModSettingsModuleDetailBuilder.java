@@ -71,7 +71,7 @@ public class ModSettingsModuleDetailBuilder {
     private static FWidget editorForModuleSetting(Module module, Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX, Consumer<ColorSetting> openColorPicker) {
         if (setting instanceof BooleanSetting booleanSetting && booleanSetting.hasSubSettings()) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
-            return new FBooleanWithSubSettingsWidget(booleanSetting, () -> ModConfig.saveActiveModule(module), settingsInnerWidth, editorHeight, sliderValueColumnStartX, (sub, subW, subColX) -> editorForModuleSetting(module, sub, subW, subColX, openColorPicker));
+            return new FBooleanWithSubSettingsWidget(booleanSetting, () -> ModConfig.profiles().saveModule(module), settingsInnerWidth, editorHeight, sliderValueColumnStartX, (sub, subW, subColX) -> editorForModuleSetting(module, sub, subW, subColX, openColorPicker));
         }
         if (setting instanceof BooleanSetting booleanSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
@@ -83,7 +83,7 @@ public class ModSettingsModuleDetailBuilder {
         }
         if (setting instanceof KeybindSetting keybindSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
-            return new FKeybindSettingWidget(keybindSetting, settingsInnerWidth, editorHeight, () -> ModConfig.saveActiveModule(module));
+            return new FKeybindSettingWidget(keybindSetting, settingsInnerWidth, editorHeight, () -> ModConfig.profiles().saveModule(module));
         }
         if (setting instanceof EnumSetting<?> enumSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
@@ -91,7 +91,7 @@ public class ModSettingsModuleDetailBuilder {
         }
         if (setting instanceof ColorSetting colorSetting) {
             float editorHeight = SettingsUiMetrics.booleanOuterHeight();
-            return new FColorSettingRowWidget(colorSetting, settingsInnerWidth, editorHeight, () -> ModConfig.saveActiveModule(module), sliderValueColumnStartX, openColorPicker);
+            return new FColorSettingRowWidget(colorSetting, settingsInnerWidth, editorHeight, () -> ModConfig.profiles().saveModule(module), sliderValueColumnStartX, openColorPicker);
         }
         return null;
     }

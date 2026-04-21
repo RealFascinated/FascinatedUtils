@@ -19,7 +19,7 @@ public class FSliderSettingRowWidget extends FSettingRowWidget {
     private boolean hoveredReset;
 
     public FSliderSettingRowWidget(Module module, SliderSetting sliderSetting, float outerWidth, float outerHeight, float valueColumnStartX) {
-        this(sliderSetting, outerWidth, outerHeight, () -> ModConfig.saveActiveModule(module), valueColumnStartX);
+        this(sliderSetting, outerWidth, outerHeight, () -> ModConfig.profiles().saveModule(module), valueColumnStartX);
     }
 
     public FSliderSettingRowWidget(SliderSetting sliderSetting, float outerWidth, float outerHeight, Runnable onPersist, float valueColumnStartX) {

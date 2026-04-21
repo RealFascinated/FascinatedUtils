@@ -1,9 +1,5 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import java.util.List;
-
-import org.jspecify.annotations.NonNull;
-
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
@@ -15,8 +11,14 @@ import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContentRenderer;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import lombok.Getter;
 import net.minecraft.util.Mth;
+import org.jspecify.annotations.NonNull;
+
+import java.util.List;
 
 public abstract class HudModule extends Module implements HudRenderableModule {
 
@@ -111,6 +113,64 @@ public abstract class HudModule extends Module implements HudRenderableModule {
 
         hudState.setLastLayoutWidth(-1f);
         hudState.setLastLayoutHeight(-1f);
+    }
+
+    @Override
+    public JsonElement serialize(Gson gson) {
+        JsonObject root = super.serialize(gson).getAsJsonObject();
+        JsonObject hudJson = new JsonObject();
+        hudJson.addProperty("scale", hudState.getScale());
+        hudJson.addProperty("anchor", hudState.getHudAnchor().name());
+        hudJson.addProperty("anchor_offset_x", hudState.getAnchorOffsetX());
+        hudJson.addProperty("anchor_offset_y", hudState.getAnchorOffsetY());
+        hudJson.addProperty("last_layout_width", hudState.getLastLayoutWidth());
+        hudJson.addProperty("last_layout_height", hudState.getLastLayoutHeight());
+        root.add("hud", hudJson);
+        return root;
+    }
+
+    @Override
+    public Module deserialize(JsonElement data, Gson gson) {
+        super.deserialize(data, gson);
+        if (!data.isJsonObject()) {
+            return this;
+        }
+        JsonObject root = data.getAsJsonObject();
+        if (!root.has("hud") || !root.get("hud").isJsonObject()) {
+            return this;
+        }
+        JsonObject hudJson = root.get("hud").getAsJsonObject();
+        if (hudJson.has("scale")) {
+            hudState.setScale(hudJson.get("scale").getAsFloat());
+        }
+        if (hudJson.has("anchor")) {
+            try {
+                hudState.setHudAnchor(HUDWidgetAnchor.valueOf(hudJson.get("anchor").getAsString()));
+            } catch (IllegalArgumentException ignored) {
+                hudState.setHudAnchor(HUDWidgetAnchor.TOP_LEFT);
+            }
+        }
+        if (hudJson.has("anchor_offset_x")) {
+            hudState.setAnchorOffsetX(hudJson.get("anchor_offset_x").getAsFloat());
+        }
+        if (hudJson.has("anchor_offset_y")) {
+            hudState.setAnchorOffsetY(hudJson.get("anchor_offset_y").getAsFloat());
+        }
+        if (hudJson.has("last_layout_width")) {
+            float layoutWidth = hudJson.get("last_layout_width").getAsFloat();
+            hudState.setLastLayoutWidth(layoutWidth);
+            if (layoutWidth > 0f && Float.isFinite(layoutWidth)) {
+                hudState.setCommittedLayoutWidth(layoutWidth);
+            }
+        }
+        if (hudJson.has("last_layout_height")) {
+            float layoutHeight = hudJson.get("last_layout_height").getAsFloat();
+            hudState.setLastLayoutHeight(layoutHeight);
+            if (layoutHeight > 0f && Float.isFinite(layoutHeight)) {
+                hudState.setCommittedLayoutHeight(layoutHeight);
+            }
+        }
+        return this;
     }
 
     @Override

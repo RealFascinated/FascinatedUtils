@@ -23,6 +23,7 @@
     "confirmdisconnect.GameMenuScreenMixin",
     "freelook.CameraFreelookMixin",
     "freelook.MouseHandlerFreelookMixin",
+    "inventorytweaks.AbstractContainerScreenDragMoveMixin",
     "performance.GlBackendMixin",
     "performance.WindowMixin",
     "scoreboard.GuiMixin",

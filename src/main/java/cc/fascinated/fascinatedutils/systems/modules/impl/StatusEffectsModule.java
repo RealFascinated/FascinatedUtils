@@ -1,11 +1,5 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-
-import org.jspecify.annotations.Nullable;
-
 import cc.fascinated.fascinatedutils.common.DateUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
@@ -26,70 +20,19 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+import org.jspecify.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class StatusEffectsModule extends HudModule {
-    private enum SortMode {
-        REMAINING_TIME("Remaining Time"), ALPHABETICAL("Alphabetical");
-
-        private final String displayName;
-
-        SortMode(String displayName) {
-            this.displayName = displayName;
-        }
-
-        private String displayName() {
-            return displayName;
-        }
-    }
-    private enum DisplayMode {
-        DETAILED("Detailed"), COMPACT("Compact");
-
-        private final String displayName;
-
-        DisplayMode(String displayName) {
-            this.displayName = displayName;
-        }
-
-        private String displayName() {
-            return displayName;
-        }
-    }
-    private record EffectRow(Identifier effectSprite, String nameText, String durationText, float iconAlpha) {}
     private static final float ICON_SIZE = 18f;
     private static final float ICON_TEXT_GAP = 5f;
     private static final float TEXT_LINE_GAP = 1f;
     private static final float ROW_GAP = 2f;
     private static final Identifier PREVIEW_SPEED_ICON = Identifier.withDefaultNamespace("mob_effect/speed");
     private static final Identifier PREVIEW_POISON_ICON = Identifier.withDefaultNamespace("mob_effect/poison");
-    private static int whiteWithAlpha(float alpha) {
-        int alphaChannel = Mth.clamp(Math.round(alpha * 255f), 0, 255);
-        return (alphaChannel << 24) | 0x00FFFFFF;
-    }
-    private static Identifier getMobEffectSprite(Holder<MobEffect> effect) {
-        return effect.unwrapKey().map(ResourceKey::identifier).map(identifier -> identifier.withPrefix("mob_effect/")).orElseGet(MissingTextureAtlasSprite::getLocation);
-    }
-    private static String formatEffectNameWithAmplifier(MobEffectInstance effectInstance, boolean includeAmplifier) {
-        String effectName = effectInstance.getEffect().value().getDisplayName().getString();
-        if (!includeAmplifier) {
-            return effectName;
-        }
-        int amplifier = effectInstance.getAmplifier();
-        if (amplifier <= 0) {
-            return effectName;
-        }
-
-        int level = amplifier + 1;
-        String levelKey = "enchantment.level." + level;
-        String translatedLevel = Component.translatable(levelKey).getString();
-        String levelText = translatedLevel.equals(levelKey) ? Integer.toString(level) : translatedLevel;
-        return effectName + " " + levelText;
-    }
-    private static String compactText(String effectName, String durationText, boolean includeDuration) {
-        if (!includeDuration || durationText == null || durationText.isBlank()) {
-            return effectName;
-        }
-        return effectName + " " + durationText;
-    }
     private final BooleanSetting showAmplifier = BooleanSetting.builder().id("show_amplifier").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final BooleanSetting showDuration = BooleanSetting.builder().id("show_duration").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final SliderSetting flashTimeWhenEnding = SliderSetting.builder().id("flash_time_when_ending").defaultValue(10f).minValue(0f).maxValue(30f).step(1f).valueFormatter(value -> {
@@ -98,21 +41,13 @@ public class StatusEffectsModule extends HudModule {
     }).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final EnumSetting<SortMode> sortMode = EnumSetting.<SortMode>builder().id("sort_mode").defaultValue(SortMode.REMAINING_TIME).valueFormatter(SortMode::displayName).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final EnumSetting<DisplayMode> displayMode = EnumSetting.<DisplayMode>builder().id("display_mode").defaultValue(DisplayMode.DETAILED).valueFormatter(DisplayMode::displayName).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-
     private final Minecraft minecraft = Minecraft.getInstance();
-
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
-
     private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
-
     private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
-
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
-
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
-
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
-
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
 
     public StatusEffectsModule() {
@@ -133,6 +68,39 @@ public class StatusEffectsModule extends HudModule {
         addSetting(flashTimeWhenEnding);
         addSetting(sortMode);
         addSetting(displayMode);
+    }
+
+    private static int whiteWithAlpha(float alpha) {
+        int alphaChannel = Mth.clamp(Math.round(alpha * 255f), 0, 255);
+        return (alphaChannel << 24) | 0x00FFFFFF;
+    }
+
+    private static Identifier getMobEffectSprite(Holder<MobEffect> effect) {
+        return effect.unwrapKey().map(ResourceKey::identifier).map(identifier -> identifier.withPrefix("mob_effect/")).orElseGet(MissingTextureAtlasSprite::getLocation);
+    }
+
+    private static String formatEffectNameWithAmplifier(MobEffectInstance effectInstance, boolean includeAmplifier) {
+        String effectName = effectInstance.getEffect().value().getDisplayName().getString();
+        if (!includeAmplifier) {
+            return effectName;
+        }
+        int amplifier = effectInstance.getAmplifier();
+        if (amplifier <= 0) {
+            return effectName;
+        }
+
+        int level = amplifier + 1;
+        String levelKey = "enchantment.level." + level;
+        String translatedLevel = Component.translatable(levelKey).getString();
+        String levelText = translatedLevel.equals(levelKey) ? Integer.toString(level) : translatedLevel;
+        return effectName + " " + levelText;
+    }
+
+    private static String compactText(String effectName, String durationText, boolean includeDuration) {
+        if (!includeDuration || durationText == null || durationText.isBlank()) {
+            return effectName;
+        }
+        return effectName + " " + durationText;
     }
 
     @Override
@@ -283,4 +251,34 @@ public class StatusEffectsModule extends HudModule {
         }
         return rows;
     }
+
+    private enum SortMode {
+        REMAINING_TIME("Remaining Time"), ALPHABETICAL("Alphabetical");
+
+        private final String displayName;
+
+        SortMode(String displayName) {
+            this.displayName = displayName;
+        }
+
+        private String displayName() {
+            return displayName;
+        }
+    }
+
+    private enum DisplayMode {
+        DETAILED("Detailed"), COMPACT("Compact");
+
+        private final String displayName;
+
+        DisplayMode(String displayName) {
+            this.displayName = displayName;
+        }
+
+        private String displayName() {
+            return displayName;
+        }
+    }
+
+    private record EffectRow(Identifier effectSprite, String nameText, String durationText, float iconAlpha) {}
 }

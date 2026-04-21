@@ -167,5 +167,9 @@
   "fascinatedutils.module.hurtcam.cancel_hurtcam_animation.display_name": "Disable Hurt Camera Shake",
   "fascinatedutils.module.hurtcam.cancel_hurtcam_animation.description": "Stops the camera from tilting when you take damage.",
   "fascinatedutils.module.timechanger.world_time.display_name": "World Time",
-  "fascinatedutils.module.timechanger.world_time.description": "Sets the time of day shown in the world."
+  "fascinatedutils.module.timechanger.world_time.description": "Sets the time of day shown in the world.",
+  "fascinatedutils.module.inventorytweaks.quick_move.display_name": "Quick Move",
+  "fascinatedutils.module.inventorytweaks.quick_move.description": "Hold Shift and drag across inventory slots to quickly move items without clicking each one individually.",
+  "fascinatedutils.module.inventorytweaks.scroll_move.display_name": "Scroll Move",
+  "fascinatedutils.module.inventorytweaks.scroll_move.description": "Scroll over a slot to instantly move that item to the other inventory."
 }

@@ -1,14 +1,14 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import cc.fascinated.fascinatedutils.common.ColorUtils;
 import cc.fascinated.fascinatedutils.common.PingColors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class PingWidget extends HudMiniMessageModule {
     private static final long UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(1_000L);

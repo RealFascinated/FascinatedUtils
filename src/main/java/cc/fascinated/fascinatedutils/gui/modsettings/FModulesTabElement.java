@@ -134,7 +134,7 @@ public class FModulesTabElement extends FWidget {
         if (colorPickerSetting != null) {
             rootStack.addChild(new FColorPickerPopupWidget(colorPickerSetting.getValue(), newColor -> {
                 colorPickerSetting.setValue(newColor);
-                ModConfig.saveAllModuleSettings();
+                ModConfig.profiles().saveActiveProfile();
                 colorPickerSetting = null;
                 needsRebuild = true;
             }, () -> {
@@ -180,10 +180,10 @@ public class FModulesTabElement extends FWidget {
         if (normalizedName.isBlank()) {
             return;
         }
-        if (ModConfig.profileNameExists(normalizedName)) {
+        if (ModConfig.profiles().profileNameExists(normalizedName)) {
             return;
         }
-        ModConfig.createProfile(normalizedName, copyDefaultProfileSettings);
+        ModConfig.profiles().createProfile(normalizedName, copyDefaultProfileSettings);
         showCreateProfilePopup = false;
         profilesScrollRef.setValue(0f);
         needsRebuild = true;
