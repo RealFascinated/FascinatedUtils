@@ -69,7 +69,10 @@ public class KeybindSetting extends Setting<String> {
             keyBinding.setKey(defaultKey);
             KeyMapping.resetMapping();
             Minecraft minecraftClient = Minecraft.getInstance();
-            minecraftClient.options.save();
+            //noinspection ConstantValue
+            if (minecraftClient != null && minecraftClient.options != null) {
+                minecraftClient.options.save();
+            }
         }
         super.resetToDefault();
     }

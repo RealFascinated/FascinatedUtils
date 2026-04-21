@@ -11,6 +11,7 @@ import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.core.UiFocusIds;
 import cc.fascinated.fascinatedutils.gui.screens.HUDEditorScreen;
 import cc.fascinated.fascinatedutils.gui.screens.ModSettingsScreen;
+import net.minecraft.client.gui.screens.Screen;
 import cc.fascinated.fascinatedutils.systems.hud.HUDEditorSnap;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
@@ -43,6 +44,17 @@ public class HudEditorPointerSession {
     private float snapGuideY = Float.NaN;
     private boolean snapGuideXIsCenter = false;
     private boolean snapGuideYIsCenter = false;
+    @Nullable
+    private Screen parentScreen;
+
+    /**
+     * Sets the parent screen to return to when the mod settings shell is closed.
+     *
+     * @param parentScreen the screen instance to restore (typically the {@link HUDEditorScreen} that owns this session)
+     */
+    public void setParentScreen(@Nullable Screen parentScreen) {
+        this.parentScreen = parentScreen;
+    }
 
     /**
      * Updates logical canvas extents for editor pointer and layout math (call once per editor paint).
@@ -106,7 +118,7 @@ public class HudEditorPointerSession {
         float pointerX = UIScale.uiPointerX();
         float pointerY = UIScale.uiPointerY();
         if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && HudEditorOverlays.hitTestModsButton(pointerX, pointerY)) {
-            Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, null, true));
+            Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, null, parentScreen));
             return true;
         }
         if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
@@ -119,7 +131,7 @@ public class HudEditorPointerSession {
                 continue;
             }
             if (HudEditorChrome.settingsButtonContainsPoint(widget, pointerX, pointerY)) {
-                Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, widget, true));
+                Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, widget, parentScreen));
                 return true;
             }
             if (HudEditorChrome.closeButtonContainsPoint(widget, pointerX, pointerY)) {

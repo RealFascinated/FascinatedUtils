@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.gui.screens;
 import java.util.List;
 
 import cc.fascinated.fascinatedutils.gui.UIScale;
+import cc.fascinated.fascinatedutils.gui.hooks.FadeInAnim;
 import cc.fascinated.fascinatedutils.gui.hudeditor.HudEditorChrome;
 import cc.fascinated.fascinatedutils.gui.hudeditor.HudEditorOverlays;
 import cc.fascinated.fascinatedutils.gui.hudeditor.HudEditorPointerSession;
@@ -22,9 +23,18 @@ import net.minecraft.util.Mth;
 public class HUDEditorScreen extends WidgetScreen {
 
     private final HudEditorPointerSession pointerSession = new HudEditorPointerSession();
+    private final FadeInAnim screenAnim = new FadeInAnim(15f);
+    private final FadeInAnim brandingAnim = new FadeInAnim(7f);
 
     public HUDEditorScreen() {
         super(Component.translatable("fascinatedutils.setting.hud_editor.title"));
+    }
+
+    @Override
+    public void init() {
+        super.init();
+        pointerSession.setParentScreen(this);
+        HUDManager.INSTANCE.markEditModeActive();
     }
 
     @Override
@@ -56,7 +66,9 @@ public class HUDEditorScreen extends WidgetScreen {
             deltaSeconds = partialTick / 20f;
         }
         deltaSeconds = Mth.clamp(deltaSeconds, 0f, 1f);
-        guiRenderer.drawRect(0f, 0f, canvasWidth, canvasHeight, UiColor.argb("#66000000"));
+        screenAnim.tick(deltaSeconds);
+        screenAnim.show();
+        screenAnim.render(guiRenderer, () -> guiRenderer.drawRect(0f, 0f, canvasWidth, canvasHeight, UiColor.argb("#66000000")));
 
         if (pointerSession.dragging() != null) {
             HudEditorOverlays.drawEditorCenterCrosshair(guiRenderer, canvasWidth, canvasHeight);
@@ -70,9 +82,16 @@ public class HUDEditorScreen extends WidgetScreen {
         }
         HudEditorOverlays.drawSnapGuides(guiRenderer, canvasWidth, canvasHeight, pointerSession.snapGuideX(), pointerSession.snapGuideY(), pointerSession.snapGuideXIsCenter(), pointerSession.snapGuideYIsCenter());
         boolean idleHudSelection = pointerSession.dragging() == null && pointerSession.scalingWidget() == null;
-        if (idleHudSelection) {
-            HudEditorOverlays.drawBrandingCenterOverlay(guiRenderer, canvasWidth, canvasHeight, UIScale.uiPointerX(), UIScale.uiPointerY());
+        brandingAnim.tick(deltaSeconds);
+        if (idleHudSelection && screenAnim.progress().value() >= 0.80f) {
+            brandingAnim.show();
         } else {
+            brandingAnim.hide();
+        }
+        final float finalCanvasWidth = canvasWidth;
+        final float finalCanvasHeight = canvasHeight;
+        brandingAnim.render(guiRenderer, () -> HudEditorOverlays.drawBrandingCenterOverlay(guiRenderer, finalCanvasWidth, finalCanvasHeight, UIScale.uiPointerX(), UIScale.uiPointerY()));
+        if (!idleHudSelection) {
             HudEditorOverlays.clearBrandingHitLayout();
         }
         guiRenderer.end();

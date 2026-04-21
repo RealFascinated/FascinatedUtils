@@ -85,6 +85,15 @@ public class HUDManager {
         }
     }
 
+    /**
+     * Marks edit mode as active without opening a new screen. Use this when the editor screen is
+     * already being shown (e.g. re-using a parent {@link HUDEditorScreen} instance after returning from
+     * mod settings).
+     */
+    public void markEditModeActive() {
+        this.editMode = true;
+    }
+
     public void clearEditModeAfterEditorRemoved() {
         if (!this.editMode) {
             return;

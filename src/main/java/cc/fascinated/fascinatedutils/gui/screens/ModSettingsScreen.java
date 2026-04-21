@@ -29,6 +29,7 @@ import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -64,19 +65,24 @@ public class ModSettingsScreen extends WidgetScreen {
     private boolean bodyRebuildDirty = true;
 
     private boolean navigateToModuleDetailApplied;
-    private final boolean returnToHudEditor;
+    @Nullable
+    private final Screen returnToScreen;
 
     public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId) {
-        this(title, getFocusId, setFocusId, null, false);
+        this(title, getFocusId, setFocusId, null, (Screen) null);
     }
 
     public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId, @Nullable Module navigateToModuleDetailOnOpen) {
-        this(title, getFocusId, setFocusId, navigateToModuleDetailOnOpen, false);
+        this(title, getFocusId, setFocusId, navigateToModuleDetailOnOpen, (Screen) null);
     }
 
     public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId, @Nullable Module navigateToModuleDetailOnOpen, boolean returnToHudEditor) {
+        this(title, getFocusId, setFocusId, navigateToModuleDetailOnOpen, (Screen) null);
+    }
+
+    public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId, @Nullable Module navigateToModuleDetailOnOpen, @Nullable Screen returnToScreen) {
         super(title);
-        this.returnToHudEditor = returnToHudEditor;
+        this.returnToScreen = returnToScreen;
         this.navigateToModuleDetailOnOpen = navigateToModuleDetailOnOpen;
         this.setFocusId = setFocusId;
         root.setFocusSync(getFocusId, setFocusId);
@@ -366,8 +372,9 @@ public class ModSettingsScreen extends WidgetScreen {
     }
 
     private void closeModSettingsShell() {
-        if (returnToHudEditor) {
-            HUDManager.INSTANCE.setEditMode(true);
+        if (returnToScreen != null) {
+            HUDManager.INSTANCE.markEditModeActive();
+            Minecraft.getInstance().setScreen(returnToScreen);
         } else {
             Minecraft.getInstance().setScreen(null);
         }
@@ -378,6 +385,11 @@ public class ModSettingsScreen extends WidgetScreen {
     }
 
     private void openHudLayoutEditor() {
-        HUDManager.INSTANCE.setEditMode(true);
+        if (returnToScreen != null) {
+            HUDManager.INSTANCE.markEditModeActive();
+            Minecraft.getInstance().setScreen(returnToScreen);
+        } else {
+            HUDManager.INSTANCE.setEditMode(true);
+        }
     }
 }
