@@ -141,7 +141,8 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
             borderColor = WSettingTooltip.dimColor(borderColor, 0.6f);
         }
         graphics.fillRoundedRectFrame(chipLeft, chipTop, chipWidth, chipHeight, corner, borderColor, fillColor, borderThickness, borderThickness, RectCornerRoundMask.ALL);
-        String bindingLabel = listening && !locked ? "Press key... (ESC cancel)" : keybindSetting.currentBindingLabel();
+        String bindingLabel = listening && !locked ? "..." : keybindSetting.currentBindingLabel();
+        bindingLabel = cc.fascinated.fascinatedutils.gui.core.TextLineLayout.ellipsize(bindingLabel, chipWidth - 4f, segment -> graphics.measureTextWidth(segment, false));
         int textWidth = graphics.measureTextWidth(bindingLabel, false);
         float textX = chipLeft + Math.max(0f, (chipWidth - textWidth) * 0.5f);
         float textY = chipTop + Math.max(0f, (chipHeight - graphics.getFontHeight()) * 0.5f);
@@ -154,7 +155,7 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
         float chipWidth = KEY_CHIP_WIDTH_DESIGN;
         float chipHeight = KEY_CHIP_HEIGHT_DESIGN;
         float chipTop = titleRowOriginY();
-        float chipLeft = x() + w() - chipWidth - SettingRowResetLayout.trailingResetReservePx();
+        float chipLeft = x() + outerWidth - chipWidth - SettingRowResetLayout.trailingResetReservePx();
         return new float[]{chipLeft, chipTop, chipWidth, chipHeight};
     }
 
