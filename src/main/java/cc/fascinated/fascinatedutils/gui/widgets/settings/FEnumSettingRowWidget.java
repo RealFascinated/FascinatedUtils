@@ -150,7 +150,7 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
         float labelRightEdge = chip[0] - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP;
         float labelMaxWidth = Math.max(0f, labelRightEdge - bodyLeft);
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
-        float labelY = titleOriginY + Math.max(0f, (chipH - graphics.getFontHeight()) * 0.5f);
+        float labelY = titleOriginY + Math.max(0f, (chipH - graphics.getFontCapHeight()) * 0.5f);
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, labelY, false);
         float chipCorner = Mth.clamp(graphics.theme().cardCornerRadius(), 0.5f, Math.min(chip[2], chipH) * 0.5f - 0.01f);
@@ -165,7 +165,7 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
         String valueText = TextLineLayout.ellipsize(enumSetting.formatValueForDisplay(), chipInnerTextWidth, segment -> graphics.measureTextWidth(segment, false));
         float valueTextW = graphics.measureTextWidth(valueText, false);
         float valueDrawX = chip[0] + Math.max(0f, (chip[2] - valueTextW) * 0.5f);
-        float valueDrawY = chip[1] + Math.max(0f, (chipH - graphics.getFontHeight()) * 0.5f);
+        float valueDrawY = chip[1] + Math.max(0f, (chipH - graphics.getFontCapHeight()) * 0.5f);
         int valueColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(valueColor) + ">" + valueText + "</color>", valueDrawX, valueDrawY, false);
         float[] resetSquare = inlineResetSquare();

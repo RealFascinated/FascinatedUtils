@@ -79,7 +79,7 @@ public class FClickableTabSegmentWidget extends FWidget {
         }
         int textWidth = graphics.measureTextWidth(labelText, false);
         float textX = x() + (w() - textWidth) * 0.5f;
-        float lineHeight = graphics.getFontHeight();
+        float lineHeight = graphics.getFontCapHeight();
         float textY = y() + (h() - lineHeight) * 0.5f;
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(textColor) + ">" + labelText + "</color>", textX, textY, false);
     }

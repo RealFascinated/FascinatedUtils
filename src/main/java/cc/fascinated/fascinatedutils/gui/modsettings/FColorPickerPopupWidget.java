@@ -142,7 +142,7 @@ public class FColorPickerPopupWidget extends FPopupWidget {
     }
 
     private void renderHexRow(GuiRenderer graphics) {
-        float textY = hexInput.y() + Math.max(0f, hexInput.h() - graphics.getFontHeight()) * 0.5f;
+        float textY = hexInput.y() + Math.max(0f, hexInput.h() - graphics.getFontCapHeight()) * 0.5f;
         graphics.drawText("#", hexInput.x() - HEX_HASH_LABEL_WIDTH + 1f, textY, graphics.theme().textLabel(), false, false);
         float previewSize = PREVIEW_SIZE_DESIGN;
         float previewX = hexInput.x() + hexInput.w() + 4f;

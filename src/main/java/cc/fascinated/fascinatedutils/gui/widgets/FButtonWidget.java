@@ -169,7 +169,7 @@ public class FButtonWidget extends FWidget {
             String line = lines.get(lineIndex);
             int textWidth = graphics.measureTextWidth(line, false);
             float textX = x() + (w() - textWidth) * 0.5f;
-            graphics.drawMiniMessageText("<color:" + Colors.rgbHex(graphics.theme().textPrimary()) + ">" + line + "</color>", textX, cursorY + (lineHeight - graphics.getFontHeight()) * 0.5f, false);
+            graphics.drawMiniMessageText("<color:" + Colors.rgbHex(graphics.theme().textPrimary()) + ">" + line + "</color>", textX, cursorY + (lineHeight - graphics.getFontCapHeight()) * 0.5f, false);
             cursorY += lineHeight + betweenLines;
         }
     }

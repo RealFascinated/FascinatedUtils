@@ -124,7 +124,7 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
         float titleOriginY = titleRowOriginY();
         String label = keybindSetting.getTranslatedDisplayName();
         float titleRowHeight = titleRowHeightPx();
-        float labelY = titleOriginY + Math.max(0f, (titleRowHeight - graphics.getFontHeight()) * 0.5f);
+        float labelY = titleOriginY + Math.max(0f, (titleRowHeight - graphics.getFontCapHeight()) * 0.5f);
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(locked ? graphics.theme().textMuted() : graphics.theme().textPrimary()) + ">" + label + "</color>", bodyLeft, labelY, false);
 
         float[] chip = chipBounds();
@@ -145,7 +145,7 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
         bindingLabel = cc.fascinated.fascinatedutils.gui.core.TextLineLayout.ellipsize(bindingLabel, chipWidth - 4f, segment -> graphics.measureTextWidth(segment, false));
         int textWidth = graphics.measureTextWidth(bindingLabel, false);
         float textX = chipLeft + Math.max(0f, (chipWidth - textWidth) * 0.5f);
-        float textY = chipTop + Math.max(0f, (chipHeight - graphics.getFontHeight()) * 0.5f);
+        float textY = chipTop + Math.max(0f, (chipHeight - graphics.getFontCapHeight()) * 0.5f);
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(locked ? graphics.theme().textMuted() : graphics.theme().textPrimary()) + ">" + bindingLabel + "</color>", textX, textY, false);
         float[] resetSquare = inlineResetSquare();
         SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], titleRowHeight, hoveredReset && !locked, keybindSetting.isAtDefault());

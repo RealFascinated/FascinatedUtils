@@ -282,7 +282,7 @@ public class FOutlinedTextInputWidget extends FWidget {
         float pad = padX(graphics);
         float visibleW = w() - pad * 2f;
         float lineH = TextLayoutMetrics.layoutLineHeightPx(graphics);
-        float textY = y() + Math.max(0f, h() - lineH) * 0.5f;
+        float textY = y() + Math.max(0f, h() - graphics.getFontCapHeight()) * 0.5f;
 
         if (focused) {
             scrollToCaret(graphics);

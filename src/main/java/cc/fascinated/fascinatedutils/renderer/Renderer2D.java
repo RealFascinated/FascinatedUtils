@@ -212,7 +212,7 @@ public class Renderer2D {
         float sy = shellScaleY();
         Matrix3x2fStack matrices = graphics.pose();
         int originX = Mth.floor(positionX);
-        int originY = Mth.floor(positionY);
+        int originY = Math.round(positionY);
         if (Math.abs(sx - 1f) > 1e-4f || Math.abs(sy - 1f) > 1e-4f) {
             matrices.pushMatrix();
             matrices.translate(originX, originY);
@@ -310,7 +310,7 @@ public class Renderer2D {
         Matrix3x2fStack matrices = graphics.pose();
         if (Math.abs(sx - 1f) > 1e-4f || Math.abs(sy - 1f) > 1e-4f) {
             int originX = Mth.floor(positionX);
-            int originY = Mth.floor(positionY);
+            int originY = Math.round(positionY);
             matrices.pushMatrix();
             matrices.translate(originX, originY);
             matrices.scale(sx, sy);
@@ -324,7 +324,7 @@ public class Renderer2D {
         }
         else {
             int originX = Mth.floor(positionX);
-            int originY = Mth.floor(positionY);
+            int originY = Math.round(positionY);
             if (!bold) {
                 guiTextRenderer.drawString(graphics, text, originX, originY, argb, shadow);
             }

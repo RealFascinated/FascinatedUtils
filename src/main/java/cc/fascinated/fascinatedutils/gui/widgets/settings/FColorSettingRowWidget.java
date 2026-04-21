@@ -101,7 +101,7 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
         float[] swatch = swatchBounds();
         float labelMaxWidth = Math.max(0f, swatch[0] - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - bodyLeft);
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
-        float labelY = titleOriginY + Math.max(0f, (swatchSize - graphics.getFontHeight()) * 0.5f);
+        float labelY = titleOriginY + Math.max(0f, (swatchSize - graphics.getFontCapHeight()) * 0.5f);
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, labelY, false);
 

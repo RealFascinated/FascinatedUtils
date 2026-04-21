@@ -149,7 +149,7 @@ public class FIconCheckboxWidget extends FWidget {
 
         String label = labelSupplier.get();
         float labelX = boxX + boxSize + labelGap;
-        float labelY = y() + (h() - graphics.getFontHeight()) * 0.5f;
+        float labelY = y() + (h() - graphics.getFontCapHeight()) * 0.5f;
         graphics.drawText(label, labelX, labelY, textColor, false, false);
     }
 }

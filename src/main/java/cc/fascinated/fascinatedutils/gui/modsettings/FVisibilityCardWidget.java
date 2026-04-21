@@ -171,7 +171,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
         graphics.fillRoundedRectFrame(settingsStripX, settingsStripY, settingsStripW, settingsStripH, settingsCorner, graphics.theme().border(), settingsFill, stripBorderThickness, stripBorderThickness, RectCornerRoundMask.NONE);
         String settingsLabel = hasSettings ? Component.translatable("fascinatedutils.setting.shell.widget_settings.open").getString() : Component.translatable("fascinatedutils.setting.shell.widget_settings.unavailable").getString();
         int settingsLabelColor = hasSettings ? graphics.theme().widgetStateLabel() : graphics.theme().widgetStateLabelMuted();
-        float settingsTextY = settingsStripY + (settingsStripH - graphics.getFontHeight()) * 0.5f;
+        float settingsTextY = settingsStripY + (settingsStripH - graphics.getFontCapHeight()) * 0.5f;
         int settingsLabelWidth = graphics.measureTextWidth(settingsLabel, false);
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(settingsLabelColor) + ">" + settingsLabel + "</color>", settingsStripX + (settingsStripW - settingsLabelWidth) * 0.5f, settingsTextY, false);
 
@@ -188,7 +188,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
         float stripCornerMax = Math.max(0.5f, Math.min(stripW, stripH) * 0.5f - stripBorderThickness * 0.5f - 0.01f);
         float stripCorner = Mth.clamp(corner, 0.5f, stripCornerMax);
         graphics.fillRoundedRectFrame(stripX, stripY, stripW, stripH, stripCorner, borderArgb, fillArgb, stripBorderThickness, stripBorderThickness, RectCornerRoundMask.BOTTOM);
-        float textY = stripY + (stripH - graphics.getFontHeight()) * 0.5f;
+        float textY = stripY + (stripH - graphics.getFontCapHeight()) * 0.5f;
         int labelWidth = graphics.measureTextWidth(actionLabel, false);
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(graphics.theme().widgetStateLabel()) + ">" + actionLabel + "</color>", stripX + (stripW - labelWidth) * 0.5f, textY, false);
     }

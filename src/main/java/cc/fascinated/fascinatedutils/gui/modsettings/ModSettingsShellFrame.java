@@ -122,7 +122,7 @@ public class ModSettingsShellFrame {
                 glUiRenderer.fillRoundedRect(titleFillX, titleFillY, titleFillW, titleFillH, titleBarInnerCornerRadius, glUiRenderer.theme().background(), RectCornerRoundMask.TOP);
                 glUiRenderer.fillRoundedRectFrame(closeButtonRect.positionX(), closeButtonRect.positionY(), closeButtonRect.width(), closeButtonRect.height(), closeButtonCornerRadius, closeBorder, closeBg, UITheme.BORDER_THICKNESS_PX, UITheme.BORDER_THICKNESS_PX, RectCornerRoundMask.ALL);
                 Icons.paintModSettingsCloseIcon(glUiRenderer, closeButtonRect.positionX(), closeButtonRect.positionY(), closeButtonRect.width(), closeButtonRect.height(), closeText);
-                glUiRenderer.drawMiniMessageText("<color:" + Colors.rgbHex(glUiRenderer.theme().textPrimary()) + ">" + titleStr + "</color>", titleStartX, innerTitleTop + (innerTitleHeight - glUiRenderer.getFontHeight()) * 0.5f, false);
+                glUiRenderer.drawMiniMessageText("<color:" + Colors.rgbHex(glUiRenderer.theme().textPrimary()) + ">" + titleStr + "</color>", titleStartX, innerTitleTop + (innerTitleHeight - glUiRenderer.getFontCapHeight()) * 0.5f, false);
                 topBarTabsHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);
                 if (showHudLayoutChip) {
                     hudLayoutButtonHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);

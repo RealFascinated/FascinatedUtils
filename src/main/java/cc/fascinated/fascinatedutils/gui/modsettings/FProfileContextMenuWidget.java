@@ -178,7 +178,7 @@ public class FProfileContextMenuWidget extends FWidget {
                 label = "";
             }
             float leftPad = 6f;
-            float textY = y() + (h() - graphics.getFontHeight()) * 0.5f;
+            float textY = y() + (h() - graphics.getFontCapHeight()) * 0.5f;
             graphics.drawMiniMessageText("<color:" + Colors.rgbHex(graphics.theme().textPrimary()) + ">" + label + "</color>", x() + leftPad, textY, false);
         }
     }

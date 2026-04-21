@@ -87,7 +87,7 @@ public class FLabelWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        float lineBlockH = TextLayoutMetrics.layoutLineHeightPx(graphics);
+        float lineBlockH = graphics.getFontCapHeight();
         float textOriginY = y();
         if (alignY == Align.CENTER) {
             textOriginY = y() + Math.max(0f, h() - lineBlockH) * 0.5f;

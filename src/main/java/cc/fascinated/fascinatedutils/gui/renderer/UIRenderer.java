@@ -99,6 +99,14 @@ public interface UIRenderer {
      */
     int getFontHeight();
 
+    /**
+     * Visual height of one text line for vertical centering (excludes the descender row included in
+     * {@link #getFontHeight()}). Use this when centering a single text line inside a container.
+     */
+    default int getFontCapHeight() {
+        return Math.max(1, getFontHeight() - 1);
+    }
+
     void setMultiplyAlpha(float factor);
 
     void resetMultiplyAlpha();
