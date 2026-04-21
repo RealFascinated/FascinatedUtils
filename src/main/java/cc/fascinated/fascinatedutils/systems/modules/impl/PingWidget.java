@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.PingColors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
@@ -28,7 +28,7 @@ public class PingWidget extends HudMiniMessageModule {
         }
 
         int color = usePingColor.getValue() ? PingColors.getPingColor(pingMs) : 0xFFFFFFFF;
-        return List.of("<color:" + ColorUtils.rgbHex(color) + ">" + pingMs + "</color> ms");
+        return List.of("<color:" + Colors.rgbHex(color) + ">" + pingMs + "</color> ms");
     }
 
     @Override

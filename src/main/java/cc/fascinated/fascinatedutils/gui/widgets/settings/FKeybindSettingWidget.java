@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -125,7 +125,7 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
         String label = keybindSetting.getTranslatedDisplayName();
         float titleRowHeight = titleRowHeightPx();
         float labelY = titleOriginY + Math.max(0f, (titleRowHeight - graphics.getFontHeight()) * 0.5f);
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(locked ? graphics.theme().textMuted() : graphics.theme().textPrimary()) + ">" + label + "</color>", bodyLeft, labelY, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(locked ? graphics.theme().textMuted() : graphics.theme().textPrimary()) + ">" + label + "</color>", bodyLeft, labelY, false);
 
         float[] chip = chipBounds();
         float chipLeft = chip[0];
@@ -146,7 +146,7 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
         int textWidth = graphics.measureTextWidth(bindingLabel, false);
         float textX = chipLeft + Math.max(0f, (chipWidth - textWidth) * 0.5f);
         float textY = chipTop + Math.max(0f, (chipHeight - graphics.getFontHeight()) * 0.5f);
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(locked ? graphics.theme().textMuted() : graphics.theme().textPrimary()) + ">" + bindingLabel + "</color>", textX, textY, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(locked ? graphics.theme().textMuted() : graphics.theme().textPrimary()) + ">" + bindingLabel + "</color>", textX, textY, false);
         float[] resetSquare = inlineResetSquare();
         SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], titleRowHeight, hoveredReset && !locked, keybindSetting.isAtDefault());
     }

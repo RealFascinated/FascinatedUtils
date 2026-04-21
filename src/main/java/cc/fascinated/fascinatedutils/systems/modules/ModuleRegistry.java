@@ -60,6 +60,7 @@ public class ModuleRegistry {
         modules.add(new ArmorWidget());
         modules.add(new WawlaWidget());
         modules.add(new TimeChangerModule());
+        modules.add(new BlockOutlineModule());
 
         for (Module module : modules) {
             FascinatedEventBus.INSTANCE.subscribe(module);

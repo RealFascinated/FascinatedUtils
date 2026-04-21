@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -81,6 +81,6 @@ public class FClickableTabSegmentWidget extends FWidget {
         float textX = x() + (w() - textWidth) * 0.5f;
         float lineHeight = graphics.getFontHeight();
         float textY = y() + (h() - lineHeight) * 0.5f;
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(textColor) + ">" + labelText + "</color>", textX, textY, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(textColor) + ">" + labelText + "</color>", textX, textY, false);
     }
 }

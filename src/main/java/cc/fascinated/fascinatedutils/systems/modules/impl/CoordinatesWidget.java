@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.NumberUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
@@ -55,7 +55,7 @@ public class CoordinatesWidget extends HudModule {
         String path = biomeId == null ? biomeIdRaw : biomeId.getPath();
         String label = Arrays.stream(path.replace("_", " ").split(" ")).map(StringUtils::capitalize).collect(Collectors.joining(" "));
         int biomeColorArgb = BiomeColors.colorForBiomeId(Identifier.tryParse(biomeIdRaw));
-        return "<color:" + ColorUtils.rgbHex(biomeColorArgb) + ">" + label + "</color>";
+        return "<color:" + Colors.rgbHex(biomeColorArgb) + ">" + label + "</color>";
     }
 
     private static String compass4FromLook(Vec3 look) {

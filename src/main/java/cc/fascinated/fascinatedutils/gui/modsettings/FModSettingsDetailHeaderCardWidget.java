@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.TextLayoutMetrics;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
@@ -125,7 +125,7 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
         float textWidth = graphics.measureTextWidth(titleText, false);
         float textX = x() + (w() - textWidth) * 0.5f;
         float textY = y() + (h() - lineHeight) * 0.5f;
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(graphics.theme().textPrimary()) + ">" + titleText + "</color>", textX, textY, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(graphics.theme().textPrimary()) + ">" + titleText + "</color>", textX, textY, false);
         if (showBackButton) {
             float[] back = backButtonBounds();
             int backIconTint = hoverBack ? graphics.theme().textPrimary() : graphics.theme().textMuted();

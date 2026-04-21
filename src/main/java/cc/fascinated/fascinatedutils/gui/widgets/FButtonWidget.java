@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -169,7 +169,7 @@ public class FButtonWidget extends FWidget {
             String line = lines.get(lineIndex);
             int textWidth = graphics.measureTextWidth(line, false);
             float textX = x() + (w() - textWidth) * 0.5f;
-            graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(graphics.theme().textPrimary()) + ">" + line + "</color>", textX, cursorY + (lineHeight - graphics.getFontHeight()) * 0.5f, false);
+            graphics.drawMiniMessageText("<color:" + Colors.rgbHex(graphics.theme().textPrimary()) + ">" + line + "</color>", textX, cursorY + (lineHeight - graphics.getFontHeight()) * 0.5f, false);
             cursorY += lineHeight + betweenLines;
         }
     }

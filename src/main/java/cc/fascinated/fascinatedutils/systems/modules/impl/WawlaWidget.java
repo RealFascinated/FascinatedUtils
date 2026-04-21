@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
@@ -99,8 +99,8 @@ public class WawlaWidget extends HudModule {
         float lineHeight = glRenderer.getFontHeight();
         float textBlockHeight = lineHeight * 2f + LINE_GAP;
         float contentHeight = Math.max(ICON_SIZE, textBlockHeight);
-        String titleMini = "<b><color:" + ColorUtils.rgbHex(TITLE_COLOR) + ">" + targetInfo.displayName() + "</color></b>";
-        String secondaryMini = targetInfo.showEntityHealth() ? "<white>" + targetInfo.sourceName() + "</white> <color:#ff5555>\u2764</color>" : "<color:" + ColorUtils.rgbHex(SOURCE_COLOR) + ">" + targetInfo.sourceName() + "</color>";
+        String titleMini = "<b><color:" + Colors.rgbHex(TITLE_COLOR) + ">" + targetInfo.displayName() + "</color></b>";
+        String secondaryMini = targetInfo.showEntityHealth() ? "<white>" + targetInfo.sourceName() + "</white> <color:#ff5555>\u2764</color>" : "<color:" + Colors.rgbHex(SOURCE_COLOR) + ">" + targetInfo.sourceName() + "</color>";
         float line1Width = glRenderer.measureMiniMessageTextWidth(titleMini);
         float line2Width = glRenderer.measureMiniMessageTextWidth(secondaryMini);
         float textWidth = Math.max(line1Width, line2Width);

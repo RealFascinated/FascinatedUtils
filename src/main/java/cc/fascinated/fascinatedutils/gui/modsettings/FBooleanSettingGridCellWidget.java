@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.hooks.AnimHandle;
@@ -153,12 +153,12 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         float labelY = titleOriginY + Math.max(0f, (toggleH - graphics.getFontHeight()) * 0.5f);
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(labelColor) + ">" + label + "</color>", labelX, labelY, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(labelColor) + ">" + label + "</color>", labelX, labelY, false);
         float progress = Mth.clamp(toggleProgressAnim.value(), 0f, 1f);
         int trackFillOff = hoveredToggle && !locked ? graphics.theme().toggleOffFillHover() : graphics.theme().toggleOffFill();
         int trackFillOn = hoveredToggle && !locked ? graphics.theme().toggleOnFillHover() : graphics.theme().toggleOnFill();
-        int trackFill = ColorUtils.mixArgb(progress, trackFillOff, trackFillOn);
-        int trackBorder = ColorUtils.mixArgb(progress, hoveredToggle && !locked ? graphics.theme().toggleOffBorderHover() : graphics.theme().toggleOffBorder(), graphics.theme().toggleOnBorder());
+        int trackFill = Colors.mixArgb(progress, trackFillOff, trackFillOn);
+        int trackBorder = Colors.mixArgb(progress, hoveredToggle && !locked ? graphics.theme().toggleOffBorderHover() : graphics.theme().toggleOffBorder(), graphics.theme().toggleOnBorder());
         if (locked) {
             trackFill = WSettingTooltip.dimColor(trackFill, 0.45f);
             trackBorder = WSettingTooltip.dimColor(trackBorder, 0.6f);

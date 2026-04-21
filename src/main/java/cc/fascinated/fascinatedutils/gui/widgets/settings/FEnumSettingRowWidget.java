@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
@@ -152,7 +152,7 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         float labelY = titleOriginY + Math.max(0f, (chipH - graphics.getFontHeight()) * 0.5f);
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, labelY, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, labelY, false);
         float chipCorner = Mth.clamp(graphics.theme().cardCornerRadius(), 0.5f, Math.min(chip[2], chipH) * 0.5f - 0.01f);
         int fill = graphics.theme().surface();
         int border = graphics.theme().border();
@@ -167,7 +167,7 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
         float valueDrawX = chip[0] + Math.max(0f, (chip[2] - valueTextW) * 0.5f);
         float valueDrawY = chip[1] + Math.max(0f, (chipH - graphics.getFontHeight()) * 0.5f);
         int valueColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(valueColor) + ">" + valueText + "</color>", valueDrawX, valueDrawY, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(valueColor) + ">" + valueText + "</color>", valueDrawX, valueDrawY, false);
         float[] resetSquare = inlineResetSquare();
         SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], chipH, hoveredReset && !locked, enumSetting.isAtDefault());
     }

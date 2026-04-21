@@ -6,7 +6,26 @@ import net.minecraft.util.Mth;
 import java.util.Locale;
 
 @UtilityClass
-public class ColorUtils {
+public class Colors {
+
+    public static final int GOOD_COLOR = 0x00E676;
+    public static final int WARNING_COLOR = 0xD6CD30;
+    public static final int BAD_COLOR = 0xE53935;
+
+    /**
+     * Resolves a packed RGB color on the good→warning→bad gradient for a given percentage.
+     *
+     * @param percentGood fraction of maximum, clamped to the inclusive unit interval; 1.0 = good (green), 0.0 = bad (red)
+     * @return RGB in the least significant 24 bits (alpha bits clear)
+     */
+    public static int getGoodBadColor(float percentGood) {
+        float clamped = Mth.clamp(percentGood, 0f, 1f);
+        float eased = clamped * clamped * (3f - 2f * clamped);
+        if (eased <= 0.5f) {
+            return mixArgb(2f * eased, BAD_COLOR, WARNING_COLOR) & 0xFFFFFF;
+        }
+        return mixArgb(2f * (eased - 0.5f), WARNING_COLOR, GOOD_COLOR) & 0xFFFFFF;
+    }
 
     /**
      * Linearly interpolates two packed ARGB colors in channel space.

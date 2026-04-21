@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -179,7 +179,7 @@ public class FProfileContextMenuWidget extends FWidget {
             }
             float leftPad = 6f;
             float textY = y() + (h() - graphics.getFontHeight()) * 0.5f;
-            graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(graphics.theme().textPrimary()) + ">" + label + "</color>", x() + leftPad, textY, false);
+            graphics.drawMiniMessageText("<color:" + Colors.rgbHex(graphics.theme().textPrimary()) + ">" + label + "</color>", x() + leftPad, textY, false);
         }
     }
 }

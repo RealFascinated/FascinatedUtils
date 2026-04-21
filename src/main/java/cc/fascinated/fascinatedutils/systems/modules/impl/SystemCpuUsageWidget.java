@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
@@ -47,10 +47,10 @@ public class SystemCpuUsageWidget extends HudMiniMessageModule {
         }
         if (cpuPercent <= 85f) {
             float t = smoothstep((cpuPercent - 60f) / 25f);
-            return ColorUtils.mixArgb(t, CPU_COLOR_GREEN, CPU_COLOR_AMBER);
+            return Colors.mixArgb(t, CPU_COLOR_GREEN, CPU_COLOR_AMBER);
         }
         float t = smoothstep((cpuPercent - 85f) / 15f);
-        return ColorUtils.mixArgb(t, CPU_COLOR_AMBER, CPU_COLOR_RED);
+        return Colors.mixArgb(t, CPU_COLOR_AMBER, CPU_COLOR_RED);
     }
 
     private static float smoothstep(float value) {
@@ -67,7 +67,7 @@ public class SystemCpuUsageWidget extends HudMiniMessageModule {
         float clampedPercent = clampPercent(systemCpuPercent);
         int roundedPercent = Math.round(clampedPercent);
         int color = useCpuColor.getValue() ? cpuColorArgb(clampedPercent) : UITheme.COLOR_TEXT_PRIMARY;
-        return List.of("<color:" + ColorUtils.rgbHex(color) + "><white>" + roundedPercent + "% CPU");
+        return List.of("<color:" + Colors.rgbHex(color) + "><white>" + roundedPercent + "% CPU");
     }
 
     private float sampleSystemCpuPercent() {

@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
@@ -103,7 +103,7 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         float labelY = titleOriginY + Math.max(0f, (swatchSize - graphics.getFontHeight()) * 0.5f);
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, labelY, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, labelY, false);
 
         SettingColor color = colorSetting.getValue();
         int swatchArgb = color.isRainbow() ? RainbowColors.currentColor().getPackedArgb() | 0xFF000000 : color.getPackedArgb();
@@ -116,7 +116,7 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
         if (color.isRainbow()) {
             float rainbowLabelX = swatch[0] + swatch[2] + 4f;
             int rainbowTextColor = locked ? graphics.theme().textMuted() : graphics.theme().textAccent();
-            graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(rainbowTextColor) + ">Rainbow</color>", rainbowLabelX, labelY, false);
+            graphics.drawMiniMessageText("<color:" + Colors.rgbHex(rainbowTextColor) + ">Rainbow</color>", rainbowLabelX, labelY, false);
         }
 
         float[] resetSquare = inlineResetSquare();

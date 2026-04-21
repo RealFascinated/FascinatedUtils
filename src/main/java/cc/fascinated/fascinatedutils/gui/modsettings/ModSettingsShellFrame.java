@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.gui.modsettings;
 import org.joml.Matrix3x2fStack;
 import org.lwjgl.glfw.GLFW;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.input.MouseButtons;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -122,7 +122,7 @@ public class ModSettingsShellFrame {
                 glUiRenderer.fillRoundedRect(titleFillX, titleFillY, titleFillW, titleFillH, titleBarInnerCornerRadius, glUiRenderer.theme().background(), RectCornerRoundMask.TOP);
                 glUiRenderer.fillRoundedRectFrame(closeButtonRect.positionX(), closeButtonRect.positionY(), closeButtonRect.width(), closeButtonRect.height(), closeButtonCornerRadius, closeBorder, closeBg, UITheme.BORDER_THICKNESS_PX, UITheme.BORDER_THICKNESS_PX, RectCornerRoundMask.ALL);
                 Icons.paintModSettingsCloseIcon(glUiRenderer, closeButtonRect.positionX(), closeButtonRect.positionY(), closeButtonRect.width(), closeButtonRect.height(), closeText);
-                glUiRenderer.drawMiniMessageText("<color:" + ColorUtils.rgbHex(glUiRenderer.theme().textPrimary()) + ">" + titleStr + "</color>", titleStartX, innerTitleTop + (innerTitleHeight - glUiRenderer.getFontHeight()) * 0.5f, false);
+                glUiRenderer.drawMiniMessageText("<color:" + Colors.rgbHex(glUiRenderer.theme().textPrimary()) + ">" + titleStr + "</color>", titleStartX, innerTitleTop + (innerTitleHeight - glUiRenderer.getFontHeight()) * 0.5f, false);
                 topBarTabsHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);
                 if (showHudLayoutChip) {
                     hudLayoutButtonHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);

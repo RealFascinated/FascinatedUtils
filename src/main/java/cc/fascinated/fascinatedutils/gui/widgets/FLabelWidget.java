@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.TextLayoutMetrics;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
@@ -108,7 +108,7 @@ public class FLabelWidget extends FWidget {
         if (clipBox) {
             graphics.pushClip(x(), y(), w(), h());
         }
-        String colorTag = "<color:" + ColorUtils.rgbHex(colorArgb) + ">";
+        String colorTag = "<color:" + Colors.rgbHex(colorArgb) + ">";
         String boldStart = textBold ? "<b>" : "";
         String boldEnd = textBold ? "</b>" : "";
         if (overflow == TextOverflow.WRAP) {

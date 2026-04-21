@@ -4,6 +4,7 @@
   "package": "cc.fascinated.fascinatedutils.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "blockoutline.BlockOutlineMixin",
     "AtmosphericFogModifierMixin",
     "BossHealthOverlayMixin",
     "CameraMixin",

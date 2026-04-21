@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -325,7 +325,7 @@ public class FOutlinedTextInputWidget extends FWidget {
         }
 
         graphics.pushClip(x() + pad, y(), visibleW, h());
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(displayColor) + ">" + displayText + "</color>", textDrawX, textY, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(displayColor) + ">" + displayText + "</color>", textDrawX, textY, false);
         graphics.popClip();
 
         if (focused && !hasSelection()) {

@@ -73,8 +73,15 @@ public abstract class Module implements GsonSerializable<Module> {
      * @param setting the setting definition to append
      */
     public void addSetting(Setting<?> setting) {
-        setting.setTranslationKeyPrefix(settingTranslationKeyPrefix(setting));
+        applyTranslationPrefix(setting);
         this.settings.add(setting);
+    }
+
+    private void applyTranslationPrefix(Setting<?> setting) {
+        setting.setTranslationKeyPrefix(settingTranslationKeyPrefix(setting));
+        for (Setting<?> sub : setting.getSubSettings()) {
+            applyTranslationPrefix(sub);
+        }
     }
 
     /**

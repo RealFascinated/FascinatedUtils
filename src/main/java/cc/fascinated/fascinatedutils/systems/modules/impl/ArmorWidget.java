@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
+import cc.fascinated.fascinatedutils.common.Colors;
+import cc.fascinated.fascinatedutils.common.TpsColors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
@@ -24,9 +26,44 @@ public class ArmorWidget extends HudModule {
     private static final EquipmentSlot[] ARMOR_SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
     private static final String SLOTS_CATEGORY_DISPLAY_KEY = "Slots";
 
-    private final BooleanSetting[] slotRowVisibility = {BooleanSetting.builder().id("show_head").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_chest").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_legs").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_feet").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_main_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_off_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build()};
-    private final BooleanSetting hideUnbreakableDurability = BooleanSetting.builder().id("hide_unbreakable_durability").defaultValue(false).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting showTotalInventoryCount = BooleanSetting.builder().id("show_total_item_count").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting[] slotRowVisibility = {
+            BooleanSetting.builder().id("show_head").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(),
+            BooleanSetting.builder().id("show_chest").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(),
+            BooleanSetting.builder().id("show_legs").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(),
+            BooleanSetting.builder().id("show_feet").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(),
+            BooleanSetting.builder().id("show_main_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(),
+            BooleanSetting.builder().id("show_off_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build()
+    };
+
+    private final BooleanSetting hideUnbreakableDurability = BooleanSetting.builder()
+            .id("hide_unbreakable_durability")
+            .defaultValue(false)
+            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
+            .build();
+
+    private final BooleanSetting showTotalInventoryCount = BooleanSetting.builder()
+            .id("show_total_item_count")
+            .defaultValue(true)
+            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+
+    private final BooleanSetting colorArmorDurability = BooleanSetting.builder()
+            .id("color_armor_durability")
+            .defaultValue(true)
+            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
+            .build();
+
+    private final BooleanSetting colorMainHandDurability = BooleanSetting.builder()
+            .id("color_main_hand_durability")
+            .defaultValue(true)
+            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
+            .build();
+
+    private final BooleanSetting colorOffHandDurability = BooleanSetting.builder()
+            .id("color_off_hand_durability")
+            .defaultValue(true)
+            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
+            .build();
+
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
     private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
     private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
@@ -53,6 +90,9 @@ public class ArmorWidget extends HudModule {
         }
         addSetting(hideUnbreakableDurability);
         addSetting(showTotalInventoryCount);
+        addSetting(colorArmorDurability);
+        addSetting(colorMainHandDurability);
+        addSetting(colorOffHandDurability);
     }
 
     private static ItemStack previewStack(Item item, int damage) {
@@ -100,7 +140,7 @@ public class ArmorWidget extends HudModule {
                 if (stack.isEmpty()) {
                     continue;
                 }
-                rows.add(new HudContent.ItemRow(stack, durabilityOnlyText(stack)));
+                rows.add(new HudContent.ItemRow(stack, durabilityOnlyText(stack, shouldColorRow(rowIndex))));
             }
         }
         else {
@@ -115,7 +155,7 @@ public class ArmorWidget extends HudModule {
                 if (stack.isEmpty()) {
                     continue;
                 }
-                rows.add(new HudContent.ItemRow(resolvedRowStack(stack, player), durabilityOnlyText(stack)));
+                rows.add(new HudContent.ItemRow(resolvedRowStack(stack, player), durabilityOnlyText(stack, shouldColorRow(rowIndex))));
             }
         }
         return rows.isEmpty() ? null : new HudContent.ItemRows(rows);
@@ -138,14 +178,30 @@ public class ArmorWidget extends HudModule {
         return stack;
     }
 
-    private String durabilityOnlyText(ItemStack stack) {
+    private boolean shouldColorRow(int rowIndex) {
+        if (rowIndex < ARMOR_SLOTS.length) {
+            return colorArmorDurability.isEnabled();
+        }
+        if (rowIndex == ARMOR_SLOTS.length) {
+            return colorMainHandDurability.isEnabled();
+        }
+        return colorOffHandDurability.isEnabled();
+    }
+
+    private String durabilityOnlyText(ItemStack stack, boolean useColor) {
         if (stack.isEmpty() || stack.getMaxDamage() <= 0) {
             return "";
         }
         if (hideUnbreakableDurability.isEnabled() && stack.has(DataComponents.UNBREAKABLE)) {
             return "";
         }
-        return "<white>" + (stack.getMaxDamage() - stack.getDamageValue()) + "</white>";
+        int durability = stack.getMaxDamage() - stack.getDamageValue();
+        if (useColor) {
+            float percent = (float) durability / stack.getMaxDamage();
+            String colorHex = Colors.rgbHex(TpsColors.getTpsColor(percent * 20f));
+            return "<color:" + colorHex + ">" + durability + "</color>";
+        }
+        return "<white>" + durability + "</white>";
     }
 
     private boolean isSlotRowShown(int rowIndex) {

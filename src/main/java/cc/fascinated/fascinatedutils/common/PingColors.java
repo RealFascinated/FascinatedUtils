@@ -13,16 +13,16 @@ public class PingColors {
     private static final int ALPHA_MASK = 0xFF000000;
 
     private static final int COLOR_GREY = 0x535353;
-    private static final int COLOR_START = 0x00E676;
-    private static final int COLOR_MID = 0xD6CD30;
-    private static final int COLOR_END = 0xE53935;
+    private static final int COLOR_START = Colors.GOOD_COLOR;
+    private static final int COLOR_MID = Colors.WARNING_COLOR;
+    private static final int COLOR_END = Colors.BAD_COLOR;
 
     /**
      * Resolve a packed ARGB text color for the given round-trip latency in milliseconds.
      *
      * @param latencyMs server-reported latency in milliseconds, or non-positive when unavailable
      * @return packed ARGB suitable for {@link net.minecraft.client.gui.Font} or MiniMessage hex via
-     * {@link ColorUtils#rgbHex(int)}
+     * {@link Colors#rgbHex(int)}
      */
     public static int getPingColor(int latencyMs) {
         return getPingColorInternal(latencyMs) | ALPHA_MASK;
@@ -33,9 +33,9 @@ public class PingColors {
             return COLOR_GREY;
         }
         if (latencyMs < PING_MID) {
-            return ColorUtils.mixArgb(computeOffset(PING_START, PING_MID, latencyMs), ALPHA_MASK | COLOR_START, ALPHA_MASK | COLOR_MID);
+            return Colors.mixArgb(computeOffset(PING_START, PING_MID, latencyMs), ALPHA_MASK | COLOR_START, ALPHA_MASK | COLOR_MID);
         }
-        return ColorUtils.mixArgb(computeOffset(PING_MID, PING_END, Math.min(latencyMs, PING_END)), ALPHA_MASK | COLOR_MID, ALPHA_MASK | COLOR_END);
+        return Colors.mixArgb(computeOffset(PING_MID, PING_END, Math.min(latencyMs, PING_END)), ALPHA_MASK | COLOR_MID, ALPHA_MASK | COLOR_END);
     }
 
     private static float computeOffset(int rangeStart, int rangeEnd, int value) {

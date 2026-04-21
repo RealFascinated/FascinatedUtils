@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.core.TextLayoutMetrics;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
@@ -155,7 +155,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
             String line = lines.get(lineIndex);
             int lineTextWidth = graphics.measureTextWidth(line, false);
             float lineX = innerLeft + (innerWidth - lineTextWidth) * 0.5f;
-            graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(graphics.theme().textPrimary()) + ">" + line + "</color>", lineX, cursorY, false);
+            graphics.drawMiniMessageText("<color:" + Colors.rgbHex(graphics.theme().textPrimary()) + ">" + line + "</color>", lineX, cursorY, false);
             cursorY += lineHeight;
         }
         float stripBorderThickness = 1f;
@@ -173,7 +173,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
         int settingsLabelColor = hasSettings ? graphics.theme().widgetStateLabel() : graphics.theme().widgetStateLabelMuted();
         float settingsTextY = settingsStripY + (settingsStripH - graphics.getFontHeight()) * 0.5f;
         int settingsLabelWidth = graphics.measureTextWidth(settingsLabel, false);
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(settingsLabelColor) + ">" + settingsLabel + "</color>", settingsStripX + (settingsStripW - settingsLabelWidth) * 0.5f, settingsTextY, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(settingsLabelColor) + ">" + settingsLabel + "</color>", settingsStripX + (settingsStripW - settingsLabelWidth) * 0.5f, settingsTextY, false);
 
         float stripX = toggleStrip[0];
         float stripY = toggleStrip[1];
@@ -182,15 +182,15 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
         float stripProgress = Mth.clamp(toggleStripProgressAnim.value(), 0f, 1f);
         int fillDisabled = hoverToggleStrip ? graphics.theme().widgetStateDisabledFillHover() : graphics.theme().widgetStateDisabledFill();
         int fillEnabled = hoverToggleStrip ? graphics.theme().widgetStateEnabledFillHover() : graphics.theme().widgetStateEnabledFill();
-        int fillArgb = ColorUtils.mixArgb(stripProgress, fillDisabled, fillEnabled);
-        int borderArgb = ColorUtils.mixArgb(stripProgress, graphics.theme().widgetStateDisabledBorder(), graphics.theme().widgetStateEnabledBorder());
+        int fillArgb = Colors.mixArgb(stripProgress, fillDisabled, fillEnabled);
+        int borderArgb = Colors.mixArgb(stripProgress, graphics.theme().widgetStateDisabledBorder(), graphics.theme().widgetStateEnabledBorder());
         String actionLabel = enabledSupplier.get() ? Component.translatable("fascinatedutils.setting.shell.widget_state.enabled").getString() : Component.translatable("fascinatedutils.setting.shell.widget_state.disabled").getString();
         float stripCornerMax = Math.max(0.5f, Math.min(stripW, stripH) * 0.5f - stripBorderThickness * 0.5f - 0.01f);
         float stripCorner = Mth.clamp(corner, 0.5f, stripCornerMax);
         graphics.fillRoundedRectFrame(stripX, stripY, stripW, stripH, stripCorner, borderArgb, fillArgb, stripBorderThickness, stripBorderThickness, RectCornerRoundMask.BOTTOM);
         float textY = stripY + (stripH - graphics.getFontHeight()) * 0.5f;
         int labelWidth = graphics.measureTextWidth(actionLabel, false);
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(graphics.theme().widgetStateLabel()) + ">" + actionLabel + "</color>", stripX + (stripW - labelWidth) * 0.5f, textY, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(graphics.theme().widgetStateLabel()) + ">" + actionLabel + "</color>", stripX + (stripW - labelWidth) * 0.5f, textY, false);
     }
 
     private boolean hasSettings() {

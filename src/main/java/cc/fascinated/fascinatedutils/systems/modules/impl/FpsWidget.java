@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.FrameCounter;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
@@ -45,10 +45,10 @@ public class FpsWidget extends HudMiniMessageModule {
         FrameCounter instance = FrameCounter.getInstance();
         int fps = instance.getSmoothFps();
         List<String> lines = new ArrayList<>();
-        lines.add("<" + ColorUtils.rgbHex(fpsColorArgb(fps)) + ">" + fps + " FPS");
+        lines.add("<" + Colors.rgbHex(fpsColorArgb(fps)) + ">" + fps + " FPS");
         if (showOnePercentLows.getValue()) {
             int onePercentLows = instance.getOnePercentLowFps();
-            lines.add("<" + ColorUtils.rgbHex(fpsColorArgb(onePercentLows)) + ">" + onePercentLows + " 1%");
+            lines.add("<" + Colors.rgbHex(fpsColorArgb(onePercentLows)) + ">" + onePercentLows + " 1%");
         }
         return lines;
     }

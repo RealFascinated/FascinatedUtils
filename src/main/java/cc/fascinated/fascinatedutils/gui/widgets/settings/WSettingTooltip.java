@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -13,7 +13,7 @@ import java.util.List;
 public class WSettingTooltip {
 
     public static int dimColor(int color, float keepAmount) {
-        return ColorUtils.mixArgb(Math.max(0f, Math.min(1f, keepAmount)), 0xFF000000, color);
+        return Colors.mixArgb(Math.max(0f, Math.min(1f, keepAmount)), 0xFF000000, color);
     }
 
     public static String lockReasonText(Setting<?> setting) {

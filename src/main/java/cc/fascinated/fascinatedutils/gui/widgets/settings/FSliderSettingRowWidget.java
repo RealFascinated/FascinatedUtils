@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
-import cc.fascinated.fascinatedutils.common.ColorUtils;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -132,14 +132,14 @@ public class FSliderSettingRowWidget extends FSettingRowWidget {
         float labelMaxWidth = Math.max(0f, sliderValueTextX(bodyLeft) - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - bodyLeft);
         String label = TextLineLayout.ellipsize(sliderSetting.getTranslatedDisplayName(), labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, textTop, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, textTop, false);
         float value = sliderSetting.getValue().floatValue();
         float min = sliderSetting.getMin();
         float max = sliderSetting.getMax();
         String valueText = sliderSetting.formatValueForDisplay();
         float valueDrawX = sliderValueTextX(bodyLeft);
         int valueColor = locked ? graphics.theme().textMuted() : graphics.theme().textAccent();
-        graphics.drawMiniMessageText("<color:" + ColorUtils.rgbHex(valueColor) + ">" + valueText + "</color>", valueDrawX, textTop, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(valueColor) + ">" + valueText + "</color>", valueDrawX, textTop, false);
         float trackLayoutTop = computeTrackTop();
         float trackLayoutHeight = computeTrackHeight();
         float trackLeft = sliderTrackLeft();
