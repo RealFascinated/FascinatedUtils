@@ -20,12 +20,19 @@ public class HudEditorChrome {
      * Half-width of the band around 1.0 where scale snaps to exactly default.
      */
     public static final float SCALE_SNAP_TO_UNITY_BAND = 0.07f;
-    public static final float CLOSE_BUTTON_SIZE = 10f;
-    public static final float CLOSE_BUTTON_PAD = 2f;
-    public static final float SETTINGS_BUTTON_SIZE = 10f;
-    public static final float SETTINGS_BUTTON_GAP = 2f;
+    public static final float CLOSE_BUTTON_SIZE = 13f;
+    public static final float CLOSE_BUTTON_PAD = 3f;
+    public static final float SETTINGS_BUTTON_SIZE = 13f;
+    public static final float SETTINGS_BUTTON_GAP = 3f;
     private static final int SELECTED_COLOR = UiColor.argb("#913de2");
     private static final int SCALE_HANDLE_FILL = UiColor.argb("#ede4fa");
+    private static final int BUTTON_FILL = UiColor.argb("#CC000000");
+    private static final int BUTTON_FILL_HOVER = UiColor.argb("#EE000000");
+    private static final int BUTTON_BORDER = UiColor.argb("#66FFFFFF");
+    private static final int BUTTON_BORDER_HOVER = UiColor.argb("#BBFFFFFF");
+    private static final int CLOSE_FILL_HOVER = UiColor.argb("#EE3d0000");
+    private static final int CLOSE_BORDER_HOVER = UiColor.argb("#BBFF4444");
+    private static final float BUTTON_ICON_INSET = 2f;
 
     /**
      * Widgets eligible for layout editing: matches {@link HUDManager#renderHUD}
@@ -68,29 +75,49 @@ public class HudEditorChrome {
     }
 
     /**
-     * Whether the pointer lies over the scale handle for the given widget.
+     * Computes the Y coordinate of the button row for a widget, preferring placement above the widget.
+     * Falls back to below the widget when there is not enough space above.
      *
-     * @param widget   selected widget
-     * @param pointerX pointer X in logical space
-     * @param pointerY pointer Y in logical space
-     * @return true when the point is inside the handle rectangle
+     * @param widget      widget whose buttons are being placed
+     * @param canvasHeight logical canvas height
+     * @return top-edge Y of the button row
      */
-    public static boolean settingsButtonContainsPoint(HudModule widget, float pointerX, float pointerY) {
-        float widgetX = widget.getHudState().getPositionX();
+    public static float computeButtonRowY(HudModule widget, float canvasHeight) {
         float widgetY = widget.getHudState().getPositionY();
+        float scaledHeight = widget.getScaledHeight();
+        float buttonSize = CLOSE_BUTTON_SIZE;
+        if (widgetY - buttonSize >= 0f) {
+            return widgetY - buttonSize;
+        } else if (widgetY + scaledHeight + buttonSize <= canvasHeight) {
+            return widgetY + scaledHeight;
+        } else {
+            return widgetY + CLOSE_BUTTON_PAD;
+        }
+    }
+
+    /**
+     * Whether the pointer lies over the settings button for the given widget.
+     *
+     * @param widget       widget to test
+     * @param pointerX     pointer X in logical space
+     * @param pointerY     pointer Y in logical space
+     * @param canvasHeight logical canvas height for button placement
+     * @return true when the point is inside the settings button rectangle
+     */
+    public static boolean settingsButtonContainsPoint(HudModule widget, float pointerX, float pointerY, float canvasHeight) {
+        float widgetX = widget.getHudState().getPositionX();
         float scaledWidth = widget.getScaledWidth();
         float closeLeft = widgetX + scaledWidth - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_PAD;
         float buttonX = closeLeft - SETTINGS_BUTTON_GAP - SETTINGS_BUTTON_SIZE;
-        float buttonY = widgetY + CLOSE_BUTTON_PAD;
+        float buttonY = computeButtonRowY(widget, canvasHeight);
         return pointerX >= buttonX && pointerX <= buttonX + SETTINGS_BUTTON_SIZE && pointerY >= buttonY && pointerY <= buttonY + SETTINGS_BUTTON_SIZE;
     }
 
-    public static boolean closeButtonContainsPoint(HudModule widget, float pointerX, float pointerY) {
+    public static boolean closeButtonContainsPoint(HudModule widget, float pointerX, float pointerY, float canvasHeight) {
         float widgetX = widget.getHudState().getPositionX();
-        float widgetY = widget.getHudState().getPositionY();
         float scaledWidth = widget.getScaledWidth();
         float buttonX = widgetX + scaledWidth - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_PAD;
-        float buttonY = widgetY + CLOSE_BUTTON_PAD;
+        float buttonY = computeButtonRowY(widget, canvasHeight);
         return pointerX >= buttonX && pointerX <= buttonX + CLOSE_BUTTON_SIZE && pointerY >= buttonY && pointerY <= buttonY + CLOSE_BUTTON_SIZE;
     }
 
@@ -102,17 +129,25 @@ public class HudEditorChrome {
         return pointerX >= handleLeft && pointerX <= widgetX + widget.getScaledWidth() && pointerY >= handleTop && pointerY <= widgetY + widget.getScaledHeight();
     }
 
-    /**
-     * Draws clipped HUD preview, post-stabilization, and optional scale handle when selected.
-     *
-     * @param glRenderer     renderer for this pass
-     * @param widget         widget being painted
-     * @param selectedWidget currently selected widget, or null
-     * @param deltaSeconds   animation delta in seconds
-     * @param canvasWidth    logical canvas width
-     * @param canvasHeight   logical canvas height
-     */
     public static void drawWidgetEditorChrome(GuiRenderer glRenderer, HudModule widget, HudModule selectedWidget, float deltaSeconds, float canvasWidth, float canvasHeight, boolean repositionFromAnchor) {
+        drawWidgetEditorChrome(glRenderer, widget, selectedWidget, deltaSeconds, canvasWidth, canvasHeight, repositionFromAnchor, Float.NaN, Float.NaN);
+    }
+
+    /**
+     * Draws clipped HUD preview, post-stabilization, and widget action buttons.
+     * Buttons are drawn only when the pointer is over the widget or the widget is selected.
+     *
+     * @param glRenderer          renderer for this pass
+     * @param widget              widget being painted
+     * @param selectedWidget      currently selected widget, or null
+     * @param deltaSeconds        animation delta in seconds
+     * @param canvasWidth         logical canvas width
+     * @param canvasHeight        logical canvas height
+     * @param repositionFromAnchor whether to reposition from anchor before drawing
+     * @param pointerX            logical pointer X for hover detection
+     * @param pointerY            logical pointer Y for hover detection
+     */
+    public static void drawWidgetEditorChrome(GuiRenderer glRenderer, HudModule widget, HudModule selectedWidget, float deltaSeconds, float canvasWidth, float canvasHeight, boolean repositionFromAnchor, float pointerX, float pointerY) {
         Runnable draw = widget.prepareAndDraw(glRenderer, deltaSeconds, true);
         if (draw == null) {
             widget.recordHudContentSkipped();
@@ -129,8 +164,14 @@ public class HudEditorChrome {
             glRenderer.popTranslate();
         }
 
-        drawSettingsButton(glRenderer, widget.getHudState().getPositionX(), widget.getHudState().getPositionY(), widget.getScaledWidth());
-        drawCloseButton(glRenderer, widget.getHudState().getPositionX(), widget.getHudState().getPositionY(), widget.getScaledWidth());
+        boolean pointerOverWidget = !Float.isNaN(pointerX) && widget.containsPoint(pointerX, pointerY);
+        if (pointerOverWidget || widget == selectedWidget) {
+            float buttonRowY = computeButtonRowY(widget, canvasHeight);
+            boolean closeHovered = closeButtonContainsPoint(widget, pointerX, pointerY, canvasHeight);
+            boolean settingsHovered = settingsButtonContainsPoint(widget, pointerX, pointerY, canvasHeight);
+            drawSettingsButton(glRenderer, widget.getHudState().getPositionX(), buttonRowY, widget.getScaledWidth(), settingsHovered);
+            drawCloseButton(glRenderer, widget.getHudState().getPositionX(), buttonRowY, widget.getScaledWidth(), closeHovered);
+        }
 
         if (widget == selectedWidget) {
             drawScaleHandle(glRenderer, widget.getHudState().getPositionX(), widget.getHudState().getPositionY(), widget.getScaledWidth(), widget.getScaledHeight());
@@ -176,20 +217,23 @@ public class HudEditorChrome {
         drawAxisAlignedBorder1px(glRenderer, handleLeft, handleTop, snappedSize, snappedSize, SELECTED_COLOR);
     }
 
-    private static void drawSettingsButton(GuiRenderer glRenderer, float widgetX, float widgetY, float scaledWidth) {
+    private static void drawSettingsButton(GuiRenderer glRenderer, float widgetX, float buttonRowY, float scaledWidth, boolean hovered) {
         float buttonX = widgetX + scaledWidth - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_PAD - SETTINGS_BUTTON_GAP - SETTINGS_BUTTON_SIZE;
-        float buttonY = widgetY + CLOSE_BUTTON_PAD;
-        glRenderer.drawRect(buttonX, buttonY, SETTINGS_BUTTON_SIZE, SETTINGS_BUTTON_SIZE, UiColor.argb("#44000000"));
-        float inset = 1f;
-        glRenderer.drawTexture(ModUiTextures.SETTINGS.getId(), buttonX + inset, buttonY + inset, SETTINGS_BUTTON_SIZE - inset * 2f, SETTINGS_BUTTON_SIZE - inset * 2f, 0xFFFFFFFF);
+        float buttonY = buttonRowY;
+        int fill = hovered ? BUTTON_FILL_HOVER : BUTTON_FILL;
+        int border = hovered ? BUTTON_BORDER_HOVER : BUTTON_BORDER;
+        glRenderer.drawRect(buttonX, buttonY, SETTINGS_BUTTON_SIZE, SETTINGS_BUTTON_SIZE, fill);
+        drawAxisAlignedBorder1px(glRenderer, buttonX, buttonY, SETTINGS_BUTTON_SIZE, SETTINGS_BUTTON_SIZE, border);
+        glRenderer.drawTexture(ModUiTextures.SETTINGS.getId(), buttonX + BUTTON_ICON_INSET, buttonY + BUTTON_ICON_INSET, SETTINGS_BUTTON_SIZE - BUTTON_ICON_INSET * 2f, SETTINGS_BUTTON_SIZE - BUTTON_ICON_INSET * 2f, 0xFFFFFFFF);
     }
 
-    private static void drawCloseButton(GuiRenderer glRenderer, float widgetX, float widgetY, float scaledWidth) {
+    private static void drawCloseButton(GuiRenderer glRenderer, float widgetX, float buttonRowY, float scaledWidth, boolean hovered) {
         float buttonX = widgetX + scaledWidth - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_PAD;
-        float buttonY = widgetY + CLOSE_BUTTON_PAD;
-        glRenderer.drawRect(buttonX, buttonY, CLOSE_BUTTON_SIZE, CLOSE_BUTTON_SIZE, UiColor.argb("#44000000"));
-        float textX = buttonX + (CLOSE_BUTTON_SIZE - glRenderer.measureMiniMessageTextWidth("X")) * 0.5f;
-        float textY = buttonY + (CLOSE_BUTTON_SIZE - glRenderer.getFontHeight()) * 0.5f;
-        glRenderer.drawMiniMessageText("<color:#CC0000>X</color>", textX, textY, false);
+        float buttonY = buttonRowY;
+        int fill = hovered ? CLOSE_FILL_HOVER : BUTTON_FILL;
+        int border = hovered ? CLOSE_BORDER_HOVER : BUTTON_BORDER;
+        glRenderer.drawRect(buttonX, buttonY, CLOSE_BUTTON_SIZE, CLOSE_BUTTON_SIZE, fill);
+        drawAxisAlignedBorder1px(glRenderer, buttonX, buttonY, CLOSE_BUTTON_SIZE, CLOSE_BUTTON_SIZE, border);
+        glRenderer.drawTexture(ModUiTextures.CLOSE.getId(), buttonX + BUTTON_ICON_INSET, buttonY + BUTTON_ICON_INSET, CLOSE_BUTTON_SIZE - BUTTON_ICON_INSET * 2f, CLOSE_BUTTON_SIZE - BUTTON_ICON_INSET * 2f, 0xFFFFFFFF);
     }
 }

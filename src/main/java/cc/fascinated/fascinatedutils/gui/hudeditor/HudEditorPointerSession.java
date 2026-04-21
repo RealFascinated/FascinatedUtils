@@ -125,20 +125,27 @@ public class HudEditorPointerSession {
             return delegateSuper.getAsBoolean();
         }
         List<HudModule> widgetList = HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets());
+        // Check action buttons first — they may be rendered outside widget bounds.
         for (int index = widgetList.size() - 1; index >= 0; index--) {
             HudModule widget = widgetList.get(index);
-            if (!widget.containsPoint(pointerX, pointerY)) {
+            if (widget != selected && !widget.containsPoint(pointerX, pointerY)) {
                 continue;
             }
-            if (HudEditorChrome.settingsButtonContainsPoint(widget, pointerX, pointerY)) {
+            if (HudEditorChrome.settingsButtonContainsPoint(widget, pointerX, pointerY, editorCanvasHeight)) {
                 Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, widget, parentScreen));
                 return true;
             }
-            if (HudEditorChrome.closeButtonContainsPoint(widget, pointerX, pointerY)) {
+            if (HudEditorChrome.closeButtonContainsPoint(widget, pointerX, pointerY, editorCanvasHeight)) {
                 widget.setEnabled(false);
                 HUDManager.INSTANCE.saveAll();
                 selected = null;
                 return true;
+            }
+        }
+        for (int index = widgetList.size() - 1; index >= 0; index--) {
+            HudModule widget = widgetList.get(index);
+            if (!widget.containsPoint(pointerX, pointerY)) {
+                continue;
             }
             if (widget == selected && HudEditorChrome.scaleHandleContainsPoint(widget, pointerX, pointerY)) {
                 scalingWidget = widget;
