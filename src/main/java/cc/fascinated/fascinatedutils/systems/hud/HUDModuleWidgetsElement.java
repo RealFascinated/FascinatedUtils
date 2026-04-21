@@ -24,7 +24,8 @@ public class HUDModuleWidgetsElement implements HudElement {
 
     @Override
     public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, @NonNull DeltaTracker tickCounter) {
-        if (Minecraft.getInstance().screen instanceof DebugOptionsScreen) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.screen instanceof DebugOptionsScreen || minecraft.screen instanceof ModSettingsScreen) {
             return;
         }
 
@@ -38,8 +39,7 @@ public class HUDModuleWidgetsElement implements HudElement {
         float canvasWidth = HudLayoutCanvas.width();
         float canvasHeight = HudLayoutCanvas.height();
         guiRenderer.begin(canvasWidth, canvasHeight);
-        boolean settingsOpen = Minecraft.getInstance().screen instanceof ModSettingsScreen;
-        hudManager.renderHUD(guiRenderer, canvasWidth, canvasHeight, Mth.clamp(deltaSeconds, 0f, 1f), settingsOpen);
+        hudManager.renderHUD(guiRenderer, canvasWidth, canvasHeight, Mth.clamp(deltaSeconds, 0f, 1f), false);
         guiRenderer.end();
         profiler.pop();
     }
