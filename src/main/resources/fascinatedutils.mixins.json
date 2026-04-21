@@ -41,7 +41,6 @@
     "turboentities.ItemFrameBackCullingMixin",
     "turboentities.LevelRendererMixin",
     "turboentities.MapRendererBackCullingMixin",
-    "turboentities.PaintingBackCullingMixin",
     "turboentities.SignBackCullingMixin",
     "turboparticles.ParticleEngineAccessor",
     "turboparticles.ParticleEngineMixin",

@@ -28,7 +28,6 @@ public class TurboEntities {
     private static final int CULL_SNAPSHOT_CAPTURE_RATE_TICKS = 5;
 
     public final CullCounters itemFrameCounters = new CullCounters();
-    public final CullCounters paintingCounters = new CullCounters();
     public final CullCounters signCounters = new CullCounters();
 
     @Getter
@@ -68,7 +67,6 @@ public class TurboEntities {
 
     public void snapshotAndResetRenderFrameCounters() {
         itemFrameCounters.snapshotAndReset();
-        paintingCounters.snapshotAndReset();
         signCounters.snapshotAndReset();
     }
 

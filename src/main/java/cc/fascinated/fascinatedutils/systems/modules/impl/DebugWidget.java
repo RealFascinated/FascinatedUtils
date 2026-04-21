@@ -62,9 +62,6 @@ public class DebugWidget extends HudMiniMessageModule {
             int consideredFrames = turboEntities.itemFrameCounters.lastConsidered;
             int culledFrames = turboEntities.itemFrameCounters.lastCulled;
             out.add("  Rendered Item Frames: " + formatStat(consideredFrames - culledFrames, consideredFrames));
-            int consideredPaintings = turboEntities.paintingCounters.lastConsidered;
-            int culledPaintings = turboEntities.paintingCounters.lastCulled;
-            out.add("  Rendered Paintings: " + formatStat(consideredPaintings - culledPaintings, consideredPaintings));
             int consideredSigns = turboEntities.signCounters.lastConsidered;
             int culledSigns = turboEntities.signCounters.lastCulled;
             out.add("  Rendered Signs: " + formatStat(consideredSigns - culledSigns, consideredSigns));
