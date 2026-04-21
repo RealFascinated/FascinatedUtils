@@ -1,29 +1,29 @@
 package cc.fascinated.fascinatedutils.gui.theme;
 
 public class UITheme {
-    public static final int COLOR_BACKGROUND = UiColor.argb("#C0101018");
+    public static final int COLOR_BACKGROUND = UiColor.argb("#A61a1625");
     /**
      * Slightly cooler bottom stop for vertical shell fills (see mod settings overlay).
      */
-    public static final int COLOR_BACKGROUND_GRADIENT_END = UiColor.argb("#C00e0c1c");
-    public static final int COLOR_SURFACE = UiColor.argb("#80181422");
-    public static final int COLOR_SURFACE_HOVER = UiColor.argb("#90242030");
-    public static final int COLOR_BORDER = UiColor.argb("#22ffffff");
-    public static final int COLOR_BORDER_SUBTLE = UiColor.argb("#15ffffff");
-    public static final int COLOR_BORDER_FOCUS = UiColor.argb("#889468f6");
+    public static final int COLOR_BACKGROUND_GRADIENT_END = UiColor.argb("#A0171222");
+    public static final int COLOR_SURFACE = UiColor.argb("#BF211d2e");
+    public static final int COLOR_SURFACE_HOVER = UiColor.argb("#CC271e38");
+    public static final int COLOR_BORDER = UiColor.argb("#12ffffff");
+    public static final int COLOR_BORDER_SUBTLE = UiColor.argb("#0Dffffff");
+    public static final int COLOR_BORDER_FOCUS = UiColor.argb("#557c5cbf");
     /**
-     * Meteor-style GUI accent ({@code rgb(145,61,226)}).
+     * Active accent purple ({@code rgb(124,92,191)}).
      */
-    public static final int COLOR_ACCENT = UiColor.argb("#913de2");
+    public static final int COLOR_ACCENT = UiColor.argb("#7c5cbf");
     /**
-     * Brighter violet for hover emphasis (tabs, close control).
+     * Brighter purple for hover emphasis (tabs, close control).
      */
-    public static final int COLOR_ACCENT_HOVER = UiColor.argb("#a855f7");
-    public static final int COLOR_ACCENT_DIM = UiColor.argb("#66913de2");
-    public static final int COLOR_TEXT_PRIMARY = UiColor.argb("#f5f5f5");
-    public static final int COLOR_TEXT_SECONDARY = UiColor.argb("#969696");
-    public static final int COLOR_TEXT_DISABLED = UiColor.argb("#555566");
-    public static final int COLOR_TEXT_ACCENT = UiColor.argb("#e9d5ff");
+    public static final int COLOR_ACCENT_HOVER = UiColor.argb("#9470d0");
+    public static final int COLOR_ACCENT_DIM = UiColor.argb("#227c5cbf");
+    public static final int COLOR_TEXT_PRIMARY = UiColor.argb("#ffffff");
+    public static final int COLOR_TEXT_SECONDARY = UiColor.argb("#99ffffff");
+    public static final int COLOR_TEXT_DISABLED = UiColor.argb("#4Dffffff");
+    public static final int COLOR_TEXT_ACCENT = UiColor.argb("#c4a8f5");
     /**
      * HUD panel fill: same idea as vanilla chat line background (black with default text-background opacity, ~25%).
      */

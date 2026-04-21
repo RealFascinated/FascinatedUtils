@@ -39,7 +39,7 @@ public class FProfilesPaneLayoutWidget extends FWidget {
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-        float topInset = 4f;
+        float topInset = ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X;
         float bottomInset = ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X;
         float sectionGap = 3f;
 

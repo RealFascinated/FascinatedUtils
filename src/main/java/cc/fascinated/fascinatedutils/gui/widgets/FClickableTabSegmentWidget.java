@@ -29,6 +29,10 @@ public class FClickableTabSegmentWidget extends FWidget {
         this.shellSegmentCornerMask = cornerRoundMask;
     }
 
+    public String getLabelText() {
+        return labelText;
+    }
+
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
@@ -63,18 +67,15 @@ public class FClickableTabSegmentWidget extends FWidget {
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
         boolean selected = tabKey.equals(selectedKey);
-        int fillColor = selected ? graphics.theme().moduleListRowSelected() : hovered ? graphics.theme().moduleListRowHover() : graphics.theme().surface();
-        int textColor = selected ? graphics.theme().textAccent() : hovered ? graphics.theme().textPrimary() : graphics.theme().textMuted();
+        int fillColor = selected ? graphics.theme().accent() : hovered ? graphics.theme().moduleListRowHover() : 0x20ffffff;
+        int textColor = selected ? graphics.theme().textPrimary() : graphics.theme().textMuted();
         if (shellSegmentCornerRadius > 0.5f) {
             float borderThickness = 1f;
-            int borderArgb = hovered ? graphics.theme().borderHover() : graphics.theme().border();
+            int borderArgb = selected ? graphics.theme().accent() : hovered ? graphics.theme().borderHover() : 0x33ffffff;
             graphics.fillRoundedRectFrame(x(), y(), w(), h(), shellSegmentCornerRadius, borderArgb, fillColor, borderThickness, borderThickness, shellSegmentCornerMask);
         }
         else {
             graphics.drawRect(x(), y(), w(), h(), fillColor);
-            float borderThickness = 1f;
-            int borderArgb = hovered ? graphics.theme().borderHover() : graphics.theme().border();
-            graphics.drawBorder(x(), y(), w(), h(), borderThickness, borderArgb);
         }
         int textWidth = graphics.measureTextWidth(labelText, false);
         float textX = x() + (w() - textWidth) * 0.5f;

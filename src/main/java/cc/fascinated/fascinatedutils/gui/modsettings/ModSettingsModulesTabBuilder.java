@@ -82,6 +82,11 @@ public class ModSettingsModulesTabBuilder {
             onFiltersChanged.run();
         }, () -> "All", 62f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> moduleCategoryFilterRef.getValue() == null) {
             @Override
+            public float intrinsicWidthForRow(UIRenderer measure, float heightBudget) {
+                return measure.measureTextWidth("All", false) + 2f * 7f;
+            }
+
+            @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
             }
@@ -94,6 +99,11 @@ public class ModSettingsModulesTabBuilder {
                 onFiltersChanged.run();
             }, moduleCategory::getDisplayName, 62f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> moduleCategory == moduleCategoryFilterRef.getValue()) {
                 @Override
+                public float intrinsicWidthForRow(UIRenderer measure, float heightBudget) {
+                    return measure.measureTextWidth(moduleCategory.getDisplayName(), false) + 2f * 7f;
+                }
+
+                @Override
                 public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                     return controlsHeight;
                 }
@@ -103,11 +113,8 @@ public class ModSettingsModulesTabBuilder {
         }
         controlsRow.addChild(categoryButtonsRow);
 
-        FSpacerWidget rightPushSpacer = new FSpacerWidget(0f, 0f);
-        rightPushSpacer.setCellConstraints(new FCellConstraints().setExpandHorizontal(true));
-        controlsRow.addChild(rightPushSpacer);
-
-        FMinWidthHostWidget searchHost = new FMinWidthHostWidget(210f, searchInput);
+        FMinWidthHostWidget searchHost = new FMinWidthHostWidget(130f, searchInput);
+        searchHost.setCellConstraints(new FCellConstraints().setExpandHorizontal(true).setExpandVertical(true));
         controlsRow.addChild(searchHost);
 
         float horizontalInset = SettingsUiMetrics.SETTINGS_DETAIL_CONTENT_INSET_X_DESIGN;

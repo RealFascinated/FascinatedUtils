@@ -319,7 +319,7 @@ public class FOutlinedTextInputWidget extends FWidget {
             float drawS = Math.max(selStartX, clipLeft);
             float drawE = Math.min(selEndX, clipRight);
             if (drawE > drawS) {
-                int selColor = (graphics.theme().accentBright() & 0x00FFFFFF) | 0x55000000;
+                int selColor = 0x55ffffff;
                 graphics.drawRect(drawS, textY, drawE - drawS, Math.min(lineH, graphics.getFontHeight()), selColor);
             }
         }

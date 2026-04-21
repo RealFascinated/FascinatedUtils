@@ -211,8 +211,7 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
         float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + outerWidth);
         // Always reserve chevron space so plain and chevron booleans cap at the same X.
         float chevronReserve = SettingRowResetLayout.glyphBoxPx() + SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP;
-        float maxToggleLeft = Math.max(bodyLeft, resetLeft - chevronReserve - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - toggleW);
-        float toggleLeft = Mth.clamp(bodyLeft + valueColumnStartX, bodyLeft, maxToggleLeft);
+        float toggleLeft = Math.max(bodyLeft, resetLeft - chevronReserve - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - toggleW);
         return new float[]{toggleLeft, titleOriginY, toggleW, toggleH};
     }
 

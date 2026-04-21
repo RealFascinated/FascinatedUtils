@@ -9,7 +9,7 @@ public class ModSettingsTheme {
     /**
      * Max shell height before clamping by canvas height times {@link #SHELL_MAX_HEIGHT_FRAC}.
      */
-    public static final float PANEL_MAX_H = 325f;
+    public static final float PANEL_MAX_H = 335f;
     public static final float SHELL_MAX_WIDTH_FRAC = 0.98f;
     public static final float SHELL_MAX_HEIGHT_FRAC = 0.82f;
     public static final float PANEL_ASPECT_W = 16f;
@@ -22,7 +22,7 @@ public class ModSettingsTheme {
     /**
      * Outer rounded border for the mod settings window shell.
      */
-    public static final int SHELL_BORDER = UiColor.argb("#30ffffff");
+    public static final int SHELL_BORDER = UiColor.argb("#12ffffff");
     /**
      * Horizontal padding from the split line to sidebar and settings column content.
      */
@@ -37,7 +37,7 @@ public class ModSettingsTheme {
      * Corner fillet radius for the mod settings window shell (shadow, gradient panel, title bar); logical px, scaled
      * .
      */
-    public static final float SHELL_CORNER_RADIUS = 6f;
+    public static final float SHELL_CORNER_RADIUS = 10f;
     /**
      * Maximum width of the segmented tab control before clamping to the body width (logical px).
      */
@@ -53,7 +53,7 @@ public class ModSettingsTheme {
     /**
      * Corner radius for module/widget segment buttons (logical px).
      */
-    public static final float SHELL_TAB_STRIP_SEGMENT_CORNER_RADIUS = 2f;
+    public static final float SHELL_TAB_STRIP_SEGMENT_CORNER_RADIUS = 6f;
 
     /**
      * Design-space body line height for mod settings layout (labels, row sizing); slightly below vanilla font line

@@ -21,17 +21,42 @@ public class Settings implements GsonSerializable<Settings> {
 
     private final KeybindSetting shellOpenKeybind = new KeybindSetting("shell_open_keybind", Keybinds::openMenuKeybind);
 
-    private final BooleanSetting showSelfNameplate = BooleanSetting.builder().id("show_self_nameplate").defaultValue(false).build();
+    private final BooleanSetting showSelfNameplate = BooleanSetting.builder()
+            .id("show_self_nameplate")
+            .defaultValue(false)
+            .categoryDisplayKey("General")
+            .build();
 
-    private final BooleanSetting showServerListInPauseMenu = BooleanSetting.builder().id("show_server_list_in_pause_menu").defaultValue(false).build();
+    private final BooleanSetting showServerListInPauseMenu = BooleanSetting.builder()
+            .id("show_server_list_in_pause_menu")
+            .defaultValue(false)
+            .categoryDisplayKey("General")
+            .build();
 
-    private final BooleanSetting confirmDisconnect = BooleanSetting.builder().id("confirm_disconnect").defaultValue(false).build();
+    private final BooleanSetting confirmDisconnect = BooleanSetting.builder()
+            .id("confirm_disconnect")
+            .defaultValue(false)
+            .categoryDisplayKey("General")
+            .build();
 
-    private final BooleanSetting reduceMacOSResolution = BooleanSetting.builder().id("reduce_mac_os_resolution").defaultValue(false).locked(() -> !ClientUtils.isMacOS()).lockedReason(() -> "This Setting Requires MacOS").categoryDisplayKey("Performance").build();
+    private final BooleanSetting reduceMacOSResolution = BooleanSetting.builder()
+            .id("reduce_mac_os_resolution")
+            .defaultValue(false)
+            .locked(() -> !ClientUtils.isMacOS()).lockedReason(() -> "This Setting Requires MacOS")
+            .categoryDisplayKey("Performance")
+            .build();
 
-    private final BooleanSetting turboEntities = BooleanSetting.builder().id("turbo_entities").defaultValue(false).categoryDisplayKey("Performance").build();
+    private final BooleanSetting turboEntities = BooleanSetting.builder()
+            .id("turbo_entities")
+            .defaultValue(false)
+            .categoryDisplayKey("Performance")
+            .build();
 
-    private final BooleanSetting turboParticles = BooleanSetting.builder().id("turbo_particles").defaultValue(false).categoryDisplayKey("Performance").build();
+    private final BooleanSetting turboParticles = BooleanSetting.builder()
+            .id("turbo_particles")
+            .defaultValue(false)
+            .categoryDisplayKey("Performance")
+            .build();
 
     public Settings() {
         addSetting(shellOpenKeybind);

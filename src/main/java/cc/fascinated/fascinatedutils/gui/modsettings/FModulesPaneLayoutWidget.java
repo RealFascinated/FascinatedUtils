@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 
 /**
@@ -32,9 +33,9 @@ public class FModulesPaneLayoutWidget extends FWidget {
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-        float topInset = 4f;
+        float topInset = ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X;
         float bottomInset = 4f;
-        float sectionGap = 4f;
+        float sectionGap = ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X;
 
         float controlsHeight = controlsRowHost.intrinsicHeightForColumn(measure, layoutWidth);
         float controlsY = layoutY + topInset;

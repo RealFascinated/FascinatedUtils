@@ -86,10 +86,12 @@ public class ModSettingsShellFrame {
             hudLayoutButtonRect = new ModSettingsShellLayout.ShellBounds(0f, 0f, 0f, 0f);
         }
         float titleStartX = topBar.positionX() + shellBorderThickness + titleLeftInset;
-        float topBarTabsLeft = titleStartX + titleTextWidth + 10f;
-        float topBarTabsRight = showHudLayoutChip ? hudLayoutButtonRect.positionX() - 6f : closeButtonRect.positionX() - 6f;
-        float topBarTabsWidth = Math.max(0f, topBarTabsRight - topBarTabsLeft);
-        ModSettingsShellLayout.ShellBounds topBarTabsRect = new ModSettingsShellLayout.ShellBounds(topBarTabsLeft, innerTitleTop, topBarTabsWidth, innerTitleHeight);
+        // Give the tab strip the full inner title bar width so FShellTabStripWidget can
+        // center the pill track against the true midpoint of the title bar.
+        float titleBarInnerLeft = topBar.positionX() + shellBorderThickness;
+        float titleBarInnerRight = topBar.positionX() + topBar.width() - shellBorderThickness;
+        float topBarTabsWidth = Math.max(0f, titleBarInnerRight - titleBarInnerLeft);
+        ModSettingsShellLayout.ShellBounds topBarTabsRect = new ModSettingsShellLayout.ShellBounds(titleBarInnerLeft, innerTitleTop, topBarTabsWidth, innerTitleHeight);
         float scrimAlpha = 1f;
         Matrix3x2fStack drawMatrices = graphics.pose();
         drawMatrices.pushMatrix();

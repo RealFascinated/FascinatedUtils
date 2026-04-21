@@ -79,10 +79,10 @@ public abstract class FPopupWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        graphics.drawRect(x(), y(), w(), h(), 0xAA000000);
+        graphics.drawRect(x(), y(), w(), h(), 0x88000000);
         float cornerRadius = Math.max(0.5f, Math.min(8f, Math.min(dialogWidth, dialogHeight) * 0.5f - 0.01f));
         float borderThickness = 1f;
-        graphics.fillRoundedRectFrame(dialogX, dialogY, dialogWidth, dialogHeight, cornerRadius, graphics.theme().border(), graphics.theme().surface(), borderThickness, borderThickness, RectCornerRoundMask.ALL);
+        graphics.fillRoundedRectFrame(dialogX, dialogY, dialogWidth, dialogHeight, cornerRadius, graphics.theme().hintBorder(), graphics.theme().hintBackground(), borderThickness, borderThickness, RectCornerRoundMask.ALL);
     }
 
     private boolean containsDialogPoint(float pointerX, float pointerY) {
