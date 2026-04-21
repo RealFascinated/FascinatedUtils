@@ -64,13 +64,19 @@ public class ModSettingsScreen extends WidgetScreen {
     private boolean bodyRebuildDirty = true;
 
     private boolean navigateToModuleDetailApplied;
+    private final boolean returnToHudEditor;
 
     public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId) {
-        this(title, getFocusId, setFocusId, null);
+        this(title, getFocusId, setFocusId, null, false);
     }
 
     public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId, @Nullable Module navigateToModuleDetailOnOpen) {
+        this(title, getFocusId, setFocusId, navigateToModuleDetailOnOpen, false);
+    }
+
+    public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId, @Nullable Module navigateToModuleDetailOnOpen, boolean returnToHudEditor) {
         super(title);
+        this.returnToHudEditor = returnToHudEditor;
         this.navigateToModuleDetailOnOpen = navigateToModuleDetailOnOpen;
         this.setFocusId = setFocusId;
         root.setFocusSync(getFocusId, setFocusId);
@@ -360,7 +366,11 @@ public class ModSettingsScreen extends WidgetScreen {
     }
 
     private void closeModSettingsShell() {
-        Minecraft.getInstance().setScreen(null);
+        if (returnToHudEditor) {
+            HUDManager.INSTANCE.setEditMode(true);
+        } else {
+            Minecraft.getInstance().setScreen(null);
+        }
     }
 
     private void syncFocusFromRoot() {

@@ -58,13 +58,17 @@ public class HUDEditorScreen extends WidgetScreen {
         deltaSeconds = Mth.clamp(deltaSeconds, 0f, 1f);
         guiRenderer.drawRect(0f, 0f, canvasWidth, canvasHeight, UiColor.argb("#66000000"));
 
+        if (pointerSession.dragging() != null) {
+            HudEditorOverlays.drawEditorCenterCrosshair(guiRenderer, canvasWidth, canvasHeight);
+        }
+
         List<HudModule> widgetList = HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets());
         HudModule selected = pointerSession.selected();
         for (HudModule widget : widgetList) {
             boolean repositionFromAnchor = widget != pointerSession.dragging() && widget != pointerSession.scalingWidget();
             HudEditorChrome.drawWidgetEditorChrome(guiRenderer, widget, selected, deltaSeconds, canvasWidth, canvasHeight, repositionFromAnchor);
         }
-        HudEditorOverlays.drawSnapGuides(guiRenderer, canvasWidth, canvasHeight, pointerSession.snapGuideX(), pointerSession.snapGuideY());
+        HudEditorOverlays.drawSnapGuides(guiRenderer, canvasWidth, canvasHeight, pointerSession.snapGuideX(), pointerSession.snapGuideY(), pointerSession.snapGuideXIsCenter(), pointerSession.snapGuideYIsCenter());
         boolean idleHudSelection = pointerSession.dragging() == null && pointerSession.scalingWidget() == null;
         if (idleHudSelection) {
             HudEditorOverlays.drawBrandingCenterOverlay(guiRenderer, canvasWidth, canvasHeight, UIScale.uiPointerX(), UIScale.uiPointerY());

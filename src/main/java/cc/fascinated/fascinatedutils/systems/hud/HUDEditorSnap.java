@@ -8,7 +8,6 @@ import java.util.List;
 public class HUDEditorSnap {
 
     private static final float SNAP_RADIUS = 8f;
-    private static final float SIDE_CENTER_ZONE = 24f;
 
     /**
      * Snap targets inset from the logical screen edge so widgets can align to a safe margin (matches guide lines).
@@ -27,23 +26,15 @@ public class HUDEditorSnap {
         horizontalCandidates.add(new SnapCandidate(maxLeft, canvasWidth));
         horizontalCandidates.add(new SnapCandidate(SCREEN_EDGE_SNAP_INSET, SCREEN_EDGE_SNAP_INSET));
         horizontalCandidates.add(new SnapCandidate(canvasWidth - widgetWidth - SCREEN_EDGE_SNAP_INSET, canvasWidth - SCREEN_EDGE_SNAP_INSET));
-        boolean nearTopSide = rawTop <= SIDE_CENTER_ZONE;
-        boolean nearBottomSide = rawTop + widgetHeight >= canvasHeight - SIDE_CENTER_ZONE;
-        if (nearTopSide || nearBottomSide) {
-            horizontalCandidates.add(new SnapCandidate((canvasWidth - widgetWidth) * 0.5f, canvasWidth * 0.5f));
-        }
+        horizontalCandidates.add(new SnapCandidate((canvasWidth - widgetWidth) * 0.5f, (float) Math.floor(canvasWidth * 0.5f), true));
         verticalCandidates.add(new SnapCandidate(0f, 0f));
         verticalCandidates.add(new SnapCandidate(maxTop, canvasHeight));
         verticalCandidates.add(new SnapCandidate(SCREEN_EDGE_SNAP_INSET, SCREEN_EDGE_SNAP_INSET));
         verticalCandidates.add(new SnapCandidate(canvasHeight - widgetHeight - SCREEN_EDGE_SNAP_INSET, canvasHeight - SCREEN_EDGE_SNAP_INSET));
-        boolean nearLeftSide = rawLeft <= SIDE_CENTER_ZONE;
-        boolean nearRightSide = rawLeft + widgetWidth >= canvasWidth - SIDE_CENTER_ZONE;
-        if (nearLeftSide || nearRightSide) {
-            verticalCandidates.add(new SnapCandidate((canvasHeight - widgetHeight) * 0.5f, canvasHeight * 0.5f));
-        }
+        verticalCandidates.add(new SnapCandidate((canvasHeight - widgetHeight) * 0.5f, (float) Math.floor(canvasHeight * 0.5f), true));
         AxisSnapResult snappedLeft = snapOneAxis(rawLeft, maxLeft, horizontalCandidates);
         AxisSnapResult snappedTop = snapOneAxis(rawTop, maxTop, verticalCandidates);
-        return new SnapResult(snappedLeft.snappedCoord(), snappedTop.snappedCoord(), snappedLeft.guideCoord(), snappedTop.guideCoord());
+        return new SnapResult(snappedLeft.snappedCoord(), snappedTop.snappedCoord(), snappedLeft.guideCoord(), snappedTop.guideCoord(), snappedLeft.isCenter(), snappedTop.isCenter());
     }
 
     private static List<SnapCandidate> collectHorizontalSnapTargets(List<HudModule> allWidgets, HudModule exclude, float rawTop, float dragWidth, float dragHeight) {
@@ -104,6 +95,7 @@ public class HUDEditorSnap {
         float best = Mth.clamp(raw, 0f, maxCoord);
         float bestDistance = HUDEditorSnap.SNAP_RADIUS;
         float bestGuide = Float.NaN;
+        boolean bestIsCenter = false;
         for (SnapCandidate candidate : candidates) {
             float clamped = Mth.clamp(candidate.snapCoord(), 0f, maxCoord);
             float distance = Math.abs(raw - clamped);
@@ -111,12 +103,13 @@ public class HUDEditorSnap {
                 bestDistance = distance;
                 best = clamped;
                 bestGuide = candidate.guideCoord();
+                bestIsCenter = candidate.isCenter();
             }
         }
-        return new AxisSnapResult(Mth.clamp(best, 0f, maxCoord), bestGuide);
+        return new AxisSnapResult(Mth.clamp(best, 0f, maxCoord), bestGuide, bestIsCenter);
     }
 
-    public record SnapResult(float snappedLeft, float snappedTop, float verticalGuideX, float horizontalGuideY) {
+    public record SnapResult(float snappedLeft, float snappedTop, float verticalGuideX, float horizontalGuideY, boolean verticalGuideIsCenter, boolean horizontalGuideIsCenter) {
         public boolean hasVerticalGuide() {
             return Float.isFinite(verticalGuideX);
         }
@@ -126,7 +119,11 @@ public class HUDEditorSnap {
         }
     }
 
-    private record SnapCandidate(float snapCoord, float guideCoord) {}
+    private record SnapCandidate(float snapCoord, float guideCoord, boolean isCenter) {
+        SnapCandidate(float snapCoord, float guideCoord) {
+            this(snapCoord, guideCoord, false);
+        }
+    }
 
-    private record AxisSnapResult(float snappedCoord, float guideCoord) {}
+    private record AxisSnapResult(float snappedCoord, float guideCoord, boolean isCenter) {}
 }

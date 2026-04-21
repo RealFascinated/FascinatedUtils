@@ -10,7 +10,11 @@ import net.minecraft.util.Mth;
 public class HudEditorOverlays {
 
     private static final int SNAP_GUIDE_COLOR = UiColor.argb("#b3913de2");
+    private static final int SNAP_GUIDE_CENTER_COLOR = UiColor.argb("#ffe0c84a");
     private static final float SNAP_GUIDE_THICKNESS = 1f;
+    private static final int CENTER_CROSSHAIR_COLOR = UiColor.argb("#28913de2");
+    private static final float CENTER_CROSSHAIR_DASH = 4f;
+    private static final float CENTER_CROSSHAIR_GAP = 4f;
     private static final float BRANDING_TITLE_TO_MODS_GAP = 16f;
     private static final float MODS_BUTTON_PAD_X = 32f;
     private static final float MODS_BUTTON_PAD_Y = 9f;
@@ -83,22 +87,67 @@ public class HudEditorOverlays {
     }
 
     /**
-     * Draws alignment snap guides when coordinates are finite.
+     * Draws a faint dashed center crosshair so the screen center is always visible in the editor.
      *
      * @param glRenderer   renderer for this pass
      * @param canvasWidth  logical canvas width
      * @param canvasHeight logical canvas height
-     * @param snapGuideX   vertical guide X, or NaN to skip
-     * @param snapGuideY   horizontal guide Y, or NaN to skip
      */
-    public static void drawSnapGuides(GuiRenderer glRenderer, float canvasWidth, float canvasHeight, float snapGuideX, float snapGuideY) {
+    public static void drawEditorCenterCrosshair(GuiRenderer glRenderer, float canvasWidth, float canvasHeight) {
+        float centerX = (float) Math.floor(canvasWidth * 0.5f);
+        float centerY = (float) Math.floor(canvasHeight * 0.5f);
+        drawDashedVerticalLine(glRenderer, centerX, canvasHeight, CENTER_CROSSHAIR_COLOR);
+        drawDashedHorizontalLine(glRenderer, centerY, canvasWidth, CENTER_CROSSHAIR_COLOR);
+    }
+
+    private static void drawDashedHorizontalLine(GuiRenderer glRenderer, float y, float totalWidth, int color) {
+        float x = 0f;
+        boolean draw = true;
+        while (x < totalWidth) {
+            float segW = Math.min(draw ? CENTER_CROSSHAIR_DASH : CENTER_CROSSHAIR_GAP, totalWidth - x);
+            if (draw) {
+                glRenderer.drawRect(x, y, segW, 1f, color);
+            }
+            x += segW;
+            draw = !draw;
+        }
+    }
+
+    private static void drawDashedVerticalLine(GuiRenderer glRenderer, float x, float totalHeight, int color) {
+        float y = 0f;
+        boolean draw = true;
+        while (y < totalHeight) {
+            float segH = Math.min(draw ? CENTER_CROSSHAIR_DASH : CENTER_CROSSHAIR_GAP, totalHeight - y);
+            if (draw) {
+                glRenderer.drawRect(x, y, 1f, segH, color);
+            }
+            y += segH;
+            draw = !draw;
+        }
+    }
+
+    /**
+     * Draws alignment snap guides when coordinates are finite. Center-axis guides are rendered in a
+     * distinct golden color to distinguish them from edge and widget alignment guides.
+     *
+     * @param glRenderer           renderer for this pass
+     * @param canvasWidth          logical canvas width
+     * @param canvasHeight         logical canvas height
+     * @param snapGuideX           vertical guide X, or NaN to skip
+     * @param snapGuideY           horizontal guide Y, or NaN to skip
+     * @param snapGuideXIsCenter   whether the vertical guide is a center-axis snap
+     * @param snapGuideYIsCenter   whether the horizontal guide is a center-axis snap
+     */
+    public static void drawSnapGuides(GuiRenderer glRenderer, float canvasWidth, float canvasHeight, float snapGuideX, float snapGuideY, boolean snapGuideXIsCenter, boolean snapGuideYIsCenter) {
         if (Float.isFinite(snapGuideX)) {
             float guideX = Mth.clamp(snapGuideX, 0f, canvasWidth);
-            glRenderer.drawRect(guideX, 0f, SNAP_GUIDE_THICKNESS, canvasHeight, SNAP_GUIDE_COLOR);
+            int color = snapGuideXIsCenter ? SNAP_GUIDE_CENTER_COLOR : SNAP_GUIDE_COLOR;
+            glRenderer.drawRect(guideX, 0f, SNAP_GUIDE_THICKNESS, canvasHeight, color);
         }
         if (Float.isFinite(snapGuideY)) {
             float guideY = Mth.clamp(snapGuideY, 0f, canvasHeight);
-            glRenderer.drawRect(0f, guideY, canvasWidth, SNAP_GUIDE_THICKNESS, SNAP_GUIDE_COLOR);
+            int color = snapGuideYIsCenter ? SNAP_GUIDE_CENTER_COLOR : SNAP_GUIDE_COLOR;
+            glRenderer.drawRect(0f, guideY, canvasWidth, SNAP_GUIDE_THICKNESS, color);
         }
     }
 }

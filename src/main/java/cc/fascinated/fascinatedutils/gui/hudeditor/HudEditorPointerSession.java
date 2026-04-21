@@ -41,6 +41,8 @@ public class HudEditorPointerSession {
     private int modMenuFocusScratch = UiFocusIds.NO_FOCUS_ID;
     private float snapGuideX = Float.NaN;
     private float snapGuideY = Float.NaN;
+    private boolean snapGuideXIsCenter = false;
+    private boolean snapGuideYIsCenter = false;
 
     /**
      * Updates logical canvas extents for editor pointer and layout math (call once per editor paint).
@@ -76,9 +78,19 @@ public class HudEditorPointerSession {
         return snapGuideY;
     }
 
+    public boolean snapGuideXIsCenter() {
+        return snapGuideXIsCenter;
+    }
+
+    public boolean snapGuideYIsCenter() {
+        return snapGuideYIsCenter;
+    }
+
     public void clearSnapGuides() {
         snapGuideX = Float.NaN;
         snapGuideY = Float.NaN;
+        snapGuideXIsCenter = false;
+        snapGuideYIsCenter = false;
     }
 
     /**
@@ -94,7 +106,7 @@ public class HudEditorPointerSession {
         float pointerX = UIScale.uiPointerX();
         float pointerY = UIScale.uiPointerY();
         if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && HudEditorOverlays.hitTestModsButton(pointerX, pointerY)) {
-            Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id));
+            Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, null, true));
             return true;
         }
         if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
@@ -107,7 +119,7 @@ public class HudEditorPointerSession {
                 continue;
             }
             if (HudEditorChrome.settingsButtonContainsPoint(widget, pointerX, pointerY)) {
-                Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, widget));
+                Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, widget, true));
                 return true;
             }
             if (HudEditorChrome.closeButtonContainsPoint(widget, pointerX, pointerY)) {
@@ -173,6 +185,8 @@ public class HudEditorPointerSession {
             dragging.getHudState().setPositionY(snapped.snappedTop());
             snapGuideX = snapped.hasVerticalGuide() ? snapped.verticalGuideX() : Float.NaN;
             snapGuideY = snapped.hasHorizontalGuide() ? snapped.horizontalGuideY() : Float.NaN;
+            snapGuideXIsCenter = snapped.hasVerticalGuide() && snapped.verticalGuideIsCenter();
+            snapGuideYIsCenter = snapped.hasHorizontalGuide() && snapped.horizontalGuideIsCenter();
             return true;
         }
         clearSnapGuides();
