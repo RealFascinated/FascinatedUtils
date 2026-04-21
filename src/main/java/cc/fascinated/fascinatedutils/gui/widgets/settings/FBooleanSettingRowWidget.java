@@ -19,8 +19,6 @@ import java.util.function.BooleanSupplier;
 
 public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnimatable {
 
-    // Design px; same fillet scale for track and thumb so outer and inner rounding match (not a pill track + tiny thumb).
-    private static final float TOGGLE_CORNER_FILLET_DESIGN = 2.5f;
     private final BooleanSetting booleanSetting;
     private final AnimHandle toggleProgressAnim = new AnimHandle(0f).speed(26f);
     private boolean hoveredToggle;
@@ -174,17 +172,15 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
             trackBorder = WSettingTooltip.dimColor(trackBorder, 0.6f);
         }
         float borderThickness = 1f;
-        float filletRadius = TOGGLE_CORNER_FILLET_DESIGN;
         float maxTrackCornerRadius = Math.max(0.5f, Math.min(toggleH * 0.5f - borderThickness * 0.5f, toggleW * 0.5f - borderThickness * 0.5f));
-        float trackCornerRadius = Mth.clamp(filletRadius, 0.5f, maxTrackCornerRadius);
+        float trackCornerRadius = maxTrackCornerRadius;
         graphics.fillRoundedRectFrame(toggle[0], titleOriginY, toggleW, toggleH, trackCornerRadius, trackBorder, trackFill, borderThickness, borderThickness, RectCornerRoundMask.ALL);
-        float knobSize = toggleH - 5f;
+        float knobSize = toggleH - 4f;
         float knobTravelLeft = toggle[0] + 2f;
         float knobTravelRight = toggle[0] + toggleW - knobSize - 2f;
         float knobX = Mth.lerp(progress, knobTravelLeft, knobTravelRight);
         float knobY = titleOriginY + (toggleH - knobSize) * 0.5f;
-        float maxKnobCornerRadius = Math.max(0.5f, knobSize * 0.5f - 0.01f);
-        float knobCornerRadius = Mth.clamp(filletRadius, 0.5f, maxKnobCornerRadius);
+        float knobCornerRadius = Math.max(0.5f, knobSize * 0.5f - 0.01f);
         int thumbColor = locked ? WSettingTooltip.dimColor(graphics.theme().thumb(), 0.5f) : graphics.theme().thumb();
         graphics.fillRoundedRect(knobX, knobY, knobSize, knobSize, knobCornerRadius, thumbColor, RectCornerRoundMask.ALL);
 

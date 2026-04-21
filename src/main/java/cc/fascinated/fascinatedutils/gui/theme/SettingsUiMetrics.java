@@ -33,8 +33,8 @@ public class SettingsUiMetrics {
     public static final float SETTINGS_DETAIL_CATEGORY_CONTENT_RIGHT_INSET_X_DESIGN = 2.4f;
     public static final float SHELL_CONTROL_HEIGHT_DESIGN = 17f;
 
-    public static final float BOOLEAN_TOGGLE_OUTER_W = 20f;
-    public static final float BOOLEAN_TOGGLE_OUTER_H = 10f;
+    public static final float BOOLEAN_TOGGLE_OUTER_W = 26f;
+    public static final float BOOLEAN_TOGGLE_OUTER_H = 13f;
     public static final float SLIDER_VALUE_COL_W = 28f;
     public static final float SETTING_VALUE_CONTROL_GAP = 6f;
     /**

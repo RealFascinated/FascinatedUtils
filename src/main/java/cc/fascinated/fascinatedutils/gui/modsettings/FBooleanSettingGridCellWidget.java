@@ -23,7 +23,6 @@ import net.minecraft.util.Mth;
  */
 public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatable {
 
-    private static final float TOGGLE_CORNER_FILLET_DESIGN = 2.5f;
     private static boolean rectContains(float[] rect, float pointerX, float pointerY) {
         float rectLeft = rect[0];
         float rectTop = rect[1];
@@ -165,17 +164,15 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
             trackBorder = WSettingTooltip.dimColor(trackBorder, 0.6f);
         }
         float borderThickness = 1f;
-        float filletRadius = TOGGLE_CORNER_FILLET_DESIGN;
         float maxTrackCornerRadius = Math.max(0.5f, Math.min(toggleH * 0.5f - borderThickness * 0.5f, toggleW * 0.5f - borderThickness * 0.5f));
-        float trackCornerRadius = Mth.clamp(filletRadius, 0.5f, maxTrackCornerRadius);
+        float trackCornerRadius = maxTrackCornerRadius;
         graphics.fillRoundedRectFrame(toggle[0], titleOriginY, toggleW, toggleH, trackCornerRadius, trackBorder, trackFill, borderThickness, borderThickness, RectCornerRoundMask.ALL);
-        float knobSize = toggleH - 5f;
+        float knobSize = toggleH - 4f;
         float knobTravelLeft = toggle[0] + 2f;
         float knobTravelRight = toggle[0] + toggleW - knobSize - 2f;
         float knobX = Mth.lerp(progress, knobTravelLeft, knobTravelRight);
         float knobY = titleOriginY + (toggleH - knobSize) * 0.5f;
-        float maxKnobCornerRadius = Math.max(0.5f, knobSize * 0.5f - 0.01f);
-        float knobCornerRadius = Mth.clamp(filletRadius, 0.5f, maxKnobCornerRadius);
+        float knobCornerRadius = Math.max(0.5f, knobSize * 0.5f - 0.01f);
         int thumbColor = locked ? WSettingTooltip.dimColor(graphics.theme().thumb(), 0.5f) : graphics.theme().thumb();
         graphics.fillRoundedRect(knobX, knobY, knobSize, knobSize, knobCornerRadius, thumbColor, RectCornerRoundMask.ALL);
 
