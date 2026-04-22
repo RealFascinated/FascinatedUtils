@@ -23,13 +23,13 @@ public class Settings implements GsonSerializable<Settings> {
 
     private final BooleanSetting showSelfNameplate = BooleanSetting.builder()
             .id("show_self_nameplate")
-            .defaultValue(false)
+            .defaultValue(true)
             .categoryDisplayKey("General")
             .build();
 
     private final BooleanSetting showServerListInPauseMenu = BooleanSetting.builder()
             .id("show_server_list_in_pause_menu")
-            .defaultValue(false)
+            .defaultValue(true)
             .categoryDisplayKey("General")
             .build();
 
@@ -48,13 +48,13 @@ public class Settings implements GsonSerializable<Settings> {
 
     private final BooleanSetting turboEntities = BooleanSetting.builder()
             .id("turbo_entities")
-            .defaultValue(false)
+            .defaultValue(true)
             .categoryDisplayKey("Performance")
             .build();
 
     private final BooleanSetting turboParticles = BooleanSetting.builder()
             .id("turbo_particles")
-            .defaultValue(false)
+            .defaultValue(true)
             .categoryDisplayKey("Performance")
             .build();
 
