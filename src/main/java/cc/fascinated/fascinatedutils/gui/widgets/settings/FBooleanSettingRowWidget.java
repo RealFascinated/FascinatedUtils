@@ -150,7 +150,7 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
         float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
         float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float bodyLeft = x() + padX;
-        String label = booleanSetting.getTranslatedDisplayName();
+        String label = booleanSetting.getName();
         float[] toggle = toggleBounds();
         float toggleW = SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_W;
         float toggleH = SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H;

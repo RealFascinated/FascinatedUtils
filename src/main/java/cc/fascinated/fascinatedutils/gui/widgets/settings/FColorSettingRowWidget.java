@@ -97,7 +97,7 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
         float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), swatchSize);
         float titleOriginY = y() + padY + (innerHeight - titleRowHeight) * 0.5f;
 
-        String label = colorSetting.getTranslatedDisplayName();
+        String label = colorSetting.getName();
         float[] swatch = swatchBounds();
         float labelMaxWidth = Math.max(0f, swatch[0] - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - bodyLeft);
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));

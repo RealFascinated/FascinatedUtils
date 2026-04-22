@@ -30,7 +30,7 @@ public class WSettingTooltip {
             WTooltip.draw(graphics, mouseX, mouseY, Component.translatable("fascinatedutils.setting.ui.reset.tooltip").getString());
             return;
         }
-        String text = setting.isLocked() ? lockReasonText(setting) : setting.getTooltipDescriptionText();
+        String text = setting.isLocked() ? lockReasonText(setting) : setting.getTooltip();
         if (text == null || text.isBlank()) {
             return;
         }

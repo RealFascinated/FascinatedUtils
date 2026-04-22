@@ -97,10 +97,10 @@ public class ModSettingsCategoryRows {
     public static float computeValueColumnStartX(List<Setting<?>> settings) {
         float maxLabelWidth = 17f;
         for (Setting<?> setting : settings) {
-            String labelText = setting.getTranslatedDisplayName();
+            String labelText = setting.getName();
             maxLabelWidth = Math.max(maxLabelWidth, measureSettingLabelWidth(labelText));
             for (Setting<?> subSetting : setting.getSubSettings()) {
-                String subLabel = subSetting.getTranslatedDisplayName();
+                String subLabel = subSetting.getName();
                 maxLabelWidth = Math.max(maxLabelWidth, measureSettingLabelWidth(subLabel));
             }
         }

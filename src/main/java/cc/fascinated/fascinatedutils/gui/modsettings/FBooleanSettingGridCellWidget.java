@@ -149,7 +149,7 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
         float labelX = toggle[0] + toggleW + labelGap;
         float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + w());
         float labelMaxWidth = Math.max(0f, resetLeft - labelGap - labelX);
-        String label = booleanSetting.getTranslatedDisplayName();
+        String label = booleanSetting.getName();
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         float labelY = titleOriginY + Math.max(0f, (toggleH - graphics.getFontCapHeight()) * 0.5f);
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();

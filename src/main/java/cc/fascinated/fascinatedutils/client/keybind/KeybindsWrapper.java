@@ -1,14 +1,17 @@
 package cc.fascinated.fascinatedutils.client.keybind;
 
+import cc.fascinated.fascinatedutils.FascinatedUtils;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.Identifier;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class KeybindsWrapper {
     public static final KeybindsWrapper INSTANCE = new KeybindsWrapper();
+    public static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, FascinatedUtils.MOD_ID));
 
     private final Map<KeyMapping, Runnable> keybindCallbacks = new LinkedHashMap<>();
 

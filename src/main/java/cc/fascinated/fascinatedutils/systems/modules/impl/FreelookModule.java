@@ -19,7 +19,7 @@ import org.lwjgl.glfw.GLFW;
 public class FreelookModule extends Module {
     private static final float MAX_PITCH = 90f;
 
-    private final KeyMapping freelookKeyBinding = KeybindsWrapper.registerKeybind("key.fascinatedutils.freelook", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, KeyMapping.Category.MISC);
+    private final KeyMapping freelookKeyBinding = KeybindsWrapper.registerKeybind("key.fascinatedutils.freelook", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, KeybindsWrapper.CATEGORY);
     private final KeybindSetting freelookKeySetting = new KeybindSetting("freelook_key", () -> freelookKeyBinding);
 
     private float freelookYaw = 0f;

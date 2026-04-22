@@ -130,7 +130,7 @@ public class FSliderSettingRowWidget extends FSettingRowWidget {
         float textLineHeight = Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());
         float textTop = innerMidY() - textLineHeight * 0.5f;
         float labelMaxWidth = Math.max(0f, sliderValueTextX(bodyLeft) - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - bodyLeft);
-        String label = TextLineLayout.ellipsize(sliderSetting.getTranslatedDisplayName(), labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
+        String label = TextLineLayout.ellipsize(sliderSetting.getName(), labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, textTop, false);
         float value = sliderSetting.getValue().floatValue();

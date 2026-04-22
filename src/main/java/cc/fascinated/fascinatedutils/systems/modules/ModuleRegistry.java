@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules;
 
+import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.module.ModuleEnabledStateChangedEvent;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
@@ -61,12 +62,15 @@ public class ModuleRegistry {
         modules.add(new WawlaWidget());
         modules.add(new TimeChangerModule());
         modules.add(new BlockOutlineModule());
+        modules.add(new SoundFilterModule());
 
         for (Module module : modules) {
             FascinatedEventBus.INSTANCE.subscribe(module);
             if (module instanceof HudModule hudModule) {
                 hudModules.add(hudModule);
             }
+
+            Client.LOG.info("Loaded module {} with {} settings", module.getDisplayName(), module.getAllSettings().size());
         }
 
         ModConfig.profiles().loadActiveProfile();

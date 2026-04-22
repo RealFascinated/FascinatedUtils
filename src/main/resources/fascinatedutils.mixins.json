@@ -4,7 +4,6 @@
   "package": "cc.fascinated.fascinatedutils.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
-    "blockoutline.BlockOutlineMixin",
     "AtmosphericFogModifierMixin",
     "BossHealthOverlayMixin",
     "CameraMixin",
@@ -21,6 +20,7 @@
     "LivingEntityRendererMixin",
     "MouseHandlerMixin",
     "PlayerEntityMixin",
+    "blockoutline.BlockOutlineMixin",
     "confirmdisconnect.GameMenuScreenMixin",
     "freelook.CameraFreelookMixin",
     "freelook.MouseHandlerFreelookMixin",
@@ -29,6 +29,7 @@
     "performance.WindowMixin",
     "scoreboard.GuiMixin",
     "scoreboard.GuiScoreDisplayOrderAccessor",
+    "soundfilter.SoundEngineMixin",
     "statuseffects.GuiMixin",
     "tab.PlayerListHudMixin",
     "tab.PlayerTabOverlayMixin",

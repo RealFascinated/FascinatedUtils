@@ -122,7 +122,7 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
         float bodyPadX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float bodyLeft = x() + bodyPadX;
         float titleOriginY = titleRowOriginY();
-        String label = keybindSetting.getTranslatedDisplayName();
+        String label = keybindSetting.getName();
         float titleRowHeight = titleRowHeightPx();
         float labelY = titleOriginY + Math.max(0f, (titleRowHeight - graphics.getFontCapHeight()) * 0.5f);
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(locked ? graphics.theme().textMuted() : graphics.theme().textPrimary()) + ">" + label + "</color>", bodyLeft, labelY, false);

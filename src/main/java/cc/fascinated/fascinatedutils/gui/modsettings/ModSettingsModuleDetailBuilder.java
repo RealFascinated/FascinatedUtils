@@ -8,6 +8,7 @@ import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.core.Align;
+import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
@@ -26,19 +27,53 @@ import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 @UtilityClass
 public class ModSettingsModuleDetailBuilder {
 
-    public static FWidget buildModuleSettingsDetail(float paneWidth, float paneHeight, Module module, Runnable onBack, Ref<Float> settingsPaneScrollYRef, Consumer<ColorSetting> openColorPicker) {
+    private static final int MODULE_SETTINGS_SEARCH_FOCUS_ID = 5002;
+
+    public static FWidget buildModuleSettingsDetail(float paneWidth, float paneHeight, Module module, Runnable onBack, Ref<Float> settingsPaneScrollYRef, Ref<String> settingsSearchRef, Runnable onSearchChanged, Consumer<ColorSetting> openColorPicker) {
         float settingsContentWidth = Math.max(28f, paneWidth);
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
+
+        FColumnWidget headerColumn = new FColumnWidget(0f, Align.START);
+        headerColumn.addChild(new FSpacerWidget(settingsContentWidth, 4f));
+        headerColumn.addChild(FModSettingsDetailHeaderCardWidget.centeredInContentRow(settingsContentWidth, settingsInnerWidth, onBack, module.getDisplayName()));
+        headerColumn.addChild(new FSpacerWidget(settingsContentWidth, 3f));
+
+        float horizontalInset = SettingsUiMetrics.SETTINGS_DETAIL_CONTENT_INSET_X_DESIGN;
+        float searchInnerWidth = Math.max(14f, settingsInnerWidth - 2f * horizontalInset);
+        FOutlinedTextInputWidget searchInput = new FOutlinedTextInputWidget(MODULE_SETTINGS_SEARCH_FOCUS_ID, 180, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN, () -> Component.translatable("fascinatedutils.setting.shell.search_settings").getString());
+        String currentSearch = settingsSearchRef.getValue();
+        searchInput.setValue(currentSearch == null ? "" : currentSearch);
+        searchInput.setOnChange(text -> {
+            settingsSearchRef.setValue(text);
+            onSearchChanged.run();
+        });
+        searchInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
+        FMinWidthHostWidget searchHost = new FMinWidthHostWidget(searchInnerWidth, searchInput);
+        searchHost.setCellConstraints(new FCellConstraints().setExpandHorizontal(true));
+        FRowWidget searchRow = new FRowWidget(0f, Align.START) {
+            @Override
+            public boolean fillsHorizontalInRow() {
+                return true;
+            }
+        };
+        searchRow.addChild(new FSpacerWidget(horizontalInset, 0f));
+        searchRow.addChild(searchHost);
+        searchRow.addChild(new FSpacerWidget(horizontalInset, 0f));
+        headerColumn.addChild(new FMinWidthHostWidget(settingsContentWidth, searchRow));
+        headerColumn.addChild(new FSpacerWidget(settingsContentWidth, 3f));
+
         float gap = 3f;
         FColumnWidget scrollBody = new FColumnWidget(gap, Align.START);
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
-        scrollBody.addChild(FModSettingsDetailHeaderCardWidget.centeredInContentRow(settingsContentWidth, settingsInnerWidth, onBack, module.getDisplayName()));
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 3f));
+
+        String searchLower = (settingsSearchRef.getValue() == null ? "" : settingsSearchRef.getValue()).toLowerCase(Locale.ROOT);
+        boolean isFiltering = !searchLower.isBlank();
+
         if (module.getAllSettings().isEmpty()) {
             FLabelWidget empty = new FLabelWidget();
             empty.setText(Component.translatable("fascinatedutils.setting.shell.no_settings").getString());
@@ -46,18 +81,36 @@ public class ModSettingsModuleDetailBuilder {
             empty.setAlignX(Align.START);
             scrollBody.addChild(ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(ModSettingsCategoryRows.settingsDetailPaddedInnerWidth(settingsInnerWidth), empty)));
             scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
-            return wrapScrollClip(scrollBody, gap, settingsPaneScrollYRef);
+        } else {
+            List<ModSettingsCategoryRows.CategoryBlock> categoryBlocks = new ArrayList<>();
+            for (SettingCategory category : module.getSettingCategories()) {
+                List<Setting<?>> filtered = isFiltering
+                        ? category.settings().stream().filter(setting -> setting.getName().toLowerCase(Locale.ROOT).contains(searchLower)).toList()
+                        : List.copyOf(category.settings());
+                categoryBlocks.add(new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), filtered));
+            }
+            List<Setting<?>> filteredTopLevel = isFiltering
+                    ? module.getSettings().stream().filter(setting -> setting.getName().toLowerCase(Locale.ROOT).contains(searchLower)).toList()
+                    : module.getSettings();
+            boolean anyVisible = !filteredTopLevel.isEmpty() || categoryBlocks.stream().anyMatch(block -> !block.settings().isEmpty());
+            if (!anyVisible) {
+                FLabelWidget empty = new FLabelWidget();
+                empty.setText(Component.translatable("fascinatedutils.setting.shell.empty_modules").getString());
+                empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
+                empty.setAlignX(Align.START);
+                scrollBody.addChild(ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(ModSettingsCategoryRows.settingsDetailPaddedInnerWidth(settingsInnerWidth), empty)));
+                scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
+            } else {
+                ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, filteredTopLevel, (setting, innerWidth, sliderValueColumnStartX) -> editorForModuleSetting(module, setting, innerWidth, sliderValueColumnStartX, openColorPicker));
+                scrollBody.addChild(new FSpacerWidget(settingsContentWidth, ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET));
+            }
         }
-        List<ModSettingsCategoryRows.CategoryBlock> categoryBlocks = new ArrayList<>();
-        for (SettingCategory category : module.getSettingCategories()) {
-            categoryBlocks.add(new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), List.copyOf(category.settings())));
-        }
-        ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, module.getSettings(), (setting, innerWidth, sliderValueColumnStartX) -> editorForModuleSetting(module, setting, innerWidth, sliderValueColumnStartX, openColorPicker));
-        scrollBody.addChild(new FSpacerWidget(settingsContentWidth, ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET));
-        return wrapScrollClip(scrollBody, gap, settingsPaneScrollYRef);
+
+        FScrollColumnWidget scrollClip = buildScrollClip(scrollBody, gap, settingsPaneScrollYRef);
+        return new FModulesPaneLayoutWidget(headerColumn, scrollClip);
     }
 
-    private static FWidget wrapScrollClip(FColumnWidget body, float gap, Ref<Float> settingsPaneScrollYRef) {
+    private static FScrollColumnWidget buildScrollClip(FColumnWidget body, float gap, Ref<Float> settingsPaneScrollYRef) {
         FScrollColumnWidget clip = new FScrollColumnWidget(body, gap);
         clip.setFillVerticalInColumn(true);
         if (settingsPaneScrollYRef != null) {

@@ -140,7 +140,7 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
         float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
         float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float bodyLeft = x() + padX;
-        String label = enumSetting.getTranslatedDisplayName();
+        String label = enumSetting.getName();
         float[] chip = valueChipBounds();
         float chipH = chip[3];
         float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), chipH);

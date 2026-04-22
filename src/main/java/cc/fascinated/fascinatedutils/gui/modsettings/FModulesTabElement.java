@@ -27,6 +27,7 @@ public class FModulesTabElement extends FWidget {
     private final Ref<Float> modulesGridScrollRef = Ref.of(0f);
     private final Ref<Float> moduleSettingsScrollRef = Ref.of(0f);
     private final Ref<String> moduleSearchRef = Ref.of("");
+    private final Ref<String> moduleSettingsSearchRef = Ref.of("");
     private final Ref<ModuleCategory> moduleCategoryFilterRef = Ref.of(null);
     private final Ref<Float> profilesScrollRef = Ref.of(0f);
     private final Ref<String> newProfileNameRef = Ref.of("");
@@ -83,6 +84,7 @@ public class FModulesTabElement extends FWidget {
         modulesGridScrollRef.setValue(0f);
         moduleSettingsScrollRef.setValue(0f);
         moduleSearchRef.setValue("");
+        moduleSettingsSearchRef.setValue("");
         moduleCategoryFilterRef.setValue(null);
         profilesScrollRef.setValue(0f);
         newProfileNameRef.setValue("");
@@ -117,13 +119,16 @@ public class FModulesTabElement extends FWidget {
         float modulesPanelWidth = Math.max(0f, width - profilesPanelWidth - splitDividerWidth);
 
         FSplitRowWithDividerWidget splitLayout = new FSplitRowWithDividerWidget(profilesPanelWidth, splitDividerWidth);
-        splitLayout.addChild(ModSettingsProfilesTabBuilder.buildProfilesPane(profilesPanelWidth, height, profilesScrollRef, this::openCreateProfilePopup, profilePopupController.contextMenuCallback(), this::handleProfilesChanged, onOpenHudLayoutEditor));
+        splitLayout.addChild(ModSettingsProfilesTabBuilder.buildProfilesPane(profilesPanelWidth, height, profilesScrollRef, this::openCreateProfilePopup, profilePopupController.contextMenuCallback(),
+                this::handleProfilesChanged, onOpenHudLayoutEditor));
 
         FRectWidget splitDivider = new FRectWidget();
         splitDivider.setFillColorArgb(FascinatedGuiTheme.INSTANCE.borderMuted());
         splitLayout.addChild(splitDivider);
 
-        FWidget modulesPane = ModSettingsModulesTabBuilder.buildModulesTab(modulesPanelWidth, height, List.copyOf(ModuleRegistry.INSTANCE.getModules()), modulesGridScrollRef, moduleDetailModule, this::closeModuleDetail, openModuleSettings, moduleSettingsScrollRef, moduleSearchRef, moduleCategoryFilterRef, this::onModuleFiltersChanged, this::openColorPicker);
+        FWidget modulesPane = ModSettingsModulesTabBuilder.buildModulesTab(modulesPanelWidth, height, List.copyOf(ModuleRegistry.INSTANCE.getModules()), modulesGridScrollRef, moduleDetailModule,
+                this::closeModuleDetail, openModuleSettings, moduleSettingsScrollRef, moduleSearchRef, moduleCategoryFilterRef, this::onModuleFiltersChanged, moduleSettingsSearchRef,
+                this::onModuleSettingsSearchChanged, this::openColorPicker);
         splitLayout.addChild(modulesPane);
 
         FAbsoluteStackWidget rootStack = new FAbsoluteStackWidget();
@@ -200,12 +205,18 @@ public class FModulesTabElement extends FWidget {
         needsRebuild = true;
     }
 
+    private void onModuleSettingsSearchChanged() {
+        moduleSettingsScrollRef.setValue(0f);
+        needsRebuild = true;
+    }
+
     private void openModuleDetail(Module module) {
         if (moduleDetailModule == module) {
             return;
         }
         moduleDetailModule = module;
         moduleSettingsScrollRef.setValue(0f);
+        moduleSettingsSearchRef.setValue("");
         settingsScrollAnchorModule = module;
         needsRebuild = true;
     }
@@ -215,6 +226,7 @@ public class FModulesTabElement extends FWidget {
             return;
         }
         moduleDetailModule = null;
+        moduleSettingsSearchRef.setValue("");
         needsRebuild = true;
     }
 

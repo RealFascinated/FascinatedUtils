@@ -1,4 +1,5 @@
 {
+  "key.category.fascinatedutils.fascinatedutils": "FascinatedUtils",
   "key.fascinatedutils.open_menu": "Open HUD Editor",
   "key.fascinatedutils.zoom": "Hold to Zoom",
   "key.fascinatedutils.freelook": "Hold to Freelook",
@@ -9,6 +10,7 @@
   "fascinatedutils.setting.shell.title": "FascinatedUtils",
   "fascinatedutils.setting.shell.empty_modules": "No modules available.",
   "fascinatedutils.setting.shell.no_settings": "No settings for this module.",
+  "fascinatedutils.setting.shell.search_settings": "Search settings...",
   "fascinatedutils.setting.shell.back_to_modules": "Back to Modules",
   "fascinatedutils.setting.shell.tab_modules": "Modules",
   "fascinatedutils.setting.shell.tab_profiles": "Profiles",

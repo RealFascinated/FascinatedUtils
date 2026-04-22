@@ -9,7 +9,7 @@ public class Keybinds {
     private static KeyMapping openMenuKeybind;
 
     public Keybinds() {
-        openMenuKeybind = KeybindsWrapper.registerCallbackKeybind("key.fascinatedutils.open_menu", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, KeyMapping.Category.MISC, () -> HUDManager.INSTANCE.setEditMode(!HUDManager.INSTANCE.isEditMode()));
+        openMenuKeybind = KeybindsWrapper.registerCallbackKeybind("key.fascinatedutils.open_menu", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, KeybindsWrapper.CATEGORY, () -> HUDManager.INSTANCE.setEditMode(!HUDManager.INSTANCE.isEditMode()));
     }
 
     public static KeyMapping openMenuKeybind() {
