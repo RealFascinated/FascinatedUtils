@@ -22,7 +22,7 @@ public class SystemCpuUsageWidget extends HudMiniMessageModule {
     private final Method cpuLoadMethod;
 
     public SystemCpuUsageWidget() {
-        super("system_cpu", "System CPU Usage", 56f);
+        super("system_cpu", "System CPU Usage", UTILITY_WIDGET_MIN_WIDTH);
         addSetting(useCpuColor);
         this.operatingSystemBean = ManagementFactory.getOperatingSystemMXBean();
         this.systemCpuLoadMethod = resolveMethod(operatingSystemBean, "getSystemCpuLoad");

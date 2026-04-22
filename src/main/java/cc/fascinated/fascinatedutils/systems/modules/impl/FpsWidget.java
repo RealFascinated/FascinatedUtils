@@ -19,12 +19,19 @@ public class FpsWidget extends HudMiniMessageModule {
     private static final int FPS_COLOR_RED = UiColor.argb("#dd4444");
 
     private final BooleanSetting showOnePercentLows = BooleanSetting.builder().id("show_one_percent_lows")
+            .defaultValue(false)
+            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
+            .build();
 
-            .defaultValue(false).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showPointOnePercentLows = BooleanSetting.builder().id("show_point_one_percent_lows")
+            .defaultValue(false)
+            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
+            .build();
 
     public FpsWidget() {
-        super("fps", "FPS", 56f);
+        super("fps", "FPS", UTILITY_WIDGET_MIN_WIDTH);
         addSetting(showOnePercentLows);
+        addSetting(showPointOnePercentLows);
     }
 
     private static int fpsColorArgb(int fps) {
@@ -48,7 +55,11 @@ public class FpsWidget extends HudMiniMessageModule {
         lines.add("<" + Colors.rgbHex(fpsColorArgb(fps)) + ">" + fps + " FPS");
         if (showOnePercentLows.getValue()) {
             int onePercentLows = instance.getOnePercentLowFps();
-            lines.add("<" + Colors.rgbHex(fpsColorArgb(onePercentLows)) + ">" + onePercentLows + " 1%");
+            lines.add("<grey>1%: <" + Colors.rgbHex(fpsColorArgb(onePercentLows)) + ">" + onePercentLows);
+        }
+        if (showPointOnePercentLows.getValue()) {
+            int pointOnePercentLowFps = instance.getPointOnePercentLowFps();
+            lines.add("<grey>0.1%: <" + Colors.rgbHex(fpsColorArgb(pointOnePercentLowFps)) + ">" + pointOnePercentLowFps);
         }
         return lines;
     }

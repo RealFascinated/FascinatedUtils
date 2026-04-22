@@ -9,7 +9,7 @@ import java.util.List;
 
 public class MemoryWidget extends HudMiniMessageModule {
     public MemoryWidget() {
-        super("process_memory", "Process Memory", 56f);
+        super("process_memory", "Process Memory", UTILITY_WIDGET_MIN_WIDTH);
     }
 
     @Override

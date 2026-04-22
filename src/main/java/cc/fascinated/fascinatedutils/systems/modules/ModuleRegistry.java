@@ -63,6 +63,8 @@ public class ModuleRegistry {
         modules.add(new TimeChangerModule());
         modules.add(new BlockOutlineModule());
         modules.add(new SoundFilterModule());
+        modules.add(new SpeedWidget());
+        modules.add(new ReachWidget());
 
         for (Module module : modules) {
             FascinatedEventBus.INSTANCE.subscribe(module);

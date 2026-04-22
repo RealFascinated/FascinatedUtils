@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public abstract class HudMiniMessageModule extends HudModule {
+    public static final float UTILITY_WIDGET_MIN_WIDTH = 90f;
     private static final long DEFAULT_UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
+
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
     private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
     private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
@@ -17,6 +19,7 @@ public abstract class HudMiniMessageModule extends HudModule {
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+
     private List<String> cachedMiniMessageLines;
     private long lastMiniMessageSampleNanos;
 

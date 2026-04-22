@@ -16,7 +16,7 @@ public class PingWidget extends HudMiniMessageModule {
     private final BooleanSetting usePingColor = BooleanSetting.builder().id("use_ping_color").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
     public PingWidget() {
-        super("ping", "Ping", 56f);
+        super("ping", "Ping", UTILITY_WIDGET_MIN_WIDTH);
         addSetting(usePingColor);
     }
 

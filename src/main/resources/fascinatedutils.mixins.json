@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_25",
   "client": [
     "AtmosphericFogModifierMixin",
+    "WaterFogModifierMixin",
     "BossHealthOverlayMixin",
     "CameraMixin",
     "ChatComponentMixin",
@@ -30,6 +31,7 @@
     "scoreboard.GuiMixin",
     "scoreboard.GuiScoreDisplayOrderAccessor",
     "soundfilter.SoundEngineMixin",
+    "reach.EntityInteractionReachMixin",
     "statuseffects.GuiMixin",
     "tab.PlayerListHudMixin",
     "tab.PlayerTabOverlayMixin",

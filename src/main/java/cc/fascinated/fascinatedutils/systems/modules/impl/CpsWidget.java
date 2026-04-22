@@ -12,7 +12,7 @@ public class CpsWidget extends HudMiniMessageModule {
             .defaultValue(false).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
     public CpsWidget() {
-        super("cps", "CPS", 64f);
+        super("cps", "CPS", UTILITY_WIDGET_MIN_WIDTH);
         addSetting(splitMouseButtons);
     }
 
