@@ -65,6 +65,7 @@ public class ModuleRegistry {
         modules.add(new SoundFilterModule());
         modules.add(new SpeedWidget());
         modules.add(new ReachWidget());
+        modules.add(new FullbrightModule());
 
         for (Module module : modules) {
             FascinatedEventBus.INSTANCE.subscribe(module);

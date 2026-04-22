@@ -30,14 +30,14 @@ public abstract class Module implements GsonSerializable<Module> {
     // settings
     private boolean enabled;
 
-    protected Module(String displayName, ModuleCategory category, ModuleDefaults defaults) {
+    public Module(String displayName, ModuleCategory category, ModuleDefaults defaults) {
         this.moduleKey = idFromModuleClass(getClass());
         this.displayName = displayName;
         this.category = category;
         this.defaults = defaults;
     }
 
-    protected Module(String displayName, ModuleCategory category) {
+    public Module(String displayName, ModuleCategory category) {
         this(displayName, category, ModuleDefaults.builder().build());
     }
 
