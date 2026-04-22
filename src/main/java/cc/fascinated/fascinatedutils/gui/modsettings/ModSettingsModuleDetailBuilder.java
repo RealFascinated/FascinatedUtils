@@ -40,7 +40,6 @@ public class ModSettingsModuleDetailBuilder {
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
 
         FColumnWidget headerColumn = new FColumnWidget(0f, Align.START);
-        headerColumn.addChild(new FSpacerWidget(settingsContentWidth, 4f));
         headerColumn.addChild(FModSettingsDetailHeaderCardWidget.centeredInContentRow(settingsContentWidth, settingsInnerWidth, onBack, module.getDisplayName()));
         headerColumn.addChild(new FSpacerWidget(settingsContentWidth, 3f));
 

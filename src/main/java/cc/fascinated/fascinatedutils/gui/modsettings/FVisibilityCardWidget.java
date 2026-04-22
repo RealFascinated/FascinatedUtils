@@ -41,7 +41,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     private final Runnable onOpenSettings;
     private final Supplier<Boolean> enabledSupplier;
     private final Callback<Boolean> onEnabledChange;
-    private final AnimHandle toggleStripProgressAnim = new AnimHandle(0f).speed(22f);
+    private final AnimHandle toggleStripProgressAnim = new AnimHandle(0f).speed(26f);
 
     private boolean hoverSettingsStrip;
 

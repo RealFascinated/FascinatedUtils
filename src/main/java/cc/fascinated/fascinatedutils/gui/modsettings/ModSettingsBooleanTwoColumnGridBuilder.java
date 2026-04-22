@@ -4,13 +4,13 @@ import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
+import lombok.experimental.UtilityClass;
 
 import java.util.List;
 
-public final class ModSettingsBooleanTwoColumnGridBuilder {
+@UtilityClass
+public class ModSettingsBooleanTwoColumnGridBuilder {
 
-    private ModSettingsBooleanTwoColumnGridBuilder() {
-    }
 
     /**
      * Builds paired cells for consecutive boolean settings (two columns, row-major fill: first column fills, then second).
