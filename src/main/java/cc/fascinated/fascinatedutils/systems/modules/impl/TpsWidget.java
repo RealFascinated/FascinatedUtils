@@ -20,8 +20,18 @@ public class TpsWidget extends HudMiniMessageModule {
     private static final float MAX_TPS = 20f;
     private static final float MIN_WIDTH_WITH_MSPT = 110f;
     private static final float MIN_WIDTH_TPS_ONLY = UTILITY_WIDGET_MIN_WIDTH;
-    private final BooleanSetting showMspt = BooleanSetting.builder().id("show_mspt").defaultValue(false).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting useTpsColor = BooleanSetting.builder().id("use_tps_color").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+
+    private final BooleanSetting showMspt = BooleanSetting.builder().id("show_mspt")
+            .defaultValue(false)
+            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
+            .build();
+
+    private final BooleanSetting useTpsColor = BooleanSetting.builder()
+            .id("use_tps_color")
+            .defaultValue(true)
+            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
+            .build();
+
     private long lastWorldTime = -1L;
     private long lastSampleTimeNanos = -1L;
     private float lastKnownTps = Float.NaN;
