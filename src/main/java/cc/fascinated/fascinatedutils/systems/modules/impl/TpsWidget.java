@@ -19,7 +19,6 @@ public class TpsWidget extends HudMiniMessageModule {
     private static final long UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(500L);
     private static final float MAX_TPS = 20f;
     private static final float MIN_WIDTH_WITH_MSPT = 110f;
-    private static final float MIN_WIDTH_TPS_ONLY = UTILITY_WIDGET_MIN_WIDTH;
 
     private final BooleanSetting showMspt = BooleanSetting.builder().id("show_mspt")
             .defaultValue(false)
@@ -57,7 +56,7 @@ public class TpsWidget extends HudMiniMessageModule {
 
     @Override
     public float getMinWidth() {
-        return showMspt.getValue() ? MIN_WIDTH_WITH_MSPT : MIN_WIDTH_TPS_ONLY;
+        return showMspt.getValue() ? MIN_WIDTH_WITH_MSPT : UTILITY_WIDGET_MIN_WIDTH;
     }
 
     @Override

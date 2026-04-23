@@ -136,6 +136,10 @@ public class FButtonWidget extends FWidget {
         return hovered ? FascinatedGuiTheme.INSTANCE.borderHover() : FascinatedGuiTheme.INSTANCE.border();
     }
 
+    protected int resolveButtonLabelColorArgb(boolean hovered) {
+        return FascinatedGuiTheme.INSTANCE.textPrimary();
+    }
+
     protected float resolveCornerRadiusPx(GuiRenderer graphics) {
         float maxRadius = Math.min(w(), h()) * 0.5f - 0.01f;
         if (cornerRadiusDesign < 0f) {
@@ -169,7 +173,7 @@ public class FButtonWidget extends FWidget {
             String line = lines.get(lineIndex);
             int textWidth = graphics.measureTextWidth(line, false);
             float textX = x() + (w() - textWidth) * 0.5f;
-            graphics.drawMiniMessageText("<color:" + Colors.rgbHex(graphics.theme().textPrimary()) + ">" + line + "</color>", textX, cursorY + (lineHeight - graphics.getFontCapHeight()) * 0.5f, false);
+            graphics.drawMiniMessageText("<color:" + Colors.rgbHex(resolveButtonLabelColorArgb(hovered)) + ">" + line + "</color>", textX, cursorY + (lineHeight - graphics.getFontCapHeight()) * 0.5f, false);
             cursorY += lineHeight + betweenLines;
         }
     }

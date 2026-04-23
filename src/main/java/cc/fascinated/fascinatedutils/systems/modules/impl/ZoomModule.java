@@ -28,7 +28,7 @@ public class ZoomModule extends Module {
     private static final float SCROLL_ZOOM_MAG_RATIO_PER_NOTCH = 1.12f;
     private static final float ZOOM_MOUSE_LOOK_SCALE_MIN = 0.02f;
     private final KeyMapping zoomKeyBinding = KeybindsWrapper.registerKeybind("key.fascinatedutils.zoom", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, KeybindsWrapper.CATEGORY);
-    private final KeybindSetting zoomKeySetting = new KeybindSetting("zoom_key", () -> zoomKeyBinding);
+    private final KeybindSetting zoomKeySetting = KeybindSetting.builder().id("zoom_key").defaultValue("").keyBindingSupplier(() -> zoomKeyBinding).categoryDisplayKey("Controls").build();
     private final SliderSetting zoomLevel = SliderSetting.builder().id("zoom_level").defaultValue(5f).minValue(1f).maxValue(ZOOM_MAX_MAGNIFICATION).step(1f).build();
     private final BooleanSetting scrollToZoom = BooleanSetting.builder().id("scroll_to_zoom").defaultValue(true).build();
     private final BooleanSetting smoothZoom = BooleanSetting.builder().id("smooth_zoom").defaultValue(true).build();

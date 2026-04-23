@@ -2,11 +2,7 @@ package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
-import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.*;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
@@ -14,12 +10,7 @@ import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanSettingRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanWithSubSettingsWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FColorSettingRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FEnumSettingRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FKeybindSettingWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FSliderSettingRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import lombok.experimental.UtilityClass;
@@ -39,12 +30,6 @@ public class ModSettingsModuleDetailBuilder {
         float settingsContentWidth = Math.max(28f, paneWidth);
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
 
-        FColumnWidget headerColumn = new FColumnWidget(0f, Align.START);
-        headerColumn.addChild(FModSettingsDetailHeaderCardWidget.centeredInContentRow(settingsContentWidth, settingsInnerWidth, onBack, module.getDisplayName()));
-        headerColumn.addChild(new FSpacerWidget(settingsContentWidth, 3f));
-
-        float horizontalInset = SettingsUiMetrics.SETTINGS_DETAIL_CONTENT_INSET_X_DESIGN;
-        float searchInnerWidth = Math.max(14f, settingsInnerWidth - 2f * horizontalInset);
         FOutlinedTextInputWidget searchInput = new FOutlinedTextInputWidget(MODULE_SETTINGS_SEARCH_FOCUS_ID, 180, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN, () -> Component.translatable("fascinatedutils.setting.shell.search_settings").getString());
         String currentSearch = settingsSearchRef.getValue();
         searchInput.setValue(currentSearch == null ? "" : currentSearch);
@@ -53,18 +38,13 @@ public class ModSettingsModuleDetailBuilder {
             onSearchChanged.run();
         });
         searchInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
-        FMinWidthHostWidget searchHost = new FMinWidthHostWidget(searchInnerWidth, searchInput);
-        searchHost.setCellConstraints(new FCellConstraints().setExpandHorizontal(true));
-        FRowWidget searchRow = new FRowWidget(0f, Align.START) {
-            @Override
-            public boolean fillsHorizontalInRow() {
-                return true;
-            }
-        };
-        searchRow.addChild(new FSpacerWidget(horizontalInset, 0f));
-        searchRow.addChild(searchHost);
-        searchRow.addChild(new FSpacerWidget(horizontalInset, 0f));
-        headerColumn.addChild(new FMinWidthHostWidget(settingsContentWidth, searchRow));
+
+        FColumnWidget headerColumn = new FColumnWidget(0f, Align.START);
+        headerColumn.addChild(FModSettingsDetailHeaderCardWidget.centeredWithSearchAndResetInContentRow(settingsContentWidth, settingsInnerWidth, onBack, module.getDisplayName(), searchInput, () -> {
+            module.resetToDefault();
+            ModConfig.profiles().saveModule(module);
+            onSearchChanged.run();
+        }));
         headerColumn.addChild(new FSpacerWidget(settingsContentWidth, 3f));
 
         float gap = 3f;

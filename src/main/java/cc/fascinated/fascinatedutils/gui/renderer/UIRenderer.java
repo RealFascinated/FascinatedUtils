@@ -61,9 +61,8 @@ public interface UIRenderer {
     int measureMiniMessageTextWidth(String miniMessageText);
 
     /**
-     * Draw a GUI texture with the given tint. Textures must be registered via {@link
-     * ModUiTextures#reloadAll} after resource load (see {@link
-     * ModUiTextures#registerResourceReloadListener}).
+     * Draw a GUI sprite with the given tint. The identifier must be a sprite registered in the GUI sprite atlas
+     * (textures placed under {@code textures/gui/sprites/} in the resource pack).
      */
     void drawTexture(Identifier texture, float positionX, float positionY, float width, float height, int tintArgb);
 

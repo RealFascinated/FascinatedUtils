@@ -34,11 +34,9 @@ public class Client implements ClientModInitializer {
     public void onInitializeClient() {
         FascinatedEventBus eventBus = FascinatedEventBus.INSTANCE;
         eventBus.ensureSetup();
-        eventBus.subscribe(ModUiTextures.class);
         eventBus.subscribe(TURBO_PARTICLES);
         eventBus.subscribe(TURBO_ENTITIES);
 
-        ModUiTextures.registerResourceReloadListener();
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> eventBus.post(new ClientStartedEvent(client)));
         ModuleRegistry.INSTANCE.initialize();
         RainbowColors.init();

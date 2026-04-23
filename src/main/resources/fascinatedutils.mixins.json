@@ -24,10 +24,11 @@
     "fullbright.LightmapRenderStateExtractorMixin",
     "hurtcam.GameRendererMixin",
     "inventorytweaks.AbstractContainerScreenDragMoveMixin",
-    "movement.ClientPlayerEntityMixin",
-    "movement.PlayerEntityMixin",
+    "itemtooltip.ItemStackTooltipMixin",
     "macosresolution.GlBackendMixin",
     "macosresolution.WindowMixin",
+    "movement.ClientPlayerEntityMixin",
+    "movement.PlayerEntityMixin",
     "reach.EntityInteractionReachMixin",
     "scoreboard.GuiMixin",
     "scoreboard.GuiScoreDisplayOrderAccessor",
@@ -48,10 +49,10 @@
     "turboparticles.ParticleEngineAccessor",
     "turboparticles.ParticleEngineMixin",
     "turboparticles.SingleQuadParticleMixin",
+    "waypoints.LevelRendererMixin",
     "zoom.CameraMixin",
     "zoom.HeldItemRendererMixin",
-    "zoom.MouseHandlerMixin",
-    "itemtooltip.ItemStackTooltipMixin"
+    "zoom.MouseHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
