@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.systems.modules.impl.InventoryTweaksModule;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerInput;
@@ -92,6 +93,9 @@ public abstract class AbstractContainerScreenDragMoveMixin {
     @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
     private void fascinatedutils$onMouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY, CallbackInfoReturnable<Boolean> cir) {
         if (!isScrollMoveEnabled()) {
+            return;
+        }
+        if ((Object) this instanceof CreativeModeInventoryScreen) {
             return;
         }
         if (hoveredSlot == null) {
