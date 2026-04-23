@@ -37,7 +37,9 @@ public class ItemStackTooltipMixin {
             long byteSize = getStackSize(stack);
             if (byteSize > 0) {
                 List<Component> mutable = new ArrayList<>(cir.getReturnValue());
-                mutable.add(Component.literal(""));
+                if (module.getGapAboveInfo().isEnabled()) {
+                    mutable.add(Component.literal(""));
+                }
                 mutable.add(Component.literal("Size: " + ByteFormatterUtil.formatBytes(byteSize, 2)).withStyle(style -> style.withColor(0xAAAAAA)));
                 cir.setReturnValue(mutable);
             }

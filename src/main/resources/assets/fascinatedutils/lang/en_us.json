@@ -239,5 +239,7 @@
   "fascinatedutils.waypoints.edit.show_distance": "Show Distance",
   "fascinatedutils.waypoints.rename_popup.title": "Rename Waypoint",
   "fascinatedutils.waypoints.rename_popup.confirm": "Rename",
-  "fascinatedutils.waypoints.popup.cancel": "Cancel"
+  "fascinatedutils.waypoints.popup.cancel": "Cancel",
+  "fascinatedutils.module.wawla.gap_above_info.display_name": "Gap Above Info",
+  "fascinatedutils.module.wawla.gap_above_info.description": "Adds a gap above the info section in the WAWLA widget."
 }

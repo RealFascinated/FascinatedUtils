@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
+import cc.fascinated.fascinatedutils.gui.hooks.FadeInAnim;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import cc.fascinated.fascinatedutils.mixin.ClientPlayerInteractionManagerAccessorMixin;
@@ -14,12 +15,13 @@ import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -32,8 +34,9 @@ import org.jspecify.annotations.Nullable;
 import java.util.Locale;
 
 public class WawlaWidget extends HudModule {
-    private static final float ICON_SIZE = 16f, ICON_TEXT_GAP = 5f, LINE_GAP = 1f, BREAK_BAR_GAP = 3f, BREAK_BAR_HEIGHT = 2f, BREAK_BAR_LERP_SPEED = 14f;
+    private static final float ICON_SIZE = 16f, ICON_TEXT_GAP = 5f, LINE_GAP = 1f, BREAK_BAR_HEIGHT = 2f, BREAK_BAR_LERP_SPEED = 14f;
     private static final int TITLE_COLOR = UiColor.argb("#f2f6ff"), SOURCE_COLOR = UiColor.argb("#7f91ff"), BREAK_BAR_BACKGROUND = UiColor.argb("#44232a33"), BREAK_BAR_FILL = UiColor.argb("#ffffffff");
+
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
     private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
     private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
@@ -41,9 +44,11 @@ public class WawlaWidget extends HudModule {
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
-    @Nullable
-    private BlockPos activeBreakingPos;
     private float smoothedBreakProgress;
+    private final FadeInAnim fadeAnim = new FadeInAnim(35f);
+    @Nullable
+    private TargetInfo lastTarget;
+
     public WawlaWidget() {
         super("wawla", "WAWLA", 0f);
         addSetting(showBackground);
@@ -65,17 +70,17 @@ public class WawlaWidget extends HudModule {
         }
         String[] words = namespace.replace('_', ' ').toLowerCase(Locale.ROOT).split(" ");
         StringBuilder builder = new StringBuilder();
-        for (int wordIndex = 0; wordIndex < words.length; wordIndex++) {
-            if (wordIndex > 0) {
+        for (int i = 0; i < words.length; i++) {
+            if (i > 0) {
                 builder.append(' ');
             }
-            builder.append(StringUtils.capitalize(words[wordIndex]));
+            builder.append(StringUtils.capitalize(words[i]));
         }
         return builder.toString();
     }
 
-    private static String formatHealthLine(LivingEntity livingEntity) {
-        return formatNumber(livingEntity.getHealth()) + "/" + formatNumber(livingEntity.getMaxHealth());
+    private static String formatHealthLine(LivingEntity entity) {
+        return formatNumber(entity.getHealth()) + "/" + formatNumber(entity.getMaxHealth());
     }
 
     private static String formatNumber(float value) {
@@ -83,70 +88,81 @@ public class WawlaWidget extends HudModule {
             return "0";
         }
         float rounded = Math.round(value * 10f) / 10f;
-        if (Math.abs(rounded - Math.round(rounded)) < 0.001f) {
-            return Integer.toString(Math.round(rounded));
-        }
-        return Float.toString(rounded);
+        return Math.abs(rounded - Math.round(rounded)) < 0.001f ? Integer.toString(Math.round(rounded)) : Float.toString(rounded);
     }
 
     @Override
     @Nullable
     public Runnable prepareAndDraw(GuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
-        TargetInfo targetInfo = resolveTarget(editorMode);
-        if (targetInfo == null) {
+        TargetInfo displayTarget = resolveTarget(editorMode);
+        // todo: fix item fading
+        fadeAnim.tick(deltaSeconds);
+        if (displayTarget != null) {
+            lastTarget = displayTarget;
+            fadeAnim.show();
+        }
+        else {
+            fadeAnim.hide();
+        }
+        if (!fadeAnim.isVisible()) {
             return null;
         }
+        TargetInfo renderTarget = lastTarget;
         float lineHeight = glRenderer.getFontHeight();
         float textBlockHeight = lineHeight * 2f + LINE_GAP;
         float contentHeight = Math.max(ICON_SIZE, textBlockHeight);
-        String titleMini = "<b><color:" + Colors.rgbHex(TITLE_COLOR) + ">" + targetInfo.displayName() + "</color></b>";
-        String secondaryMini = targetInfo.showEntityHealth() ? "<white>" + targetInfo.sourceName() + "</white> <color:#ff5555>\u2764</color>" : "<color:" + Colors.rgbHex(SOURCE_COLOR) + ">" + targetInfo.sourceName() + "</color>";
+
+        String titleMini = "<color:" + Colors.rgbHex(TITLE_COLOR) + ">" + renderTarget.displayName() + "</color>";
+        String secondaryMini = renderTarget.showEntityHealth() ? "<white>" + renderTarget.sourceName() + "</white> <color:#ff5555>❤</color>" : "<i><color:" + Colors.rgbHex(SOURCE_COLOR) + ">" + renderTarget.sourceName() + "</color></i>";
+
         float line1Width = glRenderer.measureMiniMessageTextWidth(titleMini);
         float line2Width = glRenderer.measureMiniMessageTextWidth(secondaryMini);
         float textWidth = Math.max(line1Width, line2Width);
         float panelPadding = getPadding();
-        float layoutWidth = Math.max(getMinWidth(), panelPadding * 2f + ICON_SIZE + ICON_TEXT_GAP + textWidth);
-        float targetBreakProgress = Mth.clamp(targetInfo.breakProgress(), 0f, 1f);
-        if (targetInfo.showBreakBar()) {
-            smoothedBreakProgress = Mth.lerp(Mth.clamp(deltaSeconds * BREAK_BAR_LERP_SPEED, 0f, 1f), smoothedBreakProgress, targetBreakProgress);
+
+        if (renderTarget.showBreakBar()) {
+            smoothedBreakProgress = Mth.lerp(Mth.clamp(deltaSeconds * BREAK_BAR_LERP_SPEED, 0f, 1f), smoothedBreakProgress, Mth.clamp(renderTarget.breakProgress(), 0f, 1f));
         }
         else {
             smoothedBreakProgress = 0f;
         }
-        boolean renderBreakBar = targetInfo.showBreakBar() && smoothedBreakProgress > 0.001f;
-        float layoutHeight = panelPadding * 2f + contentHeight + (renderBreakBar ? BREAK_BAR_GAP + BREAK_BAR_HEIGHT : 0f);
+
+        boolean renderBreakBar = renderTarget.showBreakBar() && smoothedBreakProgress > 0.001f;
+        float layoutWidth = Math.max(getMinWidth(), panelPadding * 2f + ICON_SIZE + ICON_TEXT_GAP + textWidth);
+        float layoutHeight = panelPadding * 2f + contentHeight;
         getHudState().setLastLayoutWidth(layoutWidth);
         getHudState().setLastLayoutHeight(layoutHeight);
         getHudState().setCommittedLayoutWidth(layoutWidth);
         getHudState().setCommittedLayoutHeight(layoutHeight);
 
-        float capturedSmoothedBreakProgress = smoothedBreakProgress;
+        float alpha = fadeAnim.progress().value();
+        float capturedBreakProgress = smoothedBreakProgress;
         return () -> {
+            glRenderer.setMultiplyAlpha(alpha);
             drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
-            float innerTop = panelPadding;
-            float iconY = innerTop + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, ICON_SIZE, hudContentVerticalAlignment());
-            float textY = innerTop + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, textBlockHeight, hudContentVerticalAlignment());
+            float iconY = panelPadding + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, ICON_SIZE, hudContentVerticalAlignment());
+            float textY = panelPadding + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, textBlockHeight, hudContentVerticalAlignment());
             boolean mirrorIconAndText = hudContentHorizontalAlignment() == HudAnchorContentAlignment.Horizontal.RIGHT;
             if (!mirrorIconAndText) {
-                float iconX = panelPadding;
-                glRenderer.drawGuiItem(targetInfo.iconStack(), iconX, iconY);
-                float textX = iconX + ICON_SIZE + ICON_TEXT_GAP;
+                glRenderer.drawGuiItem(renderTarget.iconStack(), panelPadding, iconY);
+                float textX = panelPadding + ICON_SIZE + ICON_TEXT_GAP;
                 glRenderer.drawMiniMessageText(titleMini, textX, textY, false);
                 glRenderer.drawMiniMessageText(secondaryMini, textX, textY + lineHeight + LINE_GAP, false);
             }
             else {
                 float iconX = layoutWidth - panelPadding - ICON_SIZE;
-                glRenderer.drawGuiItem(targetInfo.iconStack(), iconX, iconY);
+                glRenderer.drawGuiItem(renderTarget.iconStack(), iconX, iconY);
                 float textRight = iconX - ICON_TEXT_GAP;
                 glRenderer.drawMiniMessageText(titleMini, textRight - line1Width, textY, false);
                 glRenderer.drawMiniMessageText(secondaryMini, textRight - line2Width, textY + lineHeight + LINE_GAP, false);
             }
             if (renderBreakBar) {
-                float barY = panelPadding + contentHeight + BREAK_BAR_GAP;
+                float barY = layoutHeight - BREAK_BAR_HEIGHT;
                 float barWidth = layoutWidth - panelPadding * 2f;
                 glRenderer.drawRect(panelPadding, barY, barWidth, BREAK_BAR_HEIGHT, BREAK_BAR_BACKGROUND);
-                glRenderer.drawRect(panelPadding, barY, barWidth * capturedSmoothedBreakProgress, BREAK_BAR_HEIGHT, BREAK_BAR_FILL);
+                glRenderer.drawRect(panelPadding, barY, barWidth * capturedBreakProgress, BREAK_BAR_HEIGHT, BREAK_BAR_FILL);
             }
+            glRenderer.resetMultiplyAlpha();
         };
     }
 
@@ -160,70 +176,59 @@ public class WawlaWidget extends HudModule {
         if (editorMode) {
             return new TargetInfo("Sandstone", "Minecraft", new ItemStack(Items.SANDSTONE), false, 0.65f, true);
         }
-        Minecraft minecraftClient = Minecraft.getInstance();
-        if (minecraftClient.player == null || minecraftClient.level == null) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || mc.level == null) {
             return null;
         }
-        HitResult crosshairTarget = minecraftClient.hitResult;
+        HitResult crosshairTarget = mc.hitResult;
         if (crosshairTarget == null || crosshairTarget.getType() == HitResult.Type.MISS) {
             return null;
         }
-        if (crosshairTarget.getType() == HitResult.Type.BLOCK && crosshairTarget instanceof BlockHitResult blockHitResult) {
-            BlockPos blockPos = blockHitResult.getBlockPos();
-            var blockState = minecraftClient.level.getBlockState(blockPos);
+
+        if (crosshairTarget.getType() == HitResult.Type.BLOCK && crosshairTarget instanceof BlockHitResult blockHit) {
+            BlockPos blockPos = blockHit.getBlockPos();
+            var blockState = mc.level.getBlockState(blockPos);
             var block = blockState.getBlock();
             String displayName = block.getName().getString();
             String sourceName = formatSourceName(BuiltInRegistries.BLOCK.getKey(block).getNamespace());
             Item iconItem = block.asItem();
             ItemStack iconStack = iconItem == Items.AIR ? new ItemStack(Items.SANDSTONE) : new ItemStack(iconItem);
-            BreakingProgress breakingProgress = resolveBreakingProgress(minecraftClient, blockPos);
-            return new TargetInfo(displayName, sourceName, iconStack, false, breakingProgress.progress(), breakingProgress.active());
+            float breakProgress = resolveBreakProgress(mc, blockPos);
+            return new TargetInfo(displayName, sourceName, iconStack, false, breakProgress, breakProgress > 0f);
         }
-        if (crosshairTarget.getType() == HitResult.Type.ENTITY && crosshairTarget instanceof EntityHitResult entityHitResult) {
-            Entity entity = entityHitResult.getEntity();
+        if (crosshairTarget.getType() == HitResult.Type.ENTITY && crosshairTarget instanceof EntityHitResult entityHit) {
+            Entity entity = entityHit.getEntity();
             String displayName = entity.getName().getString();
             String sourceName = formatSourceName(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).getNamespace());
-            ItemStack iconStack = SpawnEggItem.byId(entity.getType()).map(ItemStack::new).orElse(ItemStack.EMPTY);
-            boolean showEntityHealth = false;
-            if (entity instanceof LivingEntity livingEntity) {
-                sourceName = formatHealthLine(livingEntity);
-                showEntityHealth = true;
+            ItemStack iconStack;
+            if (entity instanceof Player player) {
+                iconStack = new ItemStack(Items.PLAYER_HEAD);
+                iconStack.set(DataComponents.PROFILE, player.getProfile());
             }
-            return new TargetInfo(displayName, sourceName, iconStack, showEntityHealth, 0f, false);
+            else {
+                iconStack = SpawnEggItem.byId(entity.getType()).map(ItemStack::new).orElse(ItemStack.EMPTY);
+            }
+            boolean showHealth = entity instanceof LivingEntity;
+            if (showHealth) {
+                sourceName = formatHealthLine((LivingEntity) entity);
+            }
+            return new TargetInfo(displayName, sourceName, iconStack, showHealth, 0f, false);
         }
         return null;
     }
 
-    private BreakingProgress resolveBreakingProgress(Minecraft minecraftClient, BlockPos blockPos) {
-        if (minecraftClient.gameMode == null || minecraftClient.player == null || minecraftClient.level == null) {
-            resetBreakingProgress();
-            return new BreakingProgress(0f, false);
+    private float resolveBreakProgress(Minecraft mc, BlockPos blockPos) {
+        if (mc.gameMode == null || !mc.gameMode.isDestroying()) {
+            return 0f;
         }
-        MultiPlayerGameMode interactionManager = minecraftClient.gameMode;
-        if (!interactionManager.isDestroying()) {
-            resetBreakingProgress();
-            return new BreakingProgress(0f, false);
+        ClientPlayerInteractionManagerAccessorMixin accessor = (ClientPlayerInteractionManagerAccessorMixin) mc.gameMode;
+        BlockPos currentPos = accessor.fascinatedutils$getCurrentBreakingPos();
+        if (currentPos == null || !currentPos.equals(blockPos)) {
+            return 0f;
         }
-        ClientPlayerInteractionManagerAccessorMixin accessor = (ClientPlayerInteractionManagerAccessorMixin) interactionManager;
-        BlockPos currentBreakingPos = accessor.fascinatedutils$getCurrentBreakingPos();
-        if (currentBreakingPos == null || !currentBreakingPos.equals(blockPos)) {
-            resetBreakingProgress();
-            return new BreakingProgress(0f, false);
-        }
-        if (activeBreakingPos == null || !activeBreakingPos.equals(currentBreakingPos)) {
-            activeBreakingPos = currentBreakingPos;
-            smoothedBreakProgress = 0f;
-        }
-        return new BreakingProgress(Mth.clamp(accessor.fascinatedutils$getCurrentBreakingProgress(), 0f, 1f), true);
-    }
-
-    private void resetBreakingProgress() {
-        activeBreakingPos = null;
-        smoothedBreakProgress = 0f;
+        return Mth.clamp(accessor.fascinatedutils$getCurrentBreakingProgress(), 0f, 1f);
     }
 
     private record TargetInfo(String displayName, String sourceName, ItemStack iconStack, boolean showEntityHealth,
                               float breakProgress, boolean showBreakBar) {}
-
-    private record BreakingProgress(float progress, boolean active) {}
 }
