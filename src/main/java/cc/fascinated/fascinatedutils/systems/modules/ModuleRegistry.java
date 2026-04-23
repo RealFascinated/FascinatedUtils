@@ -66,6 +66,7 @@ public class ModuleRegistry {
         modules.add(new SpeedWidget());
         modules.add(new ReachWidget());
         modules.add(new FullbrightModule());
+        modules.add(new ItemTooltipModule());
 
         for (Module module : modules) {
             FascinatedEventBus.INSTANCE.subscribe(module);

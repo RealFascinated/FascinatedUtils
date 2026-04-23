@@ -201,5 +201,7 @@
   "fascinatedutils.module.speed.show_peak.display_name": "Show Peak Speed",
   "fascinatedutils.module.speed.show_peak.description": "Shows the highest speed reached in the last second.",
   "fascinatedutils.module.speed.show_average.display_name": "Show Average Speed",
-  "fascinatedutils.module.speed.show_average.description": "Shows your average speed over the last second."
+  "fascinatedutils.module.speed.show_average.description": "Shows your average speed over the last second.",
+  "fascinatedutils.module.itemtooltip.show_item_size.display_name": "Show Item Size",
+  "fascinatedutils.module.itemtooltip.show_item_size.description": "Shows the byte size of the item's data in the tooltip."
 }

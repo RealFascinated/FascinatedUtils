@@ -50,7 +50,8 @@
     "turboparticles.SingleQuadParticleMixin",
     "zoom.CameraMixin",
     "zoom.HeldItemRendererMixin",
-    "zoom.MouseHandlerMixin"
+    "zoom.MouseHandlerMixin",
+    "itemtooltip.ItemStackTooltipMixin"
   ],
   "injectors": {
     "defaultRequire": 1
