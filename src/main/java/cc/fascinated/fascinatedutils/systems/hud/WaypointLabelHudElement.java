@@ -82,6 +82,7 @@ public class WaypointLabelHudElement implements HudElement {
         WaypointsModule module = opt.get();
         boolean labelOnLook = module.getLabelOnLook().isEnabled();
         Vec3 lookVec = labelOnLook ? minecraft.player.getLookAngle() : null;
+        boolean showBorder = module.getShowBorder().isEnabled();
         float labelPad = module.getLabelPadding().getValue().floatValue();
 
         GuiRenderer guiRenderer = new GuiRenderer(graphics, FascinatedGuiTheme.INSTANCE);
@@ -145,6 +146,9 @@ public class WaypointLabelHudElement implements HudElement {
             float bgY = (float) Math.round(screenY - bgH * 0.5f);
 
             guiRenderer.drawRect(bgX, bgY, bgW, bgH, 0xA0000000);
+            if (showBorder) {
+                guiRenderer.drawBorder(bgX, bgY, bgW, bgH, 1f, waypoint.getColor());
+            }
             guiRenderer.drawText(label, bgX + labelPad, bgY + labelPad, 0xFFFFFFFF, false, false);
         }
 

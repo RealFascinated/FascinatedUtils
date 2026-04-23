@@ -41,7 +41,7 @@ public class ReachWidget extends HudMiniMessageModule {
         }
         // Vanilla survival reach is ~3.0 blocks; color shifts red toward 6.0+
         float fraction = Math.min((lastEntityReach - 3f) / 3f, 1f);
-        String color = Colors.rgbHex(Colors.getGoodBadColor(1f - Math.max(fraction, 0f)));
+        String color = Colors.rgbHex(Colors.getGoodBadColor(Math.max(fraction, 0f), true));
         return List.of(String.format(Locale.ENGLISH, "<color:%s>%.2f <white>blocks", color, lastEntityReach));
     }
 }

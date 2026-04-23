@@ -27,6 +27,7 @@ public class WaypointsModule extends Module {
 
     private final BooleanSetting showBeam = BooleanSetting.builder().id("show_beam").defaultValue(true).build();
     private final BooleanSetting labelOnLook = BooleanSetting.builder().id("label_on_look").defaultValue(false).build();
+    private final BooleanSetting showBorder = BooleanSetting.builder().id("show_border").defaultValue(true).build();
     private final SliderSetting labelPadding = SliderSetting.builder().id("label_padding").defaultValue(2f).minValue(1f).maxValue(8f).step(1f).build();
 
     public WaypointsModule() {
@@ -35,6 +36,7 @@ public class WaypointsModule extends Module {
         addSetting(createWaypointKeySetting);
         addSetting(showBeam);
         addSetting(labelOnLook);
+        addSetting(showBorder);
         addSetting(labelPadding);
     }
 
