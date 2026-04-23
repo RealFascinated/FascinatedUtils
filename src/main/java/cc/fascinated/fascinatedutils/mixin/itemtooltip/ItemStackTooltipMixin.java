@@ -46,15 +46,12 @@ public class ItemStackTooltipMixin {
 
     @Unique
     private static long getStackSize(ItemStack stack) {
-        int hash = ItemStack.hashItemAndComponents(stack);
-        return SIZE_CACHE.computeIfAbsent(hash, _ -> {
+        return SIZE_CACHE.computeIfAbsent(ItemStack.hashItemAndComponents(stack), _ -> {
             Minecraft client = Minecraft.getInstance();
             if (client.getConnection() == null) {
                 return 0L;
             }
-            RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(
-                    Unpooled.buffer(), client.getConnection().registryAccess()
-            );
+            RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.buffer(), client.getConnection().registryAccess());
             try {
                 ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, stack);
                 return (long) buf.readableBytes();

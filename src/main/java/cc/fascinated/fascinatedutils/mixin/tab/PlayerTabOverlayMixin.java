@@ -15,9 +15,13 @@ public class PlayerTabOverlayMixin {
 
     @ModifyConstant(constant = @Constant(longValue = 80L), method = "getPlayerInfos")
     private long modifyCount(long count) {
-        Optional<TabModule> module = ModuleRegistry.INSTANCE.getModule(TabModule.class);
-        if (module.isPresent()) {
-            SliderSetting maxPlayerSlots = module.get().getMaxPlayerSlots();
+        Optional<TabModule> optionalTabModule = ModuleRegistry.INSTANCE.getModule(TabModule.class);
+        if (optionalTabModule.isPresent()) {
+            TabModule tabModule = optionalTabModule.get();
+            if (tabModule.isEnabled()) {
+                return count;
+            }
+            SliderSetting maxPlayerSlots = tabModule.getMaxPlayerSlots();
             return maxPlayerSlots.isDefault() ? count : maxPlayerSlots.getValue().longValue();
         }
         return count;
