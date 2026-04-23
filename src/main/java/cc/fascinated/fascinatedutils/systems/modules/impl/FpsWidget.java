@@ -52,14 +52,14 @@ public class FpsWidget extends HudMiniMessageModule {
         FrameCounter instance = FrameCounter.getInstance();
         int fps = instance.getSmoothFps();
         List<String> lines = new ArrayList<>();
-        lines.add("<" + Colors.rgbHex(fpsColorArgb(fps)) + ">" + fps + " FPS");
+        lines.add("<" + Colors.rgbHex(fpsColorArgb(fps)) + ">" + fps + " <white>FPS");
         if (showOnePercentLows.getValue()) {
             int onePercentLows = instance.getOnePercentLowFps();
-            lines.add("<grey>1%: <" + Colors.rgbHex(fpsColorArgb(onePercentLows)) + ">" + onePercentLows);
+            lines.add("<grey>1%: <" + Colors.rgbHex(fpsColorArgb(onePercentLows)) + "><white>" + onePercentLows);
         }
         if (showPointOnePercentLows.getValue()) {
             int pointOnePercentLowFps = instance.getPointOnePercentLowFps();
-            lines.add("<grey>0.1%: <" + Colors.rgbHex(fpsColorArgb(pointOnePercentLowFps)) + ">" + pointOnePercentLowFps);
+            lines.add("<grey>0.1%: <" + Colors.rgbHex(fpsColorArgb(pointOnePercentLowFps)) + "><white>" + pointOnePercentLowFps);
         }
         return lines;
     }
