@@ -25,7 +25,7 @@ public abstract class ConnectionMixin {
     }
 
     @Inject(method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/protocol/Packet;)V", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$onPacketReceive(ChannelHandlerContext context, Packet<?> packet, CallbackInfo callbackInfo) {
+    private void fascinatedutils$onPacketReceive(ChannelHandlerContext ctx, Packet<?> packet, CallbackInfo callbackInfo) {
         PacketReceiveEvent event = new PacketReceiveEvent(packet);
         FascinatedEventBus.INSTANCE.postCancellable(event);
         if (event.isCancelled()) {

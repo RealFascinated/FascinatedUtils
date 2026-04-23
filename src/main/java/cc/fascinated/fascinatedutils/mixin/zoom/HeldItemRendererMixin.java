@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin;
+package cc.fascinated.fascinatedutils.mixin.zoom;
 
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.render.FirstPersonHeldItemRenderEvent;

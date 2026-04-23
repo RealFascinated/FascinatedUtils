@@ -60,15 +60,4 @@ public abstract class GameRendererMixin implements IGameRenderer {
         RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(Objects.requireNonNull(minecraft.getMainRenderTarget().getDepthTexture()), 1.0);
         guiRenderer.render(fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
     }
-
-    @Inject(method = "bobHurt", at = @At("HEAD"), cancellable = true, require = 0)
-    private void fascinatedutils$cancelHurtcamTilt(CameraRenderState cameraState, PoseStack poseStack, CallbackInfo callbackInfo) {
-        Optional<HurtcamModule> module = ModuleRegistry.INSTANCE.getModule(HurtcamModule.class);
-        if (module.isPresent()) {
-            HurtcamModule hurtcamModule = module.get();
-            if (hurtcamModule.isEnabled() && hurtcamModule.getCancelHurtcamAnimation().isEnabled()) {
-                callbackInfo.cancel();
-            }
-        }
-    }
 }

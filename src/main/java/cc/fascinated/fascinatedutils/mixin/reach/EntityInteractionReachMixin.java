@@ -9,6 +9,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.EntityHitResult;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -25,10 +26,11 @@ public class EntityInteractionReachMixin {
     }
 
     @Inject(method = "interact", at = @At("HEAD"))
-    private void fascinatedutils$recordInteractReach(Player player, Entity entity, EntityHitResult hitResult, InteractionHand usedHand, CallbackInfoReturnable<InteractionResult> cir) {
+    private void fascinatedutils$recordInteractReach(Player player, Entity entity, EntityHitResult hitResult, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
         recordReach(player, entity);
     }
 
+    @Unique
     private void recordReach(Player player, Entity entity) {
         Optional<ReachWidget> optionalWidget = ModuleRegistry.INSTANCE.getModule(ReachWidget.class);
         if (optionalWidget.isPresent()) {

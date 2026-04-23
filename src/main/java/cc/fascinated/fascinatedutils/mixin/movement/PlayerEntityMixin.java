@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin;
+package cc.fascinated.fascinatedutils.mixin.movement;
 
 import cc.fascinated.fascinatedutils.common.PlayerUtils;
 import net.minecraft.world.entity.player.Player;
