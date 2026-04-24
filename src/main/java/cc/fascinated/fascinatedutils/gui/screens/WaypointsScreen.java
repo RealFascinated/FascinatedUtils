@@ -43,10 +43,6 @@ public class WaypointsScreen extends WidgetScreen {
     private float scrollAccum;
     private @Nullable UUID pendingDeleteId;
 
-    private boolean dirty = true;
-    private float cachedW = -1f;
-    private float cachedH = -1f;
-    private @Nullable FWidget inner;
 
     public WaypointsScreen() {
         super(Component.translatable("fascinatedutils.waypoints.title"));
@@ -62,13 +58,14 @@ public class WaypointsScreen extends WidgetScreen {
         searchInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
         searchInput.setOnChange(value -> {
             scrollYRef.setValue(0f);
-            dirty = true;
         });
         host.setRoot(buildRootWidget());
     }
 
     private FWidget buildRootWidget() {
         return new FWidget() {
+            private FWidget inner;
+
             @Override
             public boolean fillsHorizontalInRow() {
                 return true;
@@ -82,14 +79,9 @@ public class WaypointsScreen extends WidgetScreen {
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, lw, lh);
-                if (dirty || cachedW != lw || cachedH != lh || inner == null) {
-                    inner = buildContent(lw, lh);
-                    clearChildren();
-                    addChild(inner);
-                    cachedW = lw;
-                    cachedH = lh;
-                    dirty = false;
-                }
+                inner = buildContent(lw, lh);
+                clearChildren();
+                addChild(inner);
                 inner.layout(measure, lx, ly, lw, lh);
             }
         };
@@ -110,11 +102,9 @@ public class WaypointsScreen extends WidgetScreen {
             UUID deleteId = pendingDeleteId;
             ModConfig.waypoints().findById(deleteId).ifPresent(waypoint -> stack.addChild(new WaypointDeletePopupWidget(waypoint.getName(), () -> {
                 pendingDeleteId = null;
-                dirty = true;
             }, () -> {
                 ModConfig.waypoints().delete(deleteId);
                 pendingDeleteId = null;
-                dirty = true;
             })));
         }
 
@@ -279,19 +269,15 @@ public class WaypointsScreen extends WidgetScreen {
         FButtonWidget hideBtn = iconButton(() -> {
             waypoint.setVisible(!waypoint.isVisible());
             ModConfig.waypoints().save();
-            dirty = true;
         }, waypoint.isVisible() ? ModUiTextures.VISIBILITY : ModUiTextures.VISIBILITY_OFF, UITheme.COLOR_TEXT_DISABLED, UITheme.COLOR_TEXT_PRIMARY);
-        FButtonWidget deleteBtn = iconButton(() -> {
-            pendingDeleteId = id;
-            dirty = true;
-        }, ModUiTextures.TRASH, UITheme.COLOR_TEXT_DISABLED, 0xFFFF5555);
+        FButtonWidget deleteBtn = iconButton(() -> { pendingDeleteId = id; }, ModUiTextures.TRASH, UITheme.COLOR_TEXT_DISABLED, 0xFFFF5555);
 
         FRectWidget rowBg = new FRectWidget();
         rowBg.setFillColorArgb(UITheme.COLOR_BACKGROUND);
         rowBg.setCornerRadius(5f);
 
         FRectWidget colorBar = new FRectWidget();
-        colorBar.setFillColorArgb(waypoint.getColor());
+        colorBar.setFillColorArgb(waypoint.getColor().getResolvedArgb());
         colorBar.setCornerRadius(3f);
 
         return new FWidget() {
@@ -350,6 +336,7 @@ public class WaypointsScreen extends WidgetScreen {
 
             @Override
             protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+                hovered = containsPoint(mouseX, mouseY);
                 int tint = hovered ? hoverColor : normalColor;
                 float iconSize = Math.min(w(), h()) - 4f;
                 float iconX = x() + (w() - iconSize) / 2f;

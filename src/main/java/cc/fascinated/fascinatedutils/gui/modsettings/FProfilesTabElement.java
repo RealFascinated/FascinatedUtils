@@ -11,14 +11,11 @@ public class FProfilesTabElement extends FWidget {
     private final Runnable onProfilesChanged;
     private final ProfilePopupController profilePopupController;
     private FWidget inner;
-    private boolean dirty = true;
-    private float cachedWidth = -1f;
-    private float cachedHeight = -1f;
 
     public FProfilesTabElement(Runnable onProfilesChanged) {
         this.onProfilesChanged = onProfilesChanged;
         this.profilePopupController = new ProfilePopupController(
-                () -> dirty = true,
+                () -> {},
                 this::handleProfilesChanged,
                 () -> profilesScrollRef.setValue(0f)
         );
@@ -37,18 +34,13 @@ public class FProfilesTabElement extends FWidget {
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-        if (dirty || cachedWidth != layoutWidth || cachedHeight != layoutHeight || inner == null) {
-            FWidget profilesPane = ModSettingsProfilesTabBuilder.buildProfilesTab(layoutWidth, layoutHeight, profilesScrollRef, profileNameInputRef, profilePopupController.contextMenuCallback(), this::handleProfilesChanged);
-            FAbsoluteStackWidget stack = new FAbsoluteStackWidget();
-            stack.addChild(profilesPane);
-            profilePopupController.appendOverlaysTo(stack);
-            inner = stack;
-            clearChildren();
-            addChild(inner);
-            cachedWidth = layoutWidth;
-            cachedHeight = layoutHeight;
-            dirty = false;
-        }
+        FWidget profilesPane = ModSettingsProfilesTabBuilder.buildProfilesTab(layoutWidth, layoutHeight, profilesScrollRef, profileNameInputRef, profilePopupController.contextMenuCallback(), this::handleProfilesChanged);
+        FAbsoluteStackWidget stack = new FAbsoluteStackWidget();
+        stack.addChild(profilesPane);
+        profilePopupController.appendOverlaysTo(stack);
+        inner = stack;
+        clearChildren();
+        addChild(inner);
         if (inner != null) {
             inner.layout(measure, layoutX, layoutY, layoutWidth, layoutHeight);
         }
@@ -58,15 +50,11 @@ public class FProfilesTabElement extends FWidget {
         profilesScrollRef.setValue(0f);
         profileNameInputRef.setValue("");
         inner = null;
-        dirty = true;
-        cachedWidth = -1f;
-        cachedHeight = -1f;
         profilePopupController.reset();
         clearChildren();
     }
 
     private void handleProfilesChanged() {
-        dirty = true;
         onProfilesChanged.run();
     }
 }

@@ -15,6 +15,8 @@ import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
@@ -23,6 +25,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     private static final float ACTION_STRIP_HEIGHT_DESIGN = 20f;
     private static final int TITLE_MAX_LINES = 2;
     private static final int ACTION_STRIP_COUNT = 2;
+    private static final Map<Object, AnimHandle> TOGGLE_ANIM_CACHE = new IdentityHashMap<>();
     public static float stackedCellOuterHeightPx() {
         float titleTopPad = TITLE_PAD_TOP_DESIGN;
         float titleBottomPad = TITLE_PAD_BOTTOM_DESIGN;
@@ -41,13 +44,9 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     private final Runnable onOpenSettings;
     private final Supplier<Boolean> enabledSupplier;
     private final Callback<Boolean> onEnabledChange;
-    private final AnimHandle toggleStripProgressAnim = new AnimHandle(0f).speed(26f);
+    private final AnimHandle toggleStripProgressAnim;
 
-    private boolean hoverSettingsStrip;
-
-    private boolean hoverToggleStrip;
-
-    public FVisibilityCardWidget(float layoutWidth, float layoutHeight, Supplier<String> titleSupplier, Supplier<Boolean> settingsAvailableSupplier, Runnable onOpenSettings, Supplier<Boolean> enabledSupplier, Callback<Boolean> onEnabledChange) {
+    public FVisibilityCardWidget(Object animKey, float layoutWidth, float layoutHeight, Supplier<String> titleSupplier, Supplier<Boolean> settingsAvailableSupplier, Runnable onOpenSettings, Supplier<Boolean> enabledSupplier, Callback<Boolean> onEnabledChange) {
         this.cardWidthLogical = Math.max(0f, layoutWidth);
         this.cardHeightLogical = Math.max(0f, layoutHeight);
         this.titleSupplier = titleSupplier;
@@ -55,8 +54,10 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
         this.onOpenSettings = onOpenSettings;
         this.enabledSupplier = enabledSupplier;
         this.onEnabledChange = onEnabledChange;
-        float initialProgress = enabledSupplier.get() ? 1f : 0f;
-        this.toggleStripProgressAnim.snap(initialProgress);
+        this.toggleStripProgressAnim = TOGGLE_ANIM_CACHE.computeIfAbsent(animKey, k -> {
+            AnimHandle handle = new AnimHandle(enabledSupplier.get() ? 1f : 0f).speed(26f);
+            return handle;
+        });
     }
 
     @Override
@@ -97,21 +98,6 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     public void tickAnims(float deltaSeconds) {
         toggleStripProgressAnim.target(enabledSupplier.get() ? 1f : 0f);
         toggleStripProgressAnim.tick(deltaSeconds);
-    }
-
-    @Override
-    public boolean mouseMove(float pointerX, float pointerY) {
-        boolean hasSettings = hasSettings();
-        hoverSettingsStrip = hasSettings && hitSettingsStrip(pointerX, pointerY);
-        hoverToggleStrip = hitToggleStrip(pointerX, pointerY);
-        return false;
-    }
-
-    @Override
-    public boolean mouseLeave(float pointerX, float pointerY) {
-        hoverSettingsStrip = false;
-        hoverToggleStrip = false;
-        return false;
     }
 
     @Override
@@ -165,6 +151,8 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
         float settingsStripW = settingsStrip[2];
         float settingsStripH = settingsStrip[3];
         boolean hasSettings = hasSettings();
+        boolean hoverSettingsStrip = hasSettings && hitSettingsStrip(mouseX, mouseY);
+        boolean hoverToggleStrip = hitToggleStrip(mouseX, mouseY);
         int settingsFill = hasSettings ? hoverSettingsStrip ? graphics.theme().moduleListRowHover() : graphics.theme().borderMuted() : hoverSettingsStrip ? graphics.theme().widgetStateInactiveFillHover() : graphics.theme().widgetStateInactiveFill();
         float settingsCornerMax = Math.max(0.5f, Math.min(settingsStripW, settingsStripH) * 0.5f - stripBorderThickness * 0.5f - 0.01f);
         float settingsCorner = Mth.clamp(corner, 0.5f, settingsCornerMax);

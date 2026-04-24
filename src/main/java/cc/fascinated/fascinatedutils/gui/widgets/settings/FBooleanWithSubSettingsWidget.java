@@ -11,6 +11,9 @@ import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import org.jspecify.annotations.Nullable;
 
+import java.util.IdentityHashMap;
+import java.util.Map;
+
 /**
  * Composite widget that wraps a {@link FBooleanSettingRowWidget} and an expandable sub-panel containing child settings.
  *
@@ -18,6 +21,7 @@ import org.jspecify.annotations.Nullable;
  * are passed from {@link BooleanSetting#getSubSettings()}.
  */
 public class FBooleanWithSubSettingsWidget extends FWidget {
+    private static final Map<BooleanSetting, Boolean> EXPANDED_CACHE = new IdentityHashMap<>();
 
     private static final float SUB_PANEL_TOP_GAP = 2f;
     private static final float SUB_PANEL_INSET = 16f;
@@ -48,8 +52,13 @@ public class FBooleanWithSubSettingsWidget extends FWidget {
         this.booleanRowHeight = rowHeight;
 
         booleanRow = new FBooleanSettingRowWidget(booleanSetting, outerWidth, rowHeight, onPersist, valueColumnStartX);
-        booleanRow.setChevronHandlers(() -> expanded, () -> expanded = !expanded);
+        booleanRow.setChevronHandlers(() -> expanded, () -> {
+            expanded = !expanded;
+            EXPANDED_CACHE.put(booleanSetting, expanded);
+        });
         addChild(booleanRow);
+
+        this.expanded = Boolean.TRUE.equals(EXPANDED_CACHE.get(booleanSetting));
 
         float subPanelWidth = Math.max(0f, outerWidth - 2f * SUB_PANEL_INSET);
         float subValueColumnStartX = Math.max(0f, valueColumnStartX - SUB_PANEL_INSET);

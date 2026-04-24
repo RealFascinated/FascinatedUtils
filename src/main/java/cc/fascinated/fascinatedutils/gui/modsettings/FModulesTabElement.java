@@ -35,18 +35,14 @@ public class FModulesTabElement extends FWidget {
     private FWidget inner;
     private Module moduleDetailModule;
     private Module settingsScrollAnchorModule;
-    private boolean needsRebuild = true;
     private boolean showCreateProfilePopup;
     private ColorSetting colorPickerSetting;
-    private float lastLayoutWidth = -1f;
-    private float lastLayoutHeight = -1f;
-    private Module lastBuiltDetailModule;
 
     public FModulesTabElement(Runnable onProfilesChanged, Runnable onOpenHudLayoutEditor) {
         this.onProfilesChanged = onProfilesChanged;
         this.onOpenHudLayoutEditor = onOpenHudLayoutEditor;
         this.profilePopupController = new ProfilePopupController(
-                () -> needsRebuild = true,
+                () -> {},
                 this::handleProfilesChanged,
                 () -> profilesScrollRef.setValue(0f)
         );
@@ -72,9 +68,7 @@ public class FModulesTabElement extends FWidget {
             settingsScrollAnchorModule = null;
         }
         syncScrollAnchors();
-        if (needsRebuild || layoutWidth != lastLayoutWidth || layoutHeight != lastLayoutHeight || moduleDetailModule != lastBuiltDetailModule) {
-            rebuild(layoutWidth, layoutHeight);
-        }
+        rebuild(layoutWidth, layoutHeight);
         if (inner != null) {
             inner.layout(measure, layoutX, layoutY, layoutWidth, layoutHeight);
         }
@@ -95,10 +89,6 @@ public class FModulesTabElement extends FWidget {
         showCreateProfilePopup = false;
         colorPickerSetting = null;
         profilePopupController.reset();
-        needsRebuild = true;
-        lastLayoutWidth = -1f;
-        lastLayoutHeight = -1f;
-        lastBuiltDetailModule = null;
         clearChildren();
     }
 
@@ -141,25 +131,18 @@ public class FModulesTabElement extends FWidget {
                 colorPickerSetting.setValue(newColor);
                 ModConfig.profiles().saveActiveProfile();
                 colorPickerSetting = null;
-                needsRebuild = true;
             }, () -> {
                 colorPickerSetting = null;
-                needsRebuild = true;
             }));
         }
         profilePopupController.appendOverlaysTo(rootStack);
         inner = rootStack;
         clearChildren();
         addChild(inner);
-        needsRebuild = false;
-        lastLayoutWidth = width;
-        lastLayoutHeight = height;
-        lastBuiltDetailModule = moduleDetailModule;
     }
 
     private void openColorPicker(ColorSetting setting) {
         colorPickerSetting = setting;
-        needsRebuild = true;
     }
 
     private void openCreateProfilePopup() {
@@ -169,7 +152,6 @@ public class FModulesTabElement extends FWidget {
         showCreateProfilePopup = true;
         newProfileNameRef.setValue("");
         copyDefaultProfileSettingsRef.setValue(false);
-        needsRebuild = true;
     }
 
     private void closeCreateProfilePopup() {
@@ -177,7 +159,6 @@ public class FModulesTabElement extends FWidget {
             return;
         }
         showCreateProfilePopup = false;
-        needsRebuild = true;
     }
 
     private void submitCreateProfilePopup(String requestedProfileName, boolean copyDefaultProfileSettings) {
@@ -191,23 +172,19 @@ public class FModulesTabElement extends FWidget {
         ModConfig.profiles().createProfile(normalizedName, copyDefaultProfileSettings);
         showCreateProfilePopup = false;
         profilesScrollRef.setValue(0f);
-        needsRebuild = true;
         handleProfilesChanged();
     }
 
     private void handleProfilesChanged() {
-        needsRebuild = true;
         onProfilesChanged.run();
     }
 
     private void onModuleFiltersChanged() {
         modulesGridScrollRef.setValue(0f);
-        needsRebuild = true;
     }
 
     private void onModuleSettingsSearchChanged() {
         moduleSettingsScrollRef.setValue(0f);
-        needsRebuild = true;
     }
 
     private void openModuleDetail(Module module) {
@@ -218,7 +195,6 @@ public class FModulesTabElement extends FWidget {
         moduleSettingsScrollRef.setValue(0f);
         moduleSettingsSearchRef.setValue("");
         settingsScrollAnchorModule = module;
-        needsRebuild = true;
     }
 
     private void closeModuleDetail() {
@@ -227,7 +203,6 @@ public class FModulesTabElement extends FWidget {
         }
         moduleDetailModule = null;
         moduleSettingsSearchRef.setValue("");
-        needsRebuild = true;
     }
 
     private void syncScrollAnchors() {

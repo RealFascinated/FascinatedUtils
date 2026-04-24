@@ -10,6 +10,6 @@ public class FModuleVisibilityCardWidget extends FVisibilityCardWidget<Module> {
     }
 
     public FModuleVisibilityCardWidget(Module module, float layoutWidth, float layoutHeight, Callback<Module> onOpenSettings, Callback<Boolean> onEnabledChange) {
-        super(layoutWidth, layoutHeight, module::getDisplayName, () -> !module.getAllSettings().isEmpty(), () -> onOpenSettings.invoke(module), module::isEnabled, onEnabledChange);
+        super(module, layoutWidth, layoutHeight, module::getDisplayName, () -> !module.getAllSettings().isEmpty(), () -> onOpenSettings.invoke(module), module::isEnabled, onEnabledChange);
     }
 }

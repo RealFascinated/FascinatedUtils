@@ -79,7 +79,7 @@ public class LevelRendererMixin {
                 continue;
             }
 
-            int argb = waypoint.getColor();
+            int argb = waypoint.getColor().getResolvedArgb();
             int red = (argb >> 16) & 0xFF;
             int green = (argb >> 8) & 0xFF;
             int blue = argb & 0xFF;

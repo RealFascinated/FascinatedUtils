@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.config.impl.waypoint;
 
 import cc.fascinated.fascinatedutils.client.Client;
+import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -89,11 +90,11 @@ public class WaypointRepository {
      * @param y         world Y coordinate
      * @param z         world Z coordinate
      * @param dimension dimension resource location (e.g. "minecraft:overworld")
-     * @param color     ARGB color int
+     * @param color     ARGB color
      * @return the newly created waypoint
      */
-    public Waypoint create(String name, String worldKey, WaypointType type, double x, double y, double z, String dimension, int color) {
-        Waypoint waypoint = new Waypoint(UUID.randomUUID(), type, name, worldKey, x, y, z, dimension, true, true, true, color);
+    public Waypoint create(String name, String worldKey, WaypointType type, double x, double y, double z, String dimension, SettingColor color) {
+        Waypoint waypoint = new Waypoint(UUID.randomUUID(), type, name, worldKey, x, y, z, dimension, true, true, true, color.copy());
         cache.add(waypoint);
         save();
         return waypoint;

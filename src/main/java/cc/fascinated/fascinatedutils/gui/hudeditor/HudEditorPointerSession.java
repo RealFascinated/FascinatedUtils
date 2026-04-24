@@ -125,17 +125,17 @@ public class HudEditorPointerSession {
             return delegateSuper.getAsBoolean();
         }
         List<HudModule> widgetList = HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets());
-        // Check action buttons first — they may be rendered outside widget bounds.
+        // Check action buttons — only active when pointer is over the widget.
         for (int index = widgetList.size() - 1; index >= 0; index--) {
             HudModule widget = widgetList.get(index);
-            if (widget != selected && !widget.containsPoint(pointerX, pointerY)) {
+            if (!widget.containsPoint(pointerX, pointerY)) {
                 continue;
             }
-            if (HudEditorChrome.settingsButtonContainsPoint(widget, pointerX, pointerY, editorCanvasHeight)) {
+            if (HudEditorChrome.settingsButtonContainsPoint(widget, pointerX, pointerY)) {
                 Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, widget, parentScreen));
                 return true;
             }
-            if (HudEditorChrome.closeButtonContainsPoint(widget, pointerX, pointerY, editorCanvasHeight)) {
+            if (HudEditorChrome.closeButtonContainsPoint(widget, pointerX, pointerY)) {
                 widget.setEnabled(false);
                 HUDManager.INSTANCE.saveAll();
                 selected = null;

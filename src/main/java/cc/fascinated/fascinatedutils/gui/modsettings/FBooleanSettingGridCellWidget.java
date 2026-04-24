@@ -15,6 +15,9 @@ import cc.fascinated.fascinatedutils.gui.widgets.settings.SettingRowResetLayout;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.WSettingTooltip;
 import net.minecraft.util.Mth;
 
+import java.util.IdentityHashMap;
+import java.util.Map;
+
 /**
  * Compact boolean row used inside a two-column settings grid.
  *
@@ -22,6 +25,7 @@ import net.minecraft.util.Mth;
  * layouts. A trailing reset control keeps parity with full-width boolean rows.
  */
 public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatable {
+    private static final Map<BooleanSetting, AnimHandle> TOGGLE_ANIM_CACHE = new IdentityHashMap<>();
 
     private static boolean rectContains(float[] rect, float pointerX, float pointerY) {
         float rectLeft = rect[0];
@@ -34,18 +38,14 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
     private final BooleanSetting booleanSetting;
     private final float outerWidth;
     private final float outerHeight;
-    private final AnimHandle toggleProgressAnim = new AnimHandle(0f).speed(26f);
-    private boolean hoveredToggle;
-
-    private boolean hoveredReset;
+    private final AnimHandle toggleProgressAnim;
 
     public FBooleanSettingGridCellWidget(BooleanSetting booleanSetting, float outerWidth, float outerHeight, Runnable onPersist) {
         this.booleanSetting = booleanSetting;
         this.onPersist = onPersist;
         this.outerWidth = outerWidth;
         this.outerHeight = outerHeight;
-        float initial = booleanSetting.getValue() ? 1f : 0f;
-        this.toggleProgressAnim.snap(initial);
+        this.toggleProgressAnim = TOGGLE_ANIM_CACHE.computeIfAbsent(booleanSetting, setting -> new AnimHandle(setting.getValue() ? 1f : 0f).speed(26f));
     }
 
     @Override
@@ -70,16 +70,11 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
 
     @Override
     public boolean mouseLeave(float pointerX, float pointerY) {
-        hoveredToggle = false;
-        hoveredReset = false;
         return false;
     }
 
     @Override
     public boolean mouseMove(float pointerX, float pointerY) {
-        hoveredToggle = rectContains(toggleBounds(), pointerX, pointerY);
-        float[] resetSquare = inlineResetSquare();
-        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, booleanSetting.isAtDefault());
         return false;
     }
 
@@ -89,7 +84,7 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
             return false;
         }
         if (booleanSetting.isLocked()) {
-            return hoveredToggle || hoveredReset;
+            return rectContains(toggleBounds(), pointerX, pointerY) || SettingRowResetLayout.resetGlyphHitActive(inlineResetSquare()[0], inlineResetSquare()[1], inlineResetSquare()[2], pointerX, pointerY, booleanSetting.isAtDefault());
         }
         float[] resetSquare = inlineResetSquare();
         if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, booleanSetting.isAtDefault())) {
@@ -104,7 +99,7 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
             return false;
         }
         if (booleanSetting.isLocked()) {
-            return hoveredToggle || hoveredReset;
+            return rectContains(toggleBounds(), pointerX, pointerY) || SettingRowResetLayout.resetGlyphHitActive(inlineResetSquare()[0], inlineResetSquare()[1], inlineResetSquare()[2], pointerX, pointerY, booleanSetting.isAtDefault());
         }
         float[] resetSquare = inlineResetSquare();
         if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, booleanSetting.isAtDefault())) {
@@ -130,6 +125,8 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
 
     @Override
     public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+        boolean hoveredToggle = rectContains(toggleBounds(), mouseX, mouseY);
+        boolean hoveredReset = SettingRowResetLayout.resetGlyphHitActive(inlineResetSquare()[0], inlineResetSquare()[1], inlineResetSquare()[2], mouseX, mouseY, booleanSetting.isAtDefault());
         if (hoveredToggle || hoveredReset) {
             WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, booleanSetting, hoveredReset);
         }
@@ -155,6 +152,9 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(labelColor) + ">" + label + "</color>", labelX, labelY, false);
         float progress = Mth.clamp(toggleProgressAnim.value(), 0f, 1f);
+        boolean hoveredToggle = rectContains(toggle, mouseX, mouseY);
+        float[] resetSquare = inlineResetSquare();
+        boolean hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], mouseX, mouseY, booleanSetting.isAtDefault());
         int trackFillOff = hoveredToggle && !locked ? graphics.theme().toggleOffFillHover() : graphics.theme().toggleOffFill();
         int trackFillOn = hoveredToggle && !locked ? graphics.theme().toggleOnFillHover() : graphics.theme().toggleOnFill();
         int trackFill = Colors.mixArgb(progress, trackFillOff, trackFillOn);
@@ -176,7 +176,6 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
         int thumbColor = locked ? WSettingTooltip.dimColor(graphics.theme().thumb(), 0.5f) : graphics.theme().thumb();
         graphics.fillRoundedRect(knobX, knobY, knobSize, knobSize, knobCornerRadius, thumbColor, RectCornerRoundMask.ALL);
 
-        float[] resetSquare = inlineResetSquare();
         SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], toggleH, hoveredReset && !locked, booleanSetting.isAtDefault());
     }
 

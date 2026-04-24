@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.config.impl.waypoint;
 
+import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -26,9 +27,9 @@ public class Waypoint implements GsonSerializable<Waypoint> {
     private boolean visible;
     private boolean showBeam;
     private boolean showDistance;
-    private int color;
+    private SettingColor color;
 
-    public Waypoint(UUID id, WaypointType type, String name, String worldKey, double x, double y, double z, String dimension, boolean visible, boolean showBeam, boolean showDistance, int color) {
+    public Waypoint(UUID id, WaypointType type, String name, String worldKey, double x, double y, double z, String dimension, boolean visible, boolean showBeam, boolean showDistance, SettingColor color) {
         this.id = id;
         this.type = type;
         this.name = name;
@@ -44,7 +45,8 @@ public class Waypoint implements GsonSerializable<Waypoint> {
     }
 
     public static Waypoint defaults() {
-        return new Waypoint(null, WaypointType.NORMAL, "", "", 0, 0, 0, "minecraft:overworld", true, true, true, 0xFFFFFFFF);
+        return new Waypoint(null, WaypointType.NORMAL, "", "", 0, 0, 0, "minecraft:overworld", true,
+                true, true, new SettingColor(255, 255, 255, 255));
     }
 
     @Override
@@ -58,7 +60,7 @@ public class Waypoint implements GsonSerializable<Waypoint> {
         root.addProperty("y", this.y);
         root.addProperty("z", this.z);
         root.addProperty("dimension", this.dimension);
-        root.addProperty("color", this.color);
+        root.add("color", this.color.toJson());
         root.addProperty("visible", this.visible);
         root.addProperty("show_beam", this.showBeam);
         root.addProperty("show_distance", this.showDistance);
@@ -68,6 +70,19 @@ public class Waypoint implements GsonSerializable<Waypoint> {
     @Override
     public Waypoint deserialize(JsonElement data, Gson gson) {
         JsonObject root = data.getAsJsonObject();
-        return new Waypoint(UUID.fromString(root.get("id").getAsString()), WaypointType.valueOf(root.get("type").getAsString()), root.get("name").getAsString(), root.get("world_key").getAsString(), root.get("x").getAsDouble(), root.get("y").getAsDouble(), root.get("z").getAsDouble(), root.get("dimension").getAsString(), root.get("visible").getAsBoolean(), !root.has("show_beam") || root.get("show_beam").getAsBoolean(), !root.has("show_distance") || root.get("show_distance").getAsBoolean(), root.get("color").getAsInt());
+        return new Waypoint(
+                UUID.fromString(root.get("id").getAsString()),
+                WaypointType.valueOf(root.get("type").getAsString()),
+                root.get("name").getAsString(),
+                root.get("world_key").getAsString(),
+                root.get("x").getAsDouble(),
+                root.get("y").getAsDouble(),
+                root.get("z").getAsDouble(),
+                root.get("dimension").getAsString(),
+                root.get("visible").getAsBoolean(),
+                !root.has("show_beam") || root.get("show_beam").getAsBoolean(),
+                !root.has("show_distance") || root.get("show_distance").getAsBoolean(),
+                new SettingColor().fromJson(root.get("color").getAsJsonObject())
+        );
     }
 }

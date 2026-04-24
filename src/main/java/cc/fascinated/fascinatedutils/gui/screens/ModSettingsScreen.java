@@ -57,12 +57,6 @@ public class ModSettingsScreen extends WidgetScreen {
     private boolean appliedPersistedShellTab;
     private ShellContentTab shellContentTab = ShellContentTab.MODULES;
     private ModSettingsShellHitRegions shellHitRegions = EMPTY_SHELL_HIT;
-    private float lastBodyW;
-    private float lastBodyH;
-    private float bodyCacheWidth = -1f;
-    private float bodyCacheHeight = -1f;
-    private ShellContentTab bodyCacheShellTab = ShellContentTab.MODULES;
-    private boolean bodyRebuildDirty = true;
 
     private boolean navigateToModuleDetailApplied;
     @Nullable
@@ -102,7 +96,6 @@ public class ModSettingsScreen extends WidgetScreen {
     @Override
     public void renderCustom(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         if (!appliedPersistedShellTab) {
-            ShellContentTab previousTab = shellContentTab;
             ModConfig.uiState().loadLastShellContentTabKey().ifPresent(tabKey -> {
                 switch (tabKey) {
                     case FShellTabStripWidget.TAB_KEY_SETTINGS -> shellContentTab = ShellContentTab.SETTINGS;
@@ -110,9 +103,6 @@ public class ModSettingsScreen extends WidgetScreen {
                     case FShellTabStripWidget.TAB_KEY_MODULES -> shellContentTab = ShellContentTab.MODULES;
                 }
             });
-            if (shellContentTab != previousTab) {
-                bodyRebuildDirty = true;
-            }
             topBarTabStrip.setSelectedKey(selectedShellTabKey());
             appliedPersistedShellTab = true;
         }
@@ -134,7 +124,7 @@ public class ModSettingsScreen extends WidgetScreen {
             root.tickAnimations(deltaSeconds);
             topBarTabsHost.tickAnimations(deltaSeconds);
             hudLayoutButtonHost.tickAnimations(deltaSeconds);
-            ModSettingsShellFrameResult frameResult = ModSettingsShellFrame.render(graphics, canvasWidth, canvasHeight, guiRenderer, getTitle().getString(), pointerScreenX, pointerScreenY, deltaSeconds, minecraftClient, topBarTabStrip, selectedShellTabKey(), root, topBarTabsHost, hudLayoutButtonHost, this::beforeShellBodyLayout);
+            ModSettingsShellFrameResult frameResult = ModSettingsShellFrame.render(graphics, canvasWidth, canvasHeight, guiRenderer, getTitle().getString(), pointerScreenX, pointerScreenY, deltaSeconds, minecraftClient, topBarTabStrip, selectedShellTabKey(), root, topBarTabsHost, hudLayoutButtonHost, (w, h) -> mountBodyIfNeeded());
             float hudCanvasWidth = HudLayoutCanvas.width();
             float hudCanvasHeight = HudLayoutCanvas.height();
             guiRenderer.begin(hudCanvasWidth, hudCanvasHeight);
@@ -144,8 +134,6 @@ public class ModSettingsScreen extends WidgetScreen {
                 guiRenderer.end();
             }
             shellHitRegions = frameResult.hitRegions();
-            lastBodyW = shellHitRegions.bodyWidth();
-            lastBodyH = shellHitRegions.bodyHeight();
             float pointerX = frameResult.pointerLayoutX();
             float pointerY = frameResult.pointerLayoutY();
             topBarTabsHost.dispatchInput(new InputEvent.MouseMove(pointerX, pointerY));
@@ -175,10 +163,6 @@ public class ModSettingsScreen extends WidgetScreen {
         hudLayoutButtonHost.dispose();
         modulesTabElement.reset();
         settingsTabElement.reset();
-        bodyCacheWidth = -1f;
-        bodyCacheHeight = -1f;
-        bodyCacheShellTab = ShellContentTab.MODULES;
-        bodyRebuildDirty = true;
         super.removed();
     }
 
@@ -292,34 +276,11 @@ public class ModSettingsScreen extends WidgetScreen {
         return super.charTyped(event);
     }
 
-    private void beforeShellBodyLayout(float bodyWidth, float bodyHeight) {
-        lastBodyW = bodyWidth;
-        lastBodyH = bodyHeight;
-        if (modSettingsBodyRequiresRebuild()) {
-            root.setRoot(buildBody());
-            commitModSettingsBodyCache();
+    private void mountBodyIfNeeded() {
+        FWidget expected = buildBody();
+        if (root.root() != expected) {
+            root.setRoot(expected);
         }
-    }
-
-    private boolean modSettingsBodyRequiresRebuild() {
-        FWidget rootElement = root.root();
-        if (rootElement == null) {
-            return true;
-        }
-        if (lastBodyW != bodyCacheWidth || lastBodyH != bodyCacheHeight) {
-            return true;
-        }
-        if (shellContentTab != bodyCacheShellTab) {
-            return true;
-        }
-        return bodyRebuildDirty;
-    }
-
-    private void commitModSettingsBodyCache() {
-        bodyCacheWidth = lastBodyW;
-        bodyCacheHeight = lastBodyH;
-        bodyCacheShellTab = shellContentTab;
-        bodyRebuildDirty = false;
     }
 
     private FWidget buildBody() {
@@ -333,7 +294,6 @@ public class ModSettingsScreen extends WidgetScreen {
         if (FShellTabStripWidget.TAB_KEY_SETTINGS.equals(tabKey)) {
             if (shellContentTab != ShellContentTab.SETTINGS) {
                 shellContentTab = ShellContentTab.SETTINGS;
-                bodyRebuildDirty = true;
                 ModConfig.uiState().saveLastShellContentTabKey(tabKey);
             }
             return;
@@ -341,7 +301,6 @@ public class ModSettingsScreen extends WidgetScreen {
         if (FShellTabStripWidget.TAB_KEY_MODULES.equals(tabKey)) {
             if (shellContentTab != ShellContentTab.MODULES) {
                 shellContentTab = ShellContentTab.MODULES;
-                bodyRebuildDirty = true;
                 ModConfig.uiState().saveLastShellContentTabKey(tabKey);
             }
         }
@@ -357,7 +316,6 @@ public class ModSettingsScreen extends WidgetScreen {
 
     private void onProfilesChanged() {
         settingsTabElement.reset();
-        bodyRebuildDirty = true;
     }
 
     private void applyNavigateToModuleDetailIfPending() {
@@ -368,7 +326,6 @@ public class ModSettingsScreen extends WidgetScreen {
         topBarTabStrip.setSelectedKey(selectedShellTabKey());
         modulesTabElement.navigateToModuleSettingsPage(navigateToModuleDetailOnOpen);
         navigateToModuleDetailApplied = true;
-        bodyRebuildDirty = true;
     }
 
     private void closeModSettingsShell() {

@@ -22,7 +22,6 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 public class WaypointEditScreen extends WidgetScreen {
@@ -44,15 +43,11 @@ public class WaypointEditScreen extends WidgetScreen {
     private boolean showBeam;
     private boolean showDistance;
 
-    private boolean dirty = true;
-    private float cachedW = -1f;
-    private float cachedH = -1f;
-    private @Nullable FWidget inner;
 
     public WaypointEditScreen(Waypoint waypoint) {
         super(Component.translatable("fascinatedutils.waypoints.edit.title"));
         this.waypoint = waypoint;
-        this.color = SettingColor.fromArgb(waypoint.getColor());
+        this.color = waypoint.getColor().copy();
         this.showBeam = waypoint.isShowBeam();
         this.showDistance = waypoint.isShowDistance();
 
@@ -90,14 +85,9 @@ public class WaypointEditScreen extends WidgetScreen {
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, lw, lh);
-                if (dirty || cachedW != lw || cachedH != lh || inner == null) {
-                    inner = buildContent(lw, lh);
-                    clearChildren();
-                    addChild(inner);
-                    cachedW = lw;
-                    cachedH = lh;
-                    dirty = false;
-                }
+                FWidget inner = buildContent(lw, lh);
+                clearChildren();
+                addChild(inner);
                 inner.layout(measure, lx, ly, lw, lh);
             }
         };
@@ -117,11 +107,7 @@ public class WaypointEditScreen extends WidgetScreen {
             stack.addChild(new FColorPickerPopupWidget(color.copy(), newColor -> {
                 color.set(newColor);
                 showColorPicker = false;
-                dirty = true;
-            }, () -> {
-                showColorPicker = false;
-                dirty = true;
-            }));
+            }, () -> showColorPicker = false));
         }
 
         return stack;
@@ -163,10 +149,7 @@ public class WaypointEditScreen extends WidgetScreen {
         colorLabel.setAlignX(Align.START);
 
         // full-width color swatch button — background renders the chosen color
-        FButtonWidget colorSwatchBtn = new FButtonWidget(() -> {
-            showColorPicker = true;
-            dirty = true;
-        }, () -> Component.translatable("fascinatedutils.waypoints.create.change_color").getString(), 0f, 1, 2f, 6f, 1f, 8f) {
+        FButtonWidget colorSwatchBtn = new FButtonWidget(() -> showColorPicker = true, () -> Component.translatable("fascinatedutils.waypoints.create.change_color").getString(), 0f, 1, 2f, 6f, 1f, 8f) {
             @Override
             protected int resolveButtonFillColorArgb(boolean hovered) {
                 int argb = color.getPackedArgb();
@@ -189,14 +172,8 @@ public class WaypointEditScreen extends WidgetScreen {
         FButtonWidget saveBtn = new FButtonWidget(this::save, () -> Component.translatable("fascinatedutils.waypoints.edit.confirm").getString(), 100f, 1, 2f, 8f, 1f, 8f);
 
         float bodyW = Math.max(0f, cardW - 2f * pad);
-        FIconCheckboxWidget beamCheckbox = new FIconCheckboxWidget(showBeam, val -> {
-            showBeam = val;
-            dirty = true;
-        }, () -> Component.translatable("fascinatedutils.waypoints.edit.show_beam").getString(), bodyW);
-        FIconCheckboxWidget distanceCheckbox = new FIconCheckboxWidget(showDistance, val -> {
-            showDistance = val;
-            dirty = true;
-        }, () -> Component.translatable("fascinatedutils.waypoints.edit.show_distance").getString(), bodyW);
+        FIconCheckboxWidget beamCheckbox = new FIconCheckboxWidget(showBeam, val -> showBeam = val, () -> Component.translatable("fascinatedutils.waypoints.edit.show_beam").getString(), bodyW);
+        FIconCheckboxWidget distanceCheckbox = new FIconCheckboxWidget(showDistance, val -> showDistance = val, () -> Component.translatable("fascinatedutils.waypoints.edit.show_distance").getString(), bodyW);
 
         return new FWidget() {
             @Override
@@ -294,7 +271,7 @@ public class WaypointEditScreen extends WidgetScreen {
         waypoint.setX(parseCoord(xInput.value(), waypoint.getX()));
         waypoint.setY(parseCoord(yInput.value(), waypoint.getY()));
         waypoint.setZ(parseCoord(zInput.value(), waypoint.getZ()));
-        waypoint.setColor(color.getPackedArgb());
+        waypoint.setColor(color.copy());
         waypoint.setShowBeam(showBeam);
         waypoint.setShowDistance(showDistance);
         ModConfig.waypoints().save();
@@ -376,7 +353,6 @@ public class WaypointEditScreen extends WidgetScreen {
         if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
             if (showColorPicker) {
                 showColorPicker = false;
-                dirty = true;
                 return true;
             }
             Minecraft.getInstance().setScreen(new WaypointsScreen());

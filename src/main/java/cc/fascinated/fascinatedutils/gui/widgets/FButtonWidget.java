@@ -108,18 +108,6 @@ public class FButtonWidget extends FWidget {
     }
 
     @Override
-    public boolean mouseEnter(float pointerX, float pointerY) {
-        hovered = true;
-        return false;
-    }
-
-    @Override
-    public boolean mouseLeave(float pointerX, float pointerY) {
-        hovered = false;
-        return false;
-    }
-
-    @Override
     public boolean click(float pointerX, float pointerY, int button) {
         if (button == 0) {
             onClick.run();
@@ -150,6 +138,7 @@ public class FButtonWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+        hovered = containsPoint(mouseX, mouseY);
         int fillColor = resolveButtonFillColorArgb(hovered);
         int borderColor = resolveButtonBorderColorArgb(hovered);
         float borderThicknessX = UITheme.BORDER_THICKNESS_PX;

@@ -18,9 +18,6 @@ public class FSettingsTabElement extends FWidget {
     private final Ref<Float> performanceRegistryScrollRef = Ref.of(0f);
     private final Ref<ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab> registrySubTabRef = Ref.of(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
     private FWidget inner;
-    private boolean dirty = true;
-    private float cachedWidth = -1f;
-    private float cachedHeight = -1f;
 
     @Override
     public boolean fillsVerticalInColumn() {
@@ -35,12 +32,7 @@ public class FSettingsTabElement extends FWidget {
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-        if (dirty || cachedWidth != layoutWidth || cachedHeight != layoutHeight || inner == null) {
-            rebuild(layoutWidth, layoutHeight);
-            cachedWidth = layoutWidth;
-            cachedHeight = layoutHeight;
-            dirty = false;
-        }
+        rebuild(layoutWidth, layoutHeight);
         if (inner != null) {
             inner.layout(measure, layoutX, layoutY, layoutWidth, layoutHeight);
         }
@@ -51,9 +43,6 @@ public class FSettingsTabElement extends FWidget {
         performanceRegistryScrollRef.setValue(0f);
         registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
         inner = null;
-        dirty = true;
-        cachedWidth = -1f;
-        cachedHeight = -1f;
         clearChildren();
     }
 
@@ -129,7 +118,6 @@ public class FSettingsTabElement extends FWidget {
         FButtonWidget generalTabButton = new SelectableButtonWidget(() -> {
             if (registrySubTabRef.getValue() != ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL) {
                 registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
-                dirty = true;
             }
         }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_general"), 56f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL) {
             @Override
@@ -141,7 +129,6 @@ public class FSettingsTabElement extends FWidget {
         FButtonWidget performanceTabButton = new SelectableButtonWidget(() -> {
             if (registrySubTabRef.getValue() != ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE) {
                 registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE);
-                dirty = true;
             }
         }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_performance"), 92f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE) {
             @Override

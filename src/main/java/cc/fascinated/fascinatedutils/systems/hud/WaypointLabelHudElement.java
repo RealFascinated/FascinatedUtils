@@ -147,7 +147,7 @@ public class WaypointLabelHudElement implements HudElement {
 
             guiRenderer.drawRect(bgX, bgY, bgW, bgH, 0xA0000000);
             if (showBorder) {
-                guiRenderer.drawBorder(bgX, bgY, bgW, bgH, 1f, waypoint.getColor());
+                guiRenderer.drawBorder(bgX, bgY, bgW, bgH, 1f, waypoint.getColor().getResolvedArgb());
             }
             guiRenderer.drawText(label, bgX + labelPad, bgY + labelPad, 0xFFFFFFFF, false, false);
         }

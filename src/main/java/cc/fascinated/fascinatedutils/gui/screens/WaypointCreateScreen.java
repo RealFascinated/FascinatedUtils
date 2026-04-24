@@ -22,7 +22,6 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 public class WaypointCreateScreen extends WidgetScreen {
@@ -47,10 +46,6 @@ public class WaypointCreateScreen extends WidgetScreen {
     private final SettingColor color = new SettingColor(255, 255, 255, 255);
     private boolean showColorPicker = false;
 
-    private boolean dirty = true;
-    private float cachedW = -1f;
-    private float cachedH = -1f;
-    private @Nullable FWidget inner;
 
     public WaypointCreateScreen(double x, double y, double z, String dimension, String worldKey) {
         super(Component.translatable("fascinatedutils.waypoints.create.title"));
@@ -94,14 +89,9 @@ public class WaypointCreateScreen extends WidgetScreen {
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, lw, lh);
-                if (dirty || cachedW != lw || cachedH != lh || inner == null) {
-                    inner = buildContent(lw, lh);
-                    clearChildren();
-                    addChild(inner);
-                    cachedW = lw;
-                    cachedH = lh;
-                    dirty = false;
-                }
+                FWidget inner = buildContent(lw, lh);
+                clearChildren();
+                addChild(inner);
                 inner.layout(measure, lx, ly, lw, lh);
             }
         };
@@ -121,11 +111,7 @@ public class WaypointCreateScreen extends WidgetScreen {
             stack.addChild(new FColorPickerPopupWidget(color.copy(), newColor -> {
                 color.set(newColor);
                 showColorPicker = false;
-                dirty = true;
-            }, () -> {
-                showColorPicker = false;
-                dirty = true;
-            }));
+            }, () -> showColorPicker = false));
         }
 
         return stack;
@@ -177,10 +163,7 @@ public class WaypointCreateScreen extends WidgetScreen {
         colorLabel.setAlignX(Align.START);
 
         // full-width color swatch button — background renders the chosen color
-        FButtonWidget colorSwatchBtn = new FButtonWidget(() -> {
-            showColorPicker = true;
-            dirty = true;
-        }, () -> Component.translatable("fascinatedutils.waypoints.create.change_color").getString(), 0f, 1, 2f, 6f, 1f, 8f) {
+        FButtonWidget colorSwatchBtn = new FButtonWidget(() -> showColorPicker = true, () -> Component.translatable("fascinatedutils.waypoints.create.change_color").getString(), 0f, 1, 2f, 6f, 1f, 8f) {
             @Override
             protected int resolveButtonFillColorArgb(boolean hovered) {
                 int argb = color.getPackedArgb();
@@ -297,7 +280,7 @@ public class WaypointCreateScreen extends WidgetScreen {
         double parsedX = parseCoord(xInput.value(), origX);
         double parsedY = parseCoord(yInput.value(), origY);
         double parsedZ = parseCoord(zInput.value(), origZ);
-        ModConfig.waypoints().create(trimmed, worldKey, WaypointType.NORMAL, parsedX, parsedY, parsedZ, dimension, color.getPackedArgb());
+        ModConfig.waypoints().create(trimmed, worldKey, WaypointType.NORMAL, parsedX, parsedY, parsedZ, dimension, color.copy());
         Minecraft.getInstance().setScreen(null);
     }
 
@@ -376,7 +359,6 @@ public class WaypointCreateScreen extends WidgetScreen {
         if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
             if (showColorPicker) {
                 showColorPicker = false;
-                dirty = true;
                 return true;
             }
             Minecraft.getInstance().setScreen(null);
