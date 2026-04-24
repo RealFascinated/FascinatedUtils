@@ -163,33 +163,42 @@ public class StatusEffectsModule extends HudModule {
                 float nameY = textBlockY;
                 float durationY = textBlockY + fontHeight + TEXT_LINE_GAP;
 
+                float flashAlpha = effectRow.iconAlpha();
                 if (rightAligned) {
                     float iconX = sharedIconXWhenRight;
                     if (detailedLayout) {
                         float nameX = textRightEdgeWhenRight - glRenderer.measureMiniMessageTextWidth(effectRow.nameText());
                         float durationX = textRightEdgeWhenRight - glRenderer.measureMiniMessageTextWidth(effectRow.durationText());
                         glRenderer.drawMiniMessageText(effectRow.nameText(), nameX, nameY, false);
+                        glRenderer.setMultiplyAlpha(flashAlpha);
                         glRenderer.drawMiniMessageText(effectRow.durationText(), durationX, durationY, false);
+                        glRenderer.resetMultiplyAlpha();
                     }
                     else {
                         String compactLine = compactText(effectRow.nameText(), effectRow.durationText(), showDurationValue);
                         float compactX = textRightEdgeWhenRight - glRenderer.measureMiniMessageTextWidth(compactLine);
+                        glRenderer.setMultiplyAlpha(flashAlpha);
                         glRenderer.drawMiniMessageText(compactLine, compactX, nameY, false);
+                        glRenderer.resetMultiplyAlpha();
                     }
-                    glRenderer.drawSprite(effectRow.effectSprite(), iconX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(effectRow.iconAlpha()));
+                    glRenderer.drawSprite(effectRow.effectSprite(), iconX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(1f));
                 }
                 else {
                     float rowWidth = ICON_SIZE + ICON_TEXT_GAP + textWidths[rowIndex];
                     float rowStartX = padding + HudAnchorLayout.horizontalOffsetInInnerBand(innerWidth, rowWidth, HudAnchorContentAlignment.Horizontal.LEFT);
                     float iconX = rowStartX;
                     float textX = rowStartX + ICON_SIZE + ICON_TEXT_GAP;
-                    glRenderer.drawSprite(effectRow.effectSprite(), iconX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(effectRow.iconAlpha()));
+                    glRenderer.drawSprite(effectRow.effectSprite(), iconX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(1f));
                     if (detailedLayout) {
                         glRenderer.drawMiniMessageText(effectRow.nameText(), textX, nameY, false);
+                        glRenderer.setMultiplyAlpha(flashAlpha);
                         glRenderer.drawMiniMessageText(effectRow.durationText(), textX, durationY, false);
+                        glRenderer.resetMultiplyAlpha();
                     }
                     else {
+                        glRenderer.setMultiplyAlpha(flashAlpha);
                         glRenderer.drawMiniMessageText(compactText(effectRow.nameText(), effectRow.durationText(), showDurationValue), textX, nameY, false);
+                        glRenderer.resetMultiplyAlpha();
                     }
                 }
 
@@ -228,28 +237,32 @@ public class StatusEffectsModule extends HudModule {
     }
 
     private List<EffectRow> buildEffectRows(boolean editorMode) {
-        if (editorMode || minecraft.player == null) {
-            boolean includeAmplifier = showAmplifier.isEnabled();
+        boolean includeAmplifier = showAmplifier.isEnabled();
+
+        if (minecraft.player != null) {
+            List<MobEffectInstance> activeEffects = new ArrayList<>(minecraft.player.getActiveEffects());
+            activeEffects.removeIf(effectInstance -> !effectInstance.showIcon());
+            if (!activeEffects.isEmpty()) {
+                if (sortMode.getValue() == SortMode.ALPHABETICAL) {
+                    activeEffects.sort(Comparator.comparing(effectInstance -> effectInstance.getEffect().value().getDisplayName().getString(), String.CASE_INSENSITIVE_ORDER));
+                }
+                else {
+                    activeEffects.sort(Comparator.comparingInt(MobEffectInstance::getDuration).reversed());
+                }
+                List<EffectRow> rows = new ArrayList<>(activeEffects.size());
+                for (MobEffectInstance effectInstance : activeEffects) {
+                    String effectName = formatEffectNameWithAmplifier(effectInstance, includeAmplifier);
+                    String durationText = DateUtils.formatDuration(effectInstance.getDuration());
+                    rows.add(new EffectRow(getMobEffectSprite(effectInstance.getEffect()), effectName, durationText, iconAlpha(effectInstance)));
+                }
+                return rows;
+            }
+        }
+
+        if (editorMode) {
             return List.of(new EffectRow(PREVIEW_SPEED_ICON, includeAmplifier ? "Speed II" : "Speed", "01:25", 1f), new EffectRow(PREVIEW_POISON_ICON, includeAmplifier ? "Poison II" : "Poison", "00:37", 0.9f));
         }
-
-        List<MobEffectInstance> activeEffects = new ArrayList<>(minecraft.player.getActiveEffects());
-        activeEffects.removeIf(effectInstance -> !effectInstance.showIcon());
-        if (sortMode.getValue() == SortMode.ALPHABETICAL) {
-            activeEffects.sort(Comparator.comparing(effectInstance -> effectInstance.getEffect().value().getDisplayName().getString(), String.CASE_INSENSITIVE_ORDER));
-        }
-        else {
-            activeEffects.sort(Comparator.comparingInt(MobEffectInstance::getDuration).reversed());
-        }
-
-        List<EffectRow> rows = new ArrayList<>(activeEffects.size());
-        boolean includeAmplifier = showAmplifier.isEnabled();
-        for (MobEffectInstance effectInstance : activeEffects) {
-            String effectName = formatEffectNameWithAmplifier(effectInstance, includeAmplifier);
-            String durationText = DateUtils.formatDuration(effectInstance.getDuration());
-            rows.add(new EffectRow(getMobEffectSprite(effectInstance.getEffect()), effectName, durationText, iconAlpha(effectInstance)));
-        }
-        return rows;
+        return List.of();
     }
 
     private enum SortMode {
