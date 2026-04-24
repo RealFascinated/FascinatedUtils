@@ -35,7 +35,7 @@ public class FModulesTabElement extends FWidget {
     private Module moduleDetailModule;
     private Module settingsScrollAnchorModule;
     private boolean showCreateProfilePopup;
-    private ColorSetting colorPickerSetting;
+    private FColorPickerPopupWidget colorPickerWidget;
 
     public FModulesTabElement(Runnable onProfilesChanged, Runnable onOpenHudLayoutEditor) {
         this.onProfilesChanged = onProfilesChanged;
@@ -86,7 +86,7 @@ public class FModulesTabElement extends FWidget {
         moduleDetailModule = null;
         settingsScrollAnchorModule = null;
         showCreateProfilePopup = false;
-        colorPickerSetting = null;
+        colorPickerWidget = null;
         profilePopupController.reset();
         clearChildren();
     }
@@ -125,14 +125,8 @@ public class FModulesTabElement extends FWidget {
         if (showCreateProfilePopup) {
             rootStack.addChild(new FProfileCreatePopupWidget(newProfileNameRef, copyDefaultProfileSettingsRef, this::closeCreateProfilePopup, this::submitCreateProfilePopup));
         }
-        if (colorPickerSetting != null) {
-            rootStack.addChild(new FColorPickerPopupWidget(colorPickerSetting.getValue(), newColor -> {
-                colorPickerSetting.setValue(newColor);
-                ModConfig.profiles().saveActiveProfile();
-                colorPickerSetting = null;
-            }, () -> {
-                colorPickerSetting = null;
-            }));
+        if (colorPickerWidget != null) {
+            rootStack.addChild(colorPickerWidget);
         }
         profilePopupController.appendOverlaysTo(rootStack);
         inner = rootStack;
@@ -141,7 +135,13 @@ public class FModulesTabElement extends FWidget {
     }
 
     private void openColorPicker(ColorSetting setting) {
-        colorPickerSetting = setting;
+        colorPickerWidget = new FColorPickerPopupWidget(setting.getValue(), newColor -> {
+            setting.setValue(newColor);
+            ModConfig.profiles().saveActiveProfile();
+            colorPickerWidget = null;
+        }, () -> {
+            colorPickerWidget = null;
+        });
     }
 
     private void openCreateProfilePopup() {

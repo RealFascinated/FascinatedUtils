@@ -52,7 +52,10 @@
     "waypoints.LevelRendererMixin",
     "zoom.CameraMixin",
     "zoom.HeldItemRendererMixin",
-    "zoom.MouseHandlerMixin"
+    "zoom.MouseHandlerMixin",
+    "worldsize.SelectWorldScreenMixin",
+    "worldsize.WorldListEntryMixin",
+    "worldsize.WorldSelectionListMixin"
   ],
   "injectors": {
     "defaultRequire": 1

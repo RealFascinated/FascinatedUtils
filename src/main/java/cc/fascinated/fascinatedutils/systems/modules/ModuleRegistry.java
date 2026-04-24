@@ -68,6 +68,7 @@ public class ModuleRegistry {
         modules.add(new FullbrightModule());
         modules.add(new ItemTooltipModule());
         modules.add(new WaypointsModule());
+        modules.add(new WorldSizeModule());
 
         for (Module module : modules) {
             FascinatedEventBus.INSTANCE.subscribe(module);

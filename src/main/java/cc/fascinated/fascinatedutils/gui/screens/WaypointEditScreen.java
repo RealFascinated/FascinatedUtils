@@ -40,6 +40,7 @@ public class WaypointEditScreen extends WidgetScreen {
 
     private final SettingColor color;
     private boolean showColorPicker = false;
+    private FColorPickerPopupWidget colorPickerWidget;
     private boolean showBeam;
     private boolean showDistance;
 
@@ -103,11 +104,8 @@ public class WaypointEditScreen extends WidgetScreen {
         float cardW = Math.min(sw - 80f, 460f);
         stack.addChild(buildCard(cardW));
 
-        if (showColorPicker) {
-            stack.addChild(new FColorPickerPopupWidget(color.copy(), newColor -> {
-                color.set(newColor);
-                showColorPicker = false;
-            }, () -> showColorPicker = false));
+        if (colorPickerWidget != null) {
+            stack.addChild(colorPickerWidget);
         }
 
         return stack;
@@ -149,7 +147,7 @@ public class WaypointEditScreen extends WidgetScreen {
         colorLabel.setAlignX(Align.START);
 
         // full-width color swatch button — background renders the chosen color
-        FButtonWidget colorSwatchBtn = new FButtonWidget(() -> showColorPicker = true, () -> Component.translatable("fascinatedutils.waypoints.create.change_color").getString(), 0f, 1, 2f, 6f, 1f, 8f) {
+        FButtonWidget colorSwatchBtn = new FButtonWidget(this::openColorPicker, () -> Component.translatable("fascinatedutils.waypoints.create.change_color").getString(), 0f, 1, 2f, 6f, 1f, 8f) {
             @Override
             protected int resolveButtonFillColorArgb(boolean hovered) {
                 int argb = color.getPackedArgb();
@@ -262,6 +260,21 @@ public class WaypointEditScreen extends WidgetScreen {
         };
     }
 
+    private void openColorPicker() {
+        if (colorPickerWidget != null) {
+            return;
+        }
+        showColorPicker = true;
+        colorPickerWidget = new FColorPickerPopupWidget(color.copy(), newColor -> {
+            color.set(newColor);
+            showColorPicker = false;
+            colorPickerWidget = null;
+        }, () -> {
+            showColorPicker = false;
+            colorPickerWidget = null;
+        });
+    }
+
     private void save() {
         String trimmed = nameInput.value().trim();
         if (trimmed.isEmpty()) {
@@ -353,6 +366,7 @@ public class WaypointEditScreen extends WidgetScreen {
         if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
             if (showColorPicker) {
                 showColorPicker = false;
+                colorPickerWidget = null;
                 return true;
             }
             Minecraft.getInstance().setScreen(new WaypointsScreen());
