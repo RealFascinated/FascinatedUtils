@@ -1,24 +1,11 @@
 package cc.fascinated.fascinatedutils.gui.screens;
 
-import java.util.function.IntConsumer;
-import java.util.function.IntSupplier;
-
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
-
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.UiSounds;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.input.UiCursorController;
-import cc.fascinated.fascinatedutils.gui.modsettings.FModulesTabElement;
-import cc.fascinated.fascinatedutils.gui.modsettings.FSettingsTabElement;
-import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellFrame;
-import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellFrameResult;
-import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellHitRegions;
-import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellLayout;
-import cc.fascinated.fascinatedutils.gui.modsettings.ModSettingsShellPointer;
+import cc.fascinated.fascinatedutils.gui.modsettings.*;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FShellTabStripWidget;
@@ -29,8 +16,8 @@ import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -38,6 +25,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 
 public class ModSettingsScreen extends WidgetScreen {
 

@@ -1,29 +1,19 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FCellConstraints;
-import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FMinWidthHostWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FScrollColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.SelectableButtonWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.profiles.Profile;
 import net.minecraft.network.chat.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class ModSettingsProfilesTabBuilder {
     public static FWidget buildProfilesTab(float paneWidth, float paneHeight, Ref<Float> scrollYRef, Ref<String> newProfileNameRef, ProfileActionCallback onProfileAction, Runnable onProfilesChanged) {

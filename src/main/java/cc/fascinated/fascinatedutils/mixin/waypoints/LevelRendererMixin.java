@@ -9,8 +9,8 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.renderer.LevelRenderer;
+import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -60,7 +60,7 @@ public class LevelRendererMixin {
         double playerY = minecraft.player.getY();
         double playerZ = minecraft.player.getZ();
 
-        VertexConsumer beamConsumer = bufferSource.getBuffer(RenderTypes.debugFilledBox());
+        VertexConsumer beamConsumer = bufferSource.getBuffer(FascinatedWorldRenderTypes.WORLD_BEAM);
         PoseStack.Pose rootPose = poseStack.last();
 
         for (Waypoint waypoint : waypoints) {
@@ -116,6 +116,6 @@ public class LevelRendererMixin {
             beamConsumer.addVertex(rootPose, maxX, minY, maxZ).setColor(red, green, blue, beamAlpha);
         }
 
-        bufferSource.endBatch();
+        bufferSource.endBatch(FascinatedWorldRenderTypes.WORLD_BEAM);
     }
 }

@@ -44,6 +44,7 @@ dependencies {
     
     compileOnly "org.projectlombok:lombok:${project.lombok_version}"
     annotationProcessor "org.projectlombok:lombok:${project.lombok_version}"
+    compileOnly files('run/mods/iris-fabric-1.10.9+mc26.1.1.jar')
 }
 
 processResources {

@@ -1,5 +1,15 @@
 package cc.fascinated.fascinatedutils.updater;
 
+import cc.fascinated.fascinatedutils.common.types.GitHubAsset;
+import cc.fascinated.fascinatedutils.common.types.GitHubRelease;
+import cc.fascinated.fascinatedutils.common.types.ReleaseVersionInfo;
+import com.google.gson.*;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.minecraft.client.Minecraft;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -20,22 +30,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import cc.fascinated.fascinatedutils.common.types.GitHubAsset;
-import cc.fascinated.fascinatedutils.common.types.GitHubRelease;
-import cc.fascinated.fascinatedutils.common.types.ReleaseVersionInfo;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.client.Minecraft;
 
 public class UpdateChecker {
     private static final Logger LOG = LoggerFactory.getLogger(UpdateChecker.class);

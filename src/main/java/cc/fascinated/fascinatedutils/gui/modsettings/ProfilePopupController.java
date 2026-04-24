@@ -1,9 +1,9 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import java.util.UUID;
-
 import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
+
+import java.util.UUID;
 
 /**
  * Encapsulates the profile delete/rename/context-menu popup state that is shared between

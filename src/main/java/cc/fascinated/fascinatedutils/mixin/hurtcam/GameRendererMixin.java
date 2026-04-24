@@ -1,28 +1,16 @@
 package cc.fascinated.fascinatedutils.mixin.hurtcam;
 
-import cc.fascinated.fascinatedutils.common.FrameCounter;
-import cc.fascinated.fascinatedutils.gui.screens.WidgetScreen;
 import cc.fascinated.fascinatedutils.mixininterface.IGameRenderer;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.HurtcamModule;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.render.GuiRenderer;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.fog.FogRenderer;
-import net.minecraft.client.renderer.state.GameRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Objects;
 import java.util.Optional;
 
 @Mixin(GameRenderer.class)

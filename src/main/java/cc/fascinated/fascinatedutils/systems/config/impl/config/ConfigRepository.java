@@ -5,7 +5,6 @@ import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import cc.fascinated.fascinatedutils.systems.config.ConfigManager;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;

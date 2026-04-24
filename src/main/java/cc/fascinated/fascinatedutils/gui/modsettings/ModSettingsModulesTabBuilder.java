@@ -1,11 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.function.Consumer;
-
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
@@ -13,23 +8,17 @@ import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FCellConstraints;
-import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FMinWidthHostWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FScrollColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.SelectableButtonWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.function.Consumer;
 
 public class ModSettingsModulesTabBuilder {
 

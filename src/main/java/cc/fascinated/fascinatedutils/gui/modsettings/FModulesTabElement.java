@@ -1,9 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
-import java.util.List;
-
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -16,6 +13,8 @@ import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
+
+import java.util.List;
 
 public class FModulesTabElement extends FWidget {
     private static final float PROFILES_PANEL_WIDTH_DESIGN = 118f;

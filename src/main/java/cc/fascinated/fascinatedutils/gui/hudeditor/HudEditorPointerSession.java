@@ -1,25 +1,24 @@
 package cc.fascinated.fascinatedutils.gui.hudeditor;
 
-import java.util.List;
-import java.util.function.BooleanSupplier;
-
-import org.jspecify.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
-
 import cc.fascinated.fascinatedutils.client.ModBranding;
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.core.UiFocusIds;
 import cc.fascinated.fascinatedutils.gui.screens.HUDEditorScreen;
 import cc.fascinated.fascinatedutils.gui.screens.ModSettingsScreen;
-import net.minecraft.client.gui.screens.Screen;
 import cc.fascinated.fascinatedutils.systems.hud.HUDEditorSnap;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
+import org.jspecify.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+
+import java.util.List;
+import java.util.function.BooleanSupplier;
 
 public class HudEditorPointerSession {
 

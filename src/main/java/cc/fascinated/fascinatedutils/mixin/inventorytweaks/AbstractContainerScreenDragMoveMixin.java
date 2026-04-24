@@ -33,6 +33,7 @@ public abstract class AbstractContainerScreenDragMoveMixin {
     protected abstract void slotClicked(Slot slot, int slotId, int mouseButton, ContainerInput actionType);
 
     private boolean fascinatedutils$shiftDragging = false;
+    private boolean fascinatedutils$didDrag = false;
     private final Set<Integer> fascinatedutils$visitedSlots = new HashSet<>();
     private double fascinatedutils$scrollAccumulator = 0;
 
@@ -43,6 +44,7 @@ public abstract class AbstractContainerScreenDragMoveMixin {
         }
         if (event.button() == 0 && event.hasShiftDown() && hoveredSlot != null) {
             fascinatedutils$shiftDragging = true;
+            fascinatedutils$didDrag = false;
             fascinatedutils$visitedSlots.clear();
             int slotId = menu.slots.indexOf(hoveredSlot);
             if (slotId >= 0) {
@@ -71,6 +73,7 @@ public abstract class AbstractContainerScreenDragMoveMixin {
         if (slotId >= 0 && fascinatedutils$visitedSlots.add(slotId)) {
             slotClicked(hoveredSlot, slotId, 0, ContainerInput.QUICK_MOVE);
         }
+        fascinatedutils$didDrag = true;
         cir.setReturnValue(true);
         cir.cancel();
     }
@@ -78,8 +81,9 @@ public abstract class AbstractContainerScreenDragMoveMixin {
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
     private void fascinatedutils$onMouseReleased(MouseButtonEvent event, CallbackInfoReturnable<Boolean> cir) {
         if (event.button() == 0) {
-            boolean wasDragging = fascinatedutils$shiftDragging;
+            boolean wasDragging = fascinatedutils$shiftDragging && fascinatedutils$didDrag;
             fascinatedutils$shiftDragging = false;
+            fascinatedutils$didDrag = false;
             fascinatedutils$visitedSlots.clear();
             if (wasDragging) {
                 // Prevent vanilla from performing a pickup click on the hovered slot

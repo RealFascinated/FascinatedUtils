@@ -7,7 +7,6 @@ import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import org.jspecify.annotations.Nullable;
 

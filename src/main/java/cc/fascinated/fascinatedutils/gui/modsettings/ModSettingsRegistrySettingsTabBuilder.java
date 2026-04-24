@@ -1,8 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
@@ -15,11 +12,7 @@ import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FScrollColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanSettingRowWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FEnumSettingRowWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.FKeybindSettingWidget;
@@ -28,6 +21,9 @@ import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import lombok.experimental.UtilityClass;
 import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @UtilityClass
 public class ModSettingsRegistrySettingsTabBuilder {

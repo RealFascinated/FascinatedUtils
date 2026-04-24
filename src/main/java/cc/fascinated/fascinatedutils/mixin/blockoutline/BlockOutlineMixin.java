@@ -4,9 +4,9 @@ import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.BlockOutlineModule;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
+import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.state.level.BlockOutlineRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
@@ -79,7 +79,7 @@ public class BlockOutlineMixin {
         int blue = argb & 0xFF;
         int alpha = (argb >> 24) & 0xFF;
 
-        VertexConsumer consumer = bufferSource.getBuffer(RenderTypes.debugFilledBox());
+        VertexConsumer consumer = bufferSource.getBuffer(FascinatedWorldRenderTypes.WORLD_BEAM);
         PoseStack.Pose pose = poseStack.last();
 
         // -Y (bottom)
@@ -113,7 +113,7 @@ public class BlockOutlineMixin {
         consumer.addVertex(pose, maxX, maxY, maxZ).setColor(red, green, blue, alpha);
         consumer.addVertex(pose, maxX, minY, maxZ).setColor(red, green, blue, alpha);
 
-        bufferSource.endLastBatch();
+        bufferSource.endBatch(FascinatedWorldRenderTypes.WORLD_BEAM);
     }
 
     @Unique

@@ -1,17 +1,12 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
-import cc.fascinated.fascinatedutils.gui.widgets.SelectableButtonWidget;
-import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import net.minecraft.client.resources.language.I18n;
 import org.jspecify.annotations.NonNull;
-
-import java.util.function.Consumer;
 
 public class FSettingsTabElement extends FWidget {
     private final Ref<Float> generalRegistryScrollRef = Ref.of(0f);

@@ -1,8 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import org.joml.Matrix3x2fStack;
-import org.lwjgl.glfw.GLFW;
-
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.input.MouseButtons;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -17,6 +14,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import org.joml.Matrix3x2fStack;
+import org.lwjgl.glfw.GLFW;
 
 public class ModSettingsShellFrame {
 

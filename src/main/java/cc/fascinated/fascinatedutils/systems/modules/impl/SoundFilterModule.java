@@ -3,11 +3,9 @@ package cc.fascinated.fascinatedutils.systems.modules.impl;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
-import cc.fascinated.fascinatedutils.systems.modules.ModuleDefaults;
 import lombok.Getter;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
-import net.minecraft.sounds.SoundSource;
 
 import java.util.ArrayList;
 import java.util.List;

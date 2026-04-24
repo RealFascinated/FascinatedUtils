@@ -1,40 +1,24 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.function.Consumer;
-
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
-import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.*;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FMinWidthHostWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FScrollColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanSettingRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FBooleanWithSubSettingsWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FColorSettingRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FEnumSettingRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FKeybindSettingWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.settings.FSliderSettingRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
+import cc.fascinated.fascinatedutils.gui.widgets.settings.*;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.function.Consumer;
 
 public class ModSettingsWidgetsTabBuilder {
 

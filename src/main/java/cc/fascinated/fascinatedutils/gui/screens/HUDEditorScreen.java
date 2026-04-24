@@ -1,7 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.screens;
 
-import java.util.List;
-
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.hooks.FadeInAnim;
 import cc.fascinated.fascinatedutils.gui.hudeditor.HudEditorChrome;
@@ -19,6 +17,8 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+
+import java.util.List;
 
 public class HUDEditorScreen extends WidgetScreen {
 

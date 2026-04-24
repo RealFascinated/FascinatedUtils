@@ -1,10 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.renderer;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
-
 import cc.fascinated.fascinatedutils.gui.GuiTheme;
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.renderer.operations.GuiRenderOperation;
@@ -21,6 +16,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
 
 /**
  * GUI orchestrator: root {@link GuiGraphics} scope, nested scissors with segment flushes, deferred text

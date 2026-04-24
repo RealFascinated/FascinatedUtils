@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.renderer;
 
-import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.GuiTheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import net.minecraft.resources.Identifier;
