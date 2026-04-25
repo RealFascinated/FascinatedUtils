@@ -70,15 +70,14 @@ public abstract class HudMiniMessageModule extends HudModule {
 
     @Override
     protected HudContent produceContent(float deltaSeconds, boolean editorMode) {
-        List<String> rawLines = editorMode ? normalizeMiniMessageLines(resolveRawMiniMessageLines(deltaSeconds, true)) : miniMessageLinesWithCache(deltaSeconds);
-        return new HudContent.TextLines(rawLines);
+        return new HudContent.TextLines(miniMessageLinesWithCache(deltaSeconds, editorMode));
     }
 
-    private List<String> miniMessageLinesWithCache(float deltaSeconds) {
+    private List<String> miniMessageLinesWithCache(float deltaSeconds, boolean editorMode) {
         long intervalNanos = hudMiniMessageUpdateIntervalNanos();
         long now = System.nanoTime();
         if (intervalNanos <= 0L || cachedMiniMessageLines == null || now - lastMiniMessageSampleNanos >= intervalNanos) {
-            cachedMiniMessageLines = normalizeMiniMessageLines(resolveRawMiniMessageLines(deltaSeconds, false));
+            cachedMiniMessageLines = normalizeMiniMessageLines(resolveRawMiniMessageLines(deltaSeconds, editorMode));
             lastMiniMessageSampleNanos = now;
         }
         return cachedMiniMessageLines;
