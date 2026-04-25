@@ -31,8 +31,12 @@ public class TpsWidget extends HudMiniMessageModule {
             .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
             .build();
 
-    private long lastWorldTime = -1L;
-    private long lastSampleTimeNanos = -1L;
+    private static final int RING_CAPACITY = 60;
+
+    private final long[] ringWorldTimes = new long[RING_CAPACITY];
+    private final long[] ringNanoTimes = new long[RING_CAPACITY];
+    private int ringHead = 0;
+    private int ringCount = 0;
     private float lastKnownTps = Float.NaN;
     private float lastKnownMspt = Float.NaN;
     private boolean lastSampleIntegratedServer;
@@ -78,8 +82,8 @@ public class TpsWidget extends HudMiniMessageModule {
     }
 
     private void resetSamples() {
-        lastWorldTime = -1L;
-        lastSampleTimeNanos = -1L;
+        ringHead = 0;
+        ringCount = 0;
         lastKnownTps = Float.NaN;
         lastKnownMspt = Float.NaN;
         lastSampleIntegratedServer = false;
@@ -100,19 +104,43 @@ public class TpsWidget extends HudMiniMessageModule {
         lastSampleIntegratedServer = false;
         long currentWorldTime = minecraftClient.level.getGameTime();
         long nowNanos = System.nanoTime();
-        if (lastWorldTime < 0L || lastSampleTimeNanos < 0L) {
-            lastWorldTime = currentWorldTime;
-            lastSampleTimeNanos = nowNanos;
+
+        long prevWorldTime = ringCount > 0 ? ringWorldTimes[(ringHead - 1 + RING_CAPACITY) % RING_CAPACITY] : Long.MIN_VALUE;
+
+        // Game time went backward (e.g. dimension change) — discard stale samples
+        if (currentWorldTime < prevWorldTime) {
+            resetSamples();
             return;
         }
-        long tickDelta = currentWorldTime - lastWorldTime;
-        long nanosDelta = nowNanos - lastSampleTimeNanos;
-        lastWorldTime = currentWorldTime;
-        lastSampleTimeNanos = nowNanos;
-        if (tickDelta <= 0L || nanosDelta <= 0L) {
+
+        // Game time unchanged — no new server tick received yet, nothing to record
+        if (currentWorldTime == prevWorldTime) {
             return;
         }
-        float measuredMspt = (nanosDelta / 1_000_000f) / tickDelta;
+
+        // Record new (worldTime, wallClock) sample
+        ringWorldTimes[ringHead] = currentWorldTime;
+        ringNanoTimes[ringHead] = nowNanos;
+        ringHead = (ringHead + 1) % RING_CAPACITY;
+        if (ringCount < RING_CAPACITY) {
+            ringCount++;
+        }
+
+        if (ringCount < 2) {
+            return;
+        }
+
+        // Compute rate across the full window: oldest → newest
+        int oldestIdx = (ringHead - ringCount + RING_CAPACITY) % RING_CAPACITY;
+        int newestIdx = (ringHead - 1 + RING_CAPACITY) % RING_CAPACITY;
+        long worldTimeDelta = ringWorldTimes[newestIdx] - ringWorldTimes[oldestIdx];
+        long nanosDelta = ringNanoTimes[newestIdx] - ringNanoTimes[oldestIdx];
+
+        if (worldTimeDelta <= 0L || nanosDelta <= 0L) {
+            return;
+        }
+
+        float measuredMspt = (float) (nanosDelta / 1_000_000.0 / worldTimeDelta);
         if (!Float.isFinite(measuredMspt) || measuredMspt <= 0f) {
             return;
         }
