@@ -95,6 +95,7 @@ public class WawlaWidget extends HudModule {
     @Nullable
     public Runnable prepareAndDraw(GuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
         TargetInfo displayTarget = resolveTarget(editorMode);
+
         // todo: fix item fading
         fadeAnim.tick(deltaSeconds);
         if (displayTarget != null) {
@@ -112,7 +113,7 @@ public class WawlaWidget extends HudModule {
         float textBlockHeight = lineHeight * 2f + LINE_GAP;
         float contentHeight = Math.max(ICON_SIZE, textBlockHeight);
 
-        String titleMini = renderTarget.displayName();
+        String titleMini = "<color:" + Colors.rgbHex(TITLE_COLOR) + ">" + (renderTarget.displayName() == null ? renderTarget.entityName() : renderTarget.displayName()) + "</color>";
         String secondaryMini = renderTarget.showEntityHealth() ? "<white>" + renderTarget.sourceName() + "</white> <color:#ff5555>❤</color>" : "<i><color:" + Colors.rgbHex(SOURCE_COLOR) + ">" + renderTarget.sourceName() + "</color></i>";
 
         float line1Width = glRenderer.measureMiniMessageTextWidth(titleMini);
@@ -146,14 +147,14 @@ public class WawlaWidget extends HudModule {
             if (!mirrorIconAndText) {
                 glRenderer.drawGuiItem(renderTarget.iconStack(), panelPadding, iconY);
                 float textX = panelPadding + ICON_SIZE + ICON_TEXT_GAP;
-                glRenderer.drawText(titleMini, textX, textY, 0xffffffff, false, false);
+                glRenderer.drawMiniMessageText(titleMini, textX, textY, false);
                 glRenderer.drawMiniMessageText(secondaryMini, textX, textY + lineHeight + LINE_GAP, false);
             }
             else {
                 float iconX = layoutWidth - panelPadding - ICON_SIZE;
                 glRenderer.drawGuiItem(renderTarget.iconStack(), iconX, iconY);
                 float textRight = iconX - ICON_TEXT_GAP;
-                glRenderer.drawText(titleMini, textRight - line1Width, textY, 0xffffffff, false, false);
+                glRenderer.drawMiniMessageText(titleMini, textRight - line1Width, textY, false);
                 glRenderer.drawMiniMessageText(secondaryMini, textRight - line2Width, textY + lineHeight + LINE_GAP, false);
             }
             if (renderBreakBar) {
@@ -174,7 +175,7 @@ public class WawlaWidget extends HudModule {
     @Nullable
     private TargetInfo resolveTarget(boolean editorMode) {
         if (editorMode) {
-            return new TargetInfo("Sandstone", "Minecraft", new ItemStack(Items.SANDSTONE), false, 0.65f, true);
+            return new TargetInfo("Sandstone", "Minecraft", null, new ItemStack(Items.SANDSTONE), false, 0.65f, true);
         }
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) {
@@ -194,11 +195,12 @@ public class WawlaWidget extends HudModule {
             Item iconItem = block.asItem();
             ItemStack iconStack = iconItem == Items.AIR ? new ItemStack(Items.SANDSTONE) : new ItemStack(iconItem);
             float breakProgress = resolveBreakProgress(mc, blockPos);
-            return new TargetInfo(displayName, sourceName, iconStack, false, breakProgress, breakProgress > 0f);
+            return new TargetInfo(displayName, null, sourceName, iconStack, false, breakProgress, breakProgress > 0f);
         }
         if (crosshairTarget.getType() == HitResult.Type.ENTITY && crosshairTarget instanceof EntityHitResult entityHit) {
             Entity entity = entityHit.getEntity();
             String displayName = entity.getName().getString();
+            String entityName = entity.getType().getClass().getSimpleName();
             String sourceName = formatSourceName(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).getNamespace());
             ItemStack iconStack;
             if (entity instanceof Player player) {
@@ -212,7 +214,7 @@ public class WawlaWidget extends HudModule {
             if (showHealth) {
                 sourceName = formatHealthLine((LivingEntity) entity);
             }
-            return new TargetInfo(displayName, sourceName, iconStack, showHealth, 0f, false);
+            return new TargetInfo(displayName, entityName, sourceName, iconStack, showHealth, 0f, false);
         }
         return null;
     }
@@ -229,6 +231,6 @@ public class WawlaWidget extends HudModule {
         return Mth.clamp(accessor.fascinatedutils$getCurrentBreakingProgress(), 0f, 1f);
     }
 
-    private record TargetInfo(String displayName, String sourceName, ItemStack iconStack, boolean showEntityHealth,
+    private record TargetInfo(String displayName, String entityName, String sourceName, ItemStack iconStack, boolean showEntityHealth,
                               float breakProgress, boolean showBreakBar) {}
 }
