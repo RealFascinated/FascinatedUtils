@@ -114,7 +114,8 @@ public class WawlaWidget extends HudModule {
         float contentHeight = Math.max(ICON_SIZE, textBlockHeight);
 
         String displayName = renderTarget.displayName();
-        String titleMini = "<color:" + Colors.rgbHex(TITLE_COLOR) + ">" + (displayName == null || displayName.trim().isEmpty() ? renderTarget.entityName() : displayName) + "</color>";
+        String strippedDisplayName = displayName == null ? "" : displayName.replaceAll("§.", "").trim();
+        String titleMini = "<color:" + Colors.rgbHex(TITLE_COLOR) + ">" + (strippedDisplayName.isEmpty() ? renderTarget.entityName() : displayName) + "</color>";
         String secondaryMini = renderTarget.showEntityHealth() ? "<white>" + renderTarget.sourceName() + "</white> <color:#ff5555>❤</color>" : "<i><color:" + Colors.rgbHex(SOURCE_COLOR) + ">" + renderTarget.sourceName() + "</color></i>";
 
         float line1Width = glRenderer.measureMiniMessageTextWidth(titleMini);
@@ -201,7 +202,7 @@ public class WawlaWidget extends HudModule {
         if (crosshairTarget.getType() == HitResult.Type.ENTITY && crosshairTarget instanceof EntityHitResult entityHit) {
             Entity entity = entityHit.getEntity();
             String displayName = entity.getName().getString();
-            String entityName = entity.getType().getClass().getSimpleName();
+            String entityName = entity.getType().getDescription().getString();
             String sourceName = formatSourceName(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).getNamespace());
             ItemStack iconStack;
             if (entity instanceof Player player) {
