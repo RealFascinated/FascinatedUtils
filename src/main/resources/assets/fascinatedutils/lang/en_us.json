@@ -204,6 +204,8 @@
   "fascinatedutils.module.speed.show_peak.description": "Shows the highest speed reached in the last second.",
   "fascinatedutils.module.speed.show_average.display_name": "Show Average Speed",
   "fascinatedutils.module.speed.show_average.description": "Shows your average speed over the last second.",
+  "fascinatedutils.module.itemtooltip.gap_above_info.display_name": "Gap Above Info",
+  "fascinatedutils.module.itemtooltip.gap_above_info.description": "Adds a blank line between the item name and the extra info lines in the tooltip.",
   "fascinatedutils.module.itemtooltip.show_item_size.display_name": "Show Item Size",
   "fascinatedutils.module.itemtooltip.show_item_size.description": "Shows the byte size of the item's data in the tooltip.",
   "fascinatedutils.module.process_memory.memory_format.display_name": "Memory Format",
