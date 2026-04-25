@@ -70,6 +70,7 @@ public class WawlaWidget extends HudModule {
     private TargetInfo lastTarget;
     private float smoothedBreakProgress;
     private final FadeInAnim fadeAnim = new FadeInAnim(100f);
+    private final FadeInAnim breakBarAnim = new FadeInAnim(150f);
 
     /**
      * Registers a block extension that provides extra display data for a specific block.
@@ -98,6 +99,7 @@ public class WawlaWidget extends HudModule {
         showBorder.addSubSetting(borderThickness);
         showBorder.addSubSetting(borderColor);
 
+        // Block extensions
         registerBlockExtension(new CropGrowthExtension((CropBlock) Blocks.WHEAT));
         registerBlockExtension(new CropGrowthExtension((CropBlock) Blocks.CARROTS));
         registerBlockExtension(new CropGrowthExtension((CropBlock) Blocks.POTATOES));
@@ -117,6 +119,7 @@ public class WawlaWidget extends HudModule {
         registerBlockExtension(new SculkSensorExtension((SculkSensorBlock) Blocks.CALIBRATED_SCULK_SENSOR));
         registerBlockExtension(new FarmlandExtension((FarmlandBlock) Blocks.FARMLAND));
 
+        // Entity extensions
         registerEntityExtension(new HealthExtension());
     }
 
@@ -127,6 +130,7 @@ public class WawlaWidget extends HudModule {
 
         // todo: fix item fading
         fadeAnim.tick(deltaSeconds);
+        breakBarAnim.tick(deltaSeconds);
         if (displayTarget != null) {
             lastTarget = displayTarget;
             fadeAnim.show();
@@ -165,12 +169,19 @@ public class WawlaWidget extends HudModule {
         float panelPadding = getPadding();
 
         if (target.showBreakBar()) {
-            smoothedBreakProgress = Mth.lerp(Mth.clamp(deltaSeconds * BREAK_BAR_LERP_SPEED, 0f, 1f), smoothedBreakProgress, Mth.clamp(target.breakProgress(), 0f, 1f));
+            float targetBreakProgress = Mth.clamp(target.breakProgress(), 0f, 1f);
+            // Move forward proportionally per tick (like WTHIT), backward at the normal lerp speed
+            float lerpFactor = targetBreakProgress >= smoothedBreakProgress
+                ? Mth.clamp(deltaSeconds * 20f, 0f, 1f)
+                : Mth.clamp(deltaSeconds * BREAK_BAR_LERP_SPEED, 0f, 1f);
+            smoothedBreakProgress = Mth.lerp(lerpFactor, smoothedBreakProgress, targetBreakProgress);
+            breakBarAnim.show();
         } else {
             smoothedBreakProgress = 0f;
+            breakBarAnim.hide();
         }
 
-        boolean renderBreakBar = target.showBreakBar() && smoothedBreakProgress > 0.001f;
+        boolean renderBreakBar = breakBarAnim.isVisible();
         float layoutWidth = Math.max(getMinWidth(), panelPadding * 2f + ICON_SIZE + ICON_TEXT_GAP + textBlockWidth);
         float layoutHeight = panelPadding * 2f + contentHeight;
         getHudState().setLastLayoutWidth(layoutWidth);
@@ -179,6 +190,7 @@ public class WawlaWidget extends HudModule {
         getHudState().setCommittedLayoutHeight(layoutHeight);
 
         float fadeAlpha = fadeAnim.progress().value();
+        float breakBarAlpha = breakBarAnim.progress().value();
         float capturedBreakProgress = smoothedBreakProgress;
         return () -> {
             glRenderer.setMultiplyAlpha(fadeAlpha);
@@ -208,10 +220,13 @@ public class WawlaWidget extends HudModule {
 
             if (renderBreakBar) {
                 float barY = layoutHeight - BREAK_BAR_HEIGHT;
-                float barWidth = layoutWidth - panelPadding * 2f;
-                glRenderer.drawRect(panelPadding, barY, barWidth, BREAK_BAR_HEIGHT, BREAK_BAR_BACKGROUND);
-                glRenderer.drawRect(panelPadding, barY, barWidth * capturedBreakProgress, BREAK_BAR_HEIGHT, BREAK_BAR_FILL);
+                // Full width — no padding, fade alpha applied independently so it animates in/out separately from the panel
+                glRenderer.setMultiplyAlpha(fadeAlpha * breakBarAlpha);
+                glRenderer.drawRect(0, barY, layoutWidth, BREAK_BAR_HEIGHT, BREAK_BAR_BACKGROUND);
+                glRenderer.drawRect(0, barY, layoutWidth * capturedBreakProgress, BREAK_BAR_HEIGHT, BREAK_BAR_FILL);
+                glRenderer.setMultiplyAlpha(fadeAlpha);
             }
+
             glRenderer.resetMultiplyAlpha();
         };
     }
@@ -266,9 +281,8 @@ public class WawlaWidget extends HudModule {
             }
             List<String> entitySubtitleLines = ENTITY_EXTENSIONS.stream()
                     .filter(ext -> ext.matches(entity))
-                    .findFirst()
-                    .map(ext -> ext.apply(entity))
-                    .orElse(List.of());
+                    .flatMap(ext -> ext.apply(entity).stream())
+                    .toList();
             return new TargetInfo(displayName, entityName, sourceName, iconStack, 0f, false, entitySubtitleLines);
         }
         return null;
