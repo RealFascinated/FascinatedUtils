@@ -16,6 +16,7 @@
     "MouseHandlerMixin",
     "blockoutline.BlockOutlineMixin",
     "blur.GameRendererMixin",
+    "blur.GlobalSettingsUniformMixin",
     "blur.OptionsMixin",
     "blur.ScreenMixin",
     "bossbar.BossHealthOverlayMixin",
