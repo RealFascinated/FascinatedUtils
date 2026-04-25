@@ -20,19 +20,19 @@ public class FadeInAnim {
     private final AnimHandle progress;
 
     /**
-     * Create a fade animation with the default easing speed.
+     * Create a fade animation with a default duration of 300 ms.
      */
     public FadeInAnim() {
-        this.progress = new AnimHandle(0f).speed(10f);
+        this(300f);
     }
 
     /**
-     * Create a fade animation with a custom easing speed.
+     * Create a fade animation that completes (to ~95%) in the given duration.
      *
-     * @param speed easing speed passed to the underlying {@link AnimHandle}
+     * @param durationMs time to reach ~95% of the target value, in milliseconds
      */
-    public FadeInAnim(float speed) {
-        this.progress = new AnimHandle(0f).speed(speed);
+    public FadeInAnim(float durationMs) {
+        this.progress = new AnimHandle(0f).speed(3000f / durationMs);
     }
 
     /**

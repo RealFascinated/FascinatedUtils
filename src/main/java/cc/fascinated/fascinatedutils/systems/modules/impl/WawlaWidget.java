@@ -45,7 +45,7 @@ public class WawlaWidget extends HudModule {
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
     private float smoothedBreakProgress;
-    private final FadeInAnim fadeAnim = new FadeInAnim(35f);
+    private final FadeInAnim fadeAnim = new FadeInAnim(100f);
     @Nullable
     private TargetInfo lastTarget;
 

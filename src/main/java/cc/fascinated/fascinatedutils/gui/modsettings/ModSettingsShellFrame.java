@@ -91,13 +91,9 @@ public class ModSettingsShellFrame {
         float titleBarInnerRight = topBar.positionX() + topBar.width() - shellBorderThickness;
         float topBarTabsWidth = Math.max(0f, titleBarInnerRight - titleBarInnerLeft);
         ModSettingsShellLayout.ShellBounds topBarTabsRect = new ModSettingsShellLayout.ShellBounds(titleBarInnerLeft, innerTitleTop, topBarTabsWidth, innerTitleHeight);
-        float scrimAlpha = 1f;
         Matrix3x2fStack drawMatrices = graphics.pose();
         drawMatrices.pushMatrix();
         try {
-            glUiRenderer.setMultiplyAlpha(scrimAlpha);
-            glUiRenderer.drawRect(0f, 0f, canvasWidth, canvasHeight, ModSettingsTheme.SCRIM);
-            glUiRenderer.resetMultiplyAlpha();
             drawMatrices.pushMatrix();
             drawMatrices.translate(shellMapping.centerX(), shellMapping.centerY());
             drawMatrices.scale(shellMapping.scale(), shellMapping.scale());

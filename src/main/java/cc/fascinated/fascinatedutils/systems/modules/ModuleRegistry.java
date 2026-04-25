@@ -44,6 +44,7 @@ public class ModuleRegistry {
         modules.add(new FreelookModule());
         modules.add(new TabModule());
         modules.add(new VibrancyModule());
+        modules.add(new BlurModule());
         modules.add(new HurtcamModule());
         modules.add(new BossbarModule());
         modules.add(new InventoryTweaksModule());

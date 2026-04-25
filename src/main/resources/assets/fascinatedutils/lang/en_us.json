@@ -243,5 +243,11 @@
   "fascinatedutils.waypoints.rename_popup.confirm": "Rename",
   "fascinatedutils.waypoints.popup.cancel": "Cancel",
   "fascinatedutils.module.wawla.gap_above_info.display_name": "Gap Above Info",
-  "fascinatedutils.module.wawla.gap_above_info.description": "Adds a gap above the info section in the WAWLA widget."
+  "fascinatedutils.module.wawla.gap_above_info.description": "Adds a gap above the info section in the WAWLA widget.",
+  "fascinatedutils.module.blur.blur_strength.display_name": "Blur Strength",
+  "fascinatedutils.module.blur.blur_strength.description": "How strong the background blur appears when a screen is open.",
+  "fascinatedutils.module.blur.animation_enabled.display_name": "Animate Blur",
+  "fascinatedutils.module.blur.animation_enabled.description": "Smoothly fades the blur in and out when opening or closing a screen.",
+  "fascinatedutils.module.blur.animation_speed.display_name": "Animation Duration",
+  "fascinatedutils.module.blur.animation_speed.description": "How long the blur fade takes when opening or closing a screen, in milliseconds."
 }

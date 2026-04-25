@@ -6,7 +6,6 @@ import cc.fascinated.fascinatedutils.gui.hudeditor.HudEditorChrome;
 import cc.fascinated.fascinatedutils.gui.hudeditor.HudEditorOverlays;
 import cc.fascinated.fascinatedutils.gui.hudeditor.HudEditorPointerSession;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
@@ -23,8 +22,8 @@ import java.util.List;
 public class HUDEditorScreen extends WidgetScreen {
 
     private final HudEditorPointerSession pointerSession = new HudEditorPointerSession();
-    private final FadeInAnim screenAnim = new FadeInAnim(15f);
-    private final FadeInAnim brandingAnim = new FadeInAnim(7f);
+    private final FadeInAnim screenAnim = new FadeInAnim(200f);
+    private final FadeInAnim brandingAnim = new FadeInAnim(450f);
 
     public HUDEditorScreen() {
         super(Component.translatable("fascinatedutils.setting.hud_editor.title"));
@@ -68,7 +67,6 @@ public class HUDEditorScreen extends WidgetScreen {
         deltaSeconds = Mth.clamp(deltaSeconds, 0f, 1f);
         screenAnim.tick(deltaSeconds);
         screenAnim.show();
-        screenAnim.render(guiRenderer, () -> guiRenderer.drawRect(0f, 0f, canvasWidth, canvasHeight, ModSettingsTheme.SCRIM));
 
         if (pointerSession.dragging() != null) {
             HudEditorOverlays.drawEditorCenterCrosshair(guiRenderer, canvasWidth, canvasHeight);

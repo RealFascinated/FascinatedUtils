@@ -17,7 +17,7 @@ public class ClientPacketListenerDeathMixin {
     @Inject(method = "handlePlayerCombatKill", at = @At("HEAD"))
     private void fascinatedutils$onPlayerCombatKill(ClientboundPlayerCombatKillPacket packet, CallbackInfo ci) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null) {
+        if (!minecraft.isSameThread() || minecraft.player == null) {
             return;
         }
         Entity entity = minecraft.level.getEntity(packet.playerId());

@@ -15,6 +15,11 @@ public abstract class WidgetScreen extends Screen {
         super(title);
     }
 
+    @Override
+    public boolean isInGameUi() {
+        return true;
+    }
+
     /**
      * Primary paint entry; called with cleared GUI state and framebuffer-space projection (see mixin).
      *
