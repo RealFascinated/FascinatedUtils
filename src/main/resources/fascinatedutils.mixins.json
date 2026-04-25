@@ -49,6 +49,7 @@
     "turboparticles.ParticleEngineAccessor",
     "turboparticles.ParticleEngineMixin",
     "turboparticles.SingleQuadParticleMixin",
+    "waypoints.ClientPacketListenerDeathMixin",
     "waypoints.LevelRendererMixin",
     "zoom.CameraMixin",
     "zoom.HeldItemRendererMixin",

@@ -1,12 +1,16 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
 import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
+import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
+import cc.fascinated.fascinatedutils.event.impl.PlayerDeathEvent;
 import cc.fascinated.fascinatedutils.gui.screens.WaypointCreateScreen;
 import cc.fascinated.fascinatedutils.gui.screens.WaypointsScreen;
+import cc.fascinated.fascinatedutils.systems.config.ModConfig;
+import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.WaypointType;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -29,6 +33,7 @@ public class WaypointsModule extends Module {
     private final BooleanSetting labelOnLook = BooleanSetting.builder().id("label_on_look").defaultValue(false).build();
     private final BooleanSetting showBorder = BooleanSetting.builder().id("show_border").defaultValue(true).build();
     private final SliderSetting labelPadding = SliderSetting.builder().id("label_padding").defaultValue(2f).minValue(1f).maxValue(8f).step(1f).build();
+    private final BooleanSetting deathPoints = BooleanSetting.builder().id("death_points").defaultValue(true).build();
 
     public WaypointsModule() {
         super("Waypoints", ModuleCategory.GENERAL);
@@ -38,6 +43,7 @@ public class WaypointsModule extends Module {
         addSetting(labelOnLook);
         addSetting(showBorder);
         addSetting(labelPadding);
+        addSetting(deathPoints);
     }
 
     @EventHandler
@@ -75,5 +81,26 @@ public class WaypointsModule extends Module {
         }
         ServerData serverData = minecraft.getCurrentServer();
         return "mp:" + (serverData != null ? serverData.ip : "unknown");
+    }
+
+    @EventHandler
+    private void onPlayerDeath(PlayerDeathEvent event) {
+        if (!isEnabled() || !deathPoints.getValue()) {
+            return;
+        }
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.level == null) {
+            return;
+        }
+        double x = event.player().getX();
+        double y = event.player().getY();
+        double z = event.player().getZ();
+        String dimension = minecraft.level.dimension().identifier().toString();
+        String worldKey = resolveWorldKey(minecraft);
+        int deathCount = (int) ModConfig.waypoints().getForWorld(worldKey).stream()
+                .filter(waypoint -> waypoint.getType() == WaypointType.DEATH)
+                .count() + 1;
+        ModConfig.waypoints().create("Death #" + deathCount, worldKey, WaypointType.DEATH, x, y, z, dimension,
+                new SettingColor(255, 50, 50, 255));
     }
 }

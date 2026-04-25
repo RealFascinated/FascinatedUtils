@@ -220,6 +220,8 @@
   "fascinatedutils.module.waypoints.show_border.description": "Renders a colored border outline around the waypoint label using the waypoint color.",
   "fascinatedutils.module.waypoints.label_padding.display_name": "Label Padding",
   "fascinatedutils.module.waypoints.label_padding.description": "Controls the padding around the waypoint name label.",
+  "fascinatedutils.module.waypoints.death_points.display_name": "Death Points",
+  "fascinatedutils.module.waypoints.death_points.description": "Automatically creates a waypoint at your death location when you die.",
   "fascinatedutils.waypoints.title": "Waypoints",
   "fascinatedutils.waypoints.add": "Add Waypoint",
   "fascinatedutils.waypoints.create.title": "Create Waypoint",
