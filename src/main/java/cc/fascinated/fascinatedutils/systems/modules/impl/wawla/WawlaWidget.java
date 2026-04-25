@@ -177,8 +177,10 @@ public class WawlaWidget extends HudModule {
             smoothedBreakProgress = Mth.lerp(lerpFactor, smoothedBreakProgress, targetBreakProgress);
             breakBarAnim.show();
         } else {
-            smoothedBreakProgress = 0f;
             breakBarAnim.hide();
+            if (!breakBarAnim.isVisible()) {
+                smoothedBreakProgress = 0f;
+            }
         }
 
         boolean renderBreakBar = breakBarAnim.isVisible();
