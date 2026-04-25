@@ -21,7 +21,6 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -33,6 +32,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -41,6 +41,7 @@ import java.util.Map;
 public class WawlaWidget extends HudModule {
 
     private static final Map<Block, WawlaBlockExtension<?>> BLOCK_EXTENSIONS = new HashMap<>();
+    private static final List<WawlaEntityExtension<?>> ENTITY_EXTENSIONS = new ArrayList<>();
     private static TargetInfo editorItem;
 
     private static final float
@@ -79,6 +80,10 @@ public class WawlaWidget extends HudModule {
         BLOCK_EXTENSIONS.put(extension.getBlock(), extension);
     }
 
+    public static void registerEntityExtension(WawlaEntityExtension<?> extension) {
+        ENTITY_EXTENSIONS.add(extension);
+    }
+
     public WawlaWidget() {
         super("wawla", "WAWLA", 0f);
         addSetting(showBackground);
@@ -111,6 +116,8 @@ public class WawlaWidget extends HudModule {
         registerBlockExtension(new SculkSensorExtension((SculkSensorBlock) Blocks.SCULK_SENSOR));
         registerBlockExtension(new SculkSensorExtension((SculkSensorBlock) Blocks.CALIBRATED_SCULK_SENSOR));
         registerBlockExtension(new FarmlandExtension((FarmlandBlock) Blocks.FARMLAND));
+
+        registerEntityExtension(new HealthExtension());
     }
 
     @Override
@@ -150,9 +157,7 @@ public class WawlaWidget extends HudModule {
             subtitleWidths[subtitleIndex] = glRenderer.measureMiniMessageTextWidth(subtitleMinis.get(subtitleIndex));
             subtitleMaxWidth = Math.max(subtitleMaxWidth, subtitleWidths[subtitleIndex]);
         }
-        String sourceMini = target.showEntityHealth()
-                ? "<white>" + target.sourceName() + "</white> <color:#ff5555>❤</color>"
-                : "<i><color:" + Colors.rgbHex(SOURCE_COLOR) + ">" + target.sourceName() + "</color></i>";
+        String sourceMini = "<i><color:" + Colors.rgbHex(SOURCE_COLOR) + ">" + target.sourceName() + "</color></i>";
 
         float titleWidth = glRenderer.measureMiniMessageTextWidth(titleMini);
         float sourceWidth = glRenderer.measureMiniMessageTextWidth(sourceMini);
@@ -221,7 +226,7 @@ public class WawlaWidget extends HudModule {
         if (editorMode) {
             if (editorItem == null) {
                 editorItem = new TargetInfo("Sandstone", null, "Minecraft", new ItemStack(Items.SANDSTONE),
-                        false, 0.65f, true, List.of());
+                        0.65f, true, List.of());
             }
             return editorItem;
         }
@@ -245,7 +250,7 @@ public class WawlaWidget extends HudModule {
             float breakProgress = resolveBreakProgress(mc, blockPos);
             WawlaBlockExtension<?> blockExtension = BLOCK_EXTENSIONS.get(block);
             List<String> subtitleLines = blockExtension != null ? blockExtension.getExtension(blockState) : List.of();
-            return new TargetInfo(displayName, null, sourceName, iconStack, false, breakProgress, breakProgress > 0f, subtitleLines);
+            return new TargetInfo(displayName, null, sourceName, iconStack, breakProgress, breakProgress > 0f, subtitleLines);
         }
         if (crosshairTarget.getType() == HitResult.Type.ENTITY && crosshairTarget instanceof EntityHitResult entityHit) {
             Entity entity = entityHit.getEntity();
@@ -259,11 +264,12 @@ public class WawlaWidget extends HudModule {
             } else {
                 iconStack = SpawnEggItem.byId(entity.getType()).map(ItemStack::new).orElse(ItemStack.EMPTY);
             }
-            boolean showHealth = entity instanceof LivingEntity;
-            if (showHealth) {
-                sourceName = formatHealthLine((LivingEntity) entity);
-            }
-            return new TargetInfo(displayName, entityName, sourceName, iconStack, showHealth, 0f, false, List.of());
+            List<String> entitySubtitleLines = ENTITY_EXTENSIONS.stream()
+                    .filter(ext -> ext.matches(entity))
+                    .findFirst()
+                    .map(ext -> ext.apply(entity))
+                    .orElse(List.of());
+            return new TargetInfo(displayName, entityName, sourceName, iconStack, 0f, false, entitySubtitleLines);
         }
         return null;
     }
@@ -283,18 +289,6 @@ public class WawlaWidget extends HudModule {
         return builder.toString();
     }
 
-    private static String formatHealthLine(LivingEntity entity) {
-        return formatNumber(entity.getHealth()) + "/" + formatNumber(entity.getMaxHealth());
-    }
-
-    private static String formatNumber(float value) {
-        if (!Float.isFinite(value)) {
-            return "0";
-        }
-        float rounded = Math.round(value * 10f) / 10f;
-        return Math.abs(rounded - Math.round(rounded)) < 0.001f ? Integer.toString(Math.round(rounded)) : Float.toString(rounded);
-    }
-
     private float resolveBreakProgress(Minecraft mc, BlockPos blockPos) {
         if (mc.gameMode == null || !mc.gameMode.isDestroying()) {
             return 0f;
@@ -308,6 +302,6 @@ public class WawlaWidget extends HudModule {
     }
 
     private record TargetInfo(String displayName, String entityName, String sourceName, ItemStack iconStack,
-                              boolean showEntityHealth, float breakProgress, boolean showBreakBar,
+                              float breakProgress, boolean showBreakBar,
                               List<String> subtitleLines) {}
 }
