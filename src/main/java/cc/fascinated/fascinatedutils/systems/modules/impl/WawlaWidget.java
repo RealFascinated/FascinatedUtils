@@ -113,7 +113,8 @@ public class WawlaWidget extends HudModule {
         float textBlockHeight = lineHeight * 2f + LINE_GAP;
         float contentHeight = Math.max(ICON_SIZE, textBlockHeight);
 
-        String titleMini = "<color:" + Colors.rgbHex(TITLE_COLOR) + ">" + (renderTarget.displayName() == null ? renderTarget.entityName() : renderTarget.displayName()) + "</color>";
+        String displayName = renderTarget.displayName();
+        String titleMini = "<color:" + Colors.rgbHex(TITLE_COLOR) + ">" + (displayName == null || displayName.trim().isEmpty() ? renderTarget.entityName() : displayName) + "</color>";
         String secondaryMini = renderTarget.showEntityHealth() ? "<white>" + renderTarget.sourceName() + "</white> <color:#ff5555>❤</color>" : "<i><color:" + Colors.rgbHex(SOURCE_COLOR) + ">" + renderTarget.sourceName() + "</color></i>";
 
         float line1Width = glRenderer.measureMiniMessageTextWidth(titleMini);
