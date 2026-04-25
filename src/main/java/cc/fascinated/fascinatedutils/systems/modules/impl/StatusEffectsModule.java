@@ -163,7 +163,7 @@ public class StatusEffectsModule extends HudModule {
                 float nameY = textBlockY;
                 float durationY = textBlockY + fontHeight + TEXT_LINE_GAP;
 
-                float flashAlpha = effectRow.iconAlpha();
+                float flashAlpha = effectRow.flashAlpha();
                 if (rightAligned) {
                     float iconX = sharedIconXWhenRight;
                     if (detailedLayout) {
@@ -215,7 +215,7 @@ public class StatusEffectsModule extends HudModule {
         return null;
     }
 
-    private float iconAlpha(MobEffectInstance effectInstance) {
+    private float durationFlashAlpha(MobEffectInstance effectInstance) {
         if (effectInstance.isAmbient()) {
             return 1f;
         }
@@ -226,14 +226,8 @@ public class StatusEffectsModule extends HudModule {
         if (!effectInstance.endsWithin(flashWindowTicks)) {
             return 1f;
         }
-
-        int remainingDuration = effectInstance.getDuration();
-        float remainingFraction = Mth.clamp(remainingDuration / (float) flashWindowTicks, 0f, 1f);
-        float usedFraction = 1f - remainingFraction;
-        float baseAlpha = remainingFraction * 0.5f;
-        float pulseAlpha = Mth.cos(remainingDuration * (float) Math.PI / 5.0f) * Mth.clamp(usedFraction * 0.25f, 0.0f, 0.25f);
-        float alpha = baseAlpha + pulseAlpha;
-        return Mth.clamp(alpha, 0.0f, 1.0f);
+        int remainingSeconds = effectInstance.getDuration() / 20;
+        return (remainingSeconds % 2 == 0) ? 1f : 0f;
     }
 
     private List<EffectRow> buildEffectRows(boolean editorMode) {
@@ -253,7 +247,7 @@ public class StatusEffectsModule extends HudModule {
                 for (MobEffectInstance effectInstance : activeEffects) {
                     String effectName = formatEffectNameWithAmplifier(effectInstance, includeAmplifier);
                     String durationText = DateUtils.formatDuration(effectInstance.getDuration());
-                    rows.add(new EffectRow(getMobEffectSprite(effectInstance.getEffect()), effectName, durationText, iconAlpha(effectInstance)));
+                    rows.add(new EffectRow(getMobEffectSprite(effectInstance.getEffect()), effectName, durationText, durationFlashAlpha(effectInstance)));
                 }
                 return rows;
             }
@@ -293,5 +287,5 @@ public class StatusEffectsModule extends HudModule {
         }
     }
 
-    private record EffectRow(Identifier effectSprite, String nameText, String durationText, float iconAlpha) {}
+    private record EffectRow(Identifier effectSprite, String nameText, String durationText, float flashAlpha) {}
 }
