@@ -112,7 +112,7 @@ public class WawlaWidget extends HudModule {
         float textBlockHeight = lineHeight * 2f + LINE_GAP;
         float contentHeight = Math.max(ICON_SIZE, textBlockHeight);
 
-        String titleMini = "<color:" + Colors.rgbHex(TITLE_COLOR) + ">" + renderTarget.displayName() + "</color>";
+        String titleMini = renderTarget.displayName();
         String secondaryMini = renderTarget.showEntityHealth() ? "<white>" + renderTarget.sourceName() + "</white> <color:#ff5555>❤</color>" : "<i><color:" + Colors.rgbHex(SOURCE_COLOR) + ">" + renderTarget.sourceName() + "</color></i>";
 
         float line1Width = glRenderer.measureMiniMessageTextWidth(titleMini);
@@ -146,14 +146,14 @@ public class WawlaWidget extends HudModule {
             if (!mirrorIconAndText) {
                 glRenderer.drawGuiItem(renderTarget.iconStack(), panelPadding, iconY);
                 float textX = panelPadding + ICON_SIZE + ICON_TEXT_GAP;
-                glRenderer.drawMiniMessageText(titleMini, textX, textY, false);
+                glRenderer.drawText(titleMini, textX, textY, 0xffffffff, false, false);
                 glRenderer.drawMiniMessageText(secondaryMini, textX, textY + lineHeight + LINE_GAP, false);
             }
             else {
                 float iconX = layoutWidth - panelPadding - ICON_SIZE;
                 glRenderer.drawGuiItem(renderTarget.iconStack(), iconX, iconY);
                 float textRight = iconX - ICON_TEXT_GAP;
-                glRenderer.drawMiniMessageText(titleMini, textRight - line1Width, textY, false);
+                glRenderer.drawText(titleMini, textRight - line1Width, textY, 0xffffffff, false, false);
                 glRenderer.drawMiniMessageText(secondaryMini, textRight - line2Width, textY + lineHeight + LINE_GAP, false);
             }
             if (renderBreakBar) {
