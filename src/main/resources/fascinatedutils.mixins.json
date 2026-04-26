@@ -37,6 +37,8 @@
     "scoreboard.GuiMixin",
     "scoreboard.GuiScoreDisplayOrderAccessor",
     "soundfilter.SoundEngineMixin",
+    "particlefilter.ParticleEngineMixin",
+    "particlefilter.ClientLevelParticleMixin",
     "statuseffects.GuiMixin",
     "tab.PlayerListHudMixin",
     "tab.PlayerTabOverlayMixin",
