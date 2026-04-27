@@ -246,7 +246,9 @@ public class StatusEffectsModule extends HudModule {
                 List<EffectRow> rows = new ArrayList<>(activeEffects.size());
                 for (MobEffectInstance effectInstance : activeEffects) {
                     String effectName = formatEffectNameWithAmplifier(effectInstance, includeAmplifier);
-                    String durationText = DateUtils.formatDuration(effectInstance.getDuration());
+                    String durationText = effectInstance.isInfiniteDuration()
+                            ? Component.translatable("effect.duration.infinite").getString()
+                            : DateUtils.formatDuration(effectInstance.getDuration());
                     rows.add(new EffectRow(getMobEffectSprite(effectInstance.getEffect()), effectName, durationText, durationFlashAlpha(effectInstance)));
                 }
                 return rows;
