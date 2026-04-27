@@ -292,6 +292,11 @@ public class GuiRenderer implements UIRenderer {
         backend.drawSprite(spriteId, positionX, positionY, width, height, tintArgb);
     }
 
+    public void drawSprite(Identifier spriteId, int textureWidth, int textureHeight, int sourceX, int sourceY,
+                           float positionX, float positionY, float width, float height) {
+        backend.drawSprite(spriteId, textureWidth, textureHeight, sourceX, sourceY, positionX, positionY, width, height);
+    }
+
     @Override
     public void pushTranslate(float offsetX, float offsetY) {
         backend.pushTranslate(offsetX, offsetY);

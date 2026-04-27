@@ -358,6 +358,19 @@ public class Renderer2D {
         graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, drawX, drawY, drawWidth, drawHeight, withAlpha(tintArgb));
     }
 
+    public void drawSprite(Identifier spriteId, int textureWidth, int textureHeight, int sourceX, int sourceY,
+                           float positionX, float positionY, float width, float height) {
+        if (width < 1e-3f || height < 1e-3f) {
+            return;
+        }
+        flushMeshSegmentBeforeImmediateDraw();
+        int drawX = Math.round(positionX);
+        int drawY = Math.round(positionY);
+        int drawWidth = Math.max(1, Math.round(width));
+        int drawHeight = Math.max(1, Math.round(height));
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, textureWidth, textureHeight, sourceX, sourceY, drawX, drawY, drawWidth, drawHeight);
+    }
+
     public void pushTranslate(float offsetX, float offsetY) {
         graphics.pose().pushMatrix();
         graphics.pose().translate(offsetX, offsetY);

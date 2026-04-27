@@ -19,6 +19,7 @@
     "blur.GlobalSettingsUniformMixin",
     "blur.OptionsMixin",
     "blur.ScreenMixin",
+    "bossbar.BossHealthOverlayEventsAccessor",
     "bossbar.BossHealthOverlayMixin",
     "confirmdisconnect.GameMenuScreenMixin",
     "fogcustomizer.AtmosphericFogModifierMixin",

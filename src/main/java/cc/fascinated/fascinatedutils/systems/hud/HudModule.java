@@ -33,7 +33,7 @@ public abstract class HudModule extends Module implements HudRenderableModule {
     public static final String SETTING_PADDING = "hud_padding";
 
     private final HudDefaults defaults;
-    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
+    private final SliderSetting padding;
 
     @Getter
     private final String id;
@@ -47,6 +47,7 @@ public abstract class HudModule extends Module implements HudRenderableModule {
         this.defaults = defaults;
         this.id = widgetId;
         this.minWidth = minWidth;
+        this.padding = HudWidgetAppearanceBuilders.padding().defaultValue(defaults.defaultPadding()).build();
 
         this.hudState.setHudAnchor(defaults.defaultAnchor());
         this.hudState.setAnchorOffsetX(defaults.defaultXOffset());
