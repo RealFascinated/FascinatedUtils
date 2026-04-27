@@ -25,10 +25,16 @@ public sealed interface HudContent {
         }
     }
 
-    record ItemRow(ItemStack stack, String text) {
+    record ItemRow(List<ItemStack> leadingStacks, ItemStack stack, String text) {
         public ItemRow {
+            Objects.requireNonNull(leadingStacks, "leadingStacks cannot be null");
             Objects.requireNonNull(stack, "stack cannot be null");
             Objects.requireNonNull(text, "text cannot be null");
+            leadingStacks = List.copyOf(leadingStacks);
+        }
+
+        public ItemRow(ItemStack stack, String text) {
+            this(List.of(), stack, text);
         }
     }
 }

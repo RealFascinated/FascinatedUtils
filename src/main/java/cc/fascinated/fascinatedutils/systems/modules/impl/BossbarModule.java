@@ -132,7 +132,7 @@ public class BossbarModule extends HudModule {
         List<BossRow> rowsCopy = List.copyOf(rows);
         boolean textShadow = isTextShadowEnabled();
         return () -> {
-            drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
+            drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
             glRenderer.endRenderSegment();
 
             float barX = padding + (finalContentWidth - BAR_WIDTH) * 0.5f;

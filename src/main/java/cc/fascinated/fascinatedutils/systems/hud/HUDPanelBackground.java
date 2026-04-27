@@ -19,9 +19,11 @@ public class HUDPanelBackground {
      * @param backgroundArgb packed ARGB fill color
      * @param borderArgb     packed ARGB border color
      */
-    public static void drawPanelChrome(GuiRenderer glRenderer, float width, float height, boolean showBackground, float borderThickness, boolean showBorder, float cornerRadius, int backgroundArgb, int borderArgb) {
+    public static void drawPanelChrome(GuiRenderer glRenderer, float width, float height, boolean showBackground, float borderThickness, boolean showBorder, float cornerRadius, int backgroundArgb, int borderArgb, boolean editorMode) {
         if (!showBackground && !showBorder) {
-            drawDottedOutline(glRenderer, width, height);
+            if (editorMode) {
+                drawDottedOutline(glRenderer, width, height);
+            }
             return;
         }
         float strokePx = Math.max(1f, borderThickness);

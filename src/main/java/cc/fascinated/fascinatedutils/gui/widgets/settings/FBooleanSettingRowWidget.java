@@ -21,6 +21,7 @@ import java.util.function.BooleanSupplier;
 
 public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnimatable {
     private static final Map<BooleanSetting, AnimHandle> TOGGLE_ANIM_CACHE = new IdentityHashMap<>();
+    private static final float SUB_SETTINGS_CHEVRON_EXTRA_PX = 8f;
 
     private final BooleanSetting booleanSetting;
     private final AnimHandle toggleProgressAnim;
@@ -201,7 +202,7 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
         float bodyLeft = x() + padX;
         float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + outerWidth);
         // Always reserve chevron space so plain and chevron booleans cap at the same X.
-        float chevronReserve = SettingRowResetLayout.glyphBoxPx() + SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP;
+        float chevronReserve = chevronBoxPx() + SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP;
         float toggleLeft = Math.max(bodyLeft, resetLeft - chevronReserve - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - toggleW);
         return new float[]{toggleLeft, titleOriginY, toggleW, toggleH};
     }
@@ -210,10 +211,14 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
         float[] toggle = toggleBounds();
         float toggleH = toggle[3];
         float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + outerWidth);
-        float box = SettingRowResetLayout.glyphBoxPx();
+        float box = chevronBoxPx();
         float chevronLeft = resetLeft - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - box;
-        float chevronTop = SettingRowResetLayout.verticallyCenteredTop(toggle[1], toggleH);
+        float chevronTop = toggle[1] + (toggleH - box) * 0.5f;
         return new float[]{chevronLeft, chevronTop, box};
+    }
+
+    private float chevronBoxPx() {
+        return SettingRowResetLayout.glyphBoxPx() + SUB_SETTINGS_CHEVRON_EXTRA_PX;
     }
 
     private float[] inlineResetSquare() {

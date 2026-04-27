@@ -32,8 +32,9 @@ public class Icons {
         if (box < 2f) {
             return;
         }
-        float drawX = positionX + (width - box) * 0.5f;
-        float drawY = positionY + (height - box) * 0.5f;
-        renderer.drawTexture(chrome.getId(), drawX, drawY, box, box, tintArgb);
+        float snappedBox = Math.max(1f, (float) Math.round(box));
+        float drawX = (float) Math.floor(positionX + (width - snappedBox) * 0.5f);
+        float drawY = (float) Math.floor(positionY + (height - snappedBox) * 0.5f);
+        renderer.drawTexture(chrome.getId(), drawX, drawY, snappedBox, snappedBox, tintArgb);
     }
 }

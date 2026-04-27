@@ -25,7 +25,7 @@ public class HudEditorChrome {
     public static final float SETTINGS_BUTTON_SIZE = 13f;
     private static final int SELECTED_COLOR = UiColor.argb("#913de2");
     private static final int SCALE_HANDLE_FILL = UiColor.argb("#ede4fa");
-    private static final float BUTTON_ICON_INSET = 2f;
+    private static final float BUTTON_ICON_INSET = 1f;
 
     /**
      * Widgets eligible for layout editing: matches {@link HUDManager#renderHUD}

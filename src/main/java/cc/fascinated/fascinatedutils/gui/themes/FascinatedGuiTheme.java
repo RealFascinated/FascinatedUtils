@@ -51,7 +51,7 @@ public class FascinatedGuiTheme extends GuiTheme {
     private static final int WIDGET_STATE_LABEL = UiColor.argb("#ffffff");
     private static final int WIDGET_STATE_LABEL_MUTED = UiColor.argb("#99ffffff");
     private static final float CARD_CORNER_RADIUS_PX = 10f;
-    private static final float RESET_GLYPH_SIZE_PX = 7f;
+    private static final float RESET_GLYPH_SIZE_PX = 9f;
 
     @Override
     public int background() {

@@ -77,7 +77,7 @@ public abstract class HudModule extends Module implements HudRenderableModule {
         if (content == null) {
             return null;
         }
-        return HudContentRenderer.prepare(glRenderer, content, this);
+        return HudContentRenderer.prepare(glRenderer, content, this, editorMode);
     }
 
     public HudAnchorContentAlignment.Horizontal hudContentHorizontalAlignment() {
@@ -319,14 +319,14 @@ public abstract class HudModule extends Module implements HudRenderableModule {
         return getSetting(SliderSetting.class, SETTING_ROUNDING_RADIUS).map(s -> s.getValue().floatValue()).orElse(4f);
     }
 
-    public void drawHUDPanelBackground(GuiRenderer glRenderer, float layoutWidth, float layoutHeight) {
+    public void drawHUDPanelBackground(GuiRenderer glRenderer, float layoutWidth, float layoutHeight, boolean editorMode) {
         boolean showBg = getSetting(BooleanSetting.class, SETTING_BACKGROUND).map(BooleanSetting::isEnabled).orElse(false);
         boolean showBorder = getSetting(BooleanSetting.class, SETTING_SHOW_BORDER).map(BooleanSetting::isEnabled).orElse(false);
         float thickness = getSetting(SliderSetting.class, SETTING_BORDER_THICKNESS).map(s -> s.getValue().floatValue()).orElse(2f);
         float cornerRadius = getCornerRadius();
         int backgroundArgb = getSetting(ColorSetting.class, SETTING_BACKGROUND_COLOR).map(ColorSetting::getResolvedArgb).orElse(0x55000000);
         int borderArgb = getSetting(ColorSetting.class, SETTING_BORDER_COLOR).map(ColorSetting::getResolvedArgb).orElse(0xC0D0D7E1);
-        HUDPanelBackground.drawPanelChrome(glRenderer, layoutWidth, layoutHeight, showBg, thickness, showBorder, cornerRadius, backgroundArgb, borderArgb);
+        HUDPanelBackground.drawPanelChrome(glRenderer, layoutWidth, layoutHeight, showBg, thickness, showBorder, cornerRadius, backgroundArgb, borderArgb, editorMode);
     }
 
     @Override

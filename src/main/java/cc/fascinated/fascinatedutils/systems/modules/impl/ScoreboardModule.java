@@ -65,7 +65,7 @@ public class ScoreboardModule extends HudModule {
         float lineHeight = glRenderer.getFontHeight();
         if (objective == null) {
             if (editorMode) {
-                return buildScoreboardDraw(glRenderer, lineHeight, PREVIEW_TITLE, PREVIEW_ROWS);
+                return buildScoreboardDraw(glRenderer, lineHeight, PREVIEW_TITLE, PREVIEW_ROWS, editorMode);
             }
             recordHudContentSkipped();
             return null;
@@ -83,7 +83,7 @@ public class ScoreboardModule extends HudModule {
             return new ScoreRow(name, scoreText, scoreWidth);
         }).toList();
 
-        return buildScoreboardDraw(glRenderer, lineHeight, objective.getDisplayName(), rows);
+        return buildScoreboardDraw(glRenderer, lineHeight, objective.getDisplayName(), rows, editorMode);
     }
 
     @Override
@@ -91,7 +91,7 @@ public class ScoreboardModule extends HudModule {
         return null;
     }
 
-    private Runnable buildScoreboardDraw(GuiRenderer glRenderer, float lineHeight, Component title, List<ScoreRow> rows) {
+    private Runnable buildScoreboardDraw(GuiRenderer glRenderer, float lineHeight, Component title, List<ScoreRow> rows, boolean editorMode) {
         Font font = Minecraft.getInstance().font;
         int titleWidth = font.width(title);
         int spacerWidth = font.width(Component.literal(": "));
@@ -113,7 +113,7 @@ public class ScoreboardModule extends HudModule {
         List<ScoreRow> rowsCopy = List.copyOf(rows);
         boolean textShadow = isTextShadowEnabled();
         return () -> {
-            drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
+            drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
             glRenderer.endRenderSegment();
             float contentRight = layoutWidth - padX;
             float titleX = padX + (contentRight - padX - titleWidth) * 0.5f;

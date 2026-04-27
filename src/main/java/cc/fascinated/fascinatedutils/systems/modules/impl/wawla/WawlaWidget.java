@@ -197,7 +197,7 @@ public class WawlaWidget extends HudModule {
         boolean textShadow = isTextShadowEnabled();
         return () -> {
             glRenderer.setMultiplyAlpha(fadeAlpha);
-            drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
+            drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
             float iconY = panelPadding + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, ICON_SIZE, hudContentVerticalAlignment());
             float textBlockY = panelPadding + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, textBlockHeight, hudContentVerticalAlignment());
             boolean rightAligned = hudContentHorizontalAlignment() == HudAnchorContentAlignment.Horizontal.RIGHT;

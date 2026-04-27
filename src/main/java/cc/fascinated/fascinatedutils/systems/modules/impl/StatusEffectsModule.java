@@ -146,7 +146,7 @@ public class StatusEffectsModule extends HudModule {
 
         boolean textShadow = isTextShadowEnabled();
         return () -> {
-            drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
+            drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
 
             float innerWidth = layoutWidth - padding * 2f;
             float innerHeight = layoutHeight - padding * 2f;

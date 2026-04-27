@@ -150,6 +150,8 @@
   "fascinatedutils.module.armor_hud.show_main_hand.description": "Displays your main-hand item in the equipment display.",
   "fascinatedutils.module.armor_hud.show_off_hand.display_name": "Show Off-Hand",
   "fascinatedutils.module.armor_hud.show_off_hand.description": "Displays your off-hand item in the equipment display.",
+  "fascinatedutils.module.armor_hud.show_off_hand_next_to_main_hand.display_name": "Show Off-Hand Beside Main Hand",
+  "fascinatedutils.module.armor_hud.show_off_hand_next_to_main_hand.description": "Places your off-hand item to the left of your main-hand row instead of on its own row.",
   "fascinatedutils.module.armor_hud.hide_unbreakable_durability.display_name": "Hide Unbreakable Durability",
   "fascinatedutils.module.armor_hud.hide_unbreakable_durability.description": "Hides durability numbers on items that cannot break.",
   "fascinatedutils.module.armor_hud.show_total_item_count.display_name": "Show Total Item Count",

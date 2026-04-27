@@ -119,7 +119,7 @@ public class CoordinatesWidget extends HudModule {
         float capturedLeftColumnWidth = leftColumnWidth;
         boolean textShadow = isTextShadowEnabled();
         return () -> {
-            drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
+            drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
             float availableInnerWidth = layoutWidth - 2f * padding;
             float blockStartX = padding + HudAnchorLayout.horizontalOffsetInInnerBand(availableInnerWidth, innerWidth, hudContentHorizontalAlignment());
             float innerTop = padding;
