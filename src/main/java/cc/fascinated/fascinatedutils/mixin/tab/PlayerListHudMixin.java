@@ -64,7 +64,7 @@ public class PlayerListHudMixin {
                 textX += 12;
                 int color = tabModuleOptional.get().getColoredPing().getValue() ? PingColors.getPingColor(latency) : 0xFFFFFFFF;
                 String miniMessageText = "<color:#" + String.format("%06X", color & 0xFFFFFF) + ">" + formatted + "</color>";
-                graphics.text(textRenderer, parseMiniMessage(miniMessageText), textX, yo, color, false);
+                graphics.text(textRenderer, parseMiniMessage(miniMessageText), textX, yo, color, true);
             }
         }
     }
