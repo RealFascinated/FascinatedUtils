@@ -5,7 +5,7 @@ import cc.fascinated.fascinatedutils.common.TpsColors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
-import cc.fascinated.fascinatedutils.systems.hud.HUDWidgetAnchor;
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;

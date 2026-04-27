@@ -2,8 +2,8 @@ package cc.fascinated.fascinatedutils.systems.hud.content;
 
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HUDPanelBackground;
-import cc.fascinated.fascinatedutils.systems.hud.HudAnchorContentAlignment;
-import cc.fascinated.fascinatedutils.systems.hud.HudAnchorLayout;
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import net.minecraft.client.Minecraft;
 

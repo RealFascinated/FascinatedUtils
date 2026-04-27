@@ -9,6 +9,8 @@ import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.*;
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;

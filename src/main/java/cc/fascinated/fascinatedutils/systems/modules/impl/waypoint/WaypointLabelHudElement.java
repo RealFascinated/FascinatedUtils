@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.hud;
+package cc.fascinated.fascinatedutils.systems.modules.impl.waypoint;
 
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.render.ClientFovEvent;
@@ -8,7 +8,6 @@ import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.Waypoint;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.WaypointsModule;
 import meteordevelopment.orbit.EventHandler;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.minecraft.client.Camera;

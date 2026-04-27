@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.hud;
+package cc.fascinated.fascinatedutils.systems.hud.anchor;
 
 /**
  * Pixel offsets for laying out content inside a padded HUD panel from {@link HudAnchorContentAlignment}.

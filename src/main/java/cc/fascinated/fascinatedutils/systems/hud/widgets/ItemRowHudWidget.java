@@ -1,6 +1,7 @@
-package cc.fascinated.fascinatedutils.systems.hud;
+package cc.fascinated.fascinatedutils.systems.hud.widgets;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.systems.hud.ItemRowHudModule;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 
 import java.util.ArrayList;

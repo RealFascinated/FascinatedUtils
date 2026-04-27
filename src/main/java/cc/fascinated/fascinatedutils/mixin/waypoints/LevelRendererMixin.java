@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.mixin.waypoints;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.Waypoint;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.WaypointsModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.waypoint.WaypointsModule;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;

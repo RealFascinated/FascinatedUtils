@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.modules.impl;
+package cc.fascinated.fascinatedutils.systems.modules.impl.waypoint;
 
 import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;

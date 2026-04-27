@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.gui;
 
 import cc.fascinated.fascinatedutils.systems.hud.HUDModuleWidgetsElement;
-import cc.fascinated.fascinatedutils.systems.hud.WaypointLabelHudElement;
+import cc.fascinated.fascinatedutils.systems.modules.impl.waypoint.WaypointLabelHudElement;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.resources.Identifier;

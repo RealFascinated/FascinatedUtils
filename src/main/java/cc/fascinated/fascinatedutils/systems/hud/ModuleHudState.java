@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
 import lombok.Getter;
 import lombok.Setter;
 

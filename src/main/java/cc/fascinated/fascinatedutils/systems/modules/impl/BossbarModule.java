@@ -6,7 +6,7 @@ import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.mixin.bossbar.BossHealthOverlayEventsAccessor;
-import cc.fascinated.fascinatedutils.systems.hud.HUDWidgetAnchor;
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;

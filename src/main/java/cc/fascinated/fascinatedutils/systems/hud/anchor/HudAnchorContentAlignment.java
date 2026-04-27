@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.hud;
+package cc.fascinated.fascinatedutils.systems.hud.anchor;
 
 /**
  * Derives how HUD panel content should align and which logical edge stays fixed when intrinsic

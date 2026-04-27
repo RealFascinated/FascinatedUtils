@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.ValueSmoother;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
-import cc.fascinated.fascinatedutils.systems.hud.HudAnchorContentAlignment;
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import cc.fascinated.fascinatedutils.turboentities.EntitiesCullTask;
