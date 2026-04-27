@@ -173,14 +173,13 @@ public class BossbarModule extends HudModule {
     }
 
     private @Nullable List<BossRow> buildRows(boolean editorMode) {
-        if (editorMode) {
-            return List.of(new BossRow(PREVIEW_NAME, PREVIEW_PROGRESS,
-                BossEvent.BossBarColor.PURPLE.ordinal(),
-                BossEvent.BossBarOverlay.PROGRESS.ordinal()));
-        }
-
         Map<UUID, BossEvent> events = ((BossHealthOverlayEventsAccessor) Minecraft.getInstance().gui.getBossOverlay()).getEvents();
         if (events.isEmpty()) {
+            if (editorMode) {
+                return List.of(new BossRow(PREVIEW_NAME, PREVIEW_PROGRESS,
+                    BossEvent.BossBarColor.PURPLE.ordinal(),
+                    BossEvent.BossBarOverlay.PROGRESS.ordinal()));
+            }
             recordHudContentSkipped();
             return null;
         }
