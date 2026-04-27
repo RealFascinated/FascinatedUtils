@@ -22,6 +22,7 @@ import net.minecraft.util.Mth;
 import java.util.List;
 
 public abstract class HudModule extends Module implements HudRenderableModule {
+    public static final float UTILITY_WIDGET_MIN_WIDTH = 90f;
 
     public static final String APPEARANCE_CATEGORY_DISPLAY_KEY = "Appearance";
     public static final String SETTING_BACKGROUND = "background";

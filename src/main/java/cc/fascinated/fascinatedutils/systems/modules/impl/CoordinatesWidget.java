@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class CoordinatesWidget extends HudModule {
-    private static final float COLUMN_GAP = 10f;
+    private static final float COLUMN_GAP = 4f;
     private static final float LINE_GAP_PX = 1f;
-    private static final String[] COMPASS_CARDINALS = {"S", "E", "N", "W"};
+    private static final String[] COMPASS_DIRECTIONS = {"S", "SE", "E", "NE", "N", "NW", "W", "SW"};
     private final SliderSetting blockPrecision = SliderSetting.builder().id("block_precision")
 
             .defaultValue(0f).minValue(0f).maxValue(3f).step(1f).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
@@ -37,7 +37,7 @@ public class CoordinatesWidget extends HudModule {
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
     public CoordinatesWidget() {
-        super("coordinates", "Coordinates", 56f, HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.TOP_LEFT).defaultXOffset(5).defaultYOffset(5).build());
+        super("coordinates", "Coordinates", UTILITY_WIDGET_MIN_WIDTH, HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.TOP_LEFT).defaultXOffset(5).defaultYOffset(5).build());
         addSetting(blockPrecision);
         addSetting(showBackground);
         addSetting(roundedCorners);
@@ -60,7 +60,7 @@ public class CoordinatesWidget extends HudModule {
         return "<color:" + Colors.rgbHex(biomeColorArgb) + ">" + label + "</color>";
     }
 
-    private static String compass4FromLook(Vec3 look) {
+    private static String compassFromLook(Vec3 look) {
         double horizontalX = look.x;
         double horizontalZ = look.z;
         if (Math.hypot(horizontalX, horizontalZ) < 1e-5d) {
@@ -70,8 +70,8 @@ public class CoordinatesWidget extends HudModule {
         if (degrees < 0d) {
             degrees += 360d;
         }
-        int sector = (int) Math.floor((degrees + 45d) / 90d) & 3;
-        return COMPASS_CARDINALS[sector];
+        int sector = (int) Math.floor((degrees + 22.5d) / 45d) & 7;
+        return COMPASS_DIRECTIONS[sector];
     }
 
     @Override
@@ -85,7 +85,7 @@ public class CoordinatesWidget extends HudModule {
             coordY = player.getY();
             coordZ = player.getZ();
             biomeMini = biomeColoredMiniMessage(player.level().getBiome(player.blockPosition()).getRegisteredName());
-            facingKey = compass4FromLook(player.getViewVector(client.getDeltaTracker().getGameTimeDeltaPartialTick(false)));
+            facingKey = compassFromLook(player.getViewVector(client.getDeltaTracker().getGameTimeDeltaPartialTick(false)));
         }
         else if (editorMode) {
             coordX = 12.375;
@@ -105,7 +105,10 @@ public class CoordinatesWidget extends HudModule {
             leftColumnWidth = Math.max(leftColumnWidth, glRenderer.measureMiniMessageTextWidth(line));
         }
         int lineCount = leftLines.size();
-        float facingWidth = glRenderer.measureMiniMessageTextWidth(facingKey);
+        float facingWidth = 0f;
+        for (String directionLabel : COMPASS_DIRECTIONS) {
+            facingWidth = Math.max(facingWidth, glRenderer.measureMiniMessageTextWidth(directionLabel));
+        }
         float innerHeight = lineCount * lineHeight + Math.max(0, lineCount - 1) * LINE_GAP_PX;
         float innerWidth = leftColumnWidth + COLUMN_GAP + facingWidth;
         float padding = getPadding();
@@ -117,6 +120,7 @@ public class CoordinatesWidget extends HudModule {
         getHudState().setCommittedLayoutHeight(layoutHeight);
 
         float capturedLeftColumnWidth = leftColumnWidth;
+        float capturedFacingWidth = facingWidth;
         boolean textShadow = isTextShadowEnabled();
         return () -> {
             drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
@@ -131,7 +135,9 @@ public class CoordinatesWidget extends HudModule {
                     cursorY += LINE_GAP_PX;
                 }
             }
-            float facingX = blockStartX + capturedLeftColumnWidth + COLUMN_GAP;
+            float facingColumnStartX = blockStartX + capturedLeftColumnWidth + COLUMN_GAP;
+            float currentFacingWidth = glRenderer.measureMiniMessageTextWidth(facingKey);
+            float facingX = facingColumnStartX + (capturedFacingWidth - currentFacingWidth);
             glRenderer.drawMiniMessageText(facingKey, facingX, innerTop, textShadow);
         };
     }
