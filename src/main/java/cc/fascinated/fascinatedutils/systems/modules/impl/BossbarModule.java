@@ -113,10 +113,15 @@ public class BossbarModule extends HudModule {
 
         boolean barHidden = hideBar.isEnabled();
         float fontHeight = glRenderer.getFontHeight();
+        float contentWidth = BAR_WIDTH;
+        for (BossRow row : rows) {
+            contentWidth = Math.max(contentWidth, glRenderer.measureTextWidth(row.name()));
+        }
+        final float finalContentWidth = contentWidth;
         // Height of a single row's content: name text + optional gap + bar.
         float rowContentHeight = barHidden ? fontHeight : fontHeight + NAME_BAR_GAP + BAR_HEIGHT;
         float padding = getPadding();
-        float layoutWidth = padding * 2f + BAR_WIDTH;
+        float layoutWidth = padding * 2f + finalContentWidth;
         float layoutHeight = padding * 2f + rows.size() * rowContentHeight + Math.max(0f, rows.size() - 1f) * ROW_GAP;
 
         getHudState().setLastLayoutWidth(layoutWidth);
@@ -129,13 +134,13 @@ public class BossbarModule extends HudModule {
             drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
             glRenderer.endRenderSegment();
 
-            float barX = padding;
+            float barX = padding + (finalContentWidth - BAR_WIDTH) * 0.5f;
             float rowTop = padding;
 
             for (BossRow row : rowsCopy) {
                 // Center the name over the bar, matching vanilla's (screenWidth/2 - textWidth/2) centering.
                 int nameWidth = glRenderer.measureTextWidth(row.name());
-                float nameX = padding + (BAR_WIDTH - nameWidth) * 0.5f;
+                float nameX = padding + (finalContentWidth - nameWidth) * 0.5f;
                 glRenderer.drawComponentText(row.name(), nameX, rowTop, 0xFFFFFFFF, true);
 
                 if (!barHidden) {
