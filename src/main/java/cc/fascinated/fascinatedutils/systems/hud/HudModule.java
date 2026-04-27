@@ -31,9 +31,11 @@ public abstract class HudModule extends Module implements HudRenderableModule {
     public static final String SETTING_BACKGROUND_COLOR = "hud_background_color";
     public static final String SETTING_BORDER_COLOR = "hud_border_color";
     public static final String SETTING_PADDING = "hud_padding";
+    public static final String SETTING_TEXT_SHADOW = "text_shadow";
 
     private final HudDefaults defaults;
     private final SliderSetting padding;
+    private final BooleanSetting textShadow;
 
     @Getter
     private final String id;
@@ -48,6 +50,7 @@ public abstract class HudModule extends Module implements HudRenderableModule {
         this.id = widgetId;
         this.minWidth = minWidth;
         this.padding = HudWidgetAppearanceBuilders.padding().defaultValue(defaults.defaultPadding()).build();
+        this.textShadow = HudWidgetAppearanceBuilders.textShadow().build();
 
         this.hudState.setHudAnchor(defaults.defaultAnchor());
         this.hudState.setAnchorOffsetX(defaults.defaultXOffset());
@@ -55,6 +58,7 @@ public abstract class HudModule extends Module implements HudRenderableModule {
         hudState.setPositionX(defaults.defaultXOffset());
         hudState.setPositionY(defaults.defaultYOffset());
         addSetting(padding);
+        addSetting(textShadow);
     }
 
     protected HudModule(String widgetId, String displayName, float minWidth) {
@@ -79,7 +83,14 @@ public abstract class HudModule extends Module implements HudRenderableModule {
      * How lines and blocks are aligned horizontally inside the panel, derived from the current anchor.
      */
     public HudAnchorContentAlignment.Horizontal hudContentHorizontalAlignment() {
-        return HudAnchorContentAlignment.horizontal(hudState.getHudAnchor());
+        HudAnchorContentAlignment.Horizontal anchorHorizontalAlignment = HudAnchorContentAlignment.horizontal(hudState.getHudAnchor());
+        if (anchorHorizontalAlignment != HudAnchorContentAlignment.Horizontal.CENTER) {
+            return anchorHorizontalAlignment;
+        }
+        if (hudState.getHudAnchor() == HUDWidgetAnchor.BOTTOM) {
+            return hudState.getAnchorOffsetX() < 0f ? HudAnchorContentAlignment.Horizontal.RIGHT : HudAnchorContentAlignment.Horizontal.LEFT;
+        }
+        return HudAnchorContentAlignment.Horizontal.CENTER;
     }
 
     /**
@@ -209,6 +220,7 @@ public abstract class HudModule extends Module implements HudRenderableModule {
         float halfCanvasHeight = canvasHeight * 0.5f;
         float halfWidgetWidth = widgetWidth * 0.5f;
         float halfWidgetHeight = widgetHeight * 0.5f;
+        HudAnchorContentAlignment.Horizontal horizontalAlignment = hudContentHorizontalAlignment();
         float resolvedX = 0f;
         float resolvedY = 0f;
         switch (hudState.getHudAnchor()) {
@@ -233,7 +245,11 @@ public abstract class HudModule extends Module implements HudRenderableModule {
                 resolvedY = offsetY;
             }
             case BOTTOM -> {
-                resolvedX = halfCanvasWidth - halfWidgetWidth + offsetX;
+                resolvedX = switch (horizontalAlignment) {
+                    case LEFT -> halfCanvasWidth + offsetX;
+                    case RIGHT -> halfCanvasWidth - widgetWidth + offsetX;
+                    case CENTER -> halfCanvasWidth - halfWidgetWidth + offsetX;
+                };
                 resolvedY = canvasHeight - widgetHeight - offsetY;
             }
             case LEFT -> {
@@ -267,6 +283,7 @@ public abstract class HudModule extends Module implements HudRenderableModule {
         float halfCanvasHeight = canvasHeight * 0.5f;
         float halfWidgetWidth = widgetWidth * 0.5f;
         float halfWidgetHeight = widgetHeight * 0.5f;
+        HudAnchorContentAlignment.Horizontal horizontalAlignment = hudContentHorizontalAlignment();
         float positionX = hudState.getPositionX();
         float positionY = hudState.getPositionY();
         switch (hudState.getHudAnchor()) {
@@ -291,7 +308,12 @@ public abstract class HudModule extends Module implements HudRenderableModule {
                 hudState.setAnchorOffsetY(positionY);
             }
             case BOTTOM -> {
-                hudState.setAnchorOffsetX(positionX + halfWidgetWidth - halfCanvasWidth);
+                float anchorOffsetX = switch (horizontalAlignment) {
+                    case LEFT -> positionX - halfCanvasWidth;
+                    case RIGHT -> positionX + widgetWidth - halfCanvasWidth;
+                    case CENTER -> positionX + halfWidgetWidth - halfCanvasWidth;
+                };
+                hudState.setAnchorOffsetX(anchorOffsetX);
                 hudState.setAnchorOffsetY(canvasHeight - positionY - widgetHeight);
             }
             case LEFT -> {
@@ -321,6 +343,10 @@ public abstract class HudModule extends Module implements HudRenderableModule {
 
     public float getPadding() {
         return padding.getValue().floatValue();
+    }
+
+    public boolean isTextShadowEnabled() {
+        return textShadow.isEnabled();
     }
 
     public float getCornerRadius() {

@@ -144,6 +144,7 @@ public class StatusEffectsModule extends HudModule {
         getHudState().setCommittedLayoutWidth(layoutWidth);
         getHudState().setCommittedLayoutHeight(layoutHeight);
 
+        boolean textShadow = isTextShadowEnabled();
         return () -> {
             drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
 
@@ -169,16 +170,16 @@ public class StatusEffectsModule extends HudModule {
                     if (detailedLayout) {
                         float nameX = textRightEdgeWhenRight - glRenderer.measureMiniMessageTextWidth(effectRow.nameText());
                         float durationX = textRightEdgeWhenRight - glRenderer.measureMiniMessageTextWidth(effectRow.durationText());
-                        glRenderer.drawMiniMessageText(effectRow.nameText(), nameX, nameY, false);
+                        glRenderer.drawMiniMessageText(effectRow.nameText(), nameX, nameY, textShadow);
                         glRenderer.setMultiplyAlpha(flashAlpha);
-                        glRenderer.drawMiniMessageText(effectRow.durationText(), durationX, durationY, false);
+                        glRenderer.drawMiniMessageText(effectRow.durationText(), durationX, durationY, textShadow);
                         glRenderer.resetMultiplyAlpha();
                     }
                     else {
                         String compactLine = compactText(effectRow.nameText(), effectRow.durationText(), showDurationValue);
                         float compactX = textRightEdgeWhenRight - glRenderer.measureMiniMessageTextWidth(compactLine);
                         glRenderer.setMultiplyAlpha(flashAlpha);
-                        glRenderer.drawMiniMessageText(compactLine, compactX, nameY, false);
+                        glRenderer.drawMiniMessageText(compactLine, compactX, nameY, textShadow);
                         glRenderer.resetMultiplyAlpha();
                     }
                     glRenderer.drawSprite(effectRow.effectSprite(), iconX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(1f));
@@ -190,14 +191,14 @@ public class StatusEffectsModule extends HudModule {
                     float textX = rowStartX + ICON_SIZE + ICON_TEXT_GAP;
                     glRenderer.drawSprite(effectRow.effectSprite(), iconX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(1f));
                     if (detailedLayout) {
-                        glRenderer.drawMiniMessageText(effectRow.nameText(), textX, nameY, false);
+                        glRenderer.drawMiniMessageText(effectRow.nameText(), textX, nameY, textShadow);
                         glRenderer.setMultiplyAlpha(flashAlpha);
-                        glRenderer.drawMiniMessageText(effectRow.durationText(), textX, durationY, false);
+                        glRenderer.drawMiniMessageText(effectRow.durationText(), textX, durationY, textShadow);
                         glRenderer.resetMultiplyAlpha();
                     }
                     else {
                         glRenderer.setMultiplyAlpha(flashAlpha);
-                        glRenderer.drawMiniMessageText(compactText(effectRow.nameText(), effectRow.durationText(), showDurationValue), textX, nameY, false);
+                        glRenderer.drawMiniMessageText(compactText(effectRow.nameText(), effectRow.durationText(), showDurationValue), textX, nameY, textShadow);
                         glRenderer.resetMultiplyAlpha();
                     }
                 }

@@ -194,6 +194,7 @@ public class WawlaWidget extends HudModule {
         float fadeAlpha = fadeAnim.progress().value();
         float breakBarAlpha = breakBarAnim.progress().value();
         float capturedBreakProgress = smoothedBreakProgress;
+        boolean textShadow = isTextShadowEnabled();
         return () -> {
             glRenderer.setMultiplyAlpha(fadeAlpha);
             drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
@@ -204,20 +205,20 @@ public class WawlaWidget extends HudModule {
             if (!rightAligned) {
                 glRenderer.drawGuiItem(target.iconStack(), panelPadding, iconY);
                 float textX = panelPadding + ICON_SIZE + ICON_TEXT_GAP;
-                glRenderer.drawMiniMessageText(titleMini, textX, textBlockY, false);
+                glRenderer.drawMiniMessageText(titleMini, textX, textBlockY, textShadow);
                 for (int si = 0; si < subtitleMinis.size(); si++) {
-                    glRenderer.drawMiniMessageText(subtitleMinis.get(si), textX, textBlockY + (lineHeight + LINE_GAP) * (si + 1), false);
+                    glRenderer.drawMiniMessageText(subtitleMinis.get(si), textX, textBlockY + (lineHeight + LINE_GAP) * (si + 1), textShadow);
                 }
-                glRenderer.drawMiniMessageText(sourceMini, textX, textBlockY + (lineHeight + LINE_GAP) * (extraLines + 1), false);
+                glRenderer.drawMiniMessageText(sourceMini, textX, textBlockY + (lineHeight + LINE_GAP) * (extraLines + 1), textShadow);
             } else {
                 float iconX = layoutWidth - panelPadding - ICON_SIZE;
                 glRenderer.drawGuiItem(target.iconStack(), iconX, iconY);
                 float textRightEdge = iconX - ICON_TEXT_GAP;
-                glRenderer.drawMiniMessageText(titleMini, textRightEdge - titleWidth, textBlockY, false);
+                glRenderer.drawMiniMessageText(titleMini, textRightEdge - titleWidth, textBlockY, textShadow);
                 for (int si = 0; si < subtitleMinis.size(); si++) {
-                    glRenderer.drawMiniMessageText(subtitleMinis.get(si), textRightEdge - subtitleWidths[si], textBlockY + (lineHeight + LINE_GAP) * (si + 1), false);
+                    glRenderer.drawMiniMessageText(subtitleMinis.get(si), textRightEdge - subtitleWidths[si], textBlockY + (lineHeight + LINE_GAP) * (si + 1), textShadow);
                 }
-                glRenderer.drawMiniMessageText(sourceMini, textRightEdge - sourceWidth, textBlockY + (lineHeight + LINE_GAP) * (extraLines + 1), false);
+                glRenderer.drawMiniMessageText(sourceMini, textRightEdge - sourceWidth, textBlockY + (lineHeight + LINE_GAP) * (extraLines + 1), textShadow);
             }
 
             if (renderBreakBar) {

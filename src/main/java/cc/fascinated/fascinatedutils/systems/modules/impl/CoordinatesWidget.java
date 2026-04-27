@@ -115,6 +115,7 @@ public class CoordinatesWidget extends HudModule {
         getHudState().setCommittedLayoutHeight(layoutHeight);
 
         float capturedLeftColumnWidth = leftColumnWidth;
+        boolean textShadow = isTextShadowEnabled();
         return () -> {
             drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
             float availableInnerWidth = layoutWidth - 2f * padding;
@@ -122,14 +123,14 @@ public class CoordinatesWidget extends HudModule {
             float innerTop = padding;
             float cursorY = innerTop;
             for (int index = 0; index < lineCount; index++) {
-                glRenderer.drawMiniMessageText(leftLines.get(index), blockStartX, cursorY, false);
+                glRenderer.drawMiniMessageText(leftLines.get(index), blockStartX, cursorY, textShadow);
                 cursorY += lineHeight;
                 if (index < lineCount - 1) {
                     cursorY += LINE_GAP_PX;
                 }
             }
             float facingX = blockStartX + capturedLeftColumnWidth + COLUMN_GAP;
-            glRenderer.drawMiniMessageText(facingKey, facingX, innerTop, false);
+            glRenderer.drawMiniMessageText(facingKey, facingX, innerTop, textShadow);
         };
     }
 

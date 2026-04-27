@@ -95,4 +95,12 @@ public class HudWidgetAppearanceBuilders {
                 .categoryDisplayKey(HudModule.APPEARANCE_CATEGORY_DISPLAY_KEY);
     }
 
+    public static BooleanSetting.Builder textShadow() {
+        return BooleanSetting.builder().id(HudModule.SETTING_TEXT_SHADOW)
+                .defaultValue(true)
+                .displayName(displayName("fascinatedutils.module.text_shadow"))
+                .tooltip(tooltip("fascinatedutils.module.text_shadow"))
+                .categoryDisplayKey(HudModule.APPEARANCE_CATEGORY_DISPLAY_KEY);
+    }
+
 }

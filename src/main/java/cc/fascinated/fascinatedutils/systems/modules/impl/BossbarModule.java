@@ -130,6 +130,7 @@ public class BossbarModule extends HudModule {
         getHudState().setCommittedLayoutHeight(layoutHeight);
 
         List<BossRow> rowsCopy = List.copyOf(rows);
+        boolean textShadow = isTextShadowEnabled();
         return () -> {
             drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
             glRenderer.endRenderSegment();
@@ -141,7 +142,7 @@ public class BossbarModule extends HudModule {
                 // Center the name over the bar, matching vanilla's (screenWidth/2 - textWidth/2) centering.
                 int nameWidth = glRenderer.measureTextWidth(row.name());
                 float nameX = padding + (finalContentWidth - nameWidth) * 0.5f;
-                glRenderer.drawComponentText(row.name(), nameX, rowTop, 0xFFFFFFFF, true);
+                glRenderer.drawComponentText(row.name(), nameX, rowTop, 0xFFFFFFFF, textShadow);
 
                 if (!barHidden) {
                     float barY = rowTop + fontHeight + NAME_BAR_GAP;

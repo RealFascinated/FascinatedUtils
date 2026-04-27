@@ -111,18 +111,19 @@ public class ScoreboardModule extends HudModule {
 
         int textColor = 0xFFFFFFFF;
         List<ScoreRow> rowsCopy = List.copyOf(rows);
+        boolean textShadow = isTextShadowEnabled();
         return () -> {
             drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight);
             glRenderer.endRenderSegment();
             float contentRight = layoutWidth - padX;
             float titleX = padX + (contentRight - padX - titleWidth) * 0.5f;
-            glRenderer.drawComponentText(title, titleX, padY, textColor, false);
+            glRenderer.drawComponentText(title, titleX, padY, textColor, textShadow);
             for (int index = 0; index < rowsCopy.size(); index++) {
                 ScoreRow row = rowsCopy.get(index);
                 float rowY = padY + (index + 1) * lineHeight;
-                glRenderer.drawComponentText(row.name, padX, rowY, textColor, false);
+                glRenderer.drawComponentText(row.name, padX, rowY, textColor, textShadow);
                 if (row.scoreWidth > 0) {
-                    glRenderer.drawComponentText(row.score, contentRight - row.scoreWidth, rowY, textColor, false);
+                    glRenderer.drawComponentText(row.score, contentRight - row.scoreWidth, rowY, textColor, textShadow);
                 }
             }
         };

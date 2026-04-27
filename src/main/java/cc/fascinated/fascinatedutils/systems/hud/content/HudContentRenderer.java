@@ -21,7 +21,7 @@ public class HudContentRenderer {
         return switch (content) {
             case HudContent.TextLines textLines -> prepareTextLines(glRenderer, textLines.miniMessageLines(), module);
             case HudContent.ItemRows itemRows -> prepareItemRows(glRenderer, itemRows.rows(), module);
-            case HudContent.Custom custom -> null;
+            case HudContent.Custom _ -> null;
         };
     }
 
@@ -69,7 +69,7 @@ public class HudContentRenderer {
                 }
                 float lineWidth = lineWidths[lineIndex];
                 float drawX = horizontalPadding + HudAnchorLayout.horizontalOffsetInInnerBand(innerBandWidth, lineWidth, module.hudTextLineHorizontalAlignment());
-                glRenderer.drawMiniMessageText(lineText, drawX, cursorY, false);
+                glRenderer.drawMiniMessageText(lineText, drawX, cursorY, module.isTextShadowEnabled());
                 cursorY += lineHeight;
                 if (lineIndex < lines.size() - 1) {
                     cursorY += HUDPanelBackground.LINE_GAP_PX;
@@ -146,7 +146,7 @@ public class HudContentRenderer {
                 if (isOnRight) {
                     float iconX = stripLeft + textWidthPx + gapBeforeIcon + leftOverflowPx;
                     if (drawRowText) {
-                        glRenderer.drawMiniMessageText(rowText, stripLeft, textY, false);
+                        glRenderer.drawMiniMessageText(rowText, stripLeft, textY, module.isTextShadowEnabled());
                     }
                     if (minecraftClient.player != null) {
                         glRenderer.drawGuiItem(minecraftClient.player, row.stack(), iconX, iconY);
@@ -165,7 +165,7 @@ public class HudContentRenderer {
                         glRenderer.drawGuiItem(row.stack(), iconX, iconY);
                     }
                     if (drawRowText) {
-                        glRenderer.drawMiniMessageText(rowText, textX, textY, false);
+                        glRenderer.drawMiniMessageText(rowText, textX, textY, module.isTextShadowEnabled());
                     }
                 }
 

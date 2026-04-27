@@ -78,6 +78,8 @@
   "fascinatedutils.module.hud_border_color.description": "The outline color of HUD panels.",
   "fascinatedutils.module.hud_padding.display_name": "Padding",
   "fascinatedutils.module.hud_padding.description": "The spacing between the HUD panel edge and its content.",
+  "fascinatedutils.module.text_shadow.display_name": "Text Shadow",
+  "fascinatedutils.module.text_shadow.description": "Draws a drop shadow behind HUD text.",
   "fascinatedutils.module.fogcustomizer.atmospheric_fog.display_name": "Overworld Fog",
   "fascinatedutils.module.fogcustomizer.atmospheric_fog.description": "Adjusts how thick the fog appears in the overworld. Set to 0 to disable.",
   "fascinatedutils.module.scoreboard.hide_scoreboard_lines.display_name": "Hide Scoreboard Numbers",
