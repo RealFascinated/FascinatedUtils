@@ -47,9 +47,22 @@ public class PlayerUtils {
     }
 
     /**
+     * Return whether sprint is toggled on via sticky sprint, not by physically holding the key.
+     */
+    public static boolean isSprintBindingToggledOn(Minecraft minecraftClient) {
+        if (minecraftClient.options == null) {
+            return false;
+        }
+        return minecraftClient.options.keySprint.isDown() && !isSprintBindingPhysicallyHeld(minecraftClient);
+    }
+
+    /**
      * Return whether the sprint key binding is physically held, ignoring toggle-sprint sticky state.
      */
-    private static boolean isSprintBindingPhysicallyHeld(Minecraft minecraftClient) {
+    public static boolean isSprintBindingPhysicallyHeld(Minecraft minecraftClient) {
+        if (minecraftClient.options == null) {
+            return false;
+        }
         KeyMapping sprintBinding = minecraftClient.options.keySprint;
         Window window = minecraftClient.getWindow();
         InputConstants.Key boundKey = ((KeyBindingAccessorMixin) sprintBinding).getKey();

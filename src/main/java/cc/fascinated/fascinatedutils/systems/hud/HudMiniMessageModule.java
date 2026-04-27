@@ -22,8 +22,8 @@ public abstract class HudMiniMessageModule extends HudModule {
     private List<String> cachedMiniMessageLines;
     private long lastMiniMessageSampleNanos;
 
-    protected HudMiniMessageModule(String widgetId, String name, float minWidth) {
-        super(widgetId, name, minWidth);
+    protected HudMiniMessageModule(String widgetId, String name, float minWidth, HudDefaults hudDefaults) {
+        super(widgetId, name, minWidth, hudDefaults);
         addSetting(showBackground);
         addSetting(roundedCorners);
         addSetting(showBorder);
@@ -35,6 +35,10 @@ public abstract class HudMiniMessageModule extends HudModule {
         roundedCorners.addSubSetting(roundingRadius);
         showBorder.addSubSetting(borderThickness);
         showBorder.addSubSetting(borderColor);
+    }
+
+    public HudMiniMessageModule(String widgetId, String name, float minWidth) {
+        this(widgetId, name, minWidth, HudDefaults.builder().build());
     }
 
     private static List<String> normalizeMiniMessageLines(List<String> rawLines) {
