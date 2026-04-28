@@ -246,8 +246,7 @@ public class SocialScreen extends WidgetScreen {
         if (activeTab == Tab.FRIENDS) {
             List<FriendEntryDto> friends = SocialRegistry.INSTANCE.getFriends();
             if (friends.isEmpty()) {
-                body.addChild(buildEmptyState("◦",
-                        Component.translatable("fascinatedutils.social.no_friends").getString()));
+                body.addChild(buildEmptyState(Component.translatable("fascinatedutils.social.no_friends").getString()));
             } else {
                 for (FriendEntryDto friend : friends) {
                     body.addChild(buildFriendRow(friend, innerW));
@@ -257,8 +256,7 @@ public class SocialScreen extends WidgetScreen {
             List<PendingFriendRequestDto> incoming = SocialRegistry.INSTANCE.getIncomingFriendRequests();
             List<PendingFriendRequestDto> outgoing = SocialRegistry.INSTANCE.getOutgoingFriendRequests();
             if (incoming.isEmpty() && outgoing.isEmpty()) {
-                body.addChild(buildEmptyState("✉",
-                        Component.translatable("fascinatedutils.social.no_requests").getString()));
+                body.addChild(buildEmptyState(Component.translatable("fascinatedutils.social.no_requests").getString()));
             } else {
                 if (!incoming.isEmpty()) {
                     FLabelWidget sectionLabel = new FLabelWidget();
@@ -570,11 +568,11 @@ public class SocialScreen extends WidgetScreen {
         };
     }
 
-    private FWidget buildEmptyState(String icon, String message) {
+    private FWidget buildEmptyState(String message) {
         return new FWidget() {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-                return measure.getFontCapHeight() * 2f + 14f;
+                return measure.getFontCapHeight() + 8f;
             }
 
             @Override
@@ -585,9 +583,7 @@ public class SocialScreen extends WidgetScreen {
             @Override
             protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
                 float centerX = x() + w() / 2f;
-                float iconY = y() + 4f;
-                float textY = iconY + graphics.getFontCapHeight() + 6f;
-                graphics.drawCenteredText(icon, centerX, iconY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                float textY = y() + 4f;
                 graphics.drawCenteredText(message, centerX, textY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
             }
         };
