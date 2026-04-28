@@ -13,6 +13,7 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.gui.ModUiClientEntry;
 import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
+import cc.fascinated.fascinatedutils.systems.social.SocialRegistry;
 import cc.fascinated.fascinatedutils.turboentities.TurboEntities;
 import cc.fascinated.fascinatedutils.turboparticles.TurboParticles;
 import cc.fascinated.fascinatedutils.updater.UpdateManager;
@@ -36,6 +37,7 @@ public class Client implements ClientModInitializer {
         FascinatedEventBus eventBus = FascinatedEventBus.INSTANCE;
         eventBus.ensureSetup();
         eventBus.subscribe(AlumiteApi.INSTANCE);
+        eventBus.subscribe(SocialRegistry.INSTANCE);
         eventBus.subscribe(TURBO_PARTICLES);
         eventBus.subscribe(TURBO_ENTITIES);
 

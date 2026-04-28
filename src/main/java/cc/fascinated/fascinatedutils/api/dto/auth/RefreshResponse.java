@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.api.dto;
+package cc.fascinated.fascinatedutils.api.dto.auth;
 
 public record RefreshResponse(
         String accessToken,

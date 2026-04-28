@@ -148,6 +148,20 @@ public class MeshRenderer {
     }
 
     /**
+     * Queue an axis-aligned textured quad sampling from an explicit {@link DynamicTexture} (e.g. a downloaded avatar).
+     */
+    public void enqueueTexturedQuad(GuiGraphicsExtractor drawContext, DynamicTexture texture, float positionX, float positionY, float width, float height, int color) {
+        Matrix3x2f pose = new Matrix3x2f(drawContext.pose());
+        ScreenRectangle scissor = currentScissor(drawContext);
+        int x0 = Mth.floor(positionX);
+        int y0 = Mth.floor(positionY);
+        int x1 = Mth.ceil(positionX + width);
+        int y1 = Mth.ceil(positionY + height);
+        TextureSetup textureSetup = TextureSetup.singleTexture(texture.getTextureView(), texture.getSampler());
+        pendingTextured.add(new AxisTexColorQuadRenderState(FascinatedUiPipelines.AXIS_TEX_COLOR, textureSetup, pose, x0, y0, x1, y1, color, color, color, color, scissor));
+    }
+
+    /**
      * Queue an axis-aligned textured quad (white texture) with four corner colors (tinted rect or vertical gradient).
      */
     public void enqueueAxisTexQuad(GuiGraphicsExtractor drawContext, float positionX, float positionY, float width, float height, int colorTopLeft, int colorBottomLeft, int colorBottomRight, int colorTopRight) {

@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.Profiler;
@@ -336,6 +337,11 @@ public class Renderer2D {
 
     public void drawTexture(Identifier texture, float positionX, float positionY, float width, float height, int tintArgb) {
         if (width < 1e-3f || height < 1e-3f) {
+            return;
+        }
+        Object raw = Minecraft.getInstance().getTextureManager().getTexture(texture);
+        if (raw instanceof DynamicTexture dynamicTexture) {
+            MeshRenderer.INSTANCE.enqueueTexturedQuad(graphics, dynamicTexture, positionX, positionY, width, height, withAlpha(tintArgb));
             return;
         }
         flushMeshSegmentBeforeImmediateDraw();
