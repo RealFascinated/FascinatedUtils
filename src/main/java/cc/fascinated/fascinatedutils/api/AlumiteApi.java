@@ -10,6 +10,7 @@ import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import com.google.gson.Gson;
+import lombok.SneakyThrows;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
 
@@ -18,20 +19,16 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.time.Instant;
 
 public class AlumiteApi {
 
-    private static final Gson GSON = new Gson();
-
     public static final AlumiteApi INSTANCE = new AlumiteApi();
+    private static final Gson GSON = new Gson();
 
     private final HttpClient httpClient;
     private final AlumiteTokenStore tokenStore;
 
-    private volatile String accessToken;
-    private volatile Instant accessExpiresAt;
-    private volatile String refreshToken;
+    private volatile String activeAccountKey;
 
     private AlumiteApi() {
         httpClient = HttpClient.newBuilder()
@@ -46,15 +43,18 @@ public class AlumiteApi {
     }
 
     private void authenticate(Minecraft minecraftClient) {
-        String storedRefresh = tokenStore.load();
-        if (storedRefresh != null && tryRefresh(storedRefresh)) {
+        String accountKey = minecraftClient.getUser().getProfileId().toString();
+        activeAccountKey = accountKey;
+
+        String storedRefresh = tokenStore.load(accountKey);
+        if (storedRefresh != null && tryRefresh(accountKey, storedRefresh)) {
             return;
         }
-        tokenStore.clear();
+        tokenStore.clear(accountKey);
         performFullLogin(minecraftClient);
     }
 
-    private boolean tryRefresh(String storedRefreshToken) {
+    private boolean tryRefresh(String accountKey, String storedRefreshToken) {
         try {
             HttpResponse<String> response = post("/auth/refresh", GSON.toJson(new RefreshRequest(storedRefreshToken)), null);
             if (response.statusCode() != 200) {
@@ -62,11 +62,7 @@ public class AlumiteApi {
             }
 
             RefreshResponse refreshResponse = GSON.fromJson(response.body(), RefreshResponse.class);
-            storeSession(
-                    refreshResponse.accessToken(),
-                    Instant.parse(refreshResponse.accessExpiresAt()),
-                    refreshResponse.refreshToken()
-            );
+            storeSession(accountKey, refreshResponse.refreshToken());
             Client.LOG.info("[AlumiteApi] Session refreshed.");
             return true;
         } catch (Exception exception) {
@@ -76,8 +72,8 @@ public class AlumiteApi {
     }
 
     private void performFullLogin(Minecraft minecraftClient) {
-        String accessToken = minecraftClient.getUser().getAccessToken();
-        if (accessToken.length() < 16) {
+        String minecraftAccessToken = minecraftClient.getUser().getAccessToken();
+        if (minecraftAccessToken.length() < 16) {
             Client.LOG.info("[AlumiteApi] Skipping auth — offline/dev session detected.");
             return;
         }
@@ -89,11 +85,10 @@ public class AlumiteApi {
             }
 
             ChallengeResponse challenge = GSON.fromJson(challengeResponse.body(), ChallengeResponse.class);
-
             VerifyRequest verifyRequest = new VerifyRequest(
                     challenge.challengeId(),
                     challenge.nonce(),
-                    accessToken
+                    minecraftAccessToken
             );
 
             HttpResponse<String> verifyResponse = post("/auth/minecraft/verify", GSON.toJson(verifyRequest), null);
@@ -103,43 +98,19 @@ public class AlumiteApi {
             }
 
             VerifyResponse result = GSON.fromJson(verifyResponse.body(), VerifyResponse.class);
-            storeSession(
-                    result.accessToken(),
-                    Instant.parse(result.accessExpiresAt()),
-                    result.refreshToken()
-            );
+            storeSession(activeAccountKey, result.refreshToken());
             Client.LOG.info("[AlumiteApi] Authenticated as {}", result.user().minecraftName());
         } catch (Exception exception) {
             Client.LOG.warn("[AlumiteApi] Login failed: {}", exception.getMessage());
         }
     }
 
-    private void storeSession(String newAccessToken, Instant newAccessExpiresAt, String newRefreshToken) {
-        accessToken = newAccessToken;
-        accessExpiresAt = newAccessExpiresAt;
-        refreshToken = newRefreshToken;
-        tokenStore.save(newRefreshToken);
+    private void storeSession(String accountKey, String newRefreshToken) {
+        tokenStore.save(accountKey, newRefreshToken);
     }
 
-    /**
-     * Returns a valid access token for use in API requests, silently refreshing if near expiry.
-     *
-     * <p>Returns {@code null} if authentication has not completed or has failed.
-     *
-     * @return the current access token, or {@code null} if unavailable
-     */
-    public String getAccessToken() {
-        if (accessToken != null && accessExpiresAt != null
-                && Instant.now().isBefore(accessExpiresAt.minusSeconds(30))) {
-            return accessToken;
-        }
-        if (refreshToken != null) {
-            tryRefresh(refreshToken);
-        }
-        return accessToken;
-    }
-
-    private HttpResponse<String> post(String path, String jsonBody, String bearerToken) throws Exception {
+    @SneakyThrows
+    private HttpResponse<String> post(String path, String jsonBody, String bearerToken) {
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(AlumiteEnvironment.API_BASE_URL + path))
                 .header("Content-Type", "application/json")

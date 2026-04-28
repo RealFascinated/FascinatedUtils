@@ -10,12 +10,19 @@ import java.nio.file.StandardOpenOption;
 
 class AlumiteTokenStore {
 
-    private Path storePath() {
-        return ModConfig.getDirectory().resolve("alumite_session");
+    private Path storeDirectory() {
+        return ModConfig.getDirectory().resolve("alumite_sessions");
     }
 
-    String load() {
-        Path path = storePath();
+    private Path storePath(String accountKey) {
+        return storeDirectory().resolve(sanitizeAccountKey(accountKey));
+    }
+
+    String load(String accountKey) {
+        return readToken(storePath(accountKey));
+    }
+
+    private String readToken(Path path) {
         if (!Files.exists(path)) {
             return null;
         }
@@ -28,9 +35,9 @@ class AlumiteTokenStore {
         }
     }
 
-    void save(String refreshToken) {
+    void save(String accountKey, String refreshToken) {
         try {
-            Path path = storePath();
+            Path path = storePath(accountKey);
             Files.createDirectories(path.getParent());
             Files.writeString(path, refreshToken, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException ioException) {
@@ -38,11 +45,15 @@ class AlumiteTokenStore {
         }
     }
 
-    void clear() {
+    void clear(String accountKey) {
         try {
-            Files.deleteIfExists(storePath());
+            Files.deleteIfExists(storePath(accountKey));
         } catch (IOException ioException) {
             Client.LOG.warn("[AlumiteApi] Failed to clear session: {}", ioException.getMessage());
         }
+    }
+
+    private String sanitizeAccountKey(String accountKey) {
+        return accountKey.replaceAll("[^A-Za-z0-9._-]", "_");
     }
 }
