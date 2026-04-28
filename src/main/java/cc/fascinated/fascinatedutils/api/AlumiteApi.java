@@ -143,6 +143,7 @@ public class AlumiteApi {
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(AlumiteEnvironment.API_BASE_URL + path))
                 .header("Content-Type", "application/json")
+                .header("User-Agent", AlumiteEnvironment.USER_AGENT)
                 .timeout(Duration.ofSeconds(15))
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
         if (bearerToken != null) {
