@@ -23,10 +23,16 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+
 import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
+
+import cc.fascinated.fascinatedutils.common.DateUtils;
+import cc.fascinated.fascinatedutils.gui.toast.Toast;
 
 public class SocialScreen extends WidgetScreen {
     private static final float PANEL_WIDTH = 250f;
@@ -38,7 +44,7 @@ public class SocialScreen extends WidgetScreen {
     private static final float TAB_H = 26f;
     private static final int FOCUS_ADD_FRIEND = 7110;
     private static final float AVATAR_SIZE = 28f;
-    private static final float STATUS_DOT = 5f;
+    private static final float STATUS_DOT = 6f;
     private static final int[] BADGE_COLORS = {
             0xFF6B5B95, 0xFF88B04B, 0xFF955251, 0xFF009B77,
             0xFF45B8AC, 0xFF5B5EA6, 0xFFB565A7, 0xFFDD4132
@@ -123,12 +129,17 @@ public class SocialScreen extends WidgetScreen {
                 tabs.layout(measure, lx, curY, lw, TAB_H);
                 curY += TAB_H + 6f;
 
-                float footerH = 32f;
-                float listH = Math.max(0f, lh - (curY - ly) - footerH - PAD);
+                float footerH = activeTab == Tab.FRIENDS ? 32f : 0f;
+                float listH = Math.max(0f, lh - (curY - ly) - footerH - (footerH > 0 ? PAD : 0f));
                 list.layout(measure, lx + PAD, curY, lw - 2f * PAD, listH);
                 curY += listH + 4f;
 
-                footer.layout(measure, lx + PAD, curY, lw - 2f * PAD, footerH);
+                footer.setVisible(activeTab == Tab.FRIENDS);
+                if (activeTab == Tab.FRIENDS) {
+                    footer.layout(measure, lx + PAD, curY, lw - 2f * PAD, footerH);
+                } else {
+                    footer.layout(measure, lx + PAD, curY, lw - 2f * PAD, 0f);
+                }
             }
         };
 
@@ -158,7 +169,22 @@ public class SocialScreen extends WidgetScreen {
         subtitleLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
 
         FButtonWidget closeBtn = new FButtonWidget(() -> Minecraft.getInstance().setScreen(null),
-                () -> "✕", 20f, 1, 1f, 4f, 1f, 4f);
+                () -> "✕", 20f, 1, 1f, 4f, 1f, 4f) {
+            @Override
+            protected int resolveButtonFillColorArgb(boolean hovered) {
+                return hovered ? 0xFF2A2F3E : 0xFF1E2230;
+            }
+
+            @Override
+            protected int resolveButtonBorderColorArgb(boolean hovered) {
+                return hovered ? 0xFF6C7098 : 0xFF454A60;
+            }
+
+            @Override
+            protected int resolveButtonLabelColorArgb(boolean hovered) {
+                return hovered ? 0xFFFF7070 : FascinatedGuiTheme.INSTANCE.textMuted();
+            }
+        };
 
         return new FWidget() {
             {
@@ -216,6 +242,18 @@ public class SocialScreen extends WidgetScreen {
 
                 graphics.drawCenteredText(friendsLabel, x() + halfW / 2f, y() + (h() - graphics.getFontCapHeight()) / 2f, friendsTextColor, false, false);
                 graphics.drawCenteredText(requestsLabel, x() + halfW + halfW / 2f, y() + (h() - graphics.getFontCapHeight()) / 2f, reqTextColor, false, false);
+
+                int incomingCount = SocialRegistry.INSTANCE.getIncomingFriendRequests().size();
+                if (incomingCount > 0) {
+                    String badgeText = incomingCount > 9 ? "9+" : String.valueOf(incomingCount);
+                    float badgeR = 5f;
+                    float badgeCx = x() + w() - badgeR - 3f;
+                    float badgeCy = y() + badgeR + 2f;
+                    graphics.fillRoundedRect(badgeCx - badgeR, badgeCy - badgeR, badgeR * 2f, badgeR * 2f,
+                            badgeR, 0xFFCC2222, RectCornerRoundMask.ALL);
+                    graphics.drawCenteredText(badgeText, badgeCx,
+                            badgeCy - graphics.getFontCapHeight() / 2f, 0xFFFFFFFF, false, true);
+                }
             }
 
             @Override
@@ -259,19 +297,13 @@ public class SocialScreen extends WidgetScreen {
                 body.addChild(buildEmptyState(Component.translatable("fascinatedutils.social.no_requests").getString()));
             } else {
                 if (!incoming.isEmpty()) {
-                    FLabelWidget sectionLabel = new FLabelWidget();
-                    sectionLabel.setText(Component.translatable("fascinatedutils.social.requests_incoming").getString());
-                    sectionLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
-                    body.addChild(sectionLabel);
+                    body.addChild(buildSectionLabel(Component.translatable("fascinatedutils.social.requests_incoming").getString()));
                     for (PendingFriendRequestDto request : incoming) {
                         body.addChild(buildRequestRow(request, innerW));
                     }
                 }
                 if (!outgoing.isEmpty()) {
-                    FLabelWidget sectionLabel = new FLabelWidget();
-                    sectionLabel.setText(Component.translatable("fascinatedutils.social.requests_outgoing").getString());
-                    sectionLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
-                    body.addChild(sectionLabel);
+                    body.addChild(buildSectionLabel(Component.translatable("fascinatedutils.social.requests_outgoing").getString()));
                     for (PendingFriendRequestDto request : outgoing) {
                         body.addChild(buildOutgoingRequestRow(request, innerW));
                     }
@@ -308,9 +340,12 @@ public class SocialScreen extends WidgetScreen {
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, innerW, lh);
+                int capH = measure.getFontCapHeight();
+                float textBlockH = capH * 2f + 3f;
+                float textStartY = ly + (lh - textBlockH) / 2f;
                 float nameX = lx + 4f + AVATAR_SIZE + 6f;
                 float nameMaxX = lx + innerW - BTN_W - 8f;
-                nameLabel.layout(measure, nameX, ly, nameMaxX - nameX, lh);
+                nameLabel.layout(measure, nameX, textStartY, nameMaxX - nameX, capH);
             }
 
             @Override
@@ -338,12 +373,19 @@ public class SocialScreen extends WidgetScreen {
                 PresenceUpdateEvent presence = SocialRegistry.INSTANCE.getPresenceStatuses().get(friend.user().id());
                 boolean online = presence != null && "online".equals(presence.status());
                 int dotColor = online ? 0xFF44CC44 : 0xFF555555;
-                float dotX = avatarX + AVATAR_SIZE - STATUS_DOT - 0.5f;
-                float dotY = avatarY + AVATAR_SIZE - STATUS_DOT - 0.5f;
-                graphics.fillRoundedRect(dotX - 1.5f, dotY - 1.5f, STATUS_DOT + 3f, STATUS_DOT + 3f,
-                        (STATUS_DOT + 3f) / 2f, 0xFF1A1E24, RectCornerRoundMask.ALL);
+                float dotX = avatarX + AVATAR_SIZE - STATUS_DOT - 1f;
+                float dotY = avatarY + AVATAR_SIZE - STATUS_DOT - 1f;
+                graphics.fillRoundedRect(dotX - 2f, dotY - 2f, STATUS_DOT + 4f, STATUS_DOT + 4f,
+                        (STATUS_DOT + 4f) / 2f, 0xFF1A1E24, RectCornerRoundMask.ALL);
                 graphics.fillRoundedRect(dotX, dotY, STATUS_DOT, STATUS_DOT,
                         STATUS_DOT / 2f, dotColor, RectCornerRoundMask.ALL);
+
+                int capH = graphics.getFontCapHeight();
+                float textBlockH = capH * 2f + 3f;
+                float textStartY = y() + (h() - textBlockH) / 2f;
+                float nameX = x() + 4f + AVATAR_SIZE + 6f;
+                graphics.drawText(presenceStatusLine(presence), nameX, textStartY + capH + 3f,
+                        FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
 
                 if (rowHovered) {
                     float removeBtnX = x() + w() - BTN_W - 4f;
@@ -529,18 +571,16 @@ public class SocialScreen extends WidgetScreen {
                             0xFFFFFFFF, false, true);
                 }
 
-                if (rowHovered) {
-                    float cancelBtnX = x() + w() - BTN_W - 4f;
-                    float cancelBtnY = y() + (h() - BTN_H) / 2f;
-                    boolean btnHovered = mouseX >= cancelBtnX && mouseX < cancelBtnX + BTN_W
-                            && mouseY >= cancelBtnY && mouseY < cancelBtnY + BTN_H;
-                    graphics.fillRoundedRect(cancelBtnX, cancelBtnY, BTN_W, BTN_H, 4f,
-                            btnHovered ? 0xAA5C1F1F : 0x22FFFFFF, RectCornerRoundMask.ALL);
-                    int cancelTextColor = btnHovered ? 0xFFFF5555 : FascinatedGuiTheme.INSTANCE.textMuted();
-                    graphics.drawCenteredText("\u2715", cancelBtnX + BTN_W / 2f,
-                            cancelBtnY + (BTN_H - graphics.getFontCapHeight()) / 2f,
-                            cancelTextColor, false, false);
-                }
+                float cancelBtnX = x() + w() - BTN_W - 4f;
+                float cancelBtnY = y() + (h() - BTN_H) / 2f;
+                boolean btnHovered = mouseX >= cancelBtnX && mouseX < cancelBtnX + BTN_W
+                        && mouseY >= cancelBtnY && mouseY < cancelBtnY + BTN_H;
+                graphics.fillRoundedRect(cancelBtnX, cancelBtnY, BTN_W, BTN_H, 4f,
+                        btnHovered ? 0xAA5C1F1F : 0x22FFFFFF, RectCornerRoundMask.ALL);
+                int cancelTextColor = btnHovered ? 0xFFFF5555 : FascinatedGuiTheme.INSTANCE.textMuted();
+                graphics.drawCenteredText("\u2715", cancelBtnX + BTN_W / 2f,
+                        cancelBtnY + (BTN_H - graphics.getFontCapHeight()) / 2f,
+                        cancelTextColor, false, false);
             }
 
             @Override
@@ -565,6 +605,45 @@ public class SocialScreen extends WidgetScreen {
                 }
                 return false;
             }
+        };
+    }
+
+    private FWidget buildSectionLabel(String text) {
+        return new FWidget() {
+            @Override
+            public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
+                return measure.getFontCapHeight() + 8f;
+            }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+            }
+
+            @Override
+            protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+                float textY = y() + (h() - graphics.getFontCapHeight()) / 2f;
+                graphics.drawText(text, x(), textY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                graphics.drawRect(x(), y() + h() - 1f, w(), 1f, 0x22FFFFFF);
+            }
+        };
+    }
+
+    private static String presenceStatusLine(PresenceUpdateEvent presence) {
+        if (presence == null || "offline".equals(presence.status())) {
+            if (presence != null && presence.lastSeen() != null) {
+                try {
+                    long secsAgo = Duration.between(Instant.parse(presence.lastSeen()), Instant.now()).getSeconds();
+                    return "Offline \u00b7 " + DateUtils.formatSecsAgo(secsAgo);
+                } catch (Exception ignored) {}
+            }
+            return "Offline";
+        }
+        return switch (presence.status()) {
+            case "online" -> "Online";
+            case "away" -> "Away";
+            case "invisible" -> "Invisible";
+            default -> presence.status();
         };
     }
 
@@ -607,7 +686,10 @@ public class SocialScreen extends WidgetScreen {
                 PendingFriendRequestDto dto = AlumiteApi.INSTANCE.sendFriendRequest(username);
                 if (dto != null) {
                     SocialRegistry.INSTANCE.addOutgoingFriendRequest(dto);
+                    Toast.show().message("Friend request sent!").success();
                     Minecraft.getInstance().execute(this::rebuildHost);
+                } else {
+                    Toast.show().message("Failed to send request.").error();
                 }
             });
         }, () -> Component.translatable("fascinatedutils.social.add_button").getString(), ADD_BTN_W, 1, 1f, 4f, 1f, 4f) {

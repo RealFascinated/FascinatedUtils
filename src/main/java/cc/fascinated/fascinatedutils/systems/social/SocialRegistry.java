@@ -39,6 +39,9 @@ public class SocialRegistry {
         List<FriendEntryDto> updated = new ArrayList<>(friends);
         updated.add(event.entry());
         friends = List.copyOf(updated);
+        outgoingFriendRequests = outgoingFriendRequests.stream()
+                .filter(req -> req.user().id() != event.entry().user().id())
+                .toList();
     }
 
     @EventHandler
