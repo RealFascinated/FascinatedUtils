@@ -45,6 +45,9 @@ public class SocialRegistry {
         outgoingFriendRequests = outgoingFriendRequests.stream()
                 .filter(req -> req.user().id() != event.entry().user().id())
                 .toList();
+        incomingFriendRequests = incomingFriendRequests.stream()
+                .filter(req -> req.user().id() != event.entry().user().id())
+                .toList();
         if (wasOutgoing) {
             Toast.show().message(event.entry().user().minecraftName() + " accepted your friend request!").success();
         }

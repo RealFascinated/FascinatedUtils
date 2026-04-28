@@ -636,10 +636,8 @@ public class SocialScreen extends WidgetScreen {
     private static String presenceStatusLine(PresenceUpdateEvent presence) {
         if (presence == null || "offline".equals(presence.status())) {
             if (presence != null && presence.lastSeen() != null) {
-                try {
-                    long secsAgo = Duration.between(Instant.parse(presence.lastSeen()), Instant.now()).getSeconds();
-                    return "Offline \u00b7 " + TimeUtils.timeAgo(secsAgo * 1000, 2);
-                } catch (Exception ignored) {}
+                long timeAgo = Instant.parse(presence.lastSeen()).toEpochMilli();
+                return "Offline · " + TimeUtils.timeAgo(timeAgo, timeAgo < 61_000 ? 1 : 2);
             }
             return "Offline";
         }

@@ -3,6 +3,8 @@ package cc.fascinated.fascinatedutils.systems.hud;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.screens.ModSettingsScreen;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.toast.ToastManager;
+import cc.fascinated.fascinatedutils.gui.UIScale;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -38,8 +40,12 @@ public class HUDModuleWidgetsElement implements HudElement {
         }
         float canvasWidth = HudLayoutCanvas.width();
         float canvasHeight = HudLayoutCanvas.height();
+        float uiWidth = UIScale.uiWidth();
+        float uiHeight = UIScale.uiHeight();
         guiRenderer.begin(canvasWidth, canvasHeight);
         hudManager.renderHUD(guiRenderer, canvasWidth, canvasHeight, Mth.clamp(deltaSeconds, 0f, 1f), false);
+        ToastManager.INSTANCE.render(guiRenderer, uiWidth, uiHeight,
+                UIScale.uiPointerX(), UIScale.uiPointerY(), deltaSeconds);
         guiRenderer.end();
         profiler.pop();
     }
