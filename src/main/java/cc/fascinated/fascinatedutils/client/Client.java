@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.client;
 
 import cc.fascinated.fascinatedutils.FascinatedUtils;
+import cc.fascinated.fascinatedutils.api.AlumiteApi;
 import cc.fascinated.fascinatedutils.client.command.ClientCommandBootstrap;
 import cc.fascinated.fascinatedutils.client.keybind.Keybinds;
 import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
@@ -34,6 +35,7 @@ public class Client implements ClientModInitializer {
     public void onInitializeClient() {
         FascinatedEventBus eventBus = FascinatedEventBus.INSTANCE;
         eventBus.ensureSetup();
+        eventBus.subscribe(AlumiteApi.INSTANCE);
         eventBus.subscribe(TURBO_PARTICLES);
         eventBus.subscribe(TURBO_ENTITIES);
 

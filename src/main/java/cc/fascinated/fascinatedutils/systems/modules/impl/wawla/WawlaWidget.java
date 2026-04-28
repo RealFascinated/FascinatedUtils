@@ -53,7 +53,7 @@ public class WawlaWidget extends HudModule {
 
     private static final int
             TITLE_COLOR = UiColor.argb("#f2f6ff"),
-            SOURCE_COLOR = UiColor.argb("#7f91ff"),
+            SOURCE_COLOR = UiColor.argb("#4a5cd3"),
             SUBTITLE_COLOR = UiColor.argb("#aaaaaa"),
             BREAK_BAR_BACKGROUND = UiColor.argb("#44232a33"),
             BREAK_BAR_FILL = UiColor.argb("#ffffffff");
