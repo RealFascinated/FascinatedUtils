@@ -24,17 +24,4 @@ public class DateUtils {
         }
         return String.format(Locale.ROOT, "%02d:%02d", minutes, seconds);
     }
-
-    /**
-     * Formats a timestamp into a human-readable "time ago" string.
-     *
-     * @param timestamp the timestamp to format, in milliseconds since epoch
-     * @return the formatted "time ago" string
-     */
-    private static String formatSecsAgo(long secsAgo) {
-        if (secsAgo < 60) { return "just now"; }
-        if (secsAgo < 3600) { return (secsAgo / 60) + "m ago"; }
-        if (secsAgo < 86400) { return (secsAgo / 3600) + "h ago"; }
-        return (secsAgo / 86400) + "d ago";
-    }
 }

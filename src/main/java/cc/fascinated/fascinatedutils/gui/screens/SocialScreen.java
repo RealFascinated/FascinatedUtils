@@ -32,6 +32,7 @@ import java.time.Instant;
 import java.util.List;
 
 import cc.fascinated.fascinatedutils.common.DateUtils;
+import cc.fascinated.fascinatedutils.common.TimeUtils;
 import cc.fascinated.fascinatedutils.gui.toast.Toast;
 
 public class SocialScreen extends WidgetScreen {
@@ -506,7 +507,10 @@ public class SocialScreen extends WidgetScreen {
                 if (pointerX >= acceptBtnX && pointerX < acceptBtnX + BTN_W
                         && pointerY >= btnY && pointerY < btnY + BTN_H) {
                     FascinatedUtils.SCHEDULED_POOL.execute(() -> {
-                        AlumiteApi.INSTANCE.acceptFriendRequest(request.requestId());
+                        boolean accepted = AlumiteApi.INSTANCE.acceptFriendRequest(request.requestId());
+                        if (accepted) {
+                            Toast.show().message("You're now friends with " + request.user().minecraftName() + "!").success();
+                        }
                         Minecraft.getInstance().execute(SocialScreen.this::rebuildHost);
                     });
                     return true;
@@ -634,7 +638,7 @@ public class SocialScreen extends WidgetScreen {
             if (presence != null && presence.lastSeen() != null) {
                 try {
                     long secsAgo = Duration.between(Instant.parse(presence.lastSeen()), Instant.now()).getSeconds();
-                    return "Offline \u00b7 " + DateUtils.formatSecsAgo(secsAgo);
+                    return "Offline \u00b7 " + TimeUtils.timeAgo(secsAgo * 1000, 2);
                 } catch (Exception ignored) {}
             }
             return "Offline";

@@ -11,6 +11,7 @@ import cc.fascinated.fascinatedutils.event.impl.social.FriendRemoveEvent;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendRequestIncomingEvent;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendRequestRemovedEvent;
 import cc.fascinated.fascinatedutils.event.impl.social.PresenceUpdateEvent;
+import cc.fascinated.fascinatedutils.gui.toast.Toast;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
 
@@ -36,12 +37,17 @@ public class SocialRegistry {
 
     @EventHandler
     private void fascinatedutils$onFriendAdd(FriendAddEvent event) {
+        boolean wasOutgoing = outgoingFriendRequests.stream()
+                .anyMatch(req -> req.user().id() == event.entry().user().id());
         List<FriendEntryDto> updated = new ArrayList<>(friends);
         updated.add(event.entry());
         friends = List.copyOf(updated);
         outgoingFriendRequests = outgoingFriendRequests.stream()
                 .filter(req -> req.user().id() != event.entry().user().id())
                 .toList();
+        if (wasOutgoing) {
+            Toast.show().message(event.entry().user().minecraftName() + " accepted your friend request!").success();
+        }
     }
 
     @EventHandler
@@ -57,6 +63,7 @@ public class SocialRegistry {
         List<PendingFriendRequestDto> updated = new ArrayList<>(incomingFriendRequests);
         updated.add(event.request());
         incomingFriendRequests = List.copyOf(updated);
+        Toast.show().message(event.request().user().minecraftName() + " sent you a friend request!").info();
     }
 
     @EventHandler
