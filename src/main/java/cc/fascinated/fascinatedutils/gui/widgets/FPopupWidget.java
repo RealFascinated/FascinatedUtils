@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
+import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import org.lwjgl.glfw.GLFW;
 
 public abstract class FPopupWidget extends FWidget {
@@ -78,7 +79,7 @@ public abstract class FPopupWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        float cornerRadius = Math.max(0.5f, Math.min(8f, Math.min(dialogWidth, dialogHeight) * 0.5f - 0.01f));
+        float cornerRadius = Math.max(0.5f, Math.min(UITheme.CORNER_RADIUS_MD, Math.min(dialogWidth, dialogHeight) * 0.5f - 0.01f));
         float borderThickness = 1f;
         int fillColor = (graphics.theme().hintBackground() & 0x00FFFFFF) | 0xFF000000;
         graphics.fillRoundedRectFrame(dialogX, dialogY, dialogWidth, dialogHeight, cornerRadius, graphics.theme().hintBorder(), fillColor, borderThickness, borderThickness, RectCornerRoundMask.ALL);

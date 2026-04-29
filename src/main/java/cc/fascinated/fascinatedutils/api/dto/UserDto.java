@@ -5,5 +5,7 @@ public record UserDto(
         String minecraftUuid,
         String minecraftName,
         String role,
-        String status
+        String status,
+        Presence presence,
+        Presence preferredPresence
 ) {}

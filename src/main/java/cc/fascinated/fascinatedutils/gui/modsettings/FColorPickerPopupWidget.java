@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FIconCheckboxWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
@@ -147,7 +148,7 @@ public class FColorPickerPopupWidget extends FPopupWidget {
         float previewX = hexInput.x() + hexInput.w() + 4f;
         float previewY = hexInput.y() + (hexInput.h() - previewSize) * 0.5f;
         int previewArgb = rainbow ? RainbowColors.currentColor().getPackedArgb() | 0xFF000000 : editingColor.getPackedArgb() | 0xFF000000;
-        graphics.fillRoundedRectFrame(previewX, previewY, previewSize, previewSize, 3f, graphics.theme().border(), previewArgb, 1f, 1f, RectCornerRoundMask.ALL);
+        graphics.fillRoundedRectFrame(previewX, previewY, previewSize, previewSize, UITheme.CORNER_RADIUS_XS, graphics.theme().border(), previewArgb, 1f, 1f, RectCornerRoundMask.ALL);
     }
 
     private void syncEditingColor() {

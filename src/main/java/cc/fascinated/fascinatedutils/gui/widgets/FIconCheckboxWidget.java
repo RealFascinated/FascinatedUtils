@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.resources.Identifier;
@@ -16,7 +17,7 @@ import java.util.function.Supplier;
 
 public class FIconCheckboxWidget extends FWidget {
     private static final float CHECKBOX_SIZE_DESIGN = 12f;
-    private static final float CHECKBOX_CORNER_RADIUS_DESIGN = 2f;
+    private static final float CHECKBOX_CORNER_RADIUS_DESIGN = UITheme.CORNER_RADIUS_XS;
     private static final float LABEL_GAP_DESIGN = 4f;
     private final Consumer<Boolean> onToggle;
     private Supplier<String> labelSupplier;

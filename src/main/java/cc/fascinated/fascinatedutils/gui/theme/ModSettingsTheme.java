@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.theme;
 
-
 public class ModSettingsTheme {
     /**
      * Max shell width before clamping by canvas width times {@link #SHELL_MAX_WIDTH_FRAC}.
@@ -37,7 +36,7 @@ public class ModSettingsTheme {
      * Corner fillet radius for the mod settings window shell (shadow, gradient panel, title bar); logical px, scaled
      * .
      */
-    public static final float SHELL_CORNER_RADIUS = 10f;
+    public static final float SHELL_CORNER_RADIUS = UITheme.CORNER_RADIUS_LG;
     /**
      * Maximum width of the segmented tab control before clamping to the body width (logical px).
      */
@@ -53,7 +52,7 @@ public class ModSettingsTheme {
     /**
      * Corner radius for module/widget segment buttons (logical px).
      */
-    public static final float SHELL_TAB_STRIP_SEGMENT_CORNER_RADIUS = 6f;
+    public static final float SHELL_TAB_STRIP_SEGMENT_CORNER_RADIUS = UITheme.CORNER_RADIUS_MD;
 
     /**
      * Design-space body line height for mod settings layout (labels, row sizing); slightly below vanilla font line

@@ -9,12 +9,13 @@ import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
+import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 
 import java.util.function.Consumer;
 
 public class FColorSettingRowWidget extends FSettingRowWidget {
     private static final float SWATCH_SIZE_DESIGN = 10f;
-    private static final float SWATCH_CORNER_RADIUS_DESIGN = 2f;
+    private static final float SWATCH_CORNER_RADIUS_DESIGN = UITheme.CORNER_RADIUS_XS;
     private final ColorSetting colorSetting;
     private final Consumer<ColorSetting> openColorPicker;
     private boolean hoveredSwatch;

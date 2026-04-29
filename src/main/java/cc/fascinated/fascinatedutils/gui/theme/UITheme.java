@@ -98,4 +98,13 @@ public class UITheme {
     public static final float GAP_MD = 8f;
     public static final float GAP_LG = 14f;
     public static final float GAP_XL = 20f;
+
+    /** Tiny corner fillet: checkboxes, color swatches. */
+    public static final float CORNER_RADIUS_XS = 2f;
+    /** Small corner fillet: inputs, row items, small buttons, avatar frames. */
+    public static final float CORNER_RADIUS_SM = 4f;
+    /** Medium corner fillet: tab segments, toasts, dropdowns, context menus. */
+    public static final float CORNER_RADIUS_MD = 6f;
+    /** Large corner fillet: shells, standalone panels, full cards. */
+    public static final float CORNER_RADIUS_LG = 10f;
 }

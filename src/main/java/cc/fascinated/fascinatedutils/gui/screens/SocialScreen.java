@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.FascinatedUtils;
 import cc.fascinated.fascinatedutils.api.AlumiteApi;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.Errors;
+import cc.fascinated.fascinatedutils.api.dto.Presence;
 import cc.fascinated.fascinatedutils.api.dto.friend.FriendEntryDto;
 import cc.fascinated.fascinatedutils.api.dto.friend.PendingFriendRequestDto;
 import cc.fascinated.fascinatedutils.systems.social.SocialRegistry;
@@ -43,9 +44,20 @@ public class SocialScreen extends WidgetScreen {
     private static final float BTN_W = 20f;
     private static final float ADD_BTN_W = 36f;
     private static final float TAB_H = 26f;
+        private static final float PRESENCE_PICKER_H = 24f;
+        private static final float PRESENCE_PICKER_DOT = 8f;
+        private static final float PRESENCE_MENU_W = 156f;
+        private static final float PRESENCE_MENU_PAD = 6f;
+        private static final float PRESENCE_MENU_ROW_H = 30f;
+        private static final float PRESENCE_MENU_ROW_GAP = 4f;
     private static final int FOCUS_ADD_FRIEND = 7110;
-    private static final float AVATAR_SIZE = 28f;
+    private static final float AVATAR_SIZE = 32f;
     private static final float STATUS_DOT = 6f;
+        private static final Presence[] SELECTABLE_PREFERRED_PRESENCES = {
+            Presence.ONLINE,
+            Presence.AWAY,
+            Presence.INVISIBLE
+        };
     private static final int[] BADGE_COLORS = {
             0xFF6B5B95, 0xFF88B04B, 0xFF955251, 0xFF009B77,
             0xFF45B8AC, 0xFF5B5EA6, 0xFFB565A7, 0xFFDD4132
@@ -61,6 +73,19 @@ public class SocialScreen extends WidgetScreen {
     private float scrollAccum;
     private FriendEntryDto pendingRemoveFriend;
     private PendingFriendRequestDto pendingCancelRequest;
+    private boolean preferredPresenceMenuOpen;
+    private boolean preferredPresenceUpdatePending;
+    private float panelX;
+    private float panelY;
+    private float panelW;
+    private float panelH;
+    private float preferredPresenceButtonX;
+    private float preferredPresenceButtonY;
+    private float preferredPresenceButtonW;
+    private float preferredPresenceButtonH;
+    private float preferredPresenceMenuX;
+    private float preferredPresenceMenuY;
+    private float preferredPresenceMenuHeight;
 
     public SocialScreen() {
         super(Component.translatable("fascinatedutils.social.title"));
@@ -80,6 +105,10 @@ public class SocialScreen extends WidgetScreen {
     }
 
     private FWidget buildPanel() {
+        if (pendingRemoveFriend != null || pendingCancelRequest != null) {
+            preferredPresenceMenuOpen = false;
+        }
+
         FAbsoluteStackWidget stack = new FAbsoluteStackWidget();
 
         stack.addChild(new FWidget() {
@@ -155,6 +184,10 @@ public class SocialScreen extends WidgetScreen {
             stack.addChild(panelScopedPopup(cancelPopup));
         }
 
+        if (preferredPresenceMenuOpen) {
+            stack.addChild(buildPreferredPresenceMenuOverlay());
+        }
+
         return stack;
     }
 
@@ -205,7 +238,7 @@ public class SocialScreen extends WidgetScreen {
                 setBounds(lx, ly, lw, lh);
                 float curY = ly + PAD;
 
-                float headerH = 40f;
+                float headerH = 56f;
                 header.layout(measure, lx + PAD, curY, lw - 2f * PAD, headerH);
                 curY += headerH + 6f;
 
@@ -236,6 +269,10 @@ public class SocialScreen extends WidgetScreen {
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, lw, lh);
+                panelX = lx;
+                panelY = ly;
+                SocialScreen.this.panelW = lw;
+                panelH = lh;
                 panelBg.layout(measure, lx, ly, lw, lh);
                 content.layout(measure, lx, ly, lw, lh);
             }
@@ -270,10 +307,13 @@ public class SocialScreen extends WidgetScreen {
             }
         };
 
+        FWidget preferredPresencePicker = buildPreferredPresencePicker();
+
         return new FWidget() {
             {
                 addChild(titleLabel);
                 addChild(subtitleLabel);
+                addChild(preferredPresencePicker);
                 addChild(closeBtn);
             }
 
@@ -282,11 +322,201 @@ public class SocialScreen extends WidgetScreen {
                 setBounds(lx, ly, lw, lh);
                 float lineH = measure.getFontCapHeight();
                 float totalTextH = lineH * 2 + 4f;
-                float textStartY = ly + (lh - totalTextH) / 2f;
-                float textW = lw - 22f;
-                titleLabel.layout(measure, lx, textStartY, textW, lineH);
-                subtitleLabel.layout(measure, lx, textStartY + lineH + 4f, textW, lineH);
-                closeBtn.layout(measure, lx + lw - 20f, ly + (lh - BTN_H) / 2f, 20f, BTN_H);
+                float row1H = Math.max(totalTextH, BTN_H);
+                // Row 1: title/subtitle on left, close button on right
+                float closeBtnX = lx + lw - 20f;
+                float textStartY = ly + (row1H - totalTextH) / 2f;
+                titleLabel.layout(measure, lx, textStartY, lw - 26f, lineH);
+                subtitleLabel.layout(measure, lx, textStartY + lineH + 4f, lw - 26f, lineH);
+                closeBtn.layout(measure, closeBtnX, ly + (row1H - BTN_H) / 2f, 20f, BTN_H);
+                // Row 2: full-width presence picker
+                float row2Y = ly + row1H + 8f;
+                preferredPresencePicker.layout(measure, lx, row2Y, lw, PRESENCE_PICKER_H);
+            }
+        };
+    }
+
+    private FWidget buildPreferredPresencePicker() {
+        return new FWidget() {
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+                preferredPresenceButtonX = lx;
+                preferredPresenceButtonY = ly;
+                preferredPresenceButtonW = lw;
+                preferredPresenceButtonH = lh;
+            }
+
+            @Override
+            protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+                boolean hovered = containsPoint(mouseX, mouseY);
+                boolean interactive = !preferredPresenceUpdatePending;
+                int fillColor = preferredPresenceMenuOpen
+                        ? 0xFF2B3142
+                        : hovered && interactive ? 0xFF242A38 : 0xFF202531;
+                int borderColor = preferredPresenceMenuOpen
+                        ? 0xFF6E7897
+                        : hovered && interactive ? 0xFF59617A : 0xFF454A60;
+                graphics.fillRoundedRectFrame(x(), y(), w(), h(), 6f, borderColor, fillColor,
+                        1f, 1f, RectCornerRoundMask.ALL);
+
+                Presence presence = displayedPreferredPresence();
+                float dotX = x() + 8f;
+                float dotY = y() + (h() - PRESENCE_PICKER_DOT) / 2f;
+                graphics.fillRoundedRect(dotX, dotY, PRESENCE_PICKER_DOT, PRESENCE_PICKER_DOT,
+                        PRESENCE_PICKER_DOT / 2f, presence.color(), RectCornerRoundMask.ALL);
+
+                String label = preferredPresenceUpdatePending
+                        ? Component.translatable("fascinatedutils.social.presence.updating").getString()
+                        : preferredPresenceLabel(presence);
+                float textY = y() + (h() - graphics.getFontCapHeight()) / 2f;
+                graphics.drawText(label, dotX + PRESENCE_PICKER_DOT + 6f, textY,
+                        preferredPresenceUpdatePending
+                                ? FascinatedGuiTheme.INSTANCE.textMuted()
+                                : FascinatedGuiTheme.INSTANCE.textPrimary(),
+                        false, false);
+
+                if (!preferredPresenceUpdatePending) {
+                    graphics.drawText(preferredPresenceMenuOpen ? "\u25B4" : "\u25BE", x() + w() - 12f, textY,
+                            FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                }
+            }
+
+            @Override
+            public boolean wantsPointer() {
+                return true;
+            }
+
+            @Override
+            public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
+                return preferredPresenceUpdatePending ? UiPointerCursor.DEFAULT : UiPointerCursor.HAND;
+            }
+
+            @Override
+            public boolean mouseDown(float pointerX, float pointerY, int button) {
+                if (button != 0) {
+                    return false;
+                }
+                if (preferredPresenceUpdatePending) {
+                    return true;
+                }
+                preferredPresenceMenuOpen = !preferredPresenceMenuOpen;
+                rebuildHost();
+                return true;
+            }
+        };
+    }
+
+    private FWidget buildPreferredPresenceMenuOverlay() {
+        FWidget menu = buildPreferredPresenceMenu();
+        return new FWidget() {
+            {
+                addChild(menu);
+            }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+                float menuHeight = preferredPresenceMenuHeight();
+                float menuX = preferredPresenceButtonX + preferredPresenceButtonW - PRESENCE_MENU_W;
+                float minMenuX = panelX + PAD;
+                float maxMenuX = panelX + panelW - PAD - PRESENCE_MENU_W;
+                if (maxMenuX < minMenuX) {
+                    menuX = minMenuX;
+                } else {
+                    menuX = Math.max(minMenuX, Math.min(menuX, maxMenuX));
+                }
+                float menuY = preferredPresenceButtonY + preferredPresenceButtonH + 4f;
+                float maxMenuY = panelY + panelH - PAD - menuHeight;
+                if (menuY > maxMenuY) {
+                    menuY = Math.max(panelY + PAD, maxMenuY);
+                }
+                preferredPresenceMenuX = menuX;
+                preferredPresenceMenuY = menuY;
+                preferredPresenceMenuHeight = menuHeight;
+                menu.layout(measure, menuX, menuY, PRESENCE_MENU_W, menuHeight);
+            }
+
+            @Override
+            public void render(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+                graphics.absolutePost(() -> menu.render(graphics, mouseX, mouseY, deltaSeconds));
+            }
+        };
+    }
+
+    private FWidget buildPreferredPresenceMenu() {
+        return new FWidget() {
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+            }
+
+            @Override
+            protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+                graphics.fillRoundedRectFrame(x(), y(), w(), h(), UITheme.CORNER_RADIUS_MD, 0xFF454A60, 0xFF171B24,
+                        1f, 1f, RectCornerRoundMask.ALL);
+
+                float rowY = y() + PRESENCE_MENU_PAD;
+                Presence currentPresence = displayedPreferredPresence();
+                for (Presence presence : SELECTABLE_PREFERRED_PRESENCES) {
+                    boolean hovered = mouseX >= x() + 4f && mouseX < x() + w() - 4f
+                            && mouseY >= rowY && mouseY < rowY + PRESENCE_MENU_ROW_H;
+                    boolean selected = currentPresence == presence;
+                    int rowColor = selected ? 0x334960C8 : hovered ? 0x22FFFFFF : 0x00000000;
+                    if (rowColor != 0) {
+                        graphics.fillRoundedRect(x() + 4f, rowY, w() - 8f, PRESENCE_MENU_ROW_H, UITheme.CORNER_RADIUS_SM,
+                                rowColor, RectCornerRoundMask.ALL);
+                    }
+
+                    float dotX = x() + 12f;
+                    float dotY = rowY + 7f;
+                    graphics.fillRoundedRect(dotX, dotY, PRESENCE_PICKER_DOT, PRESENCE_PICKER_DOT,
+                            PRESENCE_PICKER_DOT / 2f, presence.color(), RectCornerRoundMask.ALL);
+
+                    float labelX = dotX + PRESENCE_PICKER_DOT + 8f;
+                    graphics.drawText(preferredPresenceLabel(presence), labelX, rowY + 3f,
+                            FascinatedGuiTheme.INSTANCE.textPrimary(), false, false);
+                    graphics.drawText(preferredPresenceDescription(presence), labelX, rowY + 15f,
+                            FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+
+                    if (selected) {
+                        graphics.drawText("\u2713", x() + w() - 14f, rowY + 6f,
+                                0xFF9DB4FF, false, false);
+                    }
+                    rowY += PRESENCE_MENU_ROW_H + PRESENCE_MENU_ROW_GAP;
+                }
+            }
+
+            @Override
+            public boolean wantsPointer() {
+                return true;
+            }
+
+            @Override
+            public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
+                return pointerX >= x() + 4f && pointerX < x() + w() - 4f
+                        && pointerY >= y() + PRESENCE_MENU_PAD && pointerY < y() + h() - PRESENCE_MENU_PAD
+                        ? UiPointerCursor.HAND
+                        : UiPointerCursor.DEFAULT;
+            }
+
+            @Override
+            public boolean mouseDown(float pointerX, float pointerY, int button) {
+                if (button != 0) {
+                    return false;
+                }
+
+                float rowY = y() + PRESENCE_MENU_PAD;
+                for (Presence presence : SELECTABLE_PREFERRED_PRESENCES) {
+                    if (pointerX >= x() + 4f && pointerX < x() + w() - 4f
+                            && pointerY >= rowY && pointerY < rowY + PRESENCE_MENU_ROW_H) {
+                        updatePreferredPresence(presence);
+                        return true;
+                    }
+                    rowY += PRESENCE_MENU_ROW_H + PRESENCE_MENU_ROW_GAP;
+                }
+
+                return false;
             }
         };
     }
@@ -316,9 +546,11 @@ public class SocialScreen extends WidgetScreen {
 
                 float underlineH = 2f;
                 if (activeTab == Tab.FRIENDS) {
-                    graphics.drawRect(x(), y() + h() - underlineH, halfW, underlineH, UITheme.COLOR_ACCENT);
+                    graphics.fillRoundedRect(x() + 8f, y() + h() - underlineH, halfW - 16f, underlineH,
+                            underlineH / 2f, UITheme.COLOR_ACCENT, RectCornerRoundMask.ALL);
                 } else {
-                    graphics.drawRect(x() + halfW, y() + h() - underlineH, halfW, underlineH, UITheme.COLOR_ACCENT);
+                    graphics.fillRoundedRect(x() + halfW + 8f, y() + h() - underlineH, halfW - 16f, underlineH,
+                            underlineH / 2f, UITheme.COLOR_ACCENT, RectCornerRoundMask.ALL);
                 }
 
                 int friendsTextColor = activeTab == Tab.FRIENDS ? FascinatedGuiTheme.INSTANCE.textPrimary() : FascinatedGuiTheme.INSTANCE.textMuted();
@@ -434,7 +666,7 @@ public class SocialScreen extends WidgetScreen {
             @Override
             protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
                 boolean rowHovered = containsPoint(mouseX, mouseY);
-                graphics.fillRoundedRect(x(), y(), w(), h(), 5f,
+                graphics.fillRoundedRect(x(), y(), w(), h(), UITheme.CORNER_RADIUS_SM,
                         rowHovered ? 0x22FFFFFF : UITheme.COLOR_BACKGROUND, RectCornerRoundMask.ALL);
 
                 float avatarX = x() + 4f;
@@ -454,8 +686,7 @@ public class SocialScreen extends WidgetScreen {
                 }
 
                 PresenceUpdateEvent presence = SocialRegistry.INSTANCE.getPresenceStatuses().get(friend.user().id());
-                boolean online = presence != null && "online".equals(presence.status());
-                int dotColor = online ? 0xFF44CC44 : 0xFF555555;
+                int dotColor = (presence == null ? Presence.OFFLINE : presence.status()).color();
                 float dotX = avatarX + AVATAR_SIZE - STATUS_DOT - 1f;
                 float dotY = avatarY + AVATAR_SIZE - STATUS_DOT - 1f;
                 graphics.fillRoundedRect(dotX - 2f, dotY - 2f, STATUS_DOT + 4f, STATUS_DOT + 4f,
@@ -467,8 +698,9 @@ public class SocialScreen extends WidgetScreen {
                 float textBlockH = capH * 2f + 3f;
                 float textStartY = y() + (h() - textBlockH) / 2f;
                 float nameX = x() + 4f + AVATAR_SIZE + 6f;
+                int statusTextColor = (presence == null ? Presence.OFFLINE : presence.status()).color();
                 graphics.drawText(presenceStatusLine(presence), nameX, textStartY + capH + 3f,
-                        FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                        statusTextColor, false, false);
 
                 if (rowHovered) {
                     float removeBtnX = x() + w() - BTN_W - 4f;
@@ -534,7 +766,7 @@ public class SocialScreen extends WidgetScreen {
             @Override
             protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
                 boolean rowHovered = containsPoint(mouseX, mouseY);
-                graphics.fillRoundedRect(x(), y(), w(), h(), 5f,
+                graphics.fillRoundedRect(x(), y(), w(), h(), UITheme.CORNER_RADIUS_SM,
                         rowHovered ? 0x22FFFFFF : UITheme.COLOR_BACKGROUND, RectCornerRoundMask.ALL);
 
                 float avatarX = x() + 4f;
@@ -648,7 +880,7 @@ public class SocialScreen extends WidgetScreen {
             @Override
             protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
                 boolean rowHovered = containsPoint(mouseX, mouseY);
-                graphics.fillRoundedRect(x(), y(), w(), h(), 5f,
+                graphics.fillRoundedRect(x(), y(), w(), h(), UITheme.CORNER_RADIUS_SM,
                         rowHovered ? 0x22FFFFFF : UITheme.COLOR_BACKGROUND, RectCornerRoundMask.ALL);
 
                 float avatarX = x() + 4f;
@@ -726,17 +958,78 @@ public class SocialScreen extends WidgetScreen {
     }
 
     private static String presenceStatusLine(PresenceUpdateEvent presence) {
-        if (presence == null || "offline".equals(presence.status())) {
+        if (presence == null || presence.status() == Presence.OFFLINE) {
             if (presence != null && presence.lastSeen() != null) {
                 long timeAgo = Instant.parse(presence.lastSeen()).toEpochMilli();
-                return "Offline · " + TimeUtils.timeAgo(timeAgo, timeAgo < 61_000 ? 1 : 2);
+                return Component.translatable("fascinatedutils.social.presence.offline").getString()
+                        + " · " + TimeUtils.timeAgo(timeAgo, timeAgo < 61_000 ? 1 : 2);
             }
-            return "Offline";
+            return Component.translatable("fascinatedutils.social.presence.offline").getString();
         }
-        return switch (presence.status()) {
-            case "online" -> "Online";
-            case "away" -> "Away";
-            default -> presence.status();
+        return preferredPresenceLabel(presence.status());
+    }
+
+    private Presence displayedPreferredPresence() {
+        return AlumiteApi.INSTANCE.currentPreferredPresence();
+    }
+
+    private void updatePreferredPresence(Presence presence) {
+        Presence currentPresence = displayedPreferredPresence();
+        preferredPresenceMenuOpen = false;
+        if (currentPresence == presence) {
+            rebuildHost();
+            return;
+        }
+
+        preferredPresenceUpdatePending = true;
+        rebuildHost();
+
+        FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+            try {
+                AlumiteApi.INSTANCE.updatePreferredPresence(presence);
+            } catch (AlumiteApiException exception) {
+                Toast.show().message(socialErrorMessage(exception)).error();
+            } catch (Exception exception) {
+                Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
+            }
+
+            Minecraft.getInstance().execute(() -> {
+                preferredPresenceUpdatePending = false;
+                rebuildHost();
+            });
+        });
+    }
+
+    private boolean isWithinPreferredPresenceControl(float pointerX, float pointerY) {
+        boolean withinButton = pointerX >= preferredPresenceButtonX && pointerX < preferredPresenceButtonX + preferredPresenceButtonW
+                && pointerY >= preferredPresenceButtonY && pointerY < preferredPresenceButtonY + preferredPresenceButtonH;
+        boolean withinMenu = preferredPresenceMenuOpen
+                && pointerX >= preferredPresenceMenuX && pointerX < preferredPresenceMenuX + PRESENCE_MENU_W
+                && pointerY >= preferredPresenceMenuY && pointerY < preferredPresenceMenuY + preferredPresenceMenuHeight;
+        return withinButton || withinMenu;
+    }
+
+    private float preferredPresenceMenuHeight() {
+        return PRESENCE_MENU_PAD * 2f
+                + SELECTABLE_PREFERRED_PRESENCES.length * PRESENCE_MENU_ROW_H
+                + Math.max(0, SELECTABLE_PREFERRED_PRESENCES.length - 1) * PRESENCE_MENU_ROW_GAP;
+    }
+
+    private static String preferredPresenceLabel(Presence presence) {
+        return switch (presence) {
+            case ONLINE -> Component.translatable("fascinatedutils.social.presence.online").getString();
+            case AWAY -> Component.translatable("fascinatedutils.social.presence.away").getString();
+            case INVISIBLE -> Component.translatable("fascinatedutils.social.presence.invisible").getString();
+            case OFFLINE -> Component.translatable("fascinatedutils.social.presence.offline").getString();
+        };
+    }
+
+    private static String preferredPresenceDescription(Presence presence) {
+        return switch (presence) {
+            case ONLINE -> Component.translatable("fascinatedutils.social.presence.description.online").getString();
+            case AWAY -> Component.translatable("fascinatedutils.social.presence.description.away").getString();
+            case INVISIBLE -> Component.translatable("fascinatedutils.social.presence.description.invisible").getString();
+            case OFFLINE -> Component.translatable("fascinatedutils.social.presence.offline").getString();
         };
     }
 
@@ -815,7 +1108,7 @@ public class SocialScreen extends WidgetScreen {
                     Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
                 }
             });
-        }, () -> Component.translatable("fascinatedutils.social.add_button").getString(), ADD_BTN_W, 1, 1f, 4f, 1f, 4f) {
+        }, () -> Component.translatable("fascinatedutils.social.add_button").getString(), ADD_BTN_W, 1, 1f, 4f, 1f, 4f, 3f) {
             @Override
             protected int resolveButtonFillColorArgb(boolean hovered) {
                 return hovered ? UITheme.COLOR_ACCENT_HOVER : UITheme.COLOR_ACCENT;
@@ -884,6 +1177,10 @@ public class SocialScreen extends WidgetScreen {
     public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubled) {
         float pX = UIScale.uiPointerX();
         float pY = UIScale.uiPointerY();
+        if (preferredPresenceMenuOpen && !isWithinPreferredPresenceControl(pX, pY)) {
+            preferredPresenceMenuOpen = false;
+            rebuildHost();
+        }
         boolean handled = host.dispatchInput(new InputEvent.MousePress(pX, pY, event.button()));
         return handled || super.mouseClicked(event, doubled);
     }
@@ -912,6 +1209,11 @@ public class SocialScreen extends WidgetScreen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
+        if (preferredPresenceMenuOpen && event.key() == GLFW.GLFW_KEY_ESCAPE) {
+            preferredPresenceMenuOpen = false;
+            rebuildHost();
+            return true;
+        }
         boolean handled = host.dispatchInput(new InputEvent.KeyPress(event.key(), event.scancode(), event.modifiers()));
         if (handled) { return true; }
         if (event.key() == GLFW.GLFW_KEY_ESCAPE) {

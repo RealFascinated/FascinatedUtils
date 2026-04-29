@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.api;
 
 import cc.fascinated.fascinatedutils.FascinatedUtils;
 import cc.fascinated.fascinatedutils.api.dto.auth.ChallengeResponse;
+import cc.fascinated.fascinatedutils.api.dto.Presence;
 import cc.fascinated.fascinatedutils.api.dto.auth.RefreshRequest;
 import cc.fascinated.fascinatedutils.api.dto.auth.RefreshResponse;
 import cc.fascinated.fascinatedutils.api.dto.auth.VerifyRequest;
@@ -9,6 +10,7 @@ import cc.fascinated.fascinatedutils.api.dto.auth.VerifyResponse;
 import cc.fascinated.fascinatedutils.api.dto.friend.FriendEntryDto;
 import cc.fascinated.fascinatedutils.api.dto.friend.PendingFriendRequestDto;
 import cc.fascinated.fascinatedutils.api.dto.friend.SendFriendRequestRequest;
+import cc.fascinated.fascinatedutils.api.dto.presence.UpdatePresenceRequest;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
@@ -43,6 +45,7 @@ public class AlumiteApi {
     private static final String ROUTE_FRIENDS_REQUESTS = "/friends/requests";
     private static final String ROUTE_FRIENDS_REQUESTS_INCOMING = "/friends/requests/incoming";
     private static final String ROUTE_FRIENDS_REQUESTS_OUTGOING = "/friends/requests/outgoing";
+    private static final String ROUTE_PRESENCE = "/presence";
 
     private final HttpClient httpClient;
     private final AlumiteTokenStore tokenStore;
@@ -51,6 +54,7 @@ public class AlumiteApi {
     private volatile String activeAccountKey;
     private volatile String activeAccessToken;
     private volatile String activeRefreshToken;
+    private volatile Presence activePreferredPresence = Presence.ONLINE;
     private volatile ScheduledFuture<?> tokenRefreshTask;
 
     private AlumiteApi() {
@@ -72,7 +76,11 @@ public class AlumiteApi {
     }
 
     private void authenticate(Minecraft minecraftClient) {
-        activeAccountKey = minecraftClient.getUser().getProfileId().toString();
+        String nextAccountKey = minecraftClient.getUser().getProfileId().toString();
+        if (activeAccountKey == null || !activeAccountKey.equals(nextAccountKey)) {
+            activePreferredPresence = Presence.ONLINE;
+        }
+        activeAccountKey = nextAccountKey;
 
         String storedRefresh = tokenStore.load(activeAccountKey);
         if (storedRefresh != null && tryRefresh(activeAccountKey, storedRefresh)) {
@@ -136,6 +144,7 @@ public class AlumiteApi {
             VerifyResponse result = GSON.fromJson(verifyResponse.body(), VerifyResponse.class);
             activeAccessToken = result.accessToken();
             activeRefreshToken = result.refreshToken();
+            activePreferredPresence = normalizePreferredPresence(result.user().preferredPresence());
             storeSession(activeAccountKey, result.refreshToken());
             scheduleTokenRefresh(result.accessExpiresAt());
             Client.LOG.info("[AlumiteApi] Authenticated as {}", result.user().minecraftName());
@@ -251,6 +260,32 @@ public class AlumiteApi {
         }
     }
 
+    public boolean updatePreferredPresence(Presence presence) {
+        Presence resolvedPresence = normalizePreferredPresence(presence);
+        if (presence == null) {
+            throw new IllegalArgumentException("Preferred presence is required.");
+        }
+        if (presence == Presence.OFFLINE) {
+            throw new IllegalArgumentException("Preferred presence cannot be offline.");
+        }
+        try {
+            sendAuthorizedChecked("PATCH", ROUTE_PRESENCE,
+                    GSON.toJson(new UpdatePresenceRequest(resolvedPresence)),
+                    "update preferred presence", "Failed to update preferred presence.");
+            activePreferredPresence = resolvedPresence;
+            return true;
+        } catch (AlumiteApiException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            throw wrapRequestException("update preferred presence", exception,
+                    "Failed to update preferred presence.");
+        }
+    }
+
+    public Presence currentPreferredPresence() {
+        return normalizePreferredPresence(activePreferredPresence);
+    }
+
     public String activeAccessToken() {
         return activeAccessToken;
     }
@@ -361,5 +396,12 @@ public class AlumiteApi {
 
     private void storeSession(String accountKey, String newRefreshToken) {
         tokenStore.save(accountKey, newRefreshToken);
+    }
+
+    private static Presence normalizePreferredPresence(Presence presence) {
+        if (presence == null || presence == Presence.OFFLINE) {
+            return Presence.ONLINE;
+        }
+        return presence;
     }
 }

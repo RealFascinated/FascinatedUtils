@@ -276,7 +276,7 @@ public class FOutlinedTextInputWidget extends FWidget {
         int borderArgb = focused ? graphics.theme().accentBright() : graphics.theme().border();
         int fillArgb = focused ? graphics.theme().surfaceElevated() : graphics.theme().surface();
         float borderThickness = UITheme.BORDER_THICKNESS_PX;
-        float cornerRadius = Mth.clamp(3f, 0.5f, Math.min(w(), h()) * 0.5f - borderThickness * 0.5f - 0.01f);
+        float cornerRadius = Mth.clamp(UITheme.CORNER_RADIUS_SM, 0.5f, Math.min(w(), h()) * 0.5f - borderThickness * 0.5f - 0.01f);
         graphics.fillRoundedRectFrame(x(), y(), w(), h(), cornerRadius, borderArgb, fillArgb, borderThickness, borderThickness, RectCornerRoundMask.ALL);
 
         float pad = padX(graphics);
