@@ -16,6 +16,7 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.AlumiteAuthenticatedEv
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import lombok.SneakyThrows;
 import meteordevelopment.orbit.EventHandler;
@@ -31,6 +32,8 @@ import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import cc.fascinated.fascinatedutils.common.JsonUtils;
 
 public class AlumiteApi {
 
@@ -190,69 +193,61 @@ public class AlumiteApi {
     }
 
     public List<FriendEntryDto> getFriends() {
-        return getList(ROUTE_FRIENDS, FriendEntryDto.class, "get friends");
+        return getList(ROUTE_FRIENDS, FriendEntryDto.class, "get friends", "Failed to load friends.");
     }
 
     public PendingFriendRequestDto sendFriendRequest(String targetUsername) {
         try {
-            HttpResponse<String> response = sendAuthorized("POST", ROUTE_FRIENDS_REQUESTS,
-                    GSON.toJson(new SendFriendRequestRequest(targetUsername)));
-            if (response.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] Send friend request failed with status {}: {}",
-                        response.statusCode(), response.body());
-                return null;
-            }
+            HttpResponse<String> response = sendAuthorizedChecked("POST", ROUTE_FRIENDS_REQUESTS,
+                    GSON.toJson(new SendFriendRequestRequest(targetUsername)),
+                    "send friend request", "Failed to send request.");
             return GSON.fromJson(response.body(), PendingFriendRequestDto.class);
+        } catch (AlumiteApiException exception) {
+            throw exception;
         } catch (Exception exception) {
-            Client.LOG.warn("[AlumiteApi] Send friend request failed: {}", exception.getMessage());
-            return null;
+            throw wrapRequestException("send friend request", exception, "Failed to send request.");
         }
     }
 
     public List<PendingFriendRequestDto> getIncomingFriendRequests() {
-        return getList(ROUTE_FRIENDS_REQUESTS_INCOMING, PendingFriendRequestDto.class, "get incoming friend requests");
+        return getList(ROUTE_FRIENDS_REQUESTS_INCOMING, PendingFriendRequestDto.class,
+                "get incoming friend requests", "Failed to load incoming requests.");
     }
 
     public List<PendingFriendRequestDto> getOutgoingFriendRequests() {
-        return getList(ROUTE_FRIENDS_REQUESTS_OUTGOING, PendingFriendRequestDto.class, "get outgoing friend requests");
+        return getList(ROUTE_FRIENDS_REQUESTS_OUTGOING, PendingFriendRequestDto.class,
+                "get outgoing friend requests", "Failed to load outgoing requests.");
     }
 
     public boolean acceptFriendRequest(int requestId) {
-        return postFriendRequestAction(requestId, "accept");
+        return postFriendRequestAction(requestId, "accept", "Failed to accept request.");
     }
 
     public boolean declineFriendRequest(int requestId) {
-        return postFriendRequestAction(requestId, "decline");
+        return postFriendRequestAction(requestId, "decline", "Failed to decline request.");
     }
 
     public boolean cancelFriendRequest(int requestId) {
         try {
-            HttpResponse<String> response = sendAuthorized("DELETE",
-                    ROUTE_FRIENDS_REQUESTS + "/" + requestId, null);
-            if (response.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] Cancel friend request failed with status {}: {}",
-                        response.statusCode(), response.body());
-                return false;
-            }
+            sendAuthorizedChecked("DELETE", ROUTE_FRIENDS_REQUESTS + "/" + requestId, null,
+                    "cancel friend request", "Failed to cancel request.");
             return true;
+        } catch (AlumiteApiException exception) {
+            throw exception;
         } catch (Exception exception) {
-            Client.LOG.warn("[AlumiteApi] Cancel friend request failed: {}", exception.getMessage());
-            return false;
+            throw wrapRequestException("cancel friend request", exception, "Failed to cancel request.");
         }
     }
 
     public boolean removeFriend(int userId) {
         try {
-            HttpResponse<String> response = sendAuthorized("DELETE", ROUTE_FRIENDS + "/" + userId, null);
-            if (response.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] Remove friend failed with status {}: {}",
-                        response.statusCode(), response.body());
-                return false;
-            }
+            sendAuthorizedChecked("DELETE", ROUTE_FRIENDS + "/" + userId, null,
+                    "remove friend", "Failed to remove friend.");
             return true;
+        } catch (AlumiteApiException exception) {
+            throw exception;
         } catch (Exception exception) {
-            Client.LOG.warn("[AlumiteApi] Remove friend failed: {}", exception.getMessage());
-            return false;
+            throw wrapRequestException("remove friend", exception, "Failed to remove friend.");
         }
     }
 
@@ -260,33 +255,43 @@ public class AlumiteApi {
         return activeAccessToken;
     }
 
-    private boolean postFriendRequestAction(int requestId, String action) {
+    private boolean postFriendRequestAction(int requestId, String action, String fallbackMessage) {
         try {
-            HttpResponse<String> response = sendAuthorized("POST",
-                    ROUTE_FRIENDS_REQUESTS + "/" + requestId + "/" + action, "{}");
-            if (response.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] {} friend request failed with status {}: {}",
-                        action, response.statusCode(), response.body());
-                return false;
-            }
+            sendAuthorizedChecked("POST", ROUTE_FRIENDS_REQUESTS + "/" + requestId + "/" + action, "{}",
+                    action + " friend request", fallbackMessage);
             return true;
+        } catch (AlumiteApiException exception) {
+            throw exception;
         } catch (Exception exception) {
-            Client.LOG.warn("[AlumiteApi] {} friend request failed: {}", action, exception.getMessage());
-            return false;
+            throw wrapRequestException(action + " friend request", exception, fallbackMessage);
         }
     }
 
-    private <T> List<T> getList(String path, Class<T> type, String actionName) {
+    private <T> List<T> getList(String path, Class<T> type, String actionName, String fallbackMessage) {
         try {
-            HttpResponse<String> response = sendAuthorized("GET", path, null);
-            if (response.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] {} failed with status {}", actionName, response.statusCode());
-                return List.of();
-            }
+            HttpResponse<String> response = sendAuthorizedChecked("GET", path, null, actionName, fallbackMessage);
             return GSON.fromJson(response.body(), TypeToken.getParameterized(List.class, type).getType());
+        } catch (AlumiteApiException exception) {
+            throw exception;
         } catch (Exception exception) {
-            Client.LOG.warn("[AlumiteApi] {} failed: {}", actionName, exception.getMessage());
-            return List.of();
+            throw wrapRequestException(actionName, exception, fallbackMessage);
+        }
+    }
+
+    private HttpResponse<String> sendAuthorizedChecked(String method, String path, String body,
+                                                       String actionName, String fallbackMessage) {
+        try {
+            HttpResponse<String> response = sendAuthorized(method, path, body);
+            if (response.statusCode() != 200) {
+                Client.LOG.warn("[AlumiteApi] {} failed with status {}: {}",
+                        actionName, response.statusCode(), response.body());
+                throw parseApiException(response.body(), fallbackMessage);
+            }
+            return response;
+        } catch (AlumiteApiException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            throw wrapRequestException(actionName, exception, fallbackMessage);
         }
     }
 
@@ -323,6 +328,28 @@ public class AlumiteApi {
     private boolean refreshActiveToken() {
         String refreshToken = activeRefreshToken;
         return refreshToken != null && tryRefresh(activeAccountKey, refreshToken);
+    }
+
+    private AlumiteApiException parseApiException(String responseBody, String fallbackMessage) {
+        try {
+            JsonObject root = GSON.fromJson(responseBody, JsonObject.class);
+            Errors error = Errors.fromCode(JsonUtils.stringMember(root, "error"));
+            if (error == null) {
+                error = Errors.fromCode(JsonUtils.stringMember(root, "code"));
+            }
+            String message = JsonUtils.stringMember(root, "message", fallbackMessage);
+            if ((message == null || message.isBlank()) && error != null) {
+                message = error.getDisplayText();
+            }
+            return new AlumiteApiException(error, message);
+        } catch (Exception ignored) {
+            return new AlumiteApiException(null, fallbackMessage);
+        }
+    }
+
+    private AlumiteApiException wrapRequestException(String actionName, Exception exception, String fallbackMessage) {
+        Client.LOG.warn("[AlumiteApi] {} failed: {}", actionName, exception.getMessage());
+        return new AlumiteApiException(null, fallbackMessage);
     }
 
     private String requireAccessToken() {

@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.systems.social;
 
 import cc.fascinated.fascinatedutils.FascinatedUtils;
 import cc.fascinated.fascinatedutils.api.AlumiteApi;
+import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.dto.friend.FriendEntryDto;
 import cc.fascinated.fascinatedutils.api.dto.friend.PendingFriendRequestDto;
 import cc.fascinated.fascinatedutils.client.Client;
@@ -92,10 +93,17 @@ public class SocialRegistry {
 
     private void fetchAll() {
         Client.LOG.info("[SocialRegistry] Fetching social data...");
-        friends = AlumiteApi.INSTANCE.getFriends();
-        incomingFriendRequests = AlumiteApi.INSTANCE.getIncomingFriendRequests();
-        outgoingFriendRequests = AlumiteApi.INSTANCE.getOutgoingFriendRequests();
-        Client.LOG.info("[SocialRegistry] Loaded {} friends, {} incoming requests, {} outgoing requests",
-                friends.size(), incomingFriendRequests.size(), outgoingFriendRequests.size());
+        try {
+            friends = AlumiteApi.INSTANCE.getFriends();
+            incomingFriendRequests = AlumiteApi.INSTANCE.getIncomingFriendRequests();
+            outgoingFriendRequests = AlumiteApi.INSTANCE.getOutgoingFriendRequests();
+            Client.LOG.info("[SocialRegistry] Loaded {} friends, {} incoming requests, {} outgoing requests",
+                    friends.size(), incomingFriendRequests.size(), outgoingFriendRequests.size());
+        } catch (AlumiteApiException exception) {
+            friends = List.of();
+            incomingFriendRequests = List.of();
+            outgoingFriendRequests = List.of();
+            Client.LOG.warn("[SocialRegistry] Failed to fetch social data: {}", exception.getDisplayText());
+        }
     }
 }

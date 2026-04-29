@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 
@@ -48,6 +49,8 @@ public class GuiRenderer implements UIRenderer {
     private final ArrayDeque<MiniMessageTextOperation> miniMessageOperationPool = new ArrayDeque<>();
     private float savedVanillaW;
     private float savedVanillaH;
+    private float logicalToVanillaScaleX = 1f;
+    private float logicalToVanillaScaleY = 1f;
 
     public GuiRenderer(GuiGraphicsExtractor drawContext, GuiTheme guiTheme) {
         this.drawContext = drawContext;
@@ -70,16 +73,24 @@ public class GuiRenderer implements UIRenderer {
     public void begin(float clipWidth, float clipHeight) {
         savedVanillaW = (float) minecraftClient.getWindow().getGuiScaledWidth();
         savedVanillaH = (float) minecraftClient.getWindow().getGuiScaledHeight();
-        float poseScaleX = savedVanillaW / UIScale.uiWidth();
-        float poseScaleY = savedVanillaH / UIScale.uiHeight();
+        logicalToVanillaScaleX = savedVanillaW / UIScale.uiWidth();
+        logicalToVanillaScaleY = savedVanillaH / UIScale.uiHeight();
         drawContext.pose().pushMatrix();
         drawContext.pose().identity();
-        drawContext.pose().scale(poseScaleX, poseScaleY);
+        drawContext.pose().scale(logicalToVanillaScaleX, logicalToVanillaScaleY);
         MeshBuilder.INSTANCE.beginFrame(drawContext, minecraftClient);
         MeshBuilder.INSTANCE.beginSegment(drawContext);
         Scissor.Region root = new Scissor.Region(0f, 0f, clipWidth, clipHeight);
         scissorStack.push(root);
-        drawContext.enableScissor(root.ix0, root.iy0, root.ix1, root.iy1);
+        enableScissor(root);
+    }
+
+    private void enableScissor(Scissor.Region region) {
+        int x0 = Mth.floor(region.x * logicalToVanillaScaleX);
+        int y0 = Mth.floor(region.y * logicalToVanillaScaleY);
+        int x1 = Math.max(x0, Mth.ceil((region.x + region.width) * logicalToVanillaScaleX));
+        int y1 = Math.max(y0, Mth.ceil((region.y + region.height) * logicalToVanillaScaleY));
+        drawContext.enableScissor(x0, y0, x1, y1);
     }
 
     /**
@@ -138,7 +149,7 @@ public class GuiRenderer implements UIRenderer {
             region = new Scissor.Region(clipX, clipY, Math.max(0f, clipW), Math.max(0f, clipH));
         }
         scissorStack.push(region);
-        drawContext.enableScissor(region.ix0, region.iy0, region.ix1, region.iy1);
+        enableScissor(region);
         MeshBuilder.INSTANCE.beginSegment(drawContext);
     }
 
@@ -153,7 +164,7 @@ public class GuiRenderer implements UIRenderer {
         drawContext.disableScissor();
         if (!scissorStack.isEmpty()) {
             Scissor.Region parent = scissorStack.peek();
-            drawContext.enableScissor(parent.ix0, parent.iy0, parent.ix1, parent.iy1);
+            enableScissor(parent);
         }
         MeshBuilder.INSTANCE.beginSegment(drawContext);
     }

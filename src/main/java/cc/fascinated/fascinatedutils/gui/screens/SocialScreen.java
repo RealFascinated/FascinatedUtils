@@ -2,6 +2,8 @@ package cc.fascinated.fascinatedutils.gui.screens;
 
 import cc.fascinated.fascinatedutils.FascinatedUtils;
 import cc.fascinated.fascinatedutils.api.AlumiteApi;
+import cc.fascinated.fascinatedutils.api.AlumiteApiException;
+import cc.fascinated.fascinatedutils.api.Errors;
 import cc.fascinated.fascinatedutils.api.dto.friend.FriendEntryDto;
 import cc.fascinated.fascinatedutils.api.dto.friend.PendingFriendRequestDto;
 import cc.fascinated.fascinatedutils.systems.social.SocialRegistry;
@@ -27,11 +29,9 @@ import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
-import cc.fascinated.fascinatedutils.common.DateUtils;
 import cc.fascinated.fascinatedutils.common.TimeUtils;
 import cc.fascinated.fascinatedutils.gui.toast.Toast;
 
@@ -115,7 +115,13 @@ public class SocialScreen extends WidgetScreen {
                     () -> {
                         pendingRemoveFriend = null;
                         FascinatedUtils.SCHEDULED_POOL.execute(() -> {
-                            AlumiteApi.INSTANCE.removeFriend(friend.user().id());
+                            try {
+                                AlumiteApi.INSTANCE.removeFriend(friend.user().id());
+                            } catch (AlumiteApiException exception) {
+                                Toast.show().message(socialErrorMessage(exception)).error();
+                            } catch (Exception exception) {
+                                Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
+                            }
                             Minecraft.getInstance().execute(SocialScreen.this::rebuildHost);
                         });
                     }
@@ -135,7 +141,13 @@ public class SocialScreen extends WidgetScreen {
                     () -> {
                         pendingCancelRequest = null;
                         FascinatedUtils.SCHEDULED_POOL.execute(() -> {
-                            AlumiteApi.INSTANCE.cancelFriendRequest(request.requestId());
+                            try {
+                                AlumiteApi.INSTANCE.cancelFriendRequest(request.requestId());
+                            } catch (AlumiteApiException exception) {
+                                Toast.show().message(socialErrorMessage(exception)).error();
+                            } catch (Exception exception) {
+                                Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
+                            }
                             Minecraft.getInstance().execute(SocialScreen.this::rebuildHost);
                         });
                     }
@@ -184,8 +196,8 @@ public class SocialScreen extends WidgetScreen {
             {
                 addChild(header);
                 addChild(tabs);
-                addChild(list);
                 addChild(footer);
+                addChild(list);
             }
 
             @Override
@@ -201,16 +213,17 @@ public class SocialScreen extends WidgetScreen {
                 curY += TAB_H + 6f;
 
                 float footerH = activeTab == Tab.FRIENDS ? 32f : 0f;
-                float listH = Math.max(0f, lh - (curY - ly) - footerH - (footerH > 0 ? PAD : 0f));
-                list.layout(measure, lx + PAD, curY, lw - 2f * PAD, listH);
-                curY += listH + 4f;
-
                 footer.setVisible(activeTab == Tab.FRIENDS);
                 if (activeTab == Tab.FRIENDS) {
                     footer.layout(measure, lx + PAD, curY, lw - 2f * PAD, footerH);
-                } else {
+                    curY += footerH + 6f;
+                }
+                else {
                     footer.layout(measure, lx + PAD, curY, lw - 2f * PAD, 0f);
                 }
+
+                float listH = Math.max(0f, ly + lh - PAD - curY);
+                list.layout(measure, lx + PAD, curY, lw - 2f * PAD, listH);
             }
         };
 
@@ -576,9 +589,15 @@ public class SocialScreen extends WidgetScreen {
                 if (pointerX >= acceptBtnX && pointerX < acceptBtnX + BTN_W
                         && pointerY >= btnY && pointerY < btnY + BTN_H) {
                     FascinatedUtils.SCHEDULED_POOL.execute(() -> {
-                        boolean accepted = AlumiteApi.INSTANCE.acceptFriendRequest(request.requestId());
-                        if (accepted) {
-                            Toast.show().message("You're now friends with " + request.user().minecraftName() + "!").success();
+                        try {
+                            boolean accepted = AlumiteApi.INSTANCE.acceptFriendRequest(request.requestId());
+                            if (accepted) {
+                                Toast.show().message("You're now friends with " + request.user().minecraftName() + "!").success();
+                            }
+                        } catch (AlumiteApiException exception) {
+                            Toast.show().message(socialErrorMessage(exception)).error();
+                        } catch (Exception exception) {
+                            Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
                         }
                         Minecraft.getInstance().execute(SocialScreen.this::rebuildHost);
                     });
@@ -587,7 +606,13 @@ public class SocialScreen extends WidgetScreen {
                 if (pointerX >= declineBtnX && pointerX < declineBtnX + BTN_W
                         && pointerY >= btnY && pointerY < btnY + BTN_H) {
                     FascinatedUtils.SCHEDULED_POOL.execute(() -> {
-                        AlumiteApi.INSTANCE.declineFriendRequest(request.requestId());
+                        try {
+                            AlumiteApi.INSTANCE.declineFriendRequest(request.requestId());
+                        } catch (AlumiteApiException exception) {
+                            Toast.show().message(socialErrorMessage(exception)).error();
+                        } catch (Exception exception) {
+                            Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
+                        }
                         Minecraft.getInstance().execute(SocialScreen.this::rebuildHost);
                     });
                     return true;
@@ -745,19 +770,49 @@ public class SocialScreen extends WidgetScreen {
         return String.valueOf(Character.toUpperCase(name.charAt(0)));
     }
 
+    private static String socialErrorMessage(Errors error) {
+        if (error == null) {
+            return Component.translatable("fascinatedutils.social.error.generic").getString();
+        }
+
+        String translationKey = "fascinatedutils.social.error." + error.getCode();
+        String translated = Component.translatable(translationKey).getString();
+        if (translated.equals(translationKey)) {
+            return error.getDisplayText();
+        }
+
+        return translated;
+    }
+
+    private static String socialErrorMessage(AlumiteApiException exception) {
+        Errors error = exception.getError();
+        if (error != null) {
+            return socialErrorMessage(error);
+        }
+
+        String displayText = exception.getDisplayText();
+        if (displayText != null && !displayText.isBlank()) {
+            return displayText;
+        }
+
+        return Component.translatable("fascinatedutils.social.error.generic").getString();
+    }
+
     private FWidget buildFooter() {
         FButtonWidget addBtn = new FButtonWidget(() -> {
             String username = addFriendInput.value().trim();
             if (username.isEmpty()) { return; }
             addFriendInput.setValue("");
             FascinatedUtils.SCHEDULED_POOL.execute(() -> {
-                PendingFriendRequestDto dto = AlumiteApi.INSTANCE.sendFriendRequest(username);
-                if (dto != null) {
+                try {
+                    PendingFriendRequestDto dto = AlumiteApi.INSTANCE.sendFriendRequest(username);
                     SocialRegistry.INSTANCE.addOutgoingFriendRequest(dto);
                     Toast.show().message("Friend request sent!").success();
                     Minecraft.getInstance().execute(this::rebuildHost);
-                } else {
-                    Toast.show().message("Failed to send request.").error();
+                } catch (AlumiteApiException exception) {
+                    Toast.show().message(socialErrorMessage(exception)).error();
+                } catch (Exception exception) {
+                    Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
                 }
             });
         }, () -> Component.translatable("fascinatedutils.social.add_button").getString(), ADD_BTN_W, 1, 1f, 4f, 1f, 4f) {
