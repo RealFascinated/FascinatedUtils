@@ -26,7 +26,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 public class AlumiteApi {
 
@@ -44,6 +48,7 @@ public class AlumiteApi {
     private volatile String activeAccountKey;
     private volatile String activeAccessToken;
     private volatile String activeRefreshToken;
+    private volatile ScheduledFuture<?> tokenRefreshTask;
 
     private AlumiteApi() {
         httpClient = HttpClient.newBuilder()
@@ -64,16 +69,15 @@ public class AlumiteApi {
     }
 
     private void authenticate(Minecraft minecraftClient) {
-        String accountKey = minecraftClient.getUser().getProfileId().toString();
-        activeAccountKey = accountKey;
+        activeAccountKey = minecraftClient.getUser().getProfileId().toString();
 
-        String storedRefresh = tokenStore.load(accountKey);
-        if (storedRefresh != null && tryRefresh(accountKey, storedRefresh)) {
+        String storedRefresh = tokenStore.load(activeAccountKey);
+        if (storedRefresh != null && tryRefresh(activeAccountKey, storedRefresh)) {
             gateway.connect();
             FascinatedEventBus.INSTANCE.post(new AlumiteAuthenticatedEvent());
             return;
         }
-        tokenStore.clear(accountKey);
+        tokenStore.clear(activeAccountKey);
         performFullLogin(minecraftClient);
         if (activeAccessToken != null) {
             gateway.connect();
@@ -83,15 +87,16 @@ public class AlumiteApi {
 
     private boolean tryRefresh(String accountKey, String storedRefreshToken) {
         try {
-            HttpResponse<String> response = post("/auth/refresh", GSON.toJson(new RefreshRequest(storedRefreshToken)), null);
+            HttpResponse<String> response = sendRaw("POST", "/auth/refresh",
+                    GSON.toJson(new RefreshRequest(storedRefreshToken)), null);
             if (response.statusCode() != 200) {
                 return false;
             }
-
             RefreshResponse refreshResponse = GSON.fromJson(response.body(), RefreshResponse.class);
             activeAccessToken = refreshResponse.accessToken();
             activeRefreshToken = refreshResponse.refreshToken();
             storeSession(accountKey, refreshResponse.refreshToken());
+            scheduleTokenRefresh(refreshResponse.accessExpiresAt());
             Client.LOG.info("[AlumiteApi] Session refreshed.");
             return true;
         } catch (Exception exception) {
@@ -107,32 +112,62 @@ public class AlumiteApi {
             return;
         }
         try {
-            HttpResponse<String> challengeResponse = post("/auth/challenge", "{}", null);
+            HttpResponse<String> challengeResponse = sendRaw("POST", "/auth/challenge", "{}", null);
             if (challengeResponse.statusCode() != 200) {
                 Client.LOG.warn("[AlumiteApi] Challenge request failed with status {}", challengeResponse.statusCode());
                 return;
             }
-
             ChallengeResponse challenge = GSON.fromJson(challengeResponse.body(), ChallengeResponse.class);
             VerifyRequest verifyRequest = new VerifyRequest(
                     challenge.challengeId(),
                     challenge.nonce(),
                     minecraftAccessToken
             );
-
-            HttpResponse<String> verifyResponse = post("/auth/minecraft/verify", GSON.toJson(verifyRequest), null);
+            HttpResponse<String> verifyResponse = sendRaw("POST", "/auth/minecraft/verify",
+                    GSON.toJson(verifyRequest), null);
             if (verifyResponse.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] Verify failed with status {}: {}", verifyResponse.statusCode(), verifyResponse.body());
+                Client.LOG.warn("[AlumiteApi] Verify failed with status {}: {}",
+                        verifyResponse.statusCode(), verifyResponse.body());
                 return;
             }
-
             VerifyResponse result = GSON.fromJson(verifyResponse.body(), VerifyResponse.class);
             activeAccessToken = result.accessToken();
             activeRefreshToken = result.refreshToken();
             storeSession(activeAccountKey, result.refreshToken());
+            scheduleTokenRefresh(result.accessExpiresAt());
             Client.LOG.info("[AlumiteApi] Authenticated as {}", result.user().minecraftName());
         } catch (Exception exception) {
             Client.LOG.warn("[AlumiteApi] Login failed: {}", exception.getMessage());
+        }
+    }
+
+    private void scheduleTokenRefresh(String accessExpiresAt) {
+        ScheduledFuture<?> existing = tokenRefreshTask;
+        if (existing != null) {
+            existing.cancel(false);
+        }
+        if (accessExpiresAt == null) {
+            return;
+        }
+        try {
+            long delayMs = Math.max(
+                    0L,
+                    Instant.parse(accessExpiresAt).toEpochMilli() - System.currentTimeMillis() - 60_000L
+            );
+            String accountKey = activeAccountKey;
+            String capturedRefresh = activeRefreshToken;
+            tokenRefreshTask = FascinatedUtils.SCHEDULED_POOL.schedule(
+                    () -> {
+                        if (capturedRefresh != null && accountKey != null) {
+                            Client.LOG.info("[AlumiteApi] Refreshing access token...");
+                            tryRefresh(accountKey, capturedRefresh);
+                        }
+                    },
+                    delayMs,
+                    TimeUnit.MILLISECONDS
+            );
+        } catch (Exception exception) {
+            Client.LOG.warn("[AlumiteApi] Failed to schedule token refresh: {}", exception.getMessage());
         }
     }
 
@@ -155,25 +190,16 @@ public class AlumiteApi {
     }
 
     public List<FriendEntryDto> getFriends() {
-        try {
-            HttpResponse<String> response = getAuthorized(ROUTE_FRIENDS);
-            if (response.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] Get friends failed with status {}", response.statusCode());
-                return List.of();
-            }
-            return GSON.fromJson(response.body(), TypeToken.getParameterized(List.class, FriendEntryDto.class).getType());
-        } catch (Exception exception) {
-            Client.LOG.warn("[AlumiteApi] Get friends failed: {}", exception.getMessage());
-            return List.of();
-        }
+        return getList(ROUTE_FRIENDS, FriendEntryDto.class, "get friends");
     }
 
     public PendingFriendRequestDto sendFriendRequest(String targetUsername) {
         try {
-            SendFriendRequestRequest request = new SendFriendRequestRequest(targetUsername);
-            HttpResponse<String> response = post(ROUTE_FRIENDS_REQUESTS, GSON.toJson(request), requireAccessToken());
+            HttpResponse<String> response = sendAuthorized("POST", ROUTE_FRIENDS_REQUESTS,
+                    GSON.toJson(new SendFriendRequestRequest(targetUsername)));
             if (response.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] Send friend request failed with status {}: {}", response.statusCode(), response.body());
+                Client.LOG.warn("[AlumiteApi] Send friend request failed with status {}: {}",
+                        response.statusCode(), response.body());
                 return null;
             }
             return GSON.fromJson(response.body(), PendingFriendRequestDto.class);
@@ -184,46 +210,28 @@ public class AlumiteApi {
     }
 
     public List<PendingFriendRequestDto> getIncomingFriendRequests() {
-        try {
-            HttpResponse<String> response = getAuthorized(ROUTE_FRIENDS_REQUESTS_INCOMING);
-            if (response.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] Get incoming friend requests failed with status {}", response.statusCode());
-                return List.of();
-            }
-            return GSON.fromJson(response.body(), TypeToken.getParameterized(List.class, PendingFriendRequestDto.class).getType());
-        } catch (Exception exception) {
-            Client.LOG.warn("[AlumiteApi] Get incoming friend requests failed: {}", exception.getMessage());
-            return List.of();
-        }
+        return getList(ROUTE_FRIENDS_REQUESTS_INCOMING, PendingFriendRequestDto.class, "get incoming friend requests");
     }
 
     public List<PendingFriendRequestDto> getOutgoingFriendRequests() {
-        try {
-            HttpResponse<String> response = getAuthorized(ROUTE_FRIENDS_REQUESTS_OUTGOING);
-            if (response.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] Get outgoing friend requests failed with status {}", response.statusCode());
-                return List.of();
-            }
-            return GSON.fromJson(response.body(), TypeToken.getParameterized(List.class, PendingFriendRequestDto.class).getType());
-        } catch (Exception exception) {
-            Client.LOG.warn("[AlumiteApi] Get outgoing friend requests failed: {}", exception.getMessage());
-            return List.of();
-        }
+        return getList(ROUTE_FRIENDS_REQUESTS_OUTGOING, PendingFriendRequestDto.class, "get outgoing friend requests");
     }
 
     public boolean acceptFriendRequest(int requestId) {
-        return postFriendRequestAction(requestId, "accept", "accept friend request");
+        return postFriendRequestAction(requestId, "accept");
     }
 
     public boolean declineFriendRequest(int requestId) {
-        return postFriendRequestAction(requestId, "decline", "decline friend request");
+        return postFriendRequestAction(requestId, "decline");
     }
 
     public boolean cancelFriendRequest(int requestId) {
         try {
-            HttpResponse<String> response = deleteAuthorized(ROUTE_FRIENDS_REQUESTS + "/" + requestId);
+            HttpResponse<String> response = sendAuthorized("DELETE",
+                    ROUTE_FRIENDS_REQUESTS + "/" + requestId, null);
             if (response.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] Cancel friend request failed with status {}: {}", response.statusCode(), response.body());
+                Client.LOG.warn("[AlumiteApi] Cancel friend request failed with status {}: {}",
+                        response.statusCode(), response.body());
                 return false;
             }
             return true;
@@ -235,9 +243,10 @@ public class AlumiteApi {
 
     public boolean removeFriend(int userId) {
         try {
-            HttpResponse<String> response = deleteAuthorized(ROUTE_FRIENDS + "/" + userId);
+            HttpResponse<String> response = sendAuthorized("DELETE", ROUTE_FRIENDS + "/" + userId, null);
             if (response.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] Remove friend failed with status {}: {}", response.statusCode(), response.body());
+                Client.LOG.warn("[AlumiteApi] Remove friend failed with status {}: {}",
+                        response.statusCode(), response.body());
                 return false;
             }
             return true;
@@ -251,44 +260,69 @@ public class AlumiteApi {
         return activeAccessToken;
     }
 
-    private boolean postFriendRequestAction(int requestId, String action, String actionName) {
+    private boolean postFriendRequestAction(int requestId, String action) {
         try {
-            HttpResponse<String> response = post(ROUTE_FRIENDS_REQUESTS + "/" + requestId + "/" + action, "{}", requireAccessToken());
+            HttpResponse<String> response = sendAuthorized("POST",
+                    ROUTE_FRIENDS_REQUESTS + "/" + requestId + "/" + action, "{}");
             if (response.statusCode() != 200) {
-                Client.LOG.warn("[AlumiteApi] {} failed with status {}: {}", actionName, response.statusCode(), response.body());
+                Client.LOG.warn("[AlumiteApi] {} friend request failed with status {}: {}",
+                        action, response.statusCode(), response.body());
                 return false;
             }
             return true;
         } catch (Exception exception) {
-            Client.LOG.warn("[AlumiteApi] {} failed: {}", actionName, exception.getMessage());
+            Client.LOG.warn("[AlumiteApi] {} friend request failed: {}", action, exception.getMessage());
             return false;
         }
     }
 
-    @SneakyThrows
-    private HttpResponse<String> getAuthorized(String path) {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(AlumiteEnvironment.API_BASE_URL + path))
-                .header("Content-Type", "application/json")
-                .header("User-Agent", AlumiteEnvironment.USER_AGENT)
-                .header("Authorization", "Bearer " + requireAccessToken())
-                .timeout(Duration.ofSeconds(15))
-                .GET()
-                .build();
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    private <T> List<T> getList(String path, Class<T> type, String actionName) {
+        try {
+            HttpResponse<String> response = sendAuthorized("GET", path, null);
+            if (response.statusCode() != 200) {
+                Client.LOG.warn("[AlumiteApi] {} failed with status {}", actionName, response.statusCode());
+                return List.of();
+            }
+            return GSON.fromJson(response.body(), TypeToken.getParameterized(List.class, type).getType());
+        } catch (Exception exception) {
+            Client.LOG.warn("[AlumiteApi] {} failed: {}", actionName, exception.getMessage());
+            return List.of();
+        }
     }
 
     @SneakyThrows
-    private HttpResponse<String> deleteAuthorized(String path) {
-        HttpRequest request = HttpRequest.newBuilder()
+    private HttpResponse<String> sendAuthorized(String method, String path, String body) {
+        Supplier<HttpRequest> buildRequest = () -> buildRequest(path, method, body, requireAccessToken());
+        HttpResponse<String> response = httpClient.send(buildRequest.get(), HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 401 && refreshActiveToken()) {
+            response = httpClient.send(buildRequest.get(), HttpResponse.BodyHandlers.ofString());
+        }
+        return response;
+    }
+
+    @SneakyThrows
+    private HttpResponse<String> sendRaw(String method, String path, String body, String token) {
+        return httpClient.send(buildRequest(path, method, body, token), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private HttpRequest buildRequest(String path, String method, String body, String token) {
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(AlumiteEnvironment.API_BASE_URL + path))
                 .header("Content-Type", "application/json")
                 .header("User-Agent", AlumiteEnvironment.USER_AGENT)
-                .header("Authorization", "Bearer " + requireAccessToken())
                 .timeout(Duration.ofSeconds(15))
-                .DELETE()
-                .build();
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                .method(method, body != null
+                        ? HttpRequest.BodyPublishers.ofString(body)
+                        : HttpRequest.BodyPublishers.noBody());
+        if (token != null) {
+            builder.header("Authorization", "Bearer " + token);
+        }
+        return builder.build();
+    }
+
+    private boolean refreshActiveToken() {
+        String refreshToken = activeRefreshToken;
+        return refreshToken != null && tryRefresh(activeAccountKey, refreshToken);
     }
 
     private String requireAccessToken() {
@@ -300,19 +334,5 @@ public class AlumiteApi {
 
     private void storeSession(String accountKey, String newRefreshToken) {
         tokenStore.save(accountKey, newRefreshToken);
-    }
-
-    @SneakyThrows
-    private HttpResponse<String> post(String path, String jsonBody, String bearerToken) {
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(AlumiteEnvironment.API_BASE_URL + path))
-                .header("Content-Type", "application/json")
-                .header("User-Agent", AlumiteEnvironment.USER_AGENT)
-                .timeout(Duration.ofSeconds(15))
-                .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
-        if (bearerToken != null) {
-            builder.header("Authorization", "Bearer " + bearerToken);
-        }
-        return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
     }
 }

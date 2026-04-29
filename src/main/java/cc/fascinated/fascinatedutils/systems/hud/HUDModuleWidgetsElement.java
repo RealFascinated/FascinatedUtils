@@ -44,8 +44,12 @@ public class HUDModuleWidgetsElement implements HudElement {
         float uiHeight = UIScale.uiHeight();
         guiRenderer.begin(canvasWidth, canvasHeight);
         hudManager.renderHUD(guiRenderer, canvasWidth, canvasHeight, Mth.clamp(deltaSeconds, 0f, 1f), false);
-        ToastManager.INSTANCE.render(guiRenderer, uiWidth, uiHeight,
-                UIScale.uiPointerX(), UIScale.uiPointerY(), deltaSeconds);
+        // Toasts are rendered after the screen by GameRendererMixin when a WidgetScreen is open,
+        // so only render them here when no screen is obscuring them.
+        if (!(minecraft.screen instanceof cc.fascinated.fascinatedutils.gui.screens.WidgetScreen)) {
+            ToastManager.INSTANCE.render(guiRenderer, uiWidth, uiHeight,
+                    UIScale.uiPointerX(), UIScale.uiPointerY(), deltaSeconds);
+        }
         guiRenderer.end();
         profiler.pop();
     }

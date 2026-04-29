@@ -59,6 +59,8 @@ public class SocialScreen extends WidgetScreen {
 
     private Tab activeTab = Tab.FRIENDS;
     private float scrollAccum;
+    private FriendEntryDto pendingRemoveFriend;
+    private PendingFriendRequestDto pendingCancelRequest;
 
     public SocialScreen() {
         super(Component.translatable("fascinatedutils.social.title"));
@@ -78,7 +80,9 @@ public class SocialScreen extends WidgetScreen {
     }
 
     private FWidget buildPanel() {
-        return new FWidget() {
+        FAbsoluteStackWidget stack = new FAbsoluteStackWidget();
+
+        stack.addChild(new FWidget() {
             private FWidget inner;
 
             @Override
@@ -96,6 +100,72 @@ public class SocialScreen extends WidgetScreen {
                 clearChildren();
                 addChild(inner);
                 inner.layout(measure, panelX, ly, panelW, lh);
+            }
+        });
+
+        if (pendingRemoveFriend != null) {
+            FriendEntryDto friend = pendingRemoveFriend;
+            FConfirmPopupWidget removePopup = new FConfirmPopupWidget(
+                    Component.translatable("fascinatedutils.social.confirm_remove_friend.title").getString(),
+                    Component.translatable("fascinatedutils.social.confirm_remove_friend.message", friend.user().minecraftName()).getString(),
+                    Component.translatable("fascinatedutils.social.confirm_remove_friend.confirm").getString(),
+                    Component.translatable("fascinatedutils.social.confirm_remove_friend.deny").getString(),
+                    FConfirmPopupWidget.ConfirmStyle.DESTRUCTIVE,
+                    () -> { pendingRemoveFriend = null; rebuildHost(); },
+                    () -> {
+                        pendingRemoveFriend = null;
+                        FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+                            AlumiteApi.INSTANCE.removeFriend(friend.user().id());
+                            Minecraft.getInstance().execute(SocialScreen.this::rebuildHost);
+                        });
+                    }
+            );
+            stack.addChild(panelScopedPopup(removePopup));
+        }
+
+        if (pendingCancelRequest != null) {
+            PendingFriendRequestDto request = pendingCancelRequest;
+            FConfirmPopupWidget cancelPopup = new FConfirmPopupWidget(
+                    Component.translatable("fascinatedutils.social.confirm_cancel_request.title").getString(),
+                    Component.translatable("fascinatedutils.social.confirm_cancel_request.message", request.user().minecraftName()).getString(),
+                    Component.translatable("fascinatedutils.social.confirm_cancel_request.confirm").getString(),
+                    Component.translatable("fascinatedutils.social.confirm_cancel_request.deny").getString(),
+                    FConfirmPopupWidget.ConfirmStyle.DESTRUCTIVE,
+                    () -> { pendingCancelRequest = null; rebuildHost(); },
+                    () -> {
+                        pendingCancelRequest = null;
+                        FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+                            AlumiteApi.INSTANCE.cancelFriendRequest(request.requestId());
+                            Minecraft.getInstance().execute(SocialScreen.this::rebuildHost);
+                        });
+                    }
+            );
+            stack.addChild(panelScopedPopup(cancelPopup));
+        }
+
+        return stack;
+    }
+
+    private FWidget panelScopedPopup(FConfirmPopupWidget popup) {
+        return new FWidget() {
+            {
+                addChild(popup);
+            }
+
+            @Override
+            public boolean wantsPointer() { return true; }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+                float panelW = Math.min(PANEL_WIDTH, lw);
+                float panelX = lx + lw - panelW;
+                popup.layout(measure, panelX, ly, panelW, lh);
+            }
+
+            @Override
+            public boolean mouseDown(float pointerX, float pointerY, int button) {
+                return popup.mouseDown(pointerX, pointerY, button);
             }
         };
     }
@@ -313,7 +383,6 @@ public class SocialScreen extends WidgetScreen {
         }
 
         FScrollColumnWidget scroll = FTheme.components().createScrollColumn(body, 3f);
-        scroll.setFillVerticalInColumn(true);
         Float savedY = scrollYRef.getValue();
         scroll.setScrollOffsetY(savedY == null ? 0f : savedY);
         scroll.setScrollOffsetChangeListener(scrollYRef::setValue);
@@ -416,8 +485,8 @@ public class SocialScreen extends WidgetScreen {
                 if (containsPoint(pointerX, pointerY)
                         && pointerX >= removeBtnX && pointerX < removeBtnX + BTN_W
                         && pointerY >= removeBtnY && pointerY < removeBtnY + BTN_H) {
-                    FascinatedUtils.SCHEDULED_POOL.execute(() ->
-                            AlumiteApi.INSTANCE.removeFriend(friend.user().id()));
+                    pendingRemoveFriend = friend;
+                    rebuildHost();
                     return true;
                 }
                 return false;
@@ -601,10 +670,8 @@ public class SocialScreen extends WidgetScreen {
                 if (containsPoint(pointerX, pointerY)
                         && pointerX >= cancelBtnX && pointerX < cancelBtnX + BTN_W
                         && pointerY >= cancelBtnY && pointerY < cancelBtnY + BTN_H) {
-                    FascinatedUtils.SCHEDULED_POOL.execute(() -> {
-                        AlumiteApi.INSTANCE.cancelFriendRequest(request.requestId());
-                        Minecraft.getInstance().execute(SocialScreen.this::rebuildHost);
-                    });
+                    pendingCancelRequest = request;
+                    rebuildHost();
                     return true;
                 }
                 return false;
@@ -644,7 +711,6 @@ public class SocialScreen extends WidgetScreen {
         return switch (presence.status()) {
             case "online" -> "Online";
             case "away" -> "Away";
-            case "invisible" -> "Invisible";
             default -> presence.status();
         };
     }

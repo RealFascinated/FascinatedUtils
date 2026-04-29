@@ -1,7 +1,10 @@
 package cc.fascinated.fascinatedutils.mixin;
 
 import cc.fascinated.fascinatedutils.common.FrameCounter;
+import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.screens.WidgetScreen;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.toast.ToastManager;
 import cc.fascinated.fascinatedutils.mixininterface.IGameRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.DeltaTracker;
@@ -52,6 +55,16 @@ public abstract class GameRendererMixin implements IGameRenderer {
         GuiGraphicsExtractor drawContext = new GuiGraphicsExtractor(minecraft, gameRenderState.guiRenderState, mouseX, mouseY);
         int scale = minecraft.getWindow().getGuiScale();
         widgetScreen.renderCustom(drawContext, mouseX * scale, mouseY * scale, deltaTracker.getGameTimeDeltaTicks());
+        // Render toasts on top of every screen
+        float uiWidth = UIScale.uiWidth();
+        float uiHeight = UIScale.uiHeight();
+        float deltaSeconds = deltaTracker.getGameTimeDeltaTicks() / 20f;
+        cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer toastRenderer =
+                new cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer(drawContext, FascinatedGuiTheme.INSTANCE);
+        toastRenderer.begin(uiWidth, uiHeight);
+        ToastManager.INSTANCE.render(toastRenderer, uiWidth, uiHeight,
+                UIScale.uiPointerX(), UIScale.uiPointerY(), deltaSeconds);
+        toastRenderer.end();
         RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(Objects.requireNonNull(minecraft.getMainRenderTarget().getDepthTexture()), 1.0);
         guiRenderer.render(fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
     }
