@@ -25,7 +25,7 @@ public class AvatarTextureCache {
 
     public static final AvatarTextureCache INSTANCE = new AvatarTextureCache();
 
-    private static final String AVATAR_URL = "https://mc-heads.net/avatar/%s/32";
+    private static final String AVATAR_URL = "https://mc.fascinated.cc/api/skins/%s/face.png?size=64";
     private static final HttpClient HTTP = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
