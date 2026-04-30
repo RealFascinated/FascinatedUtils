@@ -123,7 +123,6 @@ public class FProfileContextMenuWidget extends FWidget {
     private static class MenuItemWidget extends FWidget {
         private final Runnable onClick;
         private final Supplier<String> labelSupplier;
-        private boolean hovered;
 
         private MenuItemWidget(Runnable onClick, Supplier<String> labelSupplier) {
             this.onClick = onClick;
@@ -143,18 +142,6 @@ public class FProfileContextMenuWidget extends FWidget {
         @Override
         public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
             return UiPointerCursor.HAND;
-        }
-
-        @Override
-        public boolean mouseEnter(float pointerX, float pointerY) {
-            hovered = true;
-            return false;
-        }
-
-        @Override
-        public boolean mouseLeave(float pointerX, float pointerY) {
-            hovered = false;
-            return false;
         }
 
         @Override

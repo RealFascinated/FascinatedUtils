@@ -15,6 +15,7 @@ public abstract class FWidget {
     private FWidget parent;
     @Setter
     private boolean visible = true;
+    protected boolean hovered;
     private float positionX;
     private float positionY;
     private float width;
@@ -181,10 +182,12 @@ public abstract class FWidget {
     }
 
     public boolean mouseEnter(float pointerX, float pointerY) {
+        hovered = true;
         return false;
     }
 
     public boolean mouseLeave(float pointerX, float pointerY) {
+        hovered = false;
         return false;
     }
 

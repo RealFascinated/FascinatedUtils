@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.common.color.RainbowColors;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
+import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
@@ -29,6 +30,7 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
 
     @Override
     public boolean mouseLeave(float pointerX, float pointerY) {
+        super.mouseLeave(pointerX, pointerY);
         hoveredSwatch = false;
         hoveredReset = false;
         return false;
@@ -39,8 +41,22 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
         float[] swatch = swatchBounds();
         hoveredSwatch = rectContains(swatch, pointerX, pointerY);
         float[] resetSquare = inlineResetSquare();
-        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, colorSetting.isAtDefault());
+        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare, pointerX, pointerY, colorSetting.isAtDefault());
         return false;
+    }
+
+    @Override
+    public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
+        if (colorSetting.isLocked()) {
+            return UiPointerCursor.DEFAULT;
+        }
+        if (rectContains(swatchBounds(), pointerX, pointerY)) {
+            return UiPointerCursor.HAND;
+        }
+        if (SettingRowResetLayout.resetGlyphHitActive(inlineResetSquare(), pointerX, pointerY, colorSetting.isAtDefault())) {
+            return UiPointerCursor.HAND;
+        }
+        return UiPointerCursor.DEFAULT;
     }
 
     @Override
@@ -51,11 +67,10 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
         if (colorSetting.isLocked()) {
             return hoveredSwatch || hoveredReset;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, colorSetting.isAtDefault())) {
+        if (hoveredReset) {
             return true;
         }
-        return rectContains(swatchBounds(), pointerX, pointerY);
+        return hoveredSwatch;
     }
 
     @Override
@@ -66,13 +81,12 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
         if (colorSetting.isLocked()) {
             return hoveredSwatch || hoveredReset;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, colorSetting.isAtDefault())) {
+        if (hoveredReset) {
             colorSetting.resetToDefault();
             onPersist.run();
             return true;
         }
-        if (rectContains(swatchBounds(), pointerX, pointerY)) {
+        if (hoveredSwatch) {
             openColorPicker();
             return true;
         }

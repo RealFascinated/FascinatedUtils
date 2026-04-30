@@ -336,7 +336,6 @@ public class WaypointsScreen extends WidgetScreen {
 
             @Override
             protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-                hovered = containsPoint(mouseX, mouseY);
                 int tint = hovered ? hoverColor : normalColor;
                 float iconSize = Math.min(w(), h()) - 4f;
                 float iconX = x() + (w() - iconSize) / 2f;

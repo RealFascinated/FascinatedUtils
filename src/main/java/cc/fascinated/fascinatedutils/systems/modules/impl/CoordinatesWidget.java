@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.*;
@@ -23,9 +24,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class CoordinatesWidget extends HudModule {
+    public enum CoordinatesLayout {
+        VERTICAL, HORIZONTAL
+    }
+
     private static final float COLUMN_GAP = 4f;
     private static final float LINE_GAP_PX = 1f;
     private static final String[] COMPASS_DIRECTIONS = {"S", "SE", "E", "NE", "N", "NW", "W", "SW"};
+    private final EnumSetting<CoordinatesLayout> layout = EnumSetting.<CoordinatesLayout>builder()
+            .id("layout")
+            .defaultValue(CoordinatesLayout.VERTICAL)
+            .valueFormatter(coordsLayout -> coordsLayout == CoordinatesLayout.VERTICAL ? "Vertical" : "Horizontal")
+            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
+            .build();
     private final SliderSetting blockPrecision = SliderSetting.builder().id("block_precision")
 
             .defaultValue(0f).minValue(0f).maxValue(3f).step(1f).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
@@ -38,6 +49,7 @@ public class CoordinatesWidget extends HudModule {
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
     public CoordinatesWidget() {
         super("coordinates", "Coordinates", UTILITY_WIDGET_MIN_WIDTH, HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.TOP_LEFT).defaultXOffset(5).defaultYOffset(5).build());
+        addSetting(layout);
         addSetting(blockPrecision);
         addSetting(showBackground);
         addSetting(roundedCorners);
@@ -98,6 +110,44 @@ public class CoordinatesWidget extends HudModule {
             return null;
         }
         int decimals = Math.round(blockPrecision.getValue().floatValue());
+        if (layout.getValue() == CoordinatesLayout.HORIZONTAL) {
+            String xPart = "X: " + NumberUtils.formatNumber(coordX, decimals);
+            String yPart = "Y: " + NumberUtils.formatNumber(coordY, decimals);
+            String zPart = "Z: " + NumberUtils.formatNumber(coordZ, decimals);
+            float lineHeight = glRenderer.getFontHeight();
+            float xWidth = glRenderer.measureMiniMessageTextWidth(xPart);
+            float yWidth = glRenderer.measureMiniMessageTextWidth(yPart);
+            float zWidth = glRenderer.measureMiniMessageTextWidth(zPart);
+            float maxFacingWidth = 0f;
+            for (String directionLabel : COMPASS_DIRECTIONS) {
+                maxFacingWidth = Math.max(maxFacingWidth, glRenderer.measureMiniMessageTextWidth(directionLabel));
+            }
+            float innerWidth = xWidth + COLUMN_GAP + yWidth + COLUMN_GAP + zWidth + COLUMN_GAP + maxFacingWidth;
+            float padding = getPadding();
+            float layoutWidth = Math.max(1f, Math.max(getMinWidth(), innerWidth + 2f * padding));
+            float layoutHeight = Math.max(1f, lineHeight + 2f * padding);
+            getHudState().setLastLayoutWidth(layoutWidth);
+            getHudState().setLastLayoutHeight(layoutHeight);
+            getHudState().setCommittedLayoutWidth(layoutWidth);
+            getHudState().setCommittedLayoutHeight(layoutHeight);
+            boolean textShadow = isTextShadowEnabled();
+            float capturedXWidth = xWidth;
+            float capturedYWidth = yWidth;
+            float capturedZWidth = zWidth;
+            float capturedMaxFacingWidth = maxFacingWidth;
+            return () -> {
+                drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
+                float availableInnerWidth = layoutWidth - 2f * padding;
+                float startX = padding + HudAnchorLayout.horizontalOffsetInInnerBand(availableInnerWidth, innerWidth, hudContentHorizontalAlignment());
+                float lineY = padding;
+                glRenderer.drawMiniMessageText(xPart, startX, lineY, textShadow);
+                glRenderer.drawMiniMessageText(yPart, startX + capturedXWidth + COLUMN_GAP, lineY, textShadow);
+                glRenderer.drawMiniMessageText(zPart, startX + capturedXWidth + COLUMN_GAP + capturedYWidth + COLUMN_GAP, lineY, textShadow);
+                float facingColumnX = startX + capturedXWidth + COLUMN_GAP + capturedYWidth + COLUMN_GAP + capturedZWidth + COLUMN_GAP;
+                float currentFacingWidth = glRenderer.measureMiniMessageTextWidth(facingKey);
+                glRenderer.drawMiniMessageText(facingKey, facingColumnX + (capturedMaxFacingWidth - currentFacingWidth), lineY, textShadow);
+            };
+        }
         List<String> leftLines = List.of("X: " + NumberUtils.formatNumber(coordX, decimals), "Y: " + NumberUtils.formatNumber(coordY, decimals), "Z: " + NumberUtils.formatNumber(coordZ, decimals), "Biome: " + biomeMini);
         float lineHeight = glRenderer.getFontHeight();
         float leftColumnWidth = 0f;

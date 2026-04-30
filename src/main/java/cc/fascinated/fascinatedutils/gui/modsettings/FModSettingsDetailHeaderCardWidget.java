@@ -152,6 +152,7 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
 
     @Override
     public boolean mouseLeave(float pointerX, float pointerY) {
+        super.mouseLeave(pointerX, pointerY);
         hoverBack = false;
         hoverReset = false;
         return false;

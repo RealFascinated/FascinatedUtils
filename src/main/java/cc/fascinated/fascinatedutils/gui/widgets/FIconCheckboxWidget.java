@@ -29,7 +29,6 @@ public class FIconCheckboxWidget extends FWidget {
     @Setter
     @Getter
     private boolean disabled;
-    private boolean hovered;
 
     public FIconCheckboxWidget(boolean checked, Consumer<Boolean> onToggle, Supplier<String> labelSupplier, float outerWidth) {
         this.checked = checked;
@@ -93,25 +92,13 @@ public class FIconCheckboxWidget extends FWidget {
     }
 
     @Override
-    public boolean mouseLeave(float pointerX, float pointerY) {
-        hovered = false;
-        return false;
-    }
-
-    @Override
-    public boolean mouseMove(float pointerX, float pointerY) {
-        hovered = containsPoint(pointerX, pointerY);
-        return false;
-    }
-
-    @Override
     public boolean mouseDown(float pointerX, float pointerY, int button) {
-        return button == 0 && containsPoint(pointerX, pointerY);
+        return button == 0;
     }
 
     @Override
     public boolean click(float pointerX, float pointerY, int button) {
-        if (button != 0 || !containsPoint(pointerX, pointerY)) {
+        if (button != 0) {
             return false;
         }
         if (disabled) {

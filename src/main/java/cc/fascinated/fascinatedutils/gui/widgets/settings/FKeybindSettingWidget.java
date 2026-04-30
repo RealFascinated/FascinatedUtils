@@ -16,7 +16,7 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
     private static final float KEY_CHIP_WIDTH_DESIGN = 84f;
     private static final float KEY_CHIP_HEIGHT_DESIGN = 13f;
     private final KeybindSetting keybindSetting;
-    private boolean hovered;
+    private boolean hoveredChip;
     private boolean hoveredReset;
     private boolean listening;
 
@@ -34,7 +34,7 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
     public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
         boolean locked = keybindSetting.isLocked();
         float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, keybindSetting.isAtDefault())) {
+        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare, pointerX, pointerY, keybindSetting.isAtDefault())) {
             return locked ? UiPointerCursor.DEFAULT : UiPointerCursor.HAND;
         }
         return rectContains(chipBounds(), pointerX, pointerY) && !locked ? UiPointerCursor.HAND : UiPointerCursor.DEFAULT;
@@ -42,16 +42,17 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
 
     @Override
     public boolean mouseLeave(float pointerX, float pointerY) {
-        hovered = false;
+        super.mouseLeave(pointerX, pointerY);
+        hoveredChip = false;
         hoveredReset = false;
         return false;
     }
 
     @Override
     public boolean mouseMove(float pointerX, float pointerY) {
-        hovered = rectContains(chipBounds(), pointerX, pointerY);
+        hoveredChip = rectContains(chipBounds(), pointerX, pointerY);
         float[] resetSquare = inlineResetSquare();
-        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, keybindSetting.isAtDefault());
+        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare, pointerX, pointerY, keybindSetting.isAtDefault());
         return false;
     }
 
@@ -61,13 +62,12 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
             return false;
         }
         if (keybindSetting.isLocked()) {
-            return hovered || hoveredReset;
+            return hoveredChip || hoveredReset;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, keybindSetting.isAtDefault())) {
+        if (hoveredReset) {
             return true;
         }
-        return rectContains(chipBounds(), pointerX, pointerY);
+        return hoveredChip;
     }
 
     @Override
@@ -77,16 +77,15 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
         }
         if (keybindSetting.isLocked()) {
             listening = false;
-            return hovered || hoveredReset;
+            return hoveredChip || hoveredReset;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, keybindSetting.isAtDefault())) {
+        if (hoveredReset) {
             keybindSetting.resetToDefault();
             onPersist.run();
             listening = false;
             return true;
         }
-        if (rectContains(chipBounds(), pointerX, pointerY)) {
+        if (hoveredChip) {
             listening = true;
             return true;
         }
@@ -111,7 +110,7 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
 
     @Override
     public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        if (hovered || hoveredReset) {
+        if (hoveredChip || hoveredReset) {
             WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, keybindSetting, hoveredReset);
         }
     }
@@ -134,7 +133,7 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
         float chipHeight = chip[3];
         float borderThickness = 1f;
         float corner = Mth.clamp(3f, 0.5f, Math.min(chipWidth, chipHeight) * 0.5f - borderThickness * 0.5f - 0.01f);
-        int fillColor = listening && !locked ? graphics.theme().surfaceElevated() : hovered && !locked ? graphics.theme().moduleListRowHover() : graphics.theme().surface();
+        int fillColor = listening && !locked ? graphics.theme().surfaceElevated() : hoveredChip && !locked ? graphics.theme().moduleListRowHover() : graphics.theme().surface();
         int borderColor = listening && !locked ? graphics.theme().accentBright() : graphics.theme().border();
         if (locked) {
             fillColor = WSettingTooltip.dimColor(fillColor, 0.5f);

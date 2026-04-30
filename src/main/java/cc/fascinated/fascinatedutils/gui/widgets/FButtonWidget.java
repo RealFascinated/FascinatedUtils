@@ -22,7 +22,6 @@ public class FButtonWidget extends FWidget {
     private final float heightScale;
     private final float horizontalTextPadDesign;
     private final float cornerRadiusDesign;
-    protected boolean hovered;
     private Runnable onClick = () -> {
     };
     private Supplier<String> labelSupplier = () -> "";
@@ -138,7 +137,6 @@ public class FButtonWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        hovered = containsPoint(mouseX, mouseY);
         int fillColor = resolveButtonFillColorArgb(hovered);
         int borderColor = resolveButtonBorderColorArgb(hovered);
         float borderThicknessX = UITheme.BORDER_THICKNESS_PX;

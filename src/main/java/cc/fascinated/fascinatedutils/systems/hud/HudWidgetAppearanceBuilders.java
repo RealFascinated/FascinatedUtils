@@ -86,7 +86,7 @@ public class HudWidgetAppearanceBuilders {
 
     public static SliderSetting.Builder padding() {
         return SliderSetting.builder().id(HudModule.SETTING_PADDING)
-                .defaultValue(6f)
+                .defaultValue(5f)
                 .minValue(0f)
                 .maxValue(16f)
                 .step(1f)

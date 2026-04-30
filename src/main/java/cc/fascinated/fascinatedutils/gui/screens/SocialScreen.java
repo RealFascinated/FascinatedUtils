@@ -349,14 +349,13 @@ public class SocialScreen extends WidgetScreen {
 
             @Override
             protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-                boolean hovered = containsPoint(mouseX, mouseY);
                 boolean interactive = !preferredPresenceUpdatePending;
                 int fillColor = preferredPresenceMenuOpen
                         ? 0xFF2B3142
-                        : hovered && interactive ? 0xFF242A38 : 0xFF202531;
+                        : containsPoint(mouseX, mouseY) && interactive ? 0xFF242A38 : 0xFF202531;
                 int borderColor = preferredPresenceMenuOpen
                         ? 0xFF6E7897
-                        : hovered && interactive ? 0xFF59617A : 0xFF454A60;
+                        : containsPoint(mouseX, mouseY) && interactive ? 0xFF59617A : 0xFF454A60;
                 graphics.fillRoundedRectFrame(x(), y(), w(), h(), 6f, borderColor, fillColor,
                         1f, 1f, RectCornerRoundMask.ALL);
 
@@ -727,8 +726,7 @@ public class SocialScreen extends WidgetScreen {
                 if (button != 0) { return false; }
                 float removeBtnX = x() + w() - BTN_W - 4f;
                 float removeBtnY = y() + (h() - BTN_H) / 2f;
-                if (containsPoint(pointerX, pointerY)
-                        && pointerX >= removeBtnX && pointerX < removeBtnX + BTN_W
+                if (pointerX >= removeBtnX && pointerX < removeBtnX + BTN_W
                         && pointerY >= removeBtnY && pointerY < removeBtnY + BTN_H) {
                     pendingRemoveFriend = friend;
                     rebuildHost();
@@ -924,8 +922,7 @@ public class SocialScreen extends WidgetScreen {
                 if (button != 0) { return false; }
                 float cancelBtnX = x() + w() - BTN_W - 4f;
                 float cancelBtnY = y() + (h() - BTN_H) / 2f;
-                if (containsPoint(pointerX, pointerY)
-                        && pointerX >= cancelBtnX && pointerX < cancelBtnX + BTN_W
+                if (pointerX >= cancelBtnX && pointerX < cancelBtnX + BTN_W
                         && pointerY >= cancelBtnY && pointerY < cancelBtnY + BTN_H) {
                     pendingCancelRequest = request;
                     rebuildHost();

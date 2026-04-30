@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.hooks.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
+import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.theme.Icons;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
@@ -59,13 +60,20 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
     }
 
     @Override
-    public boolean mouseLeave(float pointerX, float pointerY) {
-        return false;
-    }
-
-    @Override
-    public boolean mouseMove(float pointerX, float pointerY) {
-        return false;
+    public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
+        if (booleanSetting.isLocked()) {
+            return UiPointerCursor.DEFAULT;
+        }
+        if (rectContains(toggleBounds(), pointerX, pointerY)) {
+            return UiPointerCursor.HAND;
+        }
+        if (SettingRowResetLayout.resetGlyphHitActive(inlineResetSquare(), pointerX, pointerY, booleanSetting.isAtDefault())) {
+            return UiPointerCursor.HAND;
+        }
+        if (expandedState != null && SettingRowResetLayout.rectContains(chevronBounds(), pointerX, pointerY)) {
+            return UiPointerCursor.HAND;
+        }
+        return UiPointerCursor.DEFAULT;
     }
 
     @Override
@@ -73,20 +81,15 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
         if (button != 0) {
             return false;
         }
-        if (booleanSetting.isLocked()) {
-            return rectContains(toggleBounds(), pointerX, pointerY) || SettingRowResetLayout.resetGlyphHitActive(inlineResetSquare()[0], inlineResetSquare()[1], inlineResetSquare()[2], pointerX, pointerY, booleanSetting.isAtDefault()) || (expandedState != null && SettingRowResetLayout.rectContains(chevronBounds()[0], chevronBounds()[1], chevronBounds()[2], pointerX, pointerY));
-        }
+        float[] toggle = toggleBounds();
         float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, booleanSetting.isAtDefault())) {
-            return true;
+        boolean isHoveredToggle = rectContains(toggle, pointerX, pointerY);
+        boolean isHoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare, pointerX, pointerY, booleanSetting.isAtDefault());
+        boolean isHoveredChevron = expandedState != null && SettingRowResetLayout.rectContains(chevronBounds(), pointerX, pointerY);
+        if (booleanSetting.isLocked()) {
+            return isHoveredToggle || isHoveredReset || isHoveredChevron;
         }
-        if (expandedState != null) {
-            float[] chevron = chevronBounds();
-            if (SettingRowResetLayout.rectContains(chevron[0], chevron[1], chevron[2], pointerX, pointerY)) {
-                return true;
-            }
-        }
-        return rectContains(toggleBounds(), pointerX, pointerY);
+        return isHoveredReset || isHoveredChevron || isHoveredToggle;
     }
 
     @Override
@@ -94,24 +97,25 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
         if (button != 0) {
             return false;
         }
-        if (booleanSetting.isLocked()) {
-            return rectContains(toggleBounds(), pointerX, pointerY) || SettingRowResetLayout.resetGlyphHitActive(inlineResetSquare()[0], inlineResetSquare()[1], inlineResetSquare()[2], pointerX, pointerY, booleanSetting.isAtDefault()) || (expandedState != null && SettingRowResetLayout.rectContains(chevronBounds()[0], chevronBounds()[1], chevronBounds()[2], pointerX, pointerY));
-        }
+        float[] toggle = toggleBounds();
         float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, booleanSetting.isAtDefault())) {
+        boolean isHoveredToggle = rectContains(toggle, pointerX, pointerY);
+        boolean isHoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare, pointerX, pointerY, booleanSetting.isAtDefault());
+        boolean isHoveredChevron = expandedState != null && SettingRowResetLayout.rectContains(chevronBounds(), pointerX, pointerY);
+        if (booleanSetting.isLocked()) {
+            return isHoveredToggle || isHoveredReset || isHoveredChevron;
+        }
+        if (isHoveredReset) {
             booleanSetting.resetToDefault();
             toggleProgressAnim.target(booleanSetting.getValue() ? 1f : 0f);
             onPersist.run();
             return true;
         }
-        if (expandedState != null && onChevronToggle != null) {
-            float[] chevron = chevronBounds();
-            if (SettingRowResetLayout.rectContains(chevron[0], chevron[1], chevron[2], pointerX, pointerY)) {
-                onChevronToggle.run();
-                return true;
-            }
+        if (isHoveredChevron && onChevronToggle != null) {
+            onChevronToggle.run();
+            return true;
         }
-        if (rectContains(toggleBounds(), pointerX, pointerY)) {
+        if (isHoveredToggle) {
             booleanSetting.setValue(!booleanSetting.getValue());
             toggleProgressAnim.target(booleanSetting.getValue() ? 1f : 0f);
             onPersist.run();
@@ -128,11 +132,11 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
 
     @Override
     public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        boolean hoveredToggle = rectContains(toggleBounds(), mouseX, mouseY);
-        boolean hoveredReset = SettingRowResetLayout.resetGlyphHitActive(inlineResetSquare()[0], inlineResetSquare()[1], inlineResetSquare()[2], mouseX, mouseY, booleanSetting.isAtDefault());
-        boolean hoveredChevron = expandedState != null && SettingRowResetLayout.rectContains(chevronBounds()[0], chevronBounds()[1], chevronBounds()[2], mouseX, mouseY);
-        if (hoveredToggle || hoveredReset || hoveredChevron) {
-            WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, booleanSetting, hoveredReset);
+        boolean isHoveredToggle = rectContains(toggleBounds(), mouseX, mouseY);
+        boolean isHoveredReset = SettingRowResetLayout.resetGlyphHitActive(inlineResetSquare(), mouseX, mouseY, booleanSetting.isAtDefault());
+        boolean isHoveredChevron = expandedState != null && SettingRowResetLayout.rectContains(chevronBounds(), mouseX, mouseY);
+        if (isHoveredToggle || isHoveredReset || isHoveredChevron) {
+            WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, booleanSetting, isHoveredReset);
         }
     }
 
@@ -156,13 +160,13 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(labelColor) + ">" + label + "</color>", labelX, labelY, false);
         float progress = Mth.clamp(toggleProgressAnim.value(), 0f, 1f);
-        boolean hoveredToggle = rectContains(toggle, mouseX, mouseY);
+        boolean isHoveredToggle = rectContains(toggle, mouseX, mouseY);
         float[] resetSquare = inlineResetSquare();
-        boolean hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], mouseX, mouseY, booleanSetting.isAtDefault());
-        int trackFillOff = hoveredToggle && !locked ? graphics.theme().toggleOffFillHover() : graphics.theme().toggleOffFill();
-        int trackFillOn = hoveredToggle && !locked ? graphics.theme().toggleOnFillHover() : graphics.theme().toggleOnFill();
+        boolean isHoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare, mouseX, mouseY, booleanSetting.isAtDefault());
+        int trackFillOff = isHoveredToggle && !locked ? graphics.theme().toggleOffFillHover() : graphics.theme().toggleOffFill();
+        int trackFillOn = isHoveredToggle && !locked ? graphics.theme().toggleOnFillHover() : graphics.theme().toggleOnFill();
         int trackFill = Colors.mixArgb(progress, trackFillOff, trackFillOn);
-        int trackBorder = Colors.mixArgb(progress, hoveredToggle && !locked ? graphics.theme().toggleOffBorderHover() : graphics.theme().toggleOffBorder(), graphics.theme().toggleOnBorder());
+        int trackBorder = Colors.mixArgb(progress, isHoveredToggle && !locked ? graphics.theme().toggleOffBorderHover() : graphics.theme().toggleOffBorder(), graphics.theme().toggleOnBorder());
         if (locked) {
             trackFill = WSettingTooltip.dimColor(trackFill, 0.45f);
             trackBorder = WSettingTooltip.dimColor(trackBorder, 0.6f);
@@ -180,13 +184,13 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
         int thumbColor = locked ? WSettingTooltip.dimColor(graphics.theme().thumb(), 0.5f) : graphics.theme().thumb();
         graphics.fillRoundedRect(knobX, knobY, knobSize, knobSize, knobCornerRadius, thumbColor, RectCornerRoundMask.ALL);
 
-        SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], toggleH, hoveredReset && !locked, booleanSetting.isAtDefault());
+        SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], toggleH, isHoveredReset && !locked, booleanSetting.isAtDefault());
 
         if (expandedState != null) {
             float[] chevron = chevronBounds();
             boolean expanded = expandedState.getAsBoolean();
-            boolean hoveredChevron = SettingRowResetLayout.rectContains(chevron[0], chevron[1], chevron[2], mouseX, mouseY);
-            int chevronColor = hoveredChevron && !locked ? graphics.theme().textPrimary() : graphics.theme().textMuted();
+            boolean isHoveredChevron = SettingRowResetLayout.rectContains(chevron, mouseX, mouseY);
+            int chevronColor = isHoveredChevron && !locked ? graphics.theme().textPrimary() : graphics.theme().textMuted();
             Icons.paintSubSettingsChevron(graphics, chevron[0], chevron[1], chevron[2], chevron[2], chevronColor, expanded);
         }
     }

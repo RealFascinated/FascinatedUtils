@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
+import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -35,12 +36,9 @@ public class FSliderSettingRowWidget extends FSettingRowWidget {
         return SliderSetting.snapValue(raw, min, max, step);
     }
 
-    private static boolean inTrack(float pointerX, float pointerY, float trackLeft, float trackTop, float trackWidth, float trackHeight) {
-        return pointerX >= trackLeft && pointerY >= trackTop && pointerX < trackLeft + trackWidth && pointerY < trackTop + trackHeight;
-    }
-
     @Override
     public boolean mouseLeave(float pointerX, float pointerY) {
+        super.mouseLeave(pointerX, pointerY);
         hoveredTrack = false;
         hoveredReset = false;
         return false;
@@ -52,14 +50,30 @@ public class FSliderSettingRowWidget extends FSettingRowWidget {
         float trackWidth = sliderTrackWidth();
         float trackLayoutTop = computeTrackTop();
         float trackLayoutHeight = computeTrackHeight();
-        hoveredTrack = inTrack(pointerX, pointerY, trackLeft, trackLayoutTop, trackWidth, trackLayoutHeight);
+        hoveredTrack = pointerX >= trackLeft && pointerY >= trackLayoutTop && pointerX < trackLeft + trackWidth && pointerY < trackLayoutTop + trackLayoutHeight;
         if (dragging) {
             applyPointer(pointerX, trackLeft, trackWidth);
             return true;
         }
         float[] resetSquare = inlineResetSquare();
-        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, sliderSetting.isAtDefault());
+        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare, pointerX, pointerY, sliderSetting.isAtDefault());
         return false;
+    }
+
+    @Override
+    public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
+        if (sliderSetting.isLocked()) {
+            return UiPointerCursor.DEFAULT;
+        }
+        if (dragging) {
+            return UiPointerCursor.HAND;
+        }
+        float trackLeft = sliderTrackLeft();
+        float trackWidth = sliderTrackWidth();
+        float trackTop = computeTrackTop();
+        float trackHeight = computeTrackHeight();
+        boolean isHoveredTrack = pointerX >= trackLeft && pointerY >= trackTop && pointerX < trackLeft + trackWidth && pointerY < trackTop + trackHeight;
+        return isHoveredTrack || SettingRowResetLayout.resetGlyphHitActive(inlineResetSquare(), pointerX, pointerY, sliderSetting.isAtDefault()) ? UiPointerCursor.HAND : UiPointerCursor.DEFAULT;
     }
 
     @Override
@@ -70,17 +84,12 @@ public class FSliderSettingRowWidget extends FSettingRowWidget {
         if (sliderSetting.isLocked()) {
             return hoveredTrack || hoveredReset;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, sliderSetting.isAtDefault())) {
+        if (hoveredReset) {
             return true;
         }
-        float trackLeft = sliderTrackLeft();
-        float trackWidth = sliderTrackWidth();
-        float trackLayoutTop = computeTrackTop();
-        float trackLayoutHeight = computeTrackHeight();
-        if (inTrack(pointerX, pointerY, trackLeft, trackLayoutTop, trackWidth, trackLayoutHeight)) {
+        if (hoveredTrack) {
             dragging = true;
-            applyPointer(pointerX, trackLeft, trackWidth);
+            applyPointer(pointerX, sliderTrackLeft(), sliderTrackWidth());
             return true;
         }
         return false;
@@ -103,17 +112,12 @@ public class FSliderSettingRowWidget extends FSettingRowWidget {
         if (sliderSetting.isLocked()) {
             return hoveredTrack || hoveredReset;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, sliderSetting.isAtDefault())) {
+        if (hoveredReset) {
             sliderSetting.resetToDefault();
             onPersist.run();
             return true;
         }
-        float trackLeft = sliderTrackLeft();
-        float trackWidth = sliderTrackWidth();
-        float trackLayoutTop = computeTrackTop();
-        float trackLayoutHeight = computeTrackHeight();
-        return inTrack(pointerX, pointerY, trackLeft, trackLayoutTop, trackWidth, trackLayoutHeight);
+        return hoveredTrack;
     }
 
     @Override

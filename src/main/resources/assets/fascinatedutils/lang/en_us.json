@@ -172,6 +172,8 @@
   "fascinatedutils.module.tps.use_tps_color.description": "Colors the TPS display based on server performance.",
   "fascinatedutils.module.cps.split_mouse_buttons.display_name": "Split Left/Right CPS",
   "fascinatedutils.module.cps.split_mouse_buttons.description": "Shows click speed for left and right mouse buttons separately.",
+  "fascinatedutils.module.coordinates.layout.display_name": "Layout",
+  "fascinatedutils.module.coordinates.layout.description": "Whether to display coordinates stacked vertically or on a single horizontal line.",
   "fascinatedutils.module.coordinates.block_precision.display_name": "Coordinate Precision",
   "fascinatedutils.module.coordinates.block_precision.description": "How many decimal places to show for your coordinates.",
   "fascinatedutils.module.background.display_name": "Background",

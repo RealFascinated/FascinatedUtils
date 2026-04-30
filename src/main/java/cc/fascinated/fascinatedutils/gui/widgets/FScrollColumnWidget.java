@@ -153,6 +153,7 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
 
     @Override
     public boolean mouseLeave(float pointerX, float pointerY) {
+        super.mouseLeave(pointerX, pointerY);
         if (!thumbDragging) {
             thumbHovered = false;
         }

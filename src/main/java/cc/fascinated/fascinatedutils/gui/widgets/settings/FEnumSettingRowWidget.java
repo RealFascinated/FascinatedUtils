@@ -55,7 +55,7 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
             return UiPointerCursor.DEFAULT;
         }
         float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, enumSetting.isAtDefault())) {
+        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare, pointerX, pointerY, enumSetting.isAtDefault())) {
             return UiPointerCursor.HAND;
         }
         float[] chip = valueChipBounds();
@@ -67,6 +67,7 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
 
     @Override
     public boolean mouseLeave(float pointerX, float pointerY) {
+        super.mouseLeave(pointerX, pointerY);
         hoveredChip = false;
         hoveredReset = false;
         return false;
@@ -77,7 +78,7 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
         float[] chip = valueChipBounds();
         hoveredChip = rectContains(chip, pointerX, pointerY);
         float[] resetSquare = inlineResetSquare();
-        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, enumSetting.isAtDefault());
+        hoveredReset = SettingRowResetLayout.resetGlyphHitActive(resetSquare, pointerX, pointerY, enumSetting.isAtDefault());
         return false;
     }
 
@@ -86,16 +87,13 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
         if (button != 0) {
             return false;
         }
-        float[] chip = valueChipBounds();
-        boolean containsChip = rectContains(chip, pointerX, pointerY);
         if (enumSetting.isLocked()) {
             return hoveredChip || hoveredReset;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, enumSetting.isAtDefault())) {
+        if (hoveredReset) {
             return true;
         }
-        return containsChip;
+        return hoveredChip;
     }
 
     @Override
@@ -103,18 +101,15 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
         if (button != 0) {
             return false;
         }
-        float[] chip = valueChipBounds();
-        boolean containsChip = rectContains(chip, pointerX, pointerY);
         if (enumSetting.isLocked()) {
             return hoveredChip || hoveredReset;
         }
-        float[] resetSquare = inlineResetSquare();
-        if (SettingRowResetLayout.resetGlyphHitActive(resetSquare[0], resetSquare[1], resetSquare[2], pointerX, pointerY, enumSetting.isAtDefault())) {
+        if (hoveredReset) {
             enumSetting.resetToDefault();
             onPersist.run();
             return true;
         }
-        if (containsChip) {
+        if (hoveredChip) {
             enumSetting.cycleNextConstant();
             onPersist.run();
             return true;

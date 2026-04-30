@@ -65,6 +65,10 @@ public class SettingRowResetLayout {
      * @param atDefault whether the setting value already matches its default
      * @return true when the reset glyph is interactable and the pointer lies inside its square
      */
+    public static boolean resetGlyphHitActive(float[] square, float pointerX, float pointerY, boolean atDefault) {
+        return resetGlyphHitActive(square[0], square[1], square[2], pointerX, pointerY, atDefault);
+    }
+
     public static boolean resetGlyphHitActive(float left, float top, float size, float pointerX, float pointerY, boolean atDefault) {
         if (atDefault) {
             return false;
@@ -72,7 +76,15 @@ public class SettingRowResetLayout {
         return rectContains(left, top, size, pointerX, pointerY);
     }
 
+    public static boolean rectContains(float[] square, float pointerX, float pointerY) {
+        return rectContains(square[0], square[1], square[2], pointerX, pointerY);
+    }
+
     public static boolean rectContains(float left, float top, float size, float pointerX, float pointerY) {
         return pointerX >= left && pointerY >= top && pointerX < left + size && pointerY < top + size;
+    }
+
+    public static boolean rectContains(float left, float top, float width, float height, float pointerX, float pointerY) {
+        return pointerX >= left && pointerY >= top && pointerX < left + width && pointerY < top + height;
     }
 }
