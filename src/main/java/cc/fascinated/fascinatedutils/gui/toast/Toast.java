@@ -6,16 +6,19 @@ public class Toast {
         SUCCESS, ERROR, WARNING, INFO
     }
 
+    private final String title;
     private final String message;
     private final Type type;
     private final float durationSeconds;
 
-    Toast(String message, Type type, float durationSeconds) {
+    Toast(String title, String message, Type type, float durationSeconds) {
+        this.title = title;
         this.message = message;
         this.type = type;
         this.durationSeconds = durationSeconds;
     }
 
+    public String title() { return title; }
     public String message() { return message; }
     public Type type() { return type; }
     public float durationSeconds() { return durationSeconds; }
@@ -26,8 +29,14 @@ public class Toast {
 
     public static class Builder {
 
+        private String title = null;
         private String message = "";
         private int durationMs = 3000;
+
+        public Builder title(String title) {
+            this.title = title;
+            return this;
+        }
 
         public Builder message(String message) {
             this.message = message;
@@ -45,7 +54,17 @@ public class Toast {
         public void info()    { commit(Type.INFO); }
 
         private void commit(Type type) {
-            ToastManager.INSTANCE.add(new Toast(message, type, durationMs / 1000f));
+            String resolvedTitle = title != null ? title : defaultTitle(type);
+            ToastManager.INSTANCE.add(new Toast(resolvedTitle, message, type, durationMs / 1000f));
+        }
+
+        private static String defaultTitle(Type type) {
+            return switch (type) {
+                case SUCCESS -> "Success";
+                case ERROR   -> "Error";
+                case WARNING -> "Warning";
+                case INFO    -> "Info";
+            };
         }
     }
 }
