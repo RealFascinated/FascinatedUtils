@@ -8,6 +8,7 @@ import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.declare.DeclarativeMountHost;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class ModSettingsModulesTabBuilder {
 
@@ -27,9 +29,12 @@ public class ModSettingsModulesTabBuilder {
     private static final int MODULE_CARD_GRID_MAX_COLUMNS = 3;
     private static final int MODULES_SEARCH_FOCUS_ID = 5001;
 
-    public static FWidget buildModulesTab(float paneWidth, float paneHeight, List<Module> modules, Ref<Float> modulesGridScrollYRef, Module settingsModule, Runnable onBackFromModuleSettings, Callback<Module> onOpenModuleSettings, Ref<Float> moduleSettingsScrollYRef, Ref<String> moduleSearchRef, Ref<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged, Ref<String> settingsSearchRef, Runnable onSettingsSearchChanged, Consumer<ColorSetting> openColorPicker) {
+    public static FWidget buildModulesTab(float paneWidth, float paneHeight, List<Module> modules, Ref<Float> modulesGridScrollYRef, Module settingsModule, Runnable onBackFromModuleSettings, Callback<Module> onOpenModuleSettings, Ref<Float> moduleSettingsScrollYRef, Ref<String> moduleSearchRef, Ref<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged, Ref<String> settingsSearchRef, Runnable onSettingsSearchChanged, Consumer<ColorSetting> openColorPicker,
+                                          Supplier<FOutlinedTextInputWidget> moduleDetailSearchFieldSupplier) {
         if (settingsModule != null) {
-            return ModSettingsModuleDetailBuilder.buildModuleSettingsDetail(paneWidth, paneHeight, settingsModule, onBackFromModuleSettings, moduleSettingsScrollYRef, settingsSearchRef, onSettingsSearchChanged, openColorPicker);
+            return new DeclarativeMountHost((paneLogicalWidth, paneLogicalHeight) -> ModSettingsModuleDetailBuilder.moduleDetailViewportUi(paneLogicalWidth,
+                    paneLogicalHeight, settingsModule, onBackFromModuleSettings, moduleSettingsScrollYRef, settingsSearchRef, onSettingsSearchChanged, openColorPicker,
+                    moduleDetailSearchFieldSupplier.get()));
         }
         return buildModuleCardGrid(paneWidth, paneHeight, modules, modulesGridScrollYRef, onOpenModuleSettings, moduleSearchRef, moduleCategoryFilterRef, onFiltersChanged);
     }

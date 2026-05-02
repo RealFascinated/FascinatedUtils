@@ -5,6 +5,8 @@ import cc.fascinated.fascinatedutils.common.setting.impl.*;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.declare.Ui;
+import cc.fascinated.fascinatedutils.gui.declare.UiSlot;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import lombok.experimental.UtilityClass;
 import net.minecraft.client.Minecraft;
@@ -65,6 +67,41 @@ public class ModSettingsCategoryRows {
      * @param topLevelSettings       module/widget settings registered outside categories
      * @param editorFactory          editor for a single setting row
      */
+    /**
+     * Declarative equivalent of {@link #appendTopLevelThenCategories}; each row gets a keyed {@link UiSlot} for stable reconcile.
+     */
+    public static List<UiSlot> declarativeSlotsTopLevelThenCategories(float settingsContentWidth, float settingsInnerWidth, List<CategoryBlock> categories, List<Setting<?>> topLevelSettings, SettingRowEditorFactory editorFactory) {
+        List<UiSlot> slots = new ArrayList<>();
+        List<Setting<?>> allForMeasure = new ArrayList<>(topLevelSettings);
+        for (CategoryBlock category : categories) {
+            allForMeasure.addAll(category.settings());
+        }
+        float sliderValueColumnStartX = computeValueColumnStartX(allForMeasure);
+        float settingRowsPaddedInnerWidth = settingsDetailPaddedInnerWidth(settingsInnerWidth, SettingsUiMetrics.SETTINGS_DETAIL_CATEGORY_CONTENT_LEFT_INSET_X_DESIGN, SettingsUiMetrics.SETTINGS_DETAIL_CATEGORY_CONTENT_RIGHT_INSET_X_DESIGN);
+        float categoryTitlePaddedInnerWidth = settingsDetailPaddedInnerWidth(settingsInnerWidth, SettingsUiMetrics.SETTINGS_DETAIL_CATEGORY_TITLE_LEFT_INSET_X_DESIGN, SettingsUiMetrics.SETTINGS_DETAIL_CATEGORY_CONTENT_RIGHT_INSET_X_DESIGN);
+        boolean[] placedAnyRow = {false};
+        declarativeAppendSequencedSettings(slots, settingsContentWidth, settingsInnerWidth, settingRowsPaddedInnerWidth, sliderValueColumnStartX, topLevelSettings, editorFactory, placedAnyRow);
+        for (CategoryBlock category : categories) {
+            if (!categoryBlockHasRenderableSetting(category)) {
+                continue;
+            }
+            if (placedAnyRow[0]) {
+                slots.add(UiSlot.of(Ui.spacer(settingsContentWidth, SettingsUiMetrics.CATEGORY_SECTION_GAP)));
+            }
+            if (categoryDisplaysSectionHeader(category.displayNameKey())) {
+                FLabelWidget categoryLabel = new FLabelWidget();
+                categoryLabel.setText(I18n.get(category.displayNameKey()));
+                categoryLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.sectionHeaderText());
+                categoryLabel.setAlignX(Align.START);
+                FWidget titleHost = wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(categoryTitlePaddedInnerWidth, categoryLabel), SettingsUiMetrics.SETTINGS_DETAIL_CATEGORY_TITLE_LEFT_INSET_X_DESIGN, SettingsUiMetrics.SETTINGS_DETAIL_CATEGORY_CONTENT_RIGHT_INSET_X_DESIGN);
+                slots.add(Ui.slot(Ui.widgetSlot("catTitle:" + category.displayNameKey(), titleHost)));
+                slots.add(UiSlot.of(Ui.spacer(settingsContentWidth, SettingsUiMetrics.CATEGORY_AFTER_HEADER_ROW_GAP)));
+            }
+            declarativeAppendSequencedSettings(slots, settingsContentWidth, settingsInnerWidth, settingRowsPaddedInnerWidth, sliderValueColumnStartX, category.settings(), editorFactory, placedAnyRow);
+        }
+        return slots;
+    }
+
     public static void appendTopLevelThenCategories(FColumnWidget scrollBody, float settingsContentWidth, float settingsInnerWidth, List<CategoryBlock> categories, List<Setting<?>> topLevelSettings, SettingRowEditorFactory editorFactory) {
         List<Setting<?>> allForMeasure = new ArrayList<>(topLevelSettings);
         for (CategoryBlock category : categories) {
@@ -106,6 +143,28 @@ public class ModSettingsCategoryRows {
         }
         float baseOffset = 35f;
         return maxLabelWidth + baseOffset;
+    }
+
+    private static void declarativeAppendSequencedSettings(List<UiSlot> slots, float settingsContentWidth, float settingsInnerWidth, float widthForEditors, float sliderValueColumnStartX, List<Setting<?>> sequence, SettingRowEditorFactory editorFactory, boolean[] placedAnyRow) {
+        for (Setting<?> setting : sequence) {
+            if (setting.isSubSetting() || !isRenderableSetting(setting)) {
+                continue;
+            }
+            FWidget editor = editorFactory.create(setting, widthForEditors, sliderValueColumnStartX);
+            declarativeAppendSingleWrappedEditor(slots, settingsContentWidth, settingsInnerWidth, editor, placedAnyRow, setting.getSettingKey());
+        }
+    }
+
+    private static void declarativeAppendSingleWrappedEditor(List<UiSlot> slots, float settingsContentWidth, float settingsInnerWidth, @Nullable FWidget editor, boolean[] placedAnyRow, String reconcileKeySuffix) {
+        if (editor == null) {
+            return;
+        }
+        if (placedAnyRow[0]) {
+            slots.add(UiSlot.of(Ui.spacer(settingsContentWidth, SettingsUiMetrics.SETTING_GROUP_GAP)));
+        }
+        placedAnyRow[0] = true;
+        FWidget wrappedRow = wrapSettingRowShellMargin(settingsContentWidth, settingsInnerWidth, editor);
+        slots.add(Ui.slot(Ui.widgetSlot("setting:" + reconcileKeySuffix, wrappedRow)));
     }
 
     private static void appendSequencedSettings(FColumnWidget scrollBody, float settingsContentWidth, float settingsInnerWidth, float widthForEditors, float sliderValueColumnStartX, List<Setting<?>> sequence, SettingRowEditorFactory editorFactory, boolean[] placedAnyRow) {

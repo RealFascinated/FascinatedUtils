@@ -19,6 +19,12 @@ import net.minecraft.util.Mth;
 
 import java.util.List;
 
+/**
+ * Full-screen HUD layout editor driven by canvas coordinates, drag-hit testing, and {@link HudEditorChrome}.
+ *
+ * <p>Unlike modal settings screens, this {@link WidgetScreen} intentionally avoids an {@code FWidgetHost}; panels are
+ * {@link HudPanel} instances edited in place.
+ */
 public class HUDEditorScreen extends WidgetScreen {
 
     private final HudEditorPointerSession pointerSession = new HudEditorPointerSession();

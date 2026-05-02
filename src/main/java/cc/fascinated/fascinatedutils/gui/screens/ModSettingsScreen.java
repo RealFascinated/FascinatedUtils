@@ -4,12 +4,14 @@ import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.UiSounds;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
+import cc.fascinated.fascinatedutils.gui.declare.DeclarativeMountHost;
+import cc.fascinated.fascinatedutils.gui.declare.Ui;
+import cc.fascinated.fascinatedutils.gui.declare.UiView;
 import cc.fascinated.fascinatedutils.gui.input.UiCursorController;
 import cc.fascinated.fascinatedutils.gui.modsettings.*;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FShellTabStripWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
@@ -77,6 +79,16 @@ public class ModSettingsScreen extends WidgetScreen {
         topBarTabsHost.setRoot(topBarTabStrip);
         modulesTabElement = new FModulesTabElement(this::onProfilesChanged, this::openHudLayoutEditor);
         settingsTabElement = new FSettingsTabElement();
+        root.setRoot(new DeclarativeMountHost(this::modSettingsBodyDeclarativeUi));
+    }
+
+    private UiView modSettingsBodyDeclarativeUi(float bodyLogicalWidth, float bodyLogicalHeight) {
+        if (bodyLogicalWidth <= 0f || bodyLogicalHeight <= 0f) {
+            throw new IllegalStateException("Declarative shell body viewport must be positive");
+        }
+        return Ui.widgetSlot(
+                "modsettings.shell." + shellContentTab.name(),
+                shellContentTab == ShellContentTab.MODULES ? modulesTabElement : settingsTabElement);
     }
 
     public void renderBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
@@ -117,7 +129,11 @@ public class ModSettingsScreen extends WidgetScreen {
             root.tickAnimations(deltaSeconds);
             topBarTabsHost.tickAnimations(deltaSeconds);
             hudLayoutButtonHost.tickAnimations(deltaSeconds);
-            ModSettingsShellFrameResult frameResult = ModSettingsShellFrame.render(graphics, canvasWidth, canvasHeight, guiRenderer, getTitle().getString(), pointerScreenX, pointerScreenY, deltaSeconds, minecraftClient, topBarTabStrip, selectedShellTabKey(), root, topBarTabsHost, hudLayoutButtonHost, (w, h) -> mountBodyIfNeeded());
+            ModSettingsShellFrameResult frameResult = ModSettingsShellFrame.render(graphics, canvasWidth, canvasHeight, guiRenderer, getTitle().getString(), pointerScreenX, pointerScreenY, deltaSeconds, minecraftClient, topBarTabStrip, selectedShellTabKey(), root, topBarTabsHost, hudLayoutButtonHost, (bodyLogicalWidth, bodyLogicalHeight) -> {
+                if (bodyLogicalWidth <= 0f || bodyLogicalHeight <= 0f) {
+                    throw new IllegalStateException("Shell body viewport must be positive");
+                }
+            });
             float hudCanvasWidth = HudLayoutCanvas.width();
             float hudCanvasHeight = HudLayoutCanvas.height();
             guiRenderer.begin(hudCanvasWidth, hudCanvasHeight);
@@ -151,6 +167,8 @@ public class ModSettingsScreen extends WidgetScreen {
     public void removed() {
         Minecraft minecraftClient = Minecraft.getInstance();
         UiCursorController.apply(minecraftClient.getWindow().handle(), UiPointerCursor.DEFAULT);
+        modulesTabElement.disposeDeclarativeSubtree();
+        settingsTabElement.disposeDeclarativeSubtree();
         root.dispose();
         topBarTabsHost.dispose();
         hudLayoutButtonHost.dispose();
@@ -267,20 +285,6 @@ public class ModSettingsScreen extends WidgetScreen {
             }
         }
         return super.charTyped(event);
-    }
-
-    private void mountBodyIfNeeded() {
-        FWidget expected = buildBody();
-        if (root.root() != expected) {
-            root.setRoot(expected);
-        }
-    }
-
-    private FWidget buildBody() {
-        return switch (shellContentTab) {
-            case MODULES -> modulesTabElement;
-            case SETTINGS -> settingsTabElement;
-        };
     }
 
     private void onShellTabSelected(String tabKey) {

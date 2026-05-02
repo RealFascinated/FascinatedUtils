@@ -41,6 +41,19 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
         addChild(bodyColumn);
     }
 
+    public float scrollClipRowGap() {
+        return rowGap;
+    }
+
+    /**
+     * The scroll body's root widget (normally an {@link FColumnWidget}).
+     *
+     * @return body column/widget passed at construction time
+     */
+    public FWidget scrollBodyRoot() {
+        return body;
+    }
+
     private static int applyAlphaFactor(int argb, float factor) {
         int a = Math.round(((argb >>> 24) & 0xFF) * factor);
         return (argb & 0x00FFFFFF) | (a << 24);

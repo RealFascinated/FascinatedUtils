@@ -12,6 +12,14 @@ public class FMinWidthHostWidget extends FWidget {
         addChild(innerChild);
     }
 
+    public float minimumWidth() {
+        return minimumWidth;
+    }
+
+    public FWidget innerChild() {
+        return innerChild;
+    }
+
     @Override
     public float intrinsicWidthForRow(UIRenderer measure, float heightBudget) {
         return Math.max(minimumWidth, innerChild.intrinsicWidthForRow(measure, heightBudget));

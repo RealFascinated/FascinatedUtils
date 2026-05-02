@@ -9,12 +9,28 @@ import java.util.List;
 import java.util.Map;
 
 public class FColumnWidget extends FWidget {
-    private final float gap;
-    private final Align horizontalAlign;
+    private float gap;
+    private Align horizontalAlign;
 
     public FColumnWidget(float gap, Align horizontalAlign) {
-        this.gap = gap;
-        this.horizontalAlign = horizontalAlign == null ? Align.START : horizontalAlign;
+        setGapInternal(gap);
+        setHorizontalAlignInternal(horizontalAlign);
+    }
+
+    private void setGapInternal(float gapValue) {
+        this.gap = gapValue;
+    }
+
+    private void setHorizontalAlignInternal(Align horizontalAlignValue) {
+        this.horizontalAlign = horizontalAlignValue == null ? Align.START : horizontalAlignValue;
+    }
+
+    public void setGap(float gapValue) {
+        setGapInternal(gapValue);
+    }
+
+    public void setHorizontalAlign(Align horizontalAlignValue) {
+        setHorizontalAlignInternal(horizontalAlignValue);
     }
 
     public static float clampScrollOffset(float contentHeight, float viewportHeight, float scrollOffset) {

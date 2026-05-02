@@ -8,6 +8,14 @@ public class FSpacerWidget extends FWidget {
     private final float spacerWidth;
     private final float spacerHeight;
 
+    public float spacerWidth() {
+        return spacerWidth;
+    }
+
+    public float spacerHeight() {
+        return spacerHeight;
+    }
+
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         float useW = spacerWidth > 0f ? spacerWidth : layoutWidth;

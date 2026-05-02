@@ -8,12 +8,32 @@ import java.util.List;
 import java.util.Map;
 
 public class FRowWidget extends FWidget {
-    private final float gap;
-    private final Align verticalAlign;
+    private float gap;
+    private Align verticalAlign;
 
     public FRowWidget(float gap, Align verticalAlign) {
-        this.gap = gap;
-        this.verticalAlign = verticalAlign == null ? Align.START : verticalAlign;
+        setGapInternal(gap);
+        setVerticalAlignInternal(verticalAlign);
+    }
+
+    public float gap() {
+        return gap;
+    }
+
+    public void setGap(float gapValue) {
+        setGapInternal(gapValue);
+    }
+
+    public void setVerticalAlign(Align verticalAlignValue) {
+        setVerticalAlignInternal(verticalAlignValue);
+    }
+
+    private void setGapInternal(float gapValue) {
+        this.gap = gapValue;
+    }
+
+    private void setVerticalAlignInternal(Align verticalAlignValue) {
+        this.verticalAlign = verticalAlignValue == null ? Align.START : verticalAlignValue;
     }
 
     @Override

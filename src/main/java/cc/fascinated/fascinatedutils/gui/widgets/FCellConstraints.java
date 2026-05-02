@@ -4,6 +4,34 @@ import cc.fascinated.fascinatedutils.gui.core.Align;
 
 public class FCellConstraints {
     public static final FCellConstraints DEFAULT = new FCellConstraints();
+
+    /**
+     * Returns a detached copy suitable for attaching to widgets without mutating a shared DEFAULT instance.
+     *
+     * @param source constraint values to duplicate; ignored when {@code null}
+     * @return a new mutable copy, or a new default instance when {@code source} is {@code null}
+     */
+    public static FCellConstraints copyNullable(FCellConstraints source) {
+        if (source == null) {
+            return new FCellConstraints();
+        }
+        FCellConstraints duplicate = new FCellConstraints();
+        duplicate.marginStart = source.marginStart;
+        duplicate.marginEnd = source.marginEnd;
+        duplicate.marginTop = source.marginTop;
+        duplicate.marginBottom = source.marginBottom;
+        duplicate.growWeight = source.growWeight;
+        duplicate.expandHorizontal = source.expandHorizontal;
+        duplicate.expandVertical = source.expandVertical;
+        duplicate.alignHorizontal = source.alignHorizontal;
+        duplicate.alignVertical = source.alignVertical;
+        duplicate.widthGroupKey = source.widthGroupKey;
+        duplicate.minWidth = source.minWidth;
+        duplicate.minHeight = source.minHeight;
+        duplicate.maxWidth = source.maxWidth;
+        duplicate.maxHeight = source.maxHeight;
+        return duplicate;
+    }
     private float marginStart;
     private float marginEnd;
     private float marginTop;

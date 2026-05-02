@@ -40,6 +40,23 @@ public class FOutlinedTextInputWidget extends FWidget {
         scrollOffsetX = 0f;
     }
 
+    /**
+     * Applies a new value from external state (for example declarative reconcile) without firing {@link #setOnChange}.
+     * Preserves caret and selection when {@code incoming} equals the current {@link #value()}.
+     *
+     * @param incoming authoritative text; treated as empty when {@code null}
+     */
+    public void adoptExternalValueWithoutCallbacks(String incoming) {
+        String next = incoming == null ? "" : incoming;
+        if (next.equals(value)) {
+            return;
+        }
+        value = next;
+        caretIndex = Mth.clamp(caretIndex, 0, value.length());
+        selectionAnchor = -1;
+        scrollOffsetX = 0f;
+    }
+
     public String value() {
         return value;
     }
