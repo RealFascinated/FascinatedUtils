@@ -24,16 +24,15 @@ import java.util.Deque;
 import java.util.List;
 
 /**
- * GUI orchestrator: root {@link GuiGraphics} scope, nested scissors with segment flushes, deferred text
+ * GUI orchestrator: root {@link GuiGraphicsExtractor} scope, nested scissors with segment flushes, deferred text
  * operations, and a single low-level {@link Renderer2D} for batched geometry and immediate chrome.
  *
  * <p>Deferred text stores the same logical {@code (x, y)} passed to {@link #drawText} / {@link #drawMiniMessageText} as
- * TextOperation (no pre-bake through the matrix stack); {@code y} is a layout line top and is
- * converted to vanilla {@link GuiGraphics#drawString} baseline coordinates in {@link Renderer2D}. {@link GuiGraphics}
- * transforms that must
- * apply to text must still be on the stack when {@link #endRenderSegment()} or {@link #end()} runs—call
- * {@link #endRenderSegment()} before popping translate/scale that were active while queueing (see HUD paths), and end
- * the frame only after any shell matrix stack work needed for deferred text is still applied (see mod settings shell).
+ * TextOperation (no pre-bake through the matrix stack); {@code y} is a layout line top and is converted to vanilla
+ * {@code drawString}-compatible baseline coordinates in {@link Renderer2D}. Pose transforms that must apply to text
+ * must still be on the stack when {@link #endRenderSegment()} or {@link #end()} runs—call {@link #endRenderSegment()}
+ * before popping translate/scale that were active while queueing (see HUD paths), and end the frame only after any
+ * shell matrix stack work needed for deferred text is still applied (see mod settings shell).
  */
 public class GuiRenderer implements UIRenderer {
     private static final int TEXT_OPERATION_POOL_CAP = 256;

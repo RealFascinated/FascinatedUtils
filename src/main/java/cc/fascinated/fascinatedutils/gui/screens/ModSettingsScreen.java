@@ -57,18 +57,6 @@ public class ModSettingsScreen extends WidgetScreen {
     @Nullable
     private final Screen returnToScreen;
 
-    public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId) {
-        this(title, getFocusId, setFocusId, null, (Screen) null);
-    }
-
-    public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId, @Nullable Module navigateToModuleDetailOnOpen) {
-        this(title, getFocusId, setFocusId, navigateToModuleDetailOnOpen, (Screen) null);
-    }
-
-    public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId, @Nullable Module navigateToModuleDetailOnOpen, boolean returnToHudEditor) {
-        this(title, getFocusId, setFocusId, navigateToModuleDetailOnOpen, (Screen) null);
-    }
-
     public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId, @Nullable Module navigateToModuleDetailOnOpen, @Nullable Screen returnToScreen) {
         super(title);
         this.returnToScreen = returnToScreen;
@@ -89,13 +77,6 @@ public class ModSettingsScreen extends WidgetScreen {
         return Ui.widgetSlot(
                 "modsettings.shell." + shellContentTab.name(),
                 shellContentTab == ShellContentTab.MODULES ? modulesTabElement : settingsTabElement);
-    }
-
-    public void renderBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
-    }
-
-    public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override

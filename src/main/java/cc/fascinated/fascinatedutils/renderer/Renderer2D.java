@@ -27,7 +27,7 @@ import org.joml.Vector2f;
 
 /**
  * Low-level GUI draw bridge: batched mesh quads (rounded rects, gradients, {@link #drawBorder}) via {@link MeshBuilder}
- * / {@link MeshRenderer}, then vanilla {@link GuiGraphics} immediate draws for text and items. Text uses the active
+ * / {@link MeshRenderer}, then {@link GuiGraphicsExtractor} immediate draws for text and items. Text uses the active
  * {@link GuiTheme#textRenderer}.
  */
 public class Renderer2D {
@@ -202,8 +202,7 @@ public class Renderer2D {
      *
      * @param text      rich text to draw
      * @param positionX left origin in logical pixels
-     * @param positionY layout line top in logical pixels (top of the nominal line box; converted to vanilla
-     *                  {@link GuiGraphics#drawString} baseline coordinates before drawing)
+     * @param positionY layout line top in logical pixels (top of the nominal line box; converted to vanilla {@code drawString}-compatible baseline coordinates before drawing)
      * @param color     packed ARGB color (already multiplied when queued from {@link
      *                  GuiRenderer})
      * @param shadow    whether to draw vanilla text shadow

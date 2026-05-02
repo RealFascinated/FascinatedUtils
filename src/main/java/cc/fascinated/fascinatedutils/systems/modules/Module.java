@@ -69,7 +69,7 @@ public abstract class Module implements GsonSerializable<Module> {
     }
 
     /**
-     * Registers a setting for this module. Use {@link Setting#getCategoryDisplayKey()} on the setting for a section
+     * Registers a setting for this module. Use {@code getCategoryDisplayKey()} on {@link Setting the setting} for a section
      * header in the module settings UI; omit or blank the key for top-level rows before categorized sections.
      *
      * @param setting the setting definition to append
@@ -96,7 +96,7 @@ public abstract class Module implements GsonSerializable<Module> {
     }
 
     /**
-     * Top-level settings: those with no {@link Setting#getCategoryDisplayKey()} (or a blank key), in registration order.
+     * Top-level settings: those with no {@code getCategoryDisplayKey()} value (or a blank key) on {@link Setting}, in registration order.
      *
      * @return an unmodifiable list of those settings
      */
@@ -105,7 +105,7 @@ public abstract class Module implements GsonSerializable<Module> {
     }
 
     /**
-     * Setting categories derived from non-blank {@link Setting#getCategoryDisplayKey()} on each setting.
+     * Setting categories derived from non-blank {@code getCategoryDisplayKey()} values on each {@link Setting}.
      *
      * @return an unmodifiable list of categories
      */

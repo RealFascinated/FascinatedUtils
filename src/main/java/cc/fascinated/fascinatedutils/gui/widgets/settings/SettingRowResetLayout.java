@@ -57,9 +57,7 @@ public class SettingRowResetLayout {
      * <p>When {@code atDefault} is true, this returns false so the reserved trailing slot does not steal hovers,
      * clicks, or tooltips even though layout space is unchanged.
      *
-     * @param left      glyph square left
-     * @param top       glyph square top
-     * @param size      glyph square edge length
+     * @param square    bounding square as {@code [left, top, size]}
      * @param pointerX  logical pointer X
      * @param pointerY  logical pointer Y
      * @param atDefault whether the setting value already matches its default

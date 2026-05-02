@@ -5,7 +5,8 @@ import org.jspecify.annotations.Nullable;
 import java.util.*;
 
 /**
- * Derives UI category sections from per-setting {@link Setting#getCategoryDisplayKey()} values.
+ * Derives UI category sections from keys returned by each {@link Setting} instance's {@code getCategoryDisplayKey()}
+ * accessor.
  */
 public final class SettingCategoryGrouper {
 

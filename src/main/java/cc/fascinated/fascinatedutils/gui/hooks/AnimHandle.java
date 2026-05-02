@@ -30,7 +30,10 @@ public class AnimHandle {
     }
 
     /**
-     * Advance {@link #value()} one step toward {@link #target()} using the configured approach {@link #speed()}.
+     * Advance {@code value} one step toward {@code target} using exponential ease with rate {@code speed} over
+     * {@code deltaSeconds}.
+     *
+     * @param deltaSeconds elapsed time this frame for the ease step, in seconds
      */
     public void tick(float deltaSeconds) {
         float rate = speed;

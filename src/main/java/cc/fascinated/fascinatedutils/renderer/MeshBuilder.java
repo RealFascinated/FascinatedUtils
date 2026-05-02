@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.renderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Frame-level segment boundaries for batched GUI mesh recording ({@link MeshRenderer}). Replaces the former
@@ -20,7 +21,7 @@ public class MeshBuilder {
      * @param drawContext     active draw context
      * @param minecraftClient client instance (reserved for future device hooks)
      */
-    public void beginFrame(GuiGraphicsExtractor drawContext, Minecraft minecraftClient) {
+    public void beginFrame(@NonNull GuiGraphicsExtractor drawContext, @NonNull Minecraft minecraftClient) {
     }
 
     /**
@@ -29,7 +30,7 @@ public class MeshBuilder {
      *
      * @param drawContext active draw context
      */
-    public void beginSegment(GuiGraphicsExtractor drawContext) {
+    public void beginSegment(@NonNull GuiGraphicsExtractor drawContext) {
         MeshRenderer.INSTANCE.beginSegment(drawContext);
     }
 
@@ -38,7 +39,7 @@ public class MeshBuilder {
      *
      * @param drawContext active draw context
      */
-    public void endSegment(GuiGraphicsExtractor drawContext) {
+    public void endSegment(@NonNull GuiGraphicsExtractor drawContext) {
         MeshRenderer.INSTANCE.endSegment(drawContext);
     }
 
@@ -47,7 +48,7 @@ public class MeshBuilder {
      *
      * @param drawContext active draw context
      */
-    public void endFrame(GuiGraphicsExtractor drawContext) {
+    public void endFrame(@NonNull GuiGraphicsExtractor drawContext) {
         MeshRenderer.INSTANCE.endSegment(drawContext);
     }
 }

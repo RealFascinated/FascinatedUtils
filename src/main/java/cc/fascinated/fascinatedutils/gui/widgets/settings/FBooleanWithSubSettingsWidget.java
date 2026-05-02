@@ -3,7 +3,6 @@ package cc.fascinated.fascinatedutils.gui.widgets.settings;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
@@ -98,10 +97,5 @@ public class FBooleanWithSubSettingsWidget extends FWidget {
             float subHeight = Math.max(0f, layoutHeight - booleanRowHeight - SUB_PANEL_TOP_GAP);
             subPanel.layout(measure, subX, subY, subWidth, subHeight);
         }
-    }
-
-    @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        // children render themselves via FWidget.render()
     }
 }

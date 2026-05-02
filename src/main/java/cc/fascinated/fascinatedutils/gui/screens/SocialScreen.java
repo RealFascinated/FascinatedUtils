@@ -74,13 +74,6 @@ public class SocialScreen extends WidgetScreen {
         }
     }
 
-    public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics, mouseX, mouseY, partialTick);
-    }
-
-    public void renderBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-    }
-
     @Override
     public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubled) {
         float pointerX = UIScale.uiPointerX();

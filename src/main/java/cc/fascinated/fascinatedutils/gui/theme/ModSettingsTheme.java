@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.theme;
 
+import cc.fascinated.fascinatedutils.gui.screens.ModSettingsScreen;
+
 public class ModSettingsTheme {
     /**
      * Max shell width before clamping by canvas width times {@link #SHELL_MAX_WIDTH_FRAC}.
@@ -62,7 +64,7 @@ public class ModSettingsTheme {
 
     /**
      * Side length of the square close button and height of tab segments / HUD layout chip in the mod settings title bar.
-     * Call only while {@link GuiDesignSpace} is active (for example during {@code ModSettingsScreen} layout).
+     * Call only while mod-settings logical layout applies (for example during {@link ModSettingsScreen} layout).
      *
      * @return size in logical shell pixels, at least 1
      */

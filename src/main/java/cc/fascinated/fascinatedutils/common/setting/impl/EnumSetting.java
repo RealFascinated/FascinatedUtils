@@ -69,7 +69,7 @@ public class EnumSetting<T extends Enum<T>> extends Setting<T> {
     }
 
     /**
-     * Advance {@link #getValue()} to the next enum constant in declaration order (wraps after the last).
+     * Advance the {@code getValue()} result to the next enum constant in declaration order (wraps after the last).
      */
     public void cycleNextConstant() {
         T[] constants = enumType.getEnumConstants();
@@ -81,7 +81,7 @@ public class EnumSetting<T extends Enum<T>> extends Setting<T> {
     }
 
     /**
-     * Move {@link #getValue()} to the previous enum constant in declaration order (wraps before the first).
+     * Move the {@code getValue()} result to the previous enum constant in declaration order (wraps before the first).
      */
     public void cyclePreviousConstant() {
         T[] constants = enumType.getEnumConstants();

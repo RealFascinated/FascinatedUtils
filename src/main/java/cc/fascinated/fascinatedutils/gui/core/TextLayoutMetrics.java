@@ -7,8 +7,8 @@ import java.util.List;
 public class TextLayoutMetrics {
 
     /**
-     * Horizontal wrap budget in GUI pixels for a text host laid out at {@code layoutWidthPx}, matching {@link
-     * GuiDesignSpace#guiTextWrapBudgetPx(float)}.
+     * Horizontal wrap budget in GUI pixels for a text host laid out at {@code layoutWidthPx} (here identical to the
+     * layout width; callers use the same logical coordinate space as mod-settings UI).
      */
     public static float wrapBudgetForLayoutWidthPx(float layoutWidthPx) {
         return layoutWidthPx;

@@ -7,7 +7,7 @@
   "authors": [],
   "contact": {},
   "license": "All-Rights-Reserved",
-  "icon": "assets/fascinatedutils/textures/ui/mod_settings/x.png",
+  "icon": "assets/fascinatedutils/textures/gui/sprites/ui/mod_settings/close.png",
   "environment": "client",
   "entrypoints": {
     "fabric-datagen": [

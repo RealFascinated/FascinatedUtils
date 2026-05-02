@@ -76,13 +76,6 @@ public class WaypointsScreen extends WidgetScreen {
         minecraftClient.setScreen(new WaypointCreateScreen(minecraftClient.player.getX(), minecraftClient.player.getY(), minecraftClient.player.getZ(), dimensionId, worldKey));
     }
 
-    public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics, mouseX, mouseY, partialTick);
-    }
-
-    public void renderBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
-    }
-
     @Override
     public void renderCustom(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         Minecraft minecraftClient = Minecraft.getInstance();

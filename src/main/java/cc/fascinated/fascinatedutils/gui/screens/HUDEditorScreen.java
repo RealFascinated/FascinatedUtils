@@ -48,18 +48,6 @@ public class HUDEditorScreen extends WidgetScreen {
     }
 
     @Override
-    public boolean shouldCloseOnEsc() {
-        return true;
-    }
-
-    public void renderBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
-    }
-
-    public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics, mouseX, mouseY, partialTick);
-    }
-
-    @Override
     public void renderCustom(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         float canvasWidth = HudLayoutCanvas.width();
         float canvasHeight = HudLayoutCanvas.height();
