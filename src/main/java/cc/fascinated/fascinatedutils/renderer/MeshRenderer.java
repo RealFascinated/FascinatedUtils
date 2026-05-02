@@ -1,15 +1,14 @@
 package cc.fascinated.fascinatedutils.renderer;
 
+import cc.fascinated.fascinatedutils.FascinatedUtils;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import org.joml.Matrix3x2f;
 
@@ -26,10 +25,10 @@ public class MeshRenderer {
     public static final MeshRenderer INSTANCE = new MeshRenderer();
     private static final Field GUI_SCISSOR_STACK_FIELD = resolveScissorStackField();
     private static final Method GUI_SCISSOR_PEEK_METHOD = resolveScissorPeekMethod();
-    private static final Identifier WHITE_BLOCK_TEXTURE = Identifier.withDefaultNamespace("textures/block/white_concrete.png");
     private final List<GuiElementRenderState> pendingSolid = new ArrayList<>();
     private final List<GuiElementRenderState> pendingTextured = new ArrayList<>();
     private final List<DynamicTexture> disposableCornerRadiiLuts = new ArrayList<>();
+    private DynamicTexture whiteDot;
     private TextureSetup whiteTextureSetup;
 
     private MeshRenderer() {
@@ -233,14 +232,10 @@ public class MeshRenderer {
         }
         else {
             roundedPipeline = FascinatedUiPipelines.ROUNDED_RECT_TEX_LUT;
-            Minecraft client = Minecraft.getInstance();
-            if (client == null) {
-                return;
-            }
-            AbstractTexture whiteBlock = client.getTextureManager().getTexture(WHITE_BLOCK_TEXTURE);
+            TextureSetup white = whiteSetup();
             DynamicTexture cornerRadiiLut = RoundedRectCornerRadiiTexture.createDisposableRadiiLut(packedCornerRadii, lutOuterRingStrokePx);
             disposableCornerRadiiLuts.add(cornerRadiiLut);
-            roundedTextureSetup = TextureSetup.doubleTexture(whiteBlock.getTextureView(), whiteBlock.getSampler(), cornerRadiiLut.getTextureView(), cornerRadiiLut.getSampler());
+            roundedTextureSetup = TextureSetup.doubleTexture(white.texure0(), white.sampler0(), cornerRadiiLut.getTextureView(), cornerRadiiLut.getSampler());
             topLeft = colorTop;
             bottomLeft = colorBottom;
             bottomRight = colorBottom;
@@ -253,12 +248,13 @@ public class MeshRenderer {
         if (whiteTextureSetup != null) {
             return whiteTextureSetup;
         }
-        Minecraft client = Minecraft.getInstance();
-        if (client == null) {
-            return TextureSetup.noTexture();
+        if (whiteDot == null) {
+            NativeImage image = new NativeImage(NativeImage.Format.RGBA, 1, 1, false);
+            image.setPixel(0, 0, 0xFFFFFFFF);
+            whiteDot = new DynamicTexture(() -> FascinatedUtils.MOD_ID + "/white_dot", image);
+            whiteDot.upload();
         }
-        AbstractTexture texture = client.getTextureManager().getTexture(WHITE_BLOCK_TEXTURE);
-        whiteTextureSetup = TextureSetup.singleTexture(texture.getTextureView(), texture.getSampler());
+        whiteTextureSetup = TextureSetup.singleTexture(whiteDot.getTextureView(), whiteDot.getSampler());
         return whiteTextureSetup;
     }
 
