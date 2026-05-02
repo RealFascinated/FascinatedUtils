@@ -17,7 +17,7 @@ public class HUDEditorSnap {
     /**
      * Snap a widget top-left to the nearest eligible X and Y within the snap radius, then clamp to the canvas.
      */
-    public static SnapResult snapTopLeft(float rawLeft, float rawTop, float widgetWidth, float widgetHeight, float canvasWidth, float canvasHeight, List<HudModule> allWidgets, HudModule exclude) {
+    public static SnapResult snapTopLeft(float rawLeft, float rawTop, float widgetWidth, float widgetHeight, float canvasWidth, float canvasHeight, List<HudPanel> allWidgets, HudPanel exclude) {
         float maxLeft = Math.max(0f, canvasWidth - widgetWidth);
         float maxTop = Math.max(0f, canvasHeight - widgetHeight);
         List<SnapCandidate> horizontalCandidates = collectHorizontalSnapTargets(allWidgets, exclude, rawTop, widgetWidth, widgetHeight);
@@ -37,10 +37,10 @@ public class HUDEditorSnap {
         return new SnapResult(snappedLeft.snappedCoord(), snappedTop.snappedCoord(), snappedLeft.guideCoord(), snappedTop.guideCoord(), snappedLeft.isCenter(), snappedTop.isCenter());
     }
 
-    private static List<SnapCandidate> collectHorizontalSnapTargets(List<HudModule> allWidgets, HudModule exclude, float rawTop, float dragWidth, float dragHeight) {
+    private static List<SnapCandidate> collectHorizontalSnapTargets(List<HudPanel> allWidgets, HudPanel exclude, float rawTop, float dragWidth, float dragHeight) {
         List<SnapCandidate> targets = new ArrayList<>();
         float draggingBottom = rawTop + dragHeight;
-        for (HudModule other : allWidgets) {
+        for (HudPanel other : allWidgets) {
             if (other == exclude) {
                 continue;
             }
@@ -59,10 +59,10 @@ public class HUDEditorSnap {
         return targets;
     }
 
-    private static List<SnapCandidate> collectVerticalSnapTargets(List<HudModule> allWidgets, HudModule exclude, float rawLeft, float dragWidth, float dragHeight) {
+    private static List<SnapCandidate> collectVerticalSnapTargets(List<HudPanel> allWidgets, HudPanel exclude, float rawLeft, float dragWidth, float dragHeight) {
         List<SnapCandidate> targets = new ArrayList<>();
         float draggingRight = rawLeft + dragWidth;
-        for (HudModule other : allWidgets) {
+        for (HudPanel other : allWidgets) {
             if (other == exclude) {
                 continue;
             }

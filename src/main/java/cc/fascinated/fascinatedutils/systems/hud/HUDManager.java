@@ -6,7 +6,6 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.screens.HUDEditorScreen;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
-import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
@@ -22,7 +21,7 @@ import java.util.List;
 public class HUDManager {
     public static final HUDManager INSTANCE = new HUDManager();
 
-    private final List<HudModule> widgets = new ArrayList<>();
+    private final List<HudPanel> widgets = new ArrayList<>();
     private boolean editMode;
     private boolean initialized;
     private volatile long lastRenderNanos = 0L;
@@ -35,7 +34,7 @@ public class HUDManager {
         if (initialized) {
             return;
         }
-        widgets.addAll(ModuleRegistry.INSTANCE.getHudModules());
+        widgets.addAll(ModuleRegistry.INSTANCE.getHudPanels());
         initialized = true;
     }
 
@@ -47,7 +46,7 @@ public class HUDManager {
         ProfilerFiller profiler = Profiler.get();
 
         long renderStart = System.nanoTime();
-        for (HudModule widget : widgets.stream().filter(Module::isEnabled).toList()) {
+        for (HudPanel widget : widgets.stream().filter(HudPanel::shouldRenderHudPanel).toList()) {
             profiler.push("widget-" + widget.getId());
 
             Runnable draw = widget.prepareAndDraw(renderer, deltaSeconds, editorMode);
@@ -102,7 +101,7 @@ public class HUDManager {
         saveAll();
     }
 
-    public List<HudModule> getWidgets() {
+    public List<HudPanel> getWidgets() {
         return Collections.unmodifiableList(widgets);
     }
 

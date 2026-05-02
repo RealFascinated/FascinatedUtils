@@ -8,15 +8,9 @@ import lombok.Getter;
 @Getter
 public class ItemTooltipModule extends Module {
 
-    private final BooleanSetting gapAboveInfo = BooleanSetting.builder()
-            .id("gap_above_info")
-            .defaultValue(true)
-            .build();
+    private final BooleanSetting gapAboveInfo = BooleanSetting.builder().id("gap_above_info").defaultValue(true).build();
 
-    private final BooleanSetting showItemSize = BooleanSetting.builder()
-            .id("show_item_size")
-            .defaultValue(true)
-            .build();
+    private final BooleanSetting showItemSize = BooleanSetting.builder().id("show_item_size").defaultValue(true).build();
 
     public ItemTooltipModule() {
         super("Item Tooltip", ModuleCategory.GENERAL);

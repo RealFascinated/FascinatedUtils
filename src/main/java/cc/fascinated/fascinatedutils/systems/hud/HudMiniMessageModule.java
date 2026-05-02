@@ -3,12 +3,13 @@ package cc.fascinated.fascinatedutils.systems.hud;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
-import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public abstract class HudMiniMessageModule extends HudModule {
+public abstract class HudMiniMessageModule extends HudHostModule {
     private static final long DEFAULT_UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
 
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
@@ -23,7 +24,7 @@ public abstract class HudMiniMessageModule extends HudModule {
     private long lastMiniMessageSampleNanos;
 
     protected HudMiniMessageModule(String widgetId, String name, float minWidth, HudDefaults hudDefaults) {
-        super(widgetId, name, minWidth, hudDefaults);
+        super(widgetId, name, hudDefaults);
         addSetting(showBackground);
         addSetting(roundedCorners);
         addSetting(showBorder);
@@ -39,6 +40,25 @@ public abstract class HudMiniMessageModule extends HudModule {
 
     public HudMiniMessageModule(String widgetId, String name, float minWidth) {
         this(widgetId, name, minWidth, HudDefaults.builder().build());
+    }
+
+    /**
+     * Override when the panel minimum width depends on settings (e.g. TPS mspt toggle).
+     *
+     * @param baseMinWidth constructor value
+     * @return resolved minimum width for layout
+     */
+    protected float resolvePanelMinWidth(float baseMinWidth) {
+        return baseMinWidth;
+    }
+
+    /**
+     * Optional horizontal alignment for centered MiniMessage lines ({@code null} = centered band).
+     *
+     * @return alignment override, or {@code null} for default
+     */
+    protected HudAnchorContentAlignment.@Nullable Horizontal hostTextLineHorizontalAlignment() {
+        return null;
     }
 
     private static List<String> normalizeMiniMessageLines(List<String> rawLines) {
@@ -71,12 +91,7 @@ public abstract class HudMiniMessageModule extends HudModule {
         return lines(deltaSeconds);
     }
 
-    @Override
-    protected HudContent produceContent(float deltaSeconds, boolean editorMode) {
-        return new HudContent.TextLines(miniMessageLinesWithCache(deltaSeconds, editorMode));
-    }
-
-    private List<String> miniMessageLinesWithCache(float deltaSeconds, boolean editorMode) {
+    protected List<String> miniMessageLinesWithCache(float deltaSeconds, boolean editorMode) {
         long intervalNanos = hudMiniMessageUpdateIntervalNanos();
         long now = System.nanoTime();
         if (intervalNanos <= 0L || cachedMiniMessageLines == null || now - lastMiniMessageSampleNanos >= intervalNanos) {

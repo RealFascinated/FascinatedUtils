@@ -7,7 +7,7 @@ import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 
 import java.util.List;
 
-public abstract class ItemRowHudModule extends HudModule {
+public abstract class ItemRowHudModule extends HudHostModule {
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
     private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
@@ -17,7 +17,7 @@ public abstract class ItemRowHudModule extends HudModule {
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
 
     protected ItemRowHudModule(String widgetId, String name, float minWidth) {
-        super(widgetId, name, minWidth);
+        super(widgetId, name, HudDefaults.builder().build());
         addSetting(showBackground);
         addSetting(roundedCorners);
         addSetting(showBorder);
@@ -33,12 +33,14 @@ public abstract class ItemRowHudModule extends HudModule {
 
     protected abstract List<HudContent.ItemRow> rows(float deltaSeconds);
 
-    @Override
-    protected HudContent produceContent(float deltaSeconds, boolean editorMode) {
-        List<HudContent.ItemRow> rowList = rows(deltaSeconds);
-        if (rowList == null || rowList.isEmpty()) {
-            return new HudContent.ItemRows(List.of());
-        }
-        return new HudContent.ItemRows(rowList);
+    /**
+     * Rows for this frame; override when editor preview should differ from {@link #rows}.
+     *
+     * @param deltaSeconds frame delta in seconds
+     * @param editorMode   true in the HUD layout editor
+     * @return item rows to render
+     */
+    protected List<HudContent.ItemRow> panelRows(float deltaSeconds, boolean editorMode) {
+        return rows(deltaSeconds);
     }
 }

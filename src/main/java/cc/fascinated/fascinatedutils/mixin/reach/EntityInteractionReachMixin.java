@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.reach;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.ReachWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.reach.ReachWidget;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;

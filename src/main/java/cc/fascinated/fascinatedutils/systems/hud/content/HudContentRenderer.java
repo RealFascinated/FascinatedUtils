@@ -2,9 +2,10 @@ package cc.fascinated.fascinatedutils.systems.hud.content;
 
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HUDPanelBackground;
+import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
-import cc.fascinated.fascinatedutils.systems.hud.HudModule;
 import net.minecraft.client.Minecraft;
 
 import java.util.List;
@@ -13,19 +14,22 @@ public class HudContentRenderer {
 
     /**
      * Measure content dimensions and return a draw callback.
-     * Dimensions are written to the module's HUD state before returning.
+     * Dimensions are written to the panel HUD state before returning.
      *
+     * @param glRenderer renderer for deferred draw callbacks
+     * @param host       module supplying padding, chrome colors, shadows
+     * @param panel      panel receiving layout commits
      * @return a draw callback, or {@code null} for {@link HudContent.Custom} content
      */
-    public static Runnable prepare(GuiRenderer glRenderer, HudContent content, HudModule module, boolean editorMode) {
+    public static Runnable prepare(GuiRenderer glRenderer, HudContent content, HudHostModule host, HudPanel panel, boolean editorMode) {
         return switch (content) {
-            case HudContent.TextLines textLines -> prepareTextLines(glRenderer, textLines.miniMessageLines(), module, editorMode);
-            case HudContent.ItemRows itemRows -> prepareItemRows(glRenderer, itemRows.rows(), module, editorMode);
+            case HudContent.TextLines textLines -> prepareTextLines(glRenderer, textLines.miniMessageLines(), host, panel, editorMode);
+            case HudContent.ItemRows itemRows -> prepareItemRows(glRenderer, itemRows.rows(), host, panel, editorMode);
             case HudContent.Custom _ -> null;
         };
     }
 
-    private static Runnable prepareTextLines(GuiRenderer glRenderer, List<String> rawLines, HudModule module, boolean editorMode) {
+    private static Runnable prepareTextLines(GuiRenderer glRenderer, List<String> rawLines, HudHostModule host, HudPanel panel, boolean editorMode) {
         if (rawLines == null || rawLines.isEmpty()) {
             rawLines = List.of("");
         }
@@ -43,20 +47,20 @@ public class HudContentRenderer {
             maxLineWidth = Math.max(maxLineWidth, width);
         }
 
-        float horizontalPadding = module.getPadding();
-        float verticalPadding = module.getPadding();
+        float horizontalPadding = host.getPadding();
+        float verticalPadding = host.getPadding();
         float innerTextHeight = HUDPanelBackground.innerTextHeightForLineCount(rawLines.size(), lineHeight);
-        float layoutWidth = Math.max(1f, Math.max(module.getMinWidth(), maxLineWidth + 2f * horizontalPadding));
+        float layoutWidth = Math.max(1f, Math.max(panel.getMinWidth(), maxLineWidth + 2f * horizontalPadding));
         float layoutHeight = Math.max(1f, innerTextHeight + 2f * verticalPadding);
 
-        module.getHudState().setLastLayoutWidth(layoutWidth);
-        module.getHudState().setLastLayoutHeight(layoutHeight);
-        module.getHudState().setCommittedLayoutWidth(layoutWidth);
-        module.getHudState().setCommittedLayoutHeight(layoutHeight);
+        panel.getHudState().setLastLayoutWidth(layoutWidth);
+        panel.getHudState().setLastLayoutHeight(layoutHeight);
+        panel.getHudState().setCommittedLayoutWidth(layoutWidth);
+        panel.getHudState().setCommittedLayoutHeight(layoutHeight);
 
         List<String> lines = rawLines;
         return () -> {
-            module.drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
+            host.drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
 
             float innerHeight = layoutHeight - 2f * verticalPadding;
             float cursorY = verticalPadding + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, innerTextHeight, HudAnchorContentAlignment.Vertical.CENTER);
@@ -68,8 +72,8 @@ public class HudContentRenderer {
                     lineText = "";
                 }
                 float lineWidth = lineWidths[lineIndex];
-                float drawX = horizontalPadding + HudAnchorLayout.horizontalOffsetInInnerBand(innerBandWidth, lineWidth, module.hudTextLineHorizontalAlignment());
-                glRenderer.drawMiniMessageText(lineText, drawX, cursorY, module.isTextShadowEnabled());
+                float drawX = horizontalPadding + HudAnchorLayout.horizontalOffsetInInnerBand(innerBandWidth, lineWidth, panel.hudTextLineHorizontalAlignment());
+                glRenderer.drawMiniMessageText(lineText, drawX, cursorY, host.isTextShadowEnabled());
                 cursorY += lineHeight;
                 if (lineIndex < lines.size() - 1) {
                     cursorY += HUDPanelBackground.LINE_GAP_PX;
@@ -78,14 +82,14 @@ public class HudContentRenderer {
         };
     }
 
-    private static Runnable prepareItemRows(GuiRenderer glRenderer, List<HudContent.ItemRow> rows, HudModule module, boolean editorMode) {
+    private static Runnable prepareItemRows(GuiRenderer glRenderer, List<HudContent.ItemRow> rows, HudHostModule host, HudPanel panel, boolean editorMode) {
         if (rows == null || rows.isEmpty()) {
-            module.recordHudContentSkipped();
+            panel.recordHudContentSkipped();
             return null;
         }
 
-        float horizontalPadding = module.getPadding();
-        float verticalPadding = module.getPadding();
+        float horizontalPadding = host.getPadding();
+        float verticalPadding = host.getPadding();
         float lineHeight = glRenderer.getFontHeight();
         float itemIconSize = 16f;
         float iconTextGap = 4f;
@@ -107,22 +111,22 @@ public class HudContentRenderer {
         }
 
         float rowHeight = Math.max(itemIconSize, lineHeight);
-        float layoutWidth = Math.max(1f, Math.max(module.getMinWidth(), maxStripWidth + 2f * horizontalPadding));
+        float layoutWidth = Math.max(1f, Math.max(panel.getMinWidth(), maxStripWidth + 2f * horizontalPadding));
         float innerContentHeight = rows.size() * rowHeight + Math.max(0, rows.size() - 1) * lineGapPx;
         float layoutHeight = Math.max(1f, innerContentHeight + 2f * verticalPadding);
 
-        module.getHudState().setLastLayoutWidth(layoutWidth);
-        module.getHudState().setLastLayoutHeight(layoutHeight);
-        module.getHudState().setCommittedLayoutWidth(layoutWidth);
-        module.getHudState().setCommittedLayoutHeight(layoutHeight);
+        panel.getHudState().setLastLayoutWidth(layoutWidth);
+        panel.getHudState().setLastLayoutHeight(layoutHeight);
+        panel.getHudState().setCommittedLayoutWidth(layoutWidth);
+        panel.getHudState().setCommittedLayoutHeight(layoutHeight);
 
         return () -> {
-            module.drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
+            host.drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
 
             float innerHeight = layoutHeight - 2f * verticalPadding;
-            float cursorY = verticalPadding + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, innerContentHeight, module.hudContentVerticalAlignment());
+            float cursorY = verticalPadding + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, innerContentHeight, panel.hudContentVerticalAlignment());
             float innerRowBandWidth = layoutWidth - 2f * horizontalPadding;
-            boolean isOnRight = module.hudContentHorizontalAlignment() == HudAnchorContentAlignment.Horizontal.RIGHT;
+            boolean isOnRight = panel.hudContentHorizontalAlignment() == HudAnchorContentAlignment.Horizontal.RIGHT;
 
             Minecraft minecraftClient = Minecraft.getInstance();
             for (int index = 0; index < rows.size(); index++) {
@@ -140,7 +144,7 @@ public class HudContentRenderer {
 
                 if (isOnRight) {
                     if (drawRowText) {
-                        glRenderer.drawMiniMessageText(rowText, stripLeft, textY, module.isTextShadowEnabled());
+                        glRenderer.drawMiniMessageText(rowText, stripLeft, textY, host.isTextShadowEnabled());
                     }
                     drawItemRowIcons(glRenderer, minecraftClient, row, stripLeft + textWidthPx + gapBeforeIcon, iconY, itemGapPx);
                 }
@@ -148,7 +152,7 @@ public class HudContentRenderer {
                     float textX = stripLeft + iconBandWidth + gapBeforeIcon;
                     drawItemRowIcons(glRenderer, minecraftClient, row, stripLeft, iconY, itemGapPx);
                     if (drawRowText) {
-                        glRenderer.drawMiniMessageText(rowText, textX, textY, module.isTextShadowEnabled());
+                        glRenderer.drawMiniMessageText(rowText, textX, textY, host.isTextShadowEnabled());
                     }
                 }
 

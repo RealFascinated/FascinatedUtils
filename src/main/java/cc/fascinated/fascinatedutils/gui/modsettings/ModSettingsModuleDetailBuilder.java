@@ -12,6 +12,8 @@ import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
+import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import lombok.experimental.UtilityClass;
 import net.minecraft.network.chat.Component;
@@ -52,6 +54,19 @@ public class ModSettingsModuleDetailBuilder {
 
         String searchLower = (settingsSearchRef.getValue() == null ? "" : settingsSearchRef.getValue()).toLowerCase(Locale.ROOT);
         boolean isFiltering = !searchLower.isBlank();
+
+        if (!isFiltering && module instanceof HudHostModule hudHost && hudHost.registeredHudPanels().size() > 1) {
+            float paddedInnerHost = ModSettingsCategoryRows.settingsDetailPaddedInnerWidth(settingsInnerWidth);
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 2f));
+            for (HudPanel hudPanel : hudHost.registeredHudPanels()) {
+                hudHost.hudPanelVisibilityToggle(hudPanel.getId()).ifPresent(panelToggle -> {
+                    float toggleHeight = SettingsUiMetrics.booleanOuterHeight();
+                    FBooleanSettingRowWidget rowWidget = new FBooleanSettingRowWidget(hudHost, panelToggle, settingsInnerWidth, toggleHeight, paddedInnerHost);
+                    scrollBody.addChild(ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(paddedInnerHost, rowWidget)));
+                });
+            }
+            scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 3f));
+        }
 
         if (module.getAllSettings().isEmpty()) {
             FLabelWidget empty = new FLabelWidget();

@@ -20,6 +20,8 @@ import java.util.Optional;
 
 @Getter
 public abstract class Module implements GsonSerializable<Module> {
+    public static final String APPEARANCE_CATEGORY_DISPLAY_KEY = "Appearance";
+
     private final String moduleKey;
     private final String displayName;
     private final List<Setting<?>> settings = new ArrayList<>();

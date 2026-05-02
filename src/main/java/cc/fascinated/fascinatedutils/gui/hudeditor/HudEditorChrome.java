@@ -6,7 +6,7 @@ import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
-import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,10 +34,10 @@ public class HudEditorChrome {
      * @param registeredWidgets widgets from the HUD manager
      * @return visible widgets in registration order
      */
-    public static List<HudModule> visibleLayoutWidgets(List<HudModule> registeredWidgets) {
-        List<HudModule> visible = new ArrayList<>(registeredWidgets.size());
-        for (HudModule widget : registeredWidgets) {
-            if (widget.isEnabled()) {
+    public static List<HudPanel> visibleLayoutWidgets(List<HudPanel> registeredWidgets) {
+        List<HudPanel> visible = new ArrayList<>(registeredWidgets.size());
+        for (HudPanel widget : registeredWidgets) {
+            if (widget.shouldRenderHudPanel()) {
                 visible.add(widget);
             }
         }
@@ -75,13 +75,13 @@ public class HudEditorChrome {
      * @param pointerY pointer Y in logical space
      * @return true when the point is inside the settings button rectangle
      */
-    public static boolean settingsButtonContainsPoint(HudModule widget, float pointerX, float pointerY) {
+    public static boolean settingsButtonContainsPoint(HudPanel widget, float pointerX, float pointerY) {
         float buttonX = widget.getHudState().getPositionX() + CLOSE_BUTTON_PAD;
         float buttonY = widget.getHudState().getPositionY() + CLOSE_BUTTON_PAD;
         return pointerX >= buttonX && pointerX <= buttonX + SETTINGS_BUTTON_SIZE && pointerY >= buttonY && pointerY <= buttonY + SETTINGS_BUTTON_SIZE;
     }
 
-    public static boolean closeButtonContainsPoint(HudModule widget, float pointerX, float pointerY) {
+    public static boolean closeButtonContainsPoint(HudPanel widget, float pointerX, float pointerY) {
         float widgetX = widget.getHudState().getPositionX();
         float scaledWidth = widget.getScaledWidth();
         float buttonX = widgetX + scaledWidth - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_PAD;
@@ -89,7 +89,7 @@ public class HudEditorChrome {
         return pointerX >= buttonX && pointerX <= buttonX + CLOSE_BUTTON_SIZE && pointerY >= buttonY && pointerY <= buttonY + CLOSE_BUTTON_SIZE;
     }
 
-    public static boolean scaleHandleContainsPoint(HudModule widget, float pointerX, float pointerY) {
+    public static boolean scaleHandleContainsPoint(HudPanel widget, float pointerX, float pointerY) {
         float widgetX = widget.getHudState().getPositionX();
         float widgetY = widget.getHudState().getPositionY();
         float handleLeft = widgetX + widget.getScaledWidth() - SCALE_HANDLE_SIZE;
@@ -97,7 +97,7 @@ public class HudEditorChrome {
         return pointerX >= handleLeft && pointerX <= widgetX + widget.getScaledWidth() && pointerY >= handleTop && pointerY <= widgetY + widget.getScaledHeight();
     }
 
-    public static void drawWidgetEditorChrome(GuiRenderer glRenderer, HudModule widget, HudModule selectedWidget, float deltaSeconds, float canvasWidth, float canvasHeight, boolean repositionFromAnchor) {
+    public static void drawWidgetEditorChrome(GuiRenderer glRenderer, HudPanel widget, HudPanel selectedWidget, float deltaSeconds, float canvasWidth, float canvasHeight, boolean repositionFromAnchor) {
         drawWidgetEditorChrome(glRenderer, widget, selectedWidget, deltaSeconds, canvasWidth, canvasHeight, repositionFromAnchor, Float.NaN, Float.NaN);
     }
 
@@ -115,7 +115,7 @@ public class HudEditorChrome {
      * @param pointerX            logical pointer X for hover detection
      * @param pointerY            logical pointer Y for hover detection
      */
-    public static void drawWidgetEditorChrome(GuiRenderer glRenderer, HudModule widget, HudModule selectedWidget, float deltaSeconds, float canvasWidth, float canvasHeight, boolean repositionFromAnchor, float pointerX, float pointerY) {
+    public static void drawWidgetEditorChrome(GuiRenderer glRenderer, HudPanel widget, HudPanel selectedWidget, float deltaSeconds, float canvasWidth, float canvasHeight, boolean repositionFromAnchor, float pointerX, float pointerY) {
         Runnable draw = widget.prepareAndDraw(glRenderer, deltaSeconds, true);
         if (draw == null) {
             widget.recordHudContentSkipped();

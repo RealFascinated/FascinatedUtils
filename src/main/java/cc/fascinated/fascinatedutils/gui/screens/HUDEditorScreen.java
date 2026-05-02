@@ -9,7 +9,7 @@ import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
-import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.KeyEvent;
@@ -72,9 +72,9 @@ public class HUDEditorScreen extends WidgetScreen {
             HudEditorOverlays.drawEditorCenterCrosshair(guiRenderer, canvasWidth, canvasHeight);
         }
 
-        List<HudModule> widgetList = HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets());
-        HudModule selected = pointerSession.selected();
-        for (HudModule widget : widgetList) {
+        List<HudPanel> widgetList = HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets());
+        HudPanel selected = pointerSession.selected();
+        for (HudPanel widget : widgetList) {
             boolean repositionFromAnchor = widget != pointerSession.dragging() && widget != pointerSession.scalingWidget();
             HudEditorChrome.drawWidgetEditorChrome(guiRenderer, widget, selected, deltaSeconds, canvasWidth, canvasHeight, repositionFromAnchor, UIScale.uiPointerX(), UIScale.uiPointerY());
         }

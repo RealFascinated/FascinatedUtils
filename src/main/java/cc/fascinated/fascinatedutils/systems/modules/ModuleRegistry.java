@@ -5,8 +5,25 @@ import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.module.ModuleEnabledStateChangedEvent;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
-import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.impl.*;
+import cc.fascinated.fascinatedutils.systems.modules.impl.armor.ArmorModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.bossbar.BossbarModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.clock.ClockWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.CoordinatesWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.cps.CpsWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.debug.DebugWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.fps.FpsWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.memory.MemoryWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.movement.MovementModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.ping.PingWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.reach.ReachWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.ScoreboardModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.speed.SpeedWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.StatusEffectsModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.systemcpu.SystemCpuUsageWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.tps.TpsWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.hypixel.HypixelModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.waypoint.WaypointsModule;
@@ -23,7 +40,7 @@ public class ModuleRegistry {
     public static final ModuleRegistry INSTANCE = new ModuleRegistry();
     private final List<Module> modules = new ArrayList<>();
     private final List<Module> enabledModules = new ArrayList<>();
-    private final List<HudModule> hudModules = new ArrayList<>();
+    private final List<HudPanel> hudPanels = new ArrayList<>();
     private boolean initialized;
 
     private ModuleRegistry() {
@@ -61,7 +78,7 @@ public class ModuleRegistry {
         modules.add(new MemoryWidget());
         modules.add(new CoordinatesWidget());
         modules.add(new PingWidget());
-        modules.add(new ArmorWidget());
+        modules.add(new ArmorModule());
         modules.add(new WawlaWidget());
         modules.add(new TimeChangerModule());
         modules.add(new BlockOutlineModule());
@@ -76,8 +93,8 @@ public class ModuleRegistry {
 
         for (Module module : modules) {
             FascinatedEventBus.INSTANCE.subscribe(module);
-            if (module instanceof HudModule hudModule) {
-                hudModules.add(hudModule);
+            if (module instanceof HudHostModule hudHost) {
+                hudPanels.addAll(hudHost.registeredHudPanels());
             }
 
             Client.LOG.info("Loaded module {} with {} settings", module.getDisplayName(), module.getAllSettings().size());
@@ -100,8 +117,8 @@ public class ModuleRegistry {
         return Collections.unmodifiableList(modules);
     }
 
-    public List<HudModule> getHudModules() {
-        return Collections.unmodifiableList(hudModules);
+    public List<HudPanel> getHudPanels() {
+        return Collections.unmodifiableList(hudPanels);
     }
 
     /**

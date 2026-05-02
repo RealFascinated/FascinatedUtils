@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.common;
 
 import cc.fascinated.fascinatedutils.mixin.KeyBindingAccessorMixin;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.MovementModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.movement.MovementModule;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
 import lombok.experimental.UtilityClass;

@@ -50,15 +50,27 @@ public class ByteFormatterUtil {
         return unitIndex;
     }
 
+    private static boolean isExactMultipleOfUnit(long bytes, int unitIndex) {
+        long working = bytes;
+        for (int index = 0; index < unitIndex; index++) {
+            if (working % 1024L != 0) {
+                return false;
+            }
+            working /= 1024L;
+        }
+        return true;
+    }
+
     private static String formatAmount(long bytes, int unitIndex, int fractionDigits) {
         double scaled = bytes;
         for (int index = 0; index < unitIndex; index++) {
             scaled /= 1024;
         }
+        int digitsToShow = isExactMultipleOfUnit(bytes, unitIndex) ? 0 : fractionDigits;
         NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.ROOT);
         numberFormat.setGroupingUsed(false);
-        numberFormat.setMinimumFractionDigits(fractionDigits);
-        numberFormat.setMaximumFractionDigits(fractionDigits);
+        numberFormat.setMinimumFractionDigits(digitsToShow);
+        numberFormat.setMaximumFractionDigits(digitsToShow);
         return numberFormat.format(scaled);
     }
 

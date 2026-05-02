@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.itemtooltip;
 
+import cc.fascinated.fascinatedutils.caches.ItemStackSizeCache;
 import cc.fascinated.fascinatedutils.common.ByteFormatterUtil;
 import cc.fascinated.fascinatedutils.common.LRUCache;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
@@ -21,9 +22,6 @@ import java.util.List;
 @Mixin(ItemStack.class)
 public class ItemStackTooltipMixin {
 
-    @Unique
-    private static final LRUCache<Integer, Long> SIZE_CACHE = new LRUCache<>(5_000);
-
     @Inject(method = "getTooltipLines", at = @At("RETURN"), cancellable = true)
     private void fascinatedutils$appendItemTooltip(CallbackInfoReturnable<List<Component>> cir) {
         ItemTooltipModule module = ModuleRegistry.INSTANCE.getModule(ItemTooltipModule.class).orElse(null);
@@ -34,7 +32,7 @@ public class ItemStackTooltipMixin {
         ItemStack stack = (ItemStack) (Object) this;
 
         if (module.getShowItemSize().isEnabled()) {
-            long byteSize = getStackSize(stack);
+            long byteSize = ItemStackSizeCache.getStackSize(stack);
             if (byteSize > 0) {
                 List<Component> mutable = new ArrayList<>(cir.getReturnValue());
                 if (module.getGapAboveInfo().isEnabled()) {
@@ -44,22 +42,5 @@ public class ItemStackTooltipMixin {
                 cir.setReturnValue(mutable);
             }
         }
-    }
-
-    @Unique
-    private static long getStackSize(ItemStack stack) {
-        return SIZE_CACHE.computeIfAbsent(ItemStack.hashItemAndComponents(stack), _ -> {
-            Minecraft client = Minecraft.getInstance();
-            if (client.getConnection() == null) {
-                return 0L;
-            }
-            RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.buffer(), client.getConnection().registryAccess());
-            try {
-                ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, stack);
-                return (long) buf.readableBytes();
-            } finally {
-                buf.release();
-            }
-        });
     }
 }

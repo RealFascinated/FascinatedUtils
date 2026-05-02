@@ -6,14 +6,14 @@ import cc.fascinated.fascinatedutils.gui.modsettings.FModuleVisibilityCardWidget
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 
 public class FTheme {
     public interface Components {
         FModuleVisibilityCardWidget createModuleVisibilityCard(Module module, float layoutWidth, float layoutHeight, Callback<Module> onOpenSettings, Callback<Boolean> onEnabledChange);
 
-        FHudWidgetVisibilityCardWidget createHudWidgetVisibilityCard(HudModule widget, float layoutWidth, float layoutHeight, Callback<Boolean> onVisibilityChange, Callback<HudModule> onOpenSettings);
+        FHudWidgetVisibilityCardWidget createHudWidgetVisibilityCard(HudPanel panel, float layoutWidth, float layoutHeight, Callback<Boolean> onVisibilityChange, Callback<HudPanel> onOpenSettings);
 
         FScrollColumnWidget createScrollColumn(FWidget bodyColumn, float rowGap);
     }
@@ -25,8 +25,8 @@ public class FTheme {
         }
 
         @Override
-        public FHudWidgetVisibilityCardWidget createHudWidgetVisibilityCard(HudModule widget, float layoutWidth, float layoutHeight, Callback<Boolean> onVisibilityChange, Callback<HudModule> onOpenSettings) {
-            return new FHudWidgetVisibilityCardWidget(widget, layoutWidth, layoutHeight, onVisibilityChange, onOpenSettings);
+        public FHudWidgetVisibilityCardWidget createHudWidgetVisibilityCard(HudPanel panel, float layoutWidth, float layoutHeight, Callback<Boolean> onVisibilityChange, Callback<HudPanel> onOpenSettings) {
+            return new FHudWidgetVisibilityCardWidget(panel, layoutWidth, layoutHeight, onVisibilityChange, onOpenSettings);
         }
 
         @Override

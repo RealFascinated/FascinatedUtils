@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.statuseffects;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.StatusEffectsModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.StatusEffectsModule;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;

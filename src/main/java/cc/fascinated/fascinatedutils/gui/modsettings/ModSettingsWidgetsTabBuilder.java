@@ -12,7 +12,8 @@ import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.*;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
-import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
+import cc.fascinated.fascinatedutils.systems.modules.Module;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -25,11 +26,11 @@ public class ModSettingsWidgetsTabBuilder {
     private static final float GRID_MIN_CELL_WIDTH_DESIGN = 90f;
     private static final float GRID_MARGIN_X_DESIGN = 8f;
 
-    public static FWidget buildWidgetsTab(float paneWidth, float paneHeight, List<HudModule> hudWidgets, Ref<Float> widgetsPaneScrollYRef, HudModule settingsWidget, Runnable onBackFromSettings, Callback<HudModule> onOpenWidgetSettings, Ref<Float> widgetSettingsPaneScrollYRef, Consumer<ColorSetting> openColorPicker) {
-        if (settingsWidget != null) {
-            return buildWidgetSettingsDetail(paneWidth, settingsWidget, onBackFromSettings, widgetSettingsPaneScrollYRef, openColorPicker);
+    public static FWidget buildWidgetsTab(float paneWidth, float paneHeight, List<HudPanel> hudPanels, Ref<Float> widgetsPaneScrollYRef, HudPanel settingsPanel, Runnable onBackFromSettings, Callback<HudPanel> onOpenPanelSettings, Ref<Float> widgetSettingsPaneScrollYRef, Consumer<ColorSetting> openColorPicker) {
+        if (settingsPanel != null) {
+            return buildWidgetSettingsDetail(paneWidth, settingsPanel, onBackFromSettings, widgetSettingsPaneScrollYRef, openColorPicker);
         }
-        return buildWidgetCardGrid(paneWidth, hudWidgets, widgetsPaneScrollYRef, onOpenWidgetSettings, openColorPicker);
+        return buildWidgetCardGrid(paneWidth, hudPanels, widgetsPaneScrollYRef, onOpenPanelSettings, openColorPicker);
     }
 
     public static FWidget editorForWidgetSetting(Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX, Consumer<ColorSetting> openColorPicker) {
@@ -61,7 +62,7 @@ public class ModSettingsWidgetsTabBuilder {
         return null;
     }
 
-    private static FWidget buildWidgetCardGrid(float paneWidth, List<HudModule> hudWidgets, Ref<Float> widgetsPaneScrollYRef, Callback<HudModule> onOpenWidgetSettings, Consumer<ColorSetting> openColorPicker) {
+    private static FWidget buildWidgetCardGrid(float paneWidth, List<HudPanel> hudPanels, Ref<Float> widgetsPaneScrollYRef, Callback<HudPanel> onOpenPanelSettings, Consumer<ColorSetting> openColorPicker) {
         float gridMarginX = GRID_MARGIN_X_DESIGN;
         float paddedInnerWidth = Math.max(0f, paneWidth - 2f * gridMarginX);
         float settingsContentWidth = Math.max(28f, paddedInnerWidth);
@@ -76,7 +77,7 @@ public class ModSettingsWidgetsTabBuilder {
         FColumnWidget scrollBody = new FColumnWidget(gapY, Align.CENTER);
         scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
 
-        if (hudWidgets == null || hudWidgets.isEmpty()) {
+        if (hudPanels == null || hudPanels.isEmpty()) {
             scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 2f));
             FLabelWidget empty = new FLabelWidget();
             empty.setText(Component.translatable("fascinatedutils.setting.shell.empty_widgets").getString());
@@ -93,17 +94,17 @@ public class ModSettingsWidgetsTabBuilder {
             }
             return emptyClip;
         }
-        List<HudModule> sortedWidgets = new ArrayList<>(hudWidgets);
-        sortedWidgets.sort((left, right) -> String.CASE_INSENSITIVE_ORDER.compare(left.getName().toLowerCase(Locale.ROOT), right.getName().toLowerCase(Locale.ROOT)));
-        for (int widgetIndex = 0; widgetIndex < sortedWidgets.size(); widgetIndex += columnCount) {
+        List<HudPanel> sortedPanels = new ArrayList<>(hudPanels);
+        sortedPanels.sort((left, right) -> String.CASE_INSENSITIVE_ORDER.compare(left.getName().toLowerCase(Locale.ROOT), right.getName().toLowerCase(Locale.ROOT)));
+        for (int widgetIndex = 0; widgetIndex < sortedPanels.size(); widgetIndex += columnCount) {
             FRowWidget row = new FRowWidget(gapX, Align.START);
             for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
                 int index = widgetIndex + columnIndex;
-                if (index >= sortedWidgets.size()) {
+                if (index >= sortedPanels.size()) {
                     break;
                 }
-                HudModule widget = sortedWidgets.get(index);
-                row.addChild(FTheme.components().createHudWidgetVisibilityCard(widget, cellWidth, cellHeight, widget::setEnabled, onOpenWidgetSettings));
+                HudPanel panel = sortedPanels.get(index);
+                row.addChild(FTheme.components().createHudWidgetVisibilityCard(panel, cellWidth, cellHeight, visibilityFlag -> HUDManager.INSTANCE.saveAll(), onOpenPanelSettings));
             }
             scrollBody.addChild(row);
         }
@@ -118,20 +119,21 @@ public class ModSettingsWidgetsTabBuilder {
         return clip;
     }
 
-    private static FWidget buildWidgetSettingsDetail(float paneWidth, HudModule settingsWidget, Runnable onBackFromSettings, Ref<Float> widgetSettingsPaneScrollYRef, Consumer<ColorSetting> openColorPicker) {
+    private static FWidget buildWidgetSettingsDetail(float paneWidth, HudPanel settingsPanel, Runnable onBackFromSettings, Ref<Float> widgetSettingsPaneScrollYRef, Consumer<ColorSetting> openColorPicker) {
         float settingsContentWidth = Math.max(28f, paneWidth);
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
         float gap = 3f;
         FColumnWidget scrollBody = new FColumnWidget(gap, Align.START);
         scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
-        scrollBody.addChild(FModSettingsDetailHeaderCardWidget.centeredInContentRow(settingsContentWidth, settingsInnerWidth, onBackFromSettings, settingsWidget.getName()));
+        Module settingsHost = settingsPanel.hudHostModule();
+        scrollBody.addChild(FModSettingsDetailHeaderCardWidget.centeredInContentRow(settingsContentWidth, settingsInnerWidth, onBackFromSettings, settingsHost.getDisplayName()));
         scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 3f));
-        appendWidgetSettingsDetailRows(scrollBody, settingsWidget, settingsContentWidth, settingsInnerWidth, openColorPicker);
+        appendWidgetSettingsDetailRows(scrollBody, settingsHost, settingsContentWidth, settingsInnerWidth, openColorPicker);
         return wrapScrollClip(scrollBody, gap, widgetSettingsPaneScrollYRef);
     }
 
-    private static void appendWidgetSettingsDetailRows(FColumnWidget scrollBody, HudModule settingsWidget, float settingsContentWidth, float settingsInnerWidth, Consumer<ColorSetting> openColorPicker) {
-        List<Setting<?>> widgetAllSettings = settingsWidget.getAllSettings();
+    private static void appendWidgetSettingsDetailRows(FColumnWidget scrollBody, Module settingsHost, float settingsContentWidth, float settingsInnerWidth, Consumer<ColorSetting> openColorPicker) {
+        List<Setting<?>> widgetAllSettings = settingsHost.getAllSettings();
         if (widgetAllSettings.isEmpty()) {
             scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 2f));
             FLabelWidget empty = new FLabelWidget();
@@ -142,10 +144,10 @@ public class ModSettingsWidgetsTabBuilder {
             return;
         }
         List<ModSettingsCategoryRows.CategoryBlock> categoryBlocks = new ArrayList<>();
-        for (SettingCategory category : settingsWidget.getSettingCategories()) {
+        for (SettingCategory category : settingsHost.getSettingCategories()) {
             categoryBlocks.add(new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), category.settings()));
         }
-        ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, settingsWidget.getSettings(), (setting, innerWidth, sliderStartX) -> editorForWidgetSetting(setting, innerWidth, sliderStartX, openColorPicker));
+        ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, settingsHost.getSettings(), (setting, innerWidth, sliderStartX) -> editorForWidgetSetting(setting, innerWidth, sliderStartX, openColorPicker));
         scrollBody.addChild(new FSpacerWidget(settingsContentWidth, ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET));
     }
 

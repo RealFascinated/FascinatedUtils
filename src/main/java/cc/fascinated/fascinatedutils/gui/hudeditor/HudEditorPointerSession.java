@@ -8,7 +8,7 @@ import cc.fascinated.fascinatedutils.gui.screens.ModSettingsScreen;
 import cc.fascinated.fascinatedutils.systems.hud.HUDEditorSnap;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
-import cc.fascinated.fascinatedutils.systems.hud.HudModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -29,13 +29,13 @@ public class HudEditorPointerSession {
     private float editorCanvasWidth = HudLayoutCanvas.width();
     private float editorCanvasHeight = HudLayoutCanvas.height();
     @Nullable
-    private HudModule dragging;
+    private HudPanel dragging;
     private float dragOffsetX;
     private float dragOffsetY;
     @Nullable
-    private HudModule selected;
+    private HudPanel selected;
     @Nullable
-    private HudModule scalingWidget;
+    private HudPanel scalingWidget;
     private float scaleDragReferenceDistance;
     private float scaleDragStartScale;
     private int modMenuFocusScratch = UiFocusIds.NO_FOCUS_ID;
@@ -67,17 +67,17 @@ public class HudEditorPointerSession {
     }
 
     @Nullable
-    public HudModule selected() {
+    public HudPanel selected() {
         return selected;
     }
 
     @Nullable
-    public HudModule dragging() {
+    public HudPanel dragging() {
         return dragging;
     }
 
     @Nullable
-    public HudModule scalingWidget() {
+    public HudPanel scalingWidget() {
         return scalingWidget;
     }
 
@@ -123,26 +123,26 @@ public class HudEditorPointerSession {
         if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return delegateSuper.getAsBoolean();
         }
-        List<HudModule> widgetList = HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets());
+        List<HudPanel> widgetList = HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets());
         // Check action buttons — only active when pointer is over the widget.
         for (int index = widgetList.size() - 1; index >= 0; index--) {
-            HudModule widget = widgetList.get(index);
+            HudPanel widget = widgetList.get(index);
             if (!widget.containsPoint(pointerX, pointerY)) {
                 continue;
             }
             if (HudEditorChrome.settingsButtonContainsPoint(widget, pointerX, pointerY)) {
-                Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, widget, parentScreen));
+                Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, widget.hudSettingsNavigationTarget(), parentScreen));
                 return true;
             }
             if (HudEditorChrome.closeButtonContainsPoint(widget, pointerX, pointerY)) {
-                widget.setEnabled(false);
+                widget.hudHostModule().setEnabled(false);
                 HUDManager.INSTANCE.saveAll();
                 selected = null;
                 return true;
             }
         }
         for (int index = widgetList.size() - 1; index >= 0; index--) {
-            HudModule widget = widgetList.get(index);
+            HudPanel widget = widgetList.get(index);
             if (!widget.containsPoint(pointerX, pointerY)) {
                 continue;
             }
@@ -220,7 +220,7 @@ public class HudEditorPointerSession {
      */
     public boolean onMouseReleased(MouseButtonEvent event, BooleanSupplier delegateSuper) {
         if (scalingWidget != null) {
-            HudModule widget = scalingWidget;
+            HudPanel widget = scalingWidget;
             scalingWidget = null;
             clearSnapGuides();
             widget.getHudState().setScale(HudEditorChrome.snapScaleNearUnity(widget.getHudState().getScale()));
@@ -235,7 +235,7 @@ public class HudEditorPointerSession {
             return true;
         }
         if (dragging != null) {
-            HudModule widget = dragging;
+            HudPanel widget = dragging;
             dragging = null;
             clearSnapGuides();
             float canvasWidth = editorCanvasWidth;
