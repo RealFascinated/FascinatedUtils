@@ -1,39 +1,37 @@
 package cc.fascinated.fascinatedutils.systems.hud.widgets;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
+import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
+import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class TextHudPanel extends HudMiniMessageModule {
+public class TextHudPanel extends HudHostModule {
     private final Function<Float, List<String>> contentProvider;
     private final Function<Float, List<String>> editorPreviewProvider;
 
     private TextHudPanel(String widgetId, String displayName, float minWidth, Function<Float, List<String>> contentProvider, Function<Float, List<String>> editorPreviewProvider) {
-        super(widgetId, displayName, minWidth);
+        super(widgetId, displayName, HudDefaults.builder().build());
+        MiniMessageHudChrome.register(this);
         this.contentProvider = contentProvider;
         this.editorPreviewProvider = editorPreviewProvider;
-        registerHudPanel(new MiniMessageHudPanel(this, widgetId, minWidth));
+        registerHudPanel(new MiniMessageHudPanel(this, widgetId, minWidth) {
+            @Override
+            protected List<String> computeMiniMessageLines(float deltaSeconds, boolean editorMode) {
+                if (editorMode && editorPreviewProvider != null) {
+                    return editorPreviewProvider.apply(deltaSeconds);
+                }
+                return contentProvider.apply(deltaSeconds);
+            }
+        });
     }
 
     public static Builder create(String widgetId, String displayName, float minWidth) {
         return new Builder(widgetId, displayName, minWidth);
-    }
-
-    @Override
-    protected List<String> lines(float deltaSeconds) {
-        return contentProvider.apply(deltaSeconds);
-    }
-
-    @Override
-    protected List<String> resolveRawMiniMessageLines(float deltaSeconds, boolean editorMode) {
-        if (editorMode && editorPreviewProvider != null) {
-            return editorPreviewProvider.apply(deltaSeconds);
-        }
-        return lines(deltaSeconds);
     }
 
     public static class Builder {
@@ -73,11 +71,11 @@ public class TextHudPanel extends HudMiniMessageModule {
                 editorPreviewProvider = delta -> List.of("Preview");
             }
 
-            TextHudPanel panel = new TextHudPanel(widgetId, displayName, minWidth, contentProvider, editorPreviewProvider);
+            TextHudPanel hudModule = new TextHudPanel(widgetId, displayName, minWidth, contentProvider, editorPreviewProvider);
             for (BooleanSetting setting : settings) {
-                panel.addSetting(setting);
+                hudModule.addSetting(setting);
             }
-            return panel;
+            return hudModule;
         }
     }
 }

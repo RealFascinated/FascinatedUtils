@@ -104,4 +104,12 @@ public class HudWidgetAppearanceBuilders {
                 .categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
     }
 
+    public static BooleanSetting.Builder removeMinimumWidth() {
+        return BooleanSetting.builder().id(HudHostModule.SETTING_REMOVE_MIN_WIDTH)
+                .defaultValue(false)
+                .displayName(displayName("fascinatedutils.module.remove_min_width"))
+                .tooltip(tooltip("fascinatedutils.module.remove_min_width"))
+                .categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
+    }
+
 }

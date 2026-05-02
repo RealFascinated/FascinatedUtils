@@ -18,5 +18,5 @@ public class HudDefaults {
     @Builder.Default
     private int defaultYOffset = 5;
     @Builder.Default
-    private float defaultPadding = 6f;
+    private float defaultPadding = 5f;
 }

@@ -1,21 +1,22 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.reach;
 
-import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.reach.hud.ReachHudPanel;
-import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
+import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
+import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
+import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
 
-import java.util.List;
-import java.util.Locale;
+public class ReachWidget extends HudHostModule {
 
-public class ReachWidget extends HudMiniMessageModule {
-
+    @Getter
     private float lastEntityReach = Float.NaN;
 
     public ReachWidget() {
-        super("reach", "Reach", UTILITY_WIDGET_MIN_WIDTH);
+        super("reach", "Reach", HudDefaults.builder().build());
+        MiniMessageHudChrome.register(this);
         registerHudPanel(new ReachHudPanel(this));
     }
 
@@ -34,15 +35,5 @@ public class ReachWidget extends HudMiniMessageModule {
         if (minecraftClient.level == null) {
             lastEntityReach = Float.NaN;
         }
-    }
-
-    @Override
-    protected List<String> lines(float deltaSeconds) {
-        if (!Float.isFinite(lastEntityReach)) {
-            return List.of("<yellow>N/A <white>blocks");
-        }
-        float fraction = Math.min((lastEntityReach - 3f) / 3f, 1f);
-        String color = Colors.rgbHex(Colors.getGoodBadColor(Math.max(fraction, 0f), true));
-        return List.of(String.format(Locale.ENGLISH, "<color:%s>%.2f <white>blocks", color, lastEntityReach));
     }
 }

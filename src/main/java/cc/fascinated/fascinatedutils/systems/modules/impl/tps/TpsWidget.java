@@ -1,34 +1,29 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.tps;
 
-import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.IntegratedServerUtils;
-import cc.fascinated.fascinatedutils.common.TpsColors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.tps.hud.TpsHudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
+import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
+import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.TimeUnit;
+@Getter
+public class TpsWidget extends HudHostModule {
 
-public class TpsWidget extends HudMiniMessageModule {
-
-    private static final long UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(500L);
-    private static final float MAX_TPS = 20f;
-    private static final float MIN_WIDTH_WITH_MSPT = 110f;
+    public static final float MAX_TPS = 20f;
+    public static final float MIN_WIDTH_WITH_MSPT = 110f;
 
     private final BooleanSetting showMspt = BooleanSetting.builder().id("show_mspt")
             .defaultValue(false)
             .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
             .build();
 
-    private final BooleanSetting useTpsColor = BooleanSetting.builder()
-            .id("use_tps_color")
+    private final BooleanSetting useTpsColor = BooleanSetting.builder().id("use_tps_color")
             .defaultValue(true)
             .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
             .build();
@@ -44,39 +39,26 @@ public class TpsWidget extends HudMiniMessageModule {
     private boolean lastSampleIntegratedServer;
 
     public TpsWidget() {
-        super("tps", "TPS", MIN_WIDTH_WITH_MSPT);
+        super("tps", "TPS", HudDefaults.builder().build());
+        MiniMessageHudChrome.register(this);
         addSetting(showMspt);
         addSetting(useTpsColor);
         FascinatedEventBus.INSTANCE.subscribe(this);
         registerHudPanel(new TpsHudPanel(this));
     }
 
-    private static List<String> formatLine(float tps, float mspt, boolean approximate, boolean showMspt, boolean useTpsColor) {
-        String formattedTps = String.format(Locale.ENGLISH, "%.2f", tps);
-        String tpsToken = useTpsColor ? String.format(Locale.ENGLISH, "<color:%s>%s</color>", Colors.rgbHex(TpsColors.getTpsColor(tps)), formattedTps) : formattedTps;
-        if (!showMspt) {
-            return List.of(String.format(Locale.ENGLISH, "%s TPS", tpsToken));
-        }
-        int roundedMspt = Math.round(mspt);
-        return List.of(String.format(Locale.ENGLISH, approximate ? "%s TPS (~%dms)" : "%s TPS (%dms)", tpsToken, roundedMspt));
+    /**
+     * @return base panel width wired into the HUD panel constructor
+     */
+    public float tpsHudBaseMinWidth() {
+        return MIN_WIDTH_WITH_MSPT;
     }
 
-    @Override
-    protected float resolvePanelMinWidth(float baseMinWidth) {
-        return showMspt.getValue() ? MIN_WIDTH_WITH_MSPT : HudHostModule.UTILITY_WIDGET_MIN_WIDTH;
-    }
-
-    @Override
-    protected List<String> lines(float deltaSeconds) {
-        if (!Float.isFinite(lastKnownTps) || !Float.isFinite(lastKnownMspt)) {
-            return List.of("<grey>TPS N/A</grey>");
-        }
-        return formatLine(lastKnownTps, lastKnownMspt, !lastSampleIntegratedServer, showMspt.getValue(), useTpsColor.getValue());
-    }
-
-    @Override
-    protected long hudMiniMessageUpdateIntervalNanos() {
-        return UPDATE_INTERVAL_NANOS;
+    /**
+     * @return whether the integrated-server MSPT probe was used for the last resolved sample pair
+     */
+    public boolean isLastSampleIntegratedServer() {
+        return lastSampleIntegratedServer;
     }
 
     @EventHandler
@@ -146,9 +128,4 @@ public class TpsWidget extends HudMiniMessageModule {
         lastKnownMspt = measuredMspt;
         lastKnownTps = Math.min(MAX_TPS, 1000f / measuredMspt);
     }
-
-    public float tpsHudBaseMinWidth() {
-        return MIN_WIDTH_WITH_MSPT;
-    }
 }
-

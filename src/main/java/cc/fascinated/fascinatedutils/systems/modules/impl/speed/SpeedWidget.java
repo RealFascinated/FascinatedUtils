@@ -3,17 +3,17 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.speed;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.speed.hud.SpeedHudPanel;
-import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
+import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
+import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
+import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
-public class SpeedWidget extends HudMiniMessageModule {
+@Getter
+public class SpeedWidget extends HudHostModule {
 
     private static final int BUFFER_SIZE = 20;
 
@@ -28,7 +28,8 @@ public class SpeedWidget extends HudMiniMessageModule {
     private float currentSpeed = Float.NaN;
 
     public SpeedWidget() {
-        super("speed", "Speed", UTILITY_WIDGET_MIN_WIDTH);
+        super("speed", "Speed", HudDefaults.builder().build());
+        MiniMessageHudChrome.register(this);
         addSetting(includeVertical);
         addSetting(showPeak);
         addSetting(showAverage);
@@ -68,39 +69,23 @@ public class SpeedWidget extends HudMiniMessageModule {
         bufferHead = 0;
     }
 
-    @Override
-    protected List<String> lines(float deltaSeconds) {
-        if (!Float.isFinite(currentSpeed)) {
-            return List.of("<grey>Speed N/A</grey>");
-        }
-        List<String> lines = new ArrayList<>();
-        lines.add(String.format(Locale.ENGLISH, "%.2f b/s", currentSpeed));
-        if (showPeak.isEnabled() && bufferCount > 0) {
-            lines.add(String.format(Locale.ENGLISH, "<grey>Peak:</grey> %.2f", peakSpeed()));
-        }
-        if (showAverage.isEnabled() && bufferCount > 0) {
-            lines.add(String.format(Locale.ENGLISH, "<grey>Avg:</grey> %.2f", averageSpeed()));
-        }
-        return lines;
-    }
-
-    private float peakSpeed() {
+    public float sampledPeakSpeed() {
         float peak = 0f;
         int start = (bufferHead - bufferCount + BUFFER_SIZE) % BUFFER_SIZE;
-        for (int idx = 0; idx < bufferCount; idx++) {
-            float val = speedBuffer[(start + idx) % BUFFER_SIZE];
-            if (val > peak) {
-                peak = val;
+        for (int index = 0; index < bufferCount; index++) {
+            float value = speedBuffer[(start + index) % BUFFER_SIZE];
+            if (value > peak) {
+                peak = value;
             }
         }
         return peak;
     }
 
-    private float averageSpeed() {
+    public float sampledAverageSpeed() {
         float sum = 0f;
         int start = (bufferHead - bufferCount + BUFFER_SIZE) % BUFFER_SIZE;
-        for (int idx = 0; idx < bufferCount; idx++) {
-            sum += speedBuffer[(start + idx) % BUFFER_SIZE];
+        for (int index = 0; index < bufferCount; index++) {
+            sum += speedBuffer[(start + index) % BUFFER_SIZE];
         }
         return sum / bufferCount;
     }

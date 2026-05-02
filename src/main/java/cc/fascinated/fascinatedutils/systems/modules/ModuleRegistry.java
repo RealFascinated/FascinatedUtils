@@ -13,6 +13,7 @@ import cc.fascinated.fascinatedutils.systems.modules.impl.bossbar.BossbarModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.clock.ClockWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.CoordinatesWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.cps.CpsWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.days.DaysWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.debug.DebugWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.fps.FpsWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.memory.MemoryWidget;
@@ -75,6 +76,7 @@ public class ModuleRegistry {
         modules.add(new TpsWidget());
         modules.add(new SystemCpuUsageWidget());
         modules.add(new ClockWidget());
+        modules.add(new DaysWidget());
         modules.add(new MemoryWidget());
         modules.add(new CoordinatesWidget());
         modules.add(new PingWidget());

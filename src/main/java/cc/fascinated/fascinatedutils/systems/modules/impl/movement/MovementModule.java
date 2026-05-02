@@ -5,7 +5,8 @@ import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.modules.impl.movement.hud.MovementHudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
-import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
+import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
+import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Getter
-public class MovementModule extends HudMiniMessageModule {
+public class MovementModule extends HudHostModule {
 
     private final BooleanSetting enableFlightSpeedModifier = BooleanSetting.builder().id("enable_flight_speed_modifier")
             .defaultValue(false)
@@ -31,26 +32,17 @@ public class MovementModule extends HudMiniMessageModule {
             .build();
 
     public MovementModule() {
-        super("movement", "Movement", 0f, HudDefaults.builder()
+        super("movement", "Movement", HudDefaults.builder()
                 .defaultState(true)
                 .defaultAnchor(HUDWidgetAnchor.TOP_RIGHT)
                 .defaultXOffset(5)
                 .defaultYOffset(5)
                 .build()
         );
+        MiniMessageHudChrome.register(this);
         addSetting(enableFlightSpeedModifier);
         addSetting(flightSpeedModifier);
         registerHudPanel(new MovementHudPanel(this));
-    }
-
-    @Override
-    protected List<String> lines(float deltaSeconds) {
-        return resolveMovementLines(false);
-    }
-
-    @Override
-    protected List<String> resolveRawMiniMessageLines(float deltaSeconds, boolean editorMode) {
-        return resolveMovementLines(editorMode);
     }
 
     private List<String> resolveMovementLines(boolean editorMode) {
@@ -81,7 +73,7 @@ public class MovementModule extends HudMiniMessageModule {
         return List.of(line);
     }
 
-    private boolean isFlyBoostActive(LocalPlayer player, boolean sprintPhysicallyHeld) {
+    boolean isFlyBoostActive(LocalPlayer player, boolean sprintPhysicallyHeld) {
         if (!enableFlightSpeedModifier.isEnabled()) {
             return false;
         }
@@ -99,5 +91,15 @@ public class MovementModule extends HudMiniMessageModule {
             return Integer.toString((int) multiplier);
         }
         return String.format(Locale.ENGLISH, "%.1f", multiplier);
+    }
+
+    /**
+     * HUD text lines for the movement widget, or {@code null} when nothing should show in-game.
+     *
+     * @param editorMode layout editor preview
+     * @return formatted lines, or {@code null}
+     */
+    public List<String> resolveMovementHudLines(boolean editorMode) {
+        return resolveMovementLines(editorMode);
     }
 }

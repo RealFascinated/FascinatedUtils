@@ -1,29 +1,26 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.systemcpu;
 
-import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.gui.theme.UITheme;
-import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import cc.fascinated.fascinatedutils.systems.modules.impl.systemcpu.hud.SystemCpuUsageHudPanel;
-import cc.fascinated.fascinatedutils.systems.hud.HudMiniMessageModule;
-import net.minecraft.util.Mth;
+import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
+import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
+import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
+import lombok.Getter;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.reflect.Method;
-import java.util.List;
 
-public class SystemCpuUsageWidget extends HudMiniMessageModule {
-    private static final int CPU_COLOR_GREEN = UiColor.argb("#00e676");
-    private static final int CPU_COLOR_AMBER = UiColor.argb("#ddaa33");
-    private static final int CPU_COLOR_RED = UiColor.argb("#dd4444");
+@Getter
+public class SystemCpuUsageWidget extends HudHostModule {
     private final BooleanSetting useCpuColor = BooleanSetting.builder().id("use_cpu_color").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final OperatingSystemMXBean operatingSystemBean;
     private final Method systemCpuLoadMethod;
     private final Method cpuLoadMethod;
 
     public SystemCpuUsageWidget() {
-        super("system_cpu", "System CPU Usage", UTILITY_WIDGET_MIN_WIDTH);
+        super("system_cpu", "System CPU Usage", HudDefaults.builder().build());
+        MiniMessageHudChrome.register(this);
         addSetting(useCpuColor);
         this.operatingSystemBean = ManagementFactory.getOperatingSystemMXBean();
         this.systemCpuLoadMethod = resolveMethod(operatingSystemBean, "getSystemCpuLoad");
@@ -31,48 +28,30 @@ public class SystemCpuUsageWidget extends HudMiniMessageModule {
         registerHudPanel(new SystemCpuUsageHudPanel(this));
     }
 
-    private static Method resolveMethod(OperatingSystemMXBean operatingSystemBean, String methodName) {
+    private static Method resolveMethod(OperatingSystemMXBean operatingSystemBeanHandle, String methodName) {
         try {
-            return operatingSystemBean.getClass().getMethod(methodName);
+            return operatingSystemBeanHandle.getClass().getMethod(methodName);
         } catch (ReflectiveOperationException ignored) {
             return null;
         }
     }
 
-    private static float clampPercent(float cpuPercent) {
-        return Math.max(0f, Math.min(100f, cpuPercent));
-    }
-
-    private static int cpuColorArgb(float cpuPercent) {
-        if (cpuPercent <= 60f) {
-            return CPU_COLOR_GREEN;
+    double invokeCpuLoadFraction(Method cpuLoadMethodHandle) {
+        if (cpuLoadMethodHandle == null) {
+            return Double.NaN;
         }
-        if (cpuPercent <= 85f) {
-            float t = smoothstep((cpuPercent - 60f) / 25f);
-            return Colors.mixArgb(t, CPU_COLOR_GREEN, CPU_COLOR_AMBER);
+        try {
+            Object value = cpuLoadMethodHandle.invoke(operatingSystemBean);
+            if (value instanceof Number numberValue) {
+                return numberValue.doubleValue();
+            }
+        } catch (ReflectiveOperationException ignored) {
+            return Double.NaN;
         }
-        float t = smoothstep((cpuPercent - 85f) / 15f);
-        return Colors.mixArgb(t, CPU_COLOR_AMBER, CPU_COLOR_RED);
+        return Double.NaN;
     }
 
-    private static float smoothstep(float value) {
-        float clamped = Mth.clamp(value, 0f, 1f);
-        return clamped * clamped * (3f - 2f * clamped);
-    }
-
-    @Override
-    protected List<String> lines(float deltaSeconds) {
-        float systemCpuPercent = sampleSystemCpuPercent();
-        if (!Float.isFinite(systemCpuPercent)) {
-            return List.of("<grey>CPU N/A</grey>");
-        }
-        float clampedPercent = clampPercent(systemCpuPercent);
-        int roundedPercent = Math.round(clampedPercent);
-        int color = useCpuColor.getValue() ? cpuColorArgb(clampedPercent) : UITheme.COLOR_TEXT_PRIMARY;
-        return List.of("<color:" + Colors.rgbHex(color) + "><white>" + roundedPercent + "% CPU");
-    }
-
-    private float sampleSystemCpuPercent() {
+    public float sampleSystemCpuPercent() {
         double reflectedSystemLoad = invokeCpuLoadFraction(systemCpuLoadMethod);
         if (reflectedSystemLoad >= 0d && Double.isFinite(reflectedSystemLoad)) {
             return (float) (reflectedSystemLoad * 100d);
@@ -87,20 +66,5 @@ public class SystemCpuUsageWidget extends HudMiniMessageModule {
             return (float) ((loadAverage * 100d) / processorCount);
         }
         return Float.NaN;
-    }
-
-    private double invokeCpuLoadFraction(Method cpuLoadMethodHandle) {
-        if (cpuLoadMethodHandle == null) {
-            return Double.NaN;
-        }
-        try {
-            Object value = cpuLoadMethodHandle.invoke(operatingSystemBean);
-            if (value instanceof Number numberValue) {
-                return numberValue.doubleValue();
-            }
-        } catch (ReflectiveOperationException ignored) {
-            return Double.NaN;
-        }
-        return Double.NaN;
     }
 }
