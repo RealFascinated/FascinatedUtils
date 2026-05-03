@@ -6,6 +6,7 @@
   "client": [
     "ChatComponentMixin",
     "ClientPlayerInteractionManagerAccessorMixin",
+    "InventorySelectedAccessorMixin",
     "ConnectionMixin",
     "GameMenuScreenMixin",
     "GameRendererMixin",
@@ -29,6 +30,7 @@
     "fullbright.LightmapRenderStateExtractorMixin",
     "hurtcam.GameRendererMixin",
     "inventorytweaks.AbstractContainerScreenDragMoveMixin",
+    "inventorytweaks.InventoryItemBreakMixin",
     "itemtooltip.ItemStackTooltipMixin",
     "macosresolution.GlBackendMixin",
     "macosresolution.WindowMixin",

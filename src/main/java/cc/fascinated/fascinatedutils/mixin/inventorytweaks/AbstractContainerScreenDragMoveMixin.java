@@ -1,8 +1,9 @@
 package cc.fascinated.fascinatedutils.mixin.inventorytweaks;
 
-import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.InventoryTweaksModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks.QuickMove;
+import cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks.ScrollMove;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -11,15 +12,17 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 
@@ -27,19 +30,24 @@ import java.util.Set;
 public abstract class AbstractContainerScreenDragMoveMixin {
 
     @Shadow protected Slot hoveredSlot;
+    @Final
     @Shadow protected AbstractContainerMenu menu;
 
     @Shadow
-    protected abstract void slotClicked(Slot slot, int slotId, int mouseButton, ContainerInput actionType);
+    protected abstract void slotClicked(Slot slot, int slotId, int buttonNum, ContainerInput containerInput);
 
+    @Unique
     private boolean fascinatedutils$shiftDragging = false;
+    @Unique
     private boolean fascinatedutils$didDrag = false;
+    @Unique
     private final Set<Integer> fascinatedutils$visitedSlots = new HashSet<>();
+    @Unique
     private double fascinatedutils$scrollAccumulator = 0;
 
     @Inject(method = "mouseClicked", at = @At("HEAD"))
-    private void fascinatedutils$onMouseClicked(MouseButtonEvent event, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
-        if (!isDragMoveEnabled()) {
+    private void fascinatedutils$onMouseClicked(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
+        if (!fascinatedutils$quickMove().map(QuickMove::isEnabled).orElse(false)) {
             return;
         }
         if (event.button() == 0 && event.hasShiftDown() && hoveredSlot != null) {
@@ -54,8 +62,9 @@ public abstract class AbstractContainerScreenDragMoveMixin {
     }
 
     @Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$onMouseDragged(MouseButtonEvent event, double dragX, double dragY, CallbackInfoReturnable<Boolean> cir) {
-        if (!fascinatedutils$shiftDragging || !isDragMoveEnabled()) {
+    private void fascinatedutils$onMouseDragged(MouseButtonEvent event, double dx, double dy, CallbackInfoReturnable<Boolean> cir) {
+        Optional<QuickMove> featureOpt = fascinatedutils$quickMove();
+        if (!fascinatedutils$shiftDragging || !featureOpt.map(QuickMove::isEnabled).orElse(false)) {
             return;
         }
         com.mojang.blaze3d.platform.Window window = Minecraft.getInstance().getWindow();
@@ -70,10 +79,14 @@ public abstract class AbstractContainerScreenDragMoveMixin {
             return;
         }
         int slotId = menu.slots.indexOf(hoveredSlot);
-        if (slotId >= 0 && fascinatedutils$visitedSlots.add(slotId)) {
-            slotClicked(hoveredSlot, slotId, 0, ContainerInput.QUICK_MOVE);
+        if (slotId >= 0) {
+            Slot slot = hoveredSlot;
+            boolean visited = featureOpt.map(feature -> feature.tryVisitSlot(
+                    slot, slotId, fascinatedutils$visitedSlots, this::slotClicked)).orElse(false);
+            if (visited) {
+                fascinatedutils$didDrag = true;
+            }
         }
-        fascinatedutils$didDrag = true;
         cir.setReturnValue(true);
         cir.cancel();
     }
@@ -86,8 +99,6 @@ public abstract class AbstractContainerScreenDragMoveMixin {
             fascinatedutils$didDrag = false;
             fascinatedutils$visitedSlots.clear();
             if (wasDragging) {
-                // Prevent vanilla from performing a pickup click on the hovered slot
-                // after our drag ends, which would leave an item stuck on the cursor.
                 cir.setReturnValue(true);
                 cir.cancel();
             }
@@ -95,8 +106,9 @@ public abstract class AbstractContainerScreenDragMoveMixin {
     }
 
     @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$onMouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY, CallbackInfoReturnable<Boolean> cir) {
-        if (!isScrollMoveEnabled()) {
+    private void fascinatedutils$onMouseScrolled(double x, double y, double scrollX, double scrollY, CallbackInfoReturnable<Boolean> cir) {
+        Optional<ScrollMove> featureOpt = fascinatedutils$scrollMove();
+        if (!featureOpt.map(ScrollMove::isEnabled).orElse(false)) {
             return;
         }
         if ((Object) this instanceof CreativeModeInventoryScreen) {
@@ -106,7 +118,6 @@ public abstract class AbstractContainerScreenDragMoveMixin {
             fascinatedutils$scrollAccumulator = 0;
             return;
         }
-        // Don't interfere if the player is already holding something on the cursor
         if (!Minecraft.getInstance().player.containerMenu.getCarried().isEmpty()) {
             return;
         }
@@ -120,99 +131,22 @@ public abstract class AbstractContainerScreenDragMoveMixin {
         }
         fascinatedutils$scrollAccumulator -= ticks;
 
-        boolean push = ticks < 0; // scroll down = push item from hovered to other inventory
-        int count = Math.abs(ticks);
-
-        for (int i = 0; i < count; i++) {
-            if (push) {
-                if (!hoveredSlot.hasItem()) break;
-                fascinatedutils$moveOne(hoveredSlot, true);
-            } else {
-                if (!hoveredSlot.hasItem()) break;
-                boolean hoveredInPlayerInv = hoveredSlot.container == Minecraft.getInstance().player.getInventory();
-                Slot source = fascinatedutils$findMatchingSource(!hoveredInPlayerInv, hoveredSlot.getItem());
-                if (source == null) break;
-                fascinatedutils$moveOne(source, true);
-            }
-        }
+        Slot slot = hoveredSlot;
+        featureOpt.ifPresent(feature -> feature.scroll(
+                ticks, slot, menu, this::slotClicked));
 
         cir.setReturnValue(true);
         cir.cancel();
     }
 
-    /**
-     * Picks up the full stack from {@code source}, drops exactly 1 item into the best available
-     * target slot on the other side, then returns any remainder to {@code source}.
-     *
-     * @param source      the slot to take an item from
-     * @param toOtherSide if true, move to the inventory opposite to source; otherwise move to
-     *                    the same side as hoveredSlot
-     */
-    private void fascinatedutils$moveOne(Slot source, boolean toOtherSide) {
-        ItemStack sourceStack = source.getItem();
-        if (sourceStack.isEmpty()) return;
-
-        boolean sourceInPlayerInv = source.container == Minecraft.getInstance().player.getInventory();
-        boolean targetInPlayerInv = toOtherSide != sourceInPlayerInv;
-
-        Slot target = fascinatedutils$findTarget(targetInPlayerInv, sourceStack);
-        if (target == null) return;
-
-        int sourceId = menu.slots.indexOf(source);
-        int targetId = menu.slots.indexOf(target);
-
-        slotClicked(source, sourceId, 0, ContainerInput.PICKUP);       // pick up all
-        slotClicked(target, targetId, 1, ContainerInput.PICKUP);        // drop 1 (right-click)
-        if (!Minecraft.getInstance().player.containerMenu.getCarried().isEmpty()) {
-            slotClicked(source, sourceId, 0, ContainerInput.PICKUP);   // return remainder
-        }
+    @Unique
+    private Optional<QuickMove> fascinatedutils$quickMove() {
+        return ModuleRegistry.INSTANCE.getModule(InventoryTweaksModule.class).map(InventoryTweaksModule::getQuickMoveFeature);
     }
 
-    /**
-     * Finds the best target slot on the given inventory side: prefers compatible non-full stacks,
-     * then falls back to any empty slot that accepts the item.
-     */
-    private Slot fascinatedutils$findTarget(boolean inPlayerInv, ItemStack item) {
-        Slot emptyFallback = null;
-        for (Slot slot : menu.slots) {
-            boolean slotInPlayerInv = slot.container == Minecraft.getInstance().player.getInventory();
-            if (slotInPlayerInv != inPlayerInv) continue;
-            if (slot.hasItem()) {
-                ItemStack existing = slot.getItem();
-                if (ItemStack.isSameItemSameComponents(existing, item)
-                        && existing.getCount() < slot.getMaxStackSize(existing)) {
-                    return slot; // compatible, not full — best choice
-                }
-            } else if (emptyFallback == null && slot.mayPlace(item)) {
-                emptyFallback = slot;
-            }
-        }
-        return emptyFallback;
-    }
-
-    /** Finds the first non-empty slot on the given inventory side whose item matches {@code filter}. */
-    private Slot fascinatedutils$findMatchingSource(boolean inPlayerInv, ItemStack filter) {
-        for (Slot slot : menu.slots) {
-            boolean slotInPlayerInv = slot.container == Minecraft.getInstance().player.getInventory();
-            if (slotInPlayerInv != inPlayerInv) continue;
-            if (slot.hasItem() && ItemStack.isSameItemSameComponents(slot.getItem(), filter)) {
-                return slot;
-            }
-        }
-        return null;
-    }
-
-    private boolean isDragMoveEnabled() {
-        return ModuleRegistry.INSTANCE.getModule(InventoryTweaksModule.class)
-                .filter(Module::isEnabled)
-                .map(module -> module.getQuickMove().isEnabled())
-                .orElse(false);
-    }
-
-    private boolean isScrollMoveEnabled() {
-        return ModuleRegistry.INSTANCE.getModule(InventoryTweaksModule.class)
-                .filter(Module::isEnabled)
-                .map(module -> module.getScrollMove().isEnabled())
-                .orElse(false);
+    @Unique
+    private Optional<ScrollMove> fascinatedutils$scrollMove() {
+        return ModuleRegistry.INSTANCE.getModule(InventoryTweaksModule.class).map(InventoryTweaksModule::getScrollMoveFeature);
     }
 }
+
