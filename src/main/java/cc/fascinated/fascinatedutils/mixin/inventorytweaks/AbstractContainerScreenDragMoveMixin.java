@@ -45,15 +45,35 @@ public abstract class AbstractContainerScreenDragMoveMixin {
     @Unique
     private double fascinatedutils$scrollAccumulator = 0;
 
-    @Inject(method = "mouseClicked", at = @At("HEAD"))
-    private void fascinatedutils$onMouseClicked(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
-        if (!fascinatedutils$quickMove().map(QuickMove::isEnabled).orElse(false)) {
+    @Inject(method = "mouseClicked", at = @At("RETURN"))
+    private void fascinatedutils$afterMouseClicked(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
+        Optional<QuickMove> quickMove = fascinatedutils$quickMove();
+        if (!quickMove.map(QuickMove::isEnabled).orElse(false)) {
+            fascinatedutils$abortQuickMoveDragSession();
             return;
         }
-        if (event.button() == 0 && event.hasShiftDown() && hoveredSlot != null) {
-            fascinatedutils$shiftDragging = true;
-            fascinatedutils$didDrag = false;
-            fascinatedutils$visitedSlots.clear();
+        if (event.button() != 0) {
+            if (fascinatedutils$shiftDragging) {
+                fascinatedutils$abortQuickMoveDragSession();
+            }
+            return;
+        }
+        if (!event.hasShiftDown()) {
+            if (fascinatedutils$shiftDragging) {
+                fascinatedutils$abortQuickMoveDragSession();
+            }
+            return;
+        }
+        boolean clickLeftRoomForDragOutsideSlots = hoveredSlot != null
+                || !Boolean.TRUE.equals(cir.getReturnValue());
+        if (!clickLeftRoomForDragOutsideSlots) {
+            fascinatedutils$abortQuickMoveDragSession();
+            return;
+        }
+        fascinatedutils$shiftDragging = true;
+        fascinatedutils$didDrag = false;
+        fascinatedutils$visitedSlots.clear();
+        if (hoveredSlot != null) {
             int slotId = menu.slots.indexOf(hoveredSlot);
             if (slotId >= 0) {
                 fascinatedutils$visitedSlots.add(slotId);
@@ -68,11 +88,11 @@ public abstract class AbstractContainerScreenDragMoveMixin {
             return;
         }
         com.mojang.blaze3d.platform.Window window = Minecraft.getInstance().getWindow();
-        boolean shiftDown = InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_SHIFT)
+        boolean shiftHeld = event.hasShiftDown()
+                || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_SHIFT)
                 || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_SHIFT);
-        if (event.button() != 0 || !shiftDown) {
-            fascinatedutils$shiftDragging = false;
-            fascinatedutils$visitedSlots.clear();
+        if (event.button() != 0 || !shiftHeld) {
+            fascinatedutils$abortQuickMoveDragSession();
             return;
         }
         if (hoveredSlot == null) {
@@ -93,15 +113,17 @@ public abstract class AbstractContainerScreenDragMoveMixin {
 
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
     private void fascinatedutils$onMouseReleased(MouseButtonEvent event, CallbackInfoReturnable<Boolean> cir) {
-        if (event.button() == 0) {
-            boolean wasDragging = fascinatedutils$shiftDragging && fascinatedutils$didDrag;
-            fascinatedutils$shiftDragging = false;
-            fascinatedutils$didDrag = false;
-            fascinatedutils$visitedSlots.clear();
-            if (wasDragging) {
-                cir.setReturnValue(true);
-                cir.cancel();
+        if (event.button() != 0) {
+            if (fascinatedutils$shiftDragging) {
+                fascinatedutils$abortQuickMoveDragSession();
             }
+            return;
+        }
+        boolean wasDragging = fascinatedutils$shiftDragging && fascinatedutils$didDrag;
+        fascinatedutils$abortQuickMoveDragSession();
+        if (wasDragging) {
+            cir.setReturnValue(true);
+            cir.cancel();
         }
     }
 
@@ -140,6 +162,13 @@ public abstract class AbstractContainerScreenDragMoveMixin {
     }
 
     @Unique
+    private void fascinatedutils$abortQuickMoveDragSession() {
+        fascinatedutils$shiftDragging = false;
+        fascinatedutils$didDrag = false;
+        fascinatedutils$visitedSlots.clear();
+    }
+
+    @Unique
     private Optional<QuickMove> fascinatedutils$quickMove() {
         return ModuleRegistry.INSTANCE.getModule(InventoryTweaksModule.class).map(InventoryTweaksModule::getQuickMoveFeature);
     }
@@ -149,4 +178,3 @@ public abstract class AbstractContainerScreenDragMoveMixin {
         return ModuleRegistry.INSTANCE.getModule(InventoryTweaksModule.class).map(InventoryTweaksModule::getScrollMoveFeature);
     }
 }
-

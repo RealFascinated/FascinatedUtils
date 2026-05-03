@@ -22,11 +22,14 @@ public class VibrancyModule extends Module {
 
     @EventHandler
     private void onClientTickEvent(ClientTickEvent event) {
-        Minecraft client = event.minecraftClient();
         if (!isEnabled()) {
             return;
         }
-        ensureVibrancyPostProcessor(client.gameRenderer);
+        GameRenderer gameRenderer = event.minecraftClient().gameRenderer;
+        if (gameRenderer != null && POST_EFFECT_ID.equals(gameRenderer.currentPostEffect())) {
+            return;
+        }
+        ensureVibrancyPostProcessor(gameRenderer);
     }
 
     @Override

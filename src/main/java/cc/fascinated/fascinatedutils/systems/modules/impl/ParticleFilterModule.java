@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import lombok.Getter;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 
@@ -12,6 +13,7 @@ import java.util.List;
 
 @Getter
 public class ParticleFilterModule extends Module {
+
     private final List<BooleanSetting> particleToggles = new ArrayList<>();
 
     public ParticleFilterModule() {
@@ -23,10 +25,10 @@ public class ParticleFilterModule extends Module {
         for (Identifier identifier : BuiltInRegistries.PARTICLE_TYPE.keySet()) {
             String id = identifier.getNamespace() + ":" + identifier.getPath();
             BooleanSetting particleToggle = BooleanSetting.builder()
-                    .categoryDisplayKey("Particles")
+                    .categoryDisplayKey("fascinatedutils.setting.category.particle_filter")
                     .id(id)
                     .displayName(() -> id)
-                    .tooltip(() -> "Toggle this particle")
+                    .tooltip(() -> I18n.get("fascinatedutils.module.particlefilter.toggle.description"))
                     .defaultValue(true)
                     .build();
             particleToggles.add(particleToggle);

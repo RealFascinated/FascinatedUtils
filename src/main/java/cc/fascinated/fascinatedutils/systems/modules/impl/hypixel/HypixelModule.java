@@ -11,8 +11,6 @@ import net.minecraft.client.Minecraft;
 @Getter
 public class HypixelModule extends Module {
 
-    private static final String HYPIXEL_BRANDING = "Hypixel BungeeCord \\(.+\\) <- .+";
-
     private final BooleanSetting autoGG = BooleanSetting.builder().id("auto_gg").defaultValue(false).build();
 
     public HypixelModule() {
@@ -31,6 +29,6 @@ public class HypixelModule extends Module {
         if (serverBrand == null) {
             return false;
         }
-        return PatternHandler.INSTANCE.getPattern(HYPIXEL_BRANDING).matcher(serverBrand).matches();
+        return PatternHandler.INSTANCE.getPattern("Hypixel BungeeCord \\(.+\\) <- .+").matcher(serverBrand).matches();
     }
 }
