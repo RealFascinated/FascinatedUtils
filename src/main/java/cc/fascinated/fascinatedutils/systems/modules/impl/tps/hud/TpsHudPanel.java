@@ -2,9 +2,9 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.tps.hud;
 
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.TpsColors;
-import cc.fascinated.fascinatedutils.systems.modules.impl.tps.TpsWidget;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.modules.impl.tps.TpsWidget;
 
 import java.util.List;
 import java.util.Locale;

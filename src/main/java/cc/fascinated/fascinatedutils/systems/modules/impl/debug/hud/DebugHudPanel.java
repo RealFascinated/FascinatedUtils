@@ -4,10 +4,10 @@ import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.modules.impl.debug.DebugWidget;
-import cc.fascinated.fascinatedutils.turboentities.EntitiesCullTask;
-import cc.fascinated.fascinatedutils.turboentities.TurboEntities;
-import cc.fascinated.fascinatedutils.turboparticles.ParticleCullTask;
-import cc.fascinated.fascinatedutils.turboparticles.TurboParticles;
+import cc.fascinated.fascinatedutils.systems.turboentities.EntitiesCullTask;
+import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
+import cc.fascinated.fascinatedutils.systems.turboparticles.ParticleCullTask;
+import cc.fascinated.fascinatedutils.systems.turboparticles.TurboParticles;
 
 import java.util.ArrayList;
 import java.util.List;

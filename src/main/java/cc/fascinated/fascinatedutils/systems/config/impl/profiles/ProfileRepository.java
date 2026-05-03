@@ -108,7 +108,7 @@ public class ProfileRepository {
 
     public void setActiveProfileId(UUID id) {
         FascinatedConfig current = configManager.getCurrent();
-        configManager.updateAndSave(new FascinatedConfig(id, current.globalSettings(), current.uiState()));
+        configManager.updateAndSave(new FascinatedConfig(id, current.globalSettings()));
     }
 
     public Optional<Profile> getActiveProfile() {

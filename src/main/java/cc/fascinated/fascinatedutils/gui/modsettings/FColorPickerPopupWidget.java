@@ -88,22 +88,21 @@ public class FColorPickerPopupWidget extends FPopupWidget {
 
         float bodyWidth = SV_SIZE_DESIGN;
         float popupWidth = bodyWidth + 2f * horizontalPadding;
-        float svAreaSize = bodyWidth;
         float hueBarHeight = HUE_BAR_HEIGHT_DESIGN;
         float hexRowHeight = hexInput.intrinsicHeightForColumn(measure, bodyWidth);
         float rainbowRowHeight = rainbowToggleCheckbox.intrinsicHeightForColumn(measure, bodyWidth);
         float actionsHeight = applyButton.intrinsicHeightForColumn(measure, bodyWidth);
 
         float titleHeight = 11f;
-        float popupHeight = verticalPadding + titleHeight + rowGap + svAreaSize + rowGap + hueBarHeight + rowGap + hexRowHeight + rowGap + rainbowRowHeight + rowGap + actionsHeight + verticalPadding;
+        float popupHeight = verticalPadding + titleHeight + rowGap + bodyWidth + rowGap + hueBarHeight + rowGap + hexRowHeight + rowGap + rainbowRowHeight + rowGap + actionsHeight + verticalPadding;
 
         setDialogBounds(layoutX, layoutY, layoutWidth, layoutHeight, popupWidth, popupHeight);
 
         float bodyLeft = dialogX() + horizontalPadding;
         float cursorY = dialogY() + verticalPadding + titleHeight + rowGap;
 
-        svPickerArea.layout(measure, bodyLeft, cursorY, svAreaSize, svAreaSize);
-        cursorY += svAreaSize + rowGap;
+        svPickerArea.layout(measure, bodyLeft, cursorY, bodyWidth, bodyWidth);
+        cursorY += bodyWidth + rowGap;
 
         hueBar.layout(measure, bodyLeft, cursorY, bodyWidth, hueBarHeight);
         cursorY += hueBarHeight + rowGap;
@@ -144,11 +143,10 @@ public class FColorPickerPopupWidget extends FPopupWidget {
     private void renderHexRow(GuiRenderer graphics) {
         float textY = hexInput.y() + Math.max(0f, hexInput.h() - graphics.getFontCapHeight()) * 0.5f;
         graphics.drawText("#", hexInput.x() - HEX_HASH_LABEL_WIDTH + 1f, textY, graphics.theme().textLabel(), false, false);
-        float previewSize = PREVIEW_SIZE_DESIGN;
         float previewX = hexInput.x() + hexInput.w() + 4f;
-        float previewY = hexInput.y() + (hexInput.h() - previewSize) * 0.5f;
+        float previewY = hexInput.y() + (hexInput.h() - PREVIEW_SIZE_DESIGN) * 0.5f;
         int previewArgb = rainbow ? RainbowColors.currentColor().getPackedArgb() | 0xFF000000 : editingColor.getPackedArgb() | 0xFF000000;
-        graphics.fillRoundedRectFrame(previewX, previewY, previewSize, previewSize, UITheme.CORNER_RADIUS_XS, graphics.theme().border(), previewArgb, 1f, 1f, RectCornerRoundMask.ALL);
+        graphics.fillRoundedRectFrame(previewX, previewY, PREVIEW_SIZE_DESIGN, PREVIEW_SIZE_DESIGN, UITheme.CORNER_RADIUS_XS, graphics.theme().border(), previewArgb, 1f, 1f, RectCornerRoundMask.ALL);
     }
 
     private void syncEditingColor() {

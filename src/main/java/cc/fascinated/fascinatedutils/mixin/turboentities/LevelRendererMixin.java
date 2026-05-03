@@ -2,8 +2,8 @@ package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
-import cc.fascinated.fascinatedutils.turboentities.EntitiesCullTask;
-import cc.fascinated.fascinatedutils.turboentities.TurboEntities;
+import cc.fascinated.fascinatedutils.systems.turboentities.EntitiesCullTask;
+import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;

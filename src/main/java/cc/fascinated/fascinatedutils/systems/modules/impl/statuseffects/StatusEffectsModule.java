@@ -4,10 +4,10 @@ import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
-import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.hud.StatusEffectsHudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
+import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.hud.StatusEffectsHudPanel;
 
 public class StatusEffectsModule extends HudHostModule {
 

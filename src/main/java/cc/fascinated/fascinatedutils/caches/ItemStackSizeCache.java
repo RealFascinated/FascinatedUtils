@@ -5,7 +5,6 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
-import org.spongepowered.asm.mixin.Unique;
 
 public class ItemStackSizeCache {
 

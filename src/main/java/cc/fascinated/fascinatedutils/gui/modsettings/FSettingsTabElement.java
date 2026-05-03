@@ -58,9 +58,8 @@ public class FSettingsTabElement extends FWidget implements ModSettingsSettingsP
     }
 
     private UiView settingsViewportDeclarative(float viewportWidth, float viewportHeight) {
-        int stampCapture = compositePresentationStamp;
         return ModSettingsSettingsPresentationComponent.view(
-                new ModSettingsSettingsPresentationComponent.Props(this, viewportWidth, viewportHeight, stampCapture));
+                new ModSettingsSettingsPresentationComponent.Props(this, viewportWidth, viewportHeight, compositePresentationStamp));
     }
 
     @Override

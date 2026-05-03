@@ -167,8 +167,7 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
     }
 
     private float titleRowHeightPx() {
-        float chipH = KEY_CHIP_HEIGHT_DESIGN;
-        return Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), chipH);
+        return Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), KEY_CHIP_HEIGHT_DESIGN);
     }
 
     private float titleRowOriginY() {

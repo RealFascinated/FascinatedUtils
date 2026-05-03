@@ -38,6 +38,6 @@ public class ConfigRepository {
             }
         }
         FascinatedConfig current = configManager.getCurrent();
-        configManager.updateAndSave(new FascinatedConfig(current.activeProfileId(), captured, current.uiState()));
+        configManager.updateAndSave(new FascinatedConfig(current.activeProfileId(), captured));
     }
 }

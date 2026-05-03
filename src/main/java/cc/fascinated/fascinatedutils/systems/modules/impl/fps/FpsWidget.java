@@ -1,11 +1,10 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.fps;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.systems.modules.impl.fps.hud.FpsHudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
-
+import cc.fascinated.fascinatedutils.systems.modules.impl.fps.hud.FpsHudPanel;
 import lombok.Getter;
 
 @Getter

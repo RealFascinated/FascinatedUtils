@@ -185,8 +185,7 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-        float innerWidth = layoutWidth;
-        float measured = measureContentHeight(measure, innerWidth);
+        float measured = measureContentHeight(measure, layoutWidth);
         contentHeight = ScrollChrome.resolveScrollableContentHeight(Float.NaN, measured);
         float maxScroll = FColumnWidget.clampScrollOffset(contentHeight, layoutHeight, targetScrollOffsetY);
         targetScrollOffsetY = maxScroll;
@@ -199,7 +198,7 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
         if (Math.abs(scrollBeforeClamp - scrollOffsetY) > 1e-3f) {
             scrollOffsetChangeListener.accept(scrollOffsetY);
         }
-        body.layout(measure, layoutX, layoutY - scrollOffsetY, innerWidth, contentHeight);
+        body.layout(measure, layoutX, layoutY - scrollOffsetY, layoutWidth, contentHeight);
     }
 
     @Override
@@ -243,8 +242,7 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
         if (!isScrollbarVisible()) {
             return false;
         }
-        float slop = SCROLLBAR_HIT_SLOP_PX;
-        return px >= cachedThumbX - slop && px <= cachedThumbX + cachedThumbW + slop && py >= cachedThumbY - slop && py <= cachedThumbY + cachedThumbH + slop;
+        return px >= cachedThumbX - SCROLLBAR_HIT_SLOP_PX && px <= cachedThumbX + cachedThumbW + SCROLLBAR_HIT_SLOP_PX && py >= cachedThumbY - SCROLLBAR_HIT_SLOP_PX && py <= cachedThumbY + cachedThumbH + SCROLLBAR_HIT_SLOP_PX;
     }
 
     private void renderVisibleContent(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.turboparticles;
+package cc.fascinated.fascinatedutils.systems.turboparticles;
 
 import cc.fascinated.fascinatedutils.common.culling.CullCounters;
 import cc.fascinated.fascinatedutils.common.culling.OcclusionProvider;

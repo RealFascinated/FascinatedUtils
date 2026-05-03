@@ -4,12 +4,12 @@ import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.hooks.FadeInAnim;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
-import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaWidget.CrosshairTarget;
+import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
-import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaWidget.CrosshairTarget;
 import net.minecraft.util.Mth;
 import org.jspecify.annotations.Nullable;
 

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.turboentities;
+package cc.fascinated.fascinatedutils.systems.turboentities;
 
 import cc.fascinated.fascinatedutils.common.culling.CullCounters;
 import cc.fascinated.fascinatedutils.common.culling.OcclusionProvider;
@@ -99,12 +99,11 @@ public class TurboEntities {
             }
         }
 
-        EntitiesCullTask task = cullTask;
-        if (task != null && enabled) {
+        if (cullTask != null && enabled) {
             if (cullSnapshotTickCounter++ % CULL_SNAPSHOT_CAPTURE_RATE_TICKS == 0) {
                 Minecraft client = Minecraft.getInstance();
-                task.publishEntityCullSnapshotFromWorld(client);
-                task.publishBlockEntityCullSnapshotFromWorld(client, BLOCK_ENTITY_CULL_CHUNK_RADIUS_CAP);
+                cullTask.publishEntityCullSnapshotFromWorld(client);
+                cullTask.publishBlockEntityCullSnapshotFromWorld(client, BLOCK_ENTITY_CULL_CHUNK_RADIUS_CAP);
             }
         }
     }

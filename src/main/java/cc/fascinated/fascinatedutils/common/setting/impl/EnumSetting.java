@@ -39,9 +39,8 @@ public class EnumSetting<T extends Enum<T>> extends Setting<T> {
      * @return the formatted value
      */
     public String formatValueForDisplay(T value) {
-        Function<T, String> formatter = valueFormatter;
-        if (formatter != null) {
-            return formatter.apply(value);
+        if (valueFormatter != null) {
+            return valueFormatter.apply(value);
         }
         return EnumUtils.formatEnumName(value);
     }

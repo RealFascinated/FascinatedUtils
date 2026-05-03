@@ -2,9 +2,9 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.bossbar.hud;
 
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.mixin.bossbar.BossHealthOverlayEventsAccessor;
-import cc.fascinated.fascinatedutils.systems.modules.impl.bossbar.BossbarModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
+import cc.fascinated.fascinatedutils.systems.modules.impl.bossbar.BossbarModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;

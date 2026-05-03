@@ -3,13 +3,13 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.debug;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.ValueSmoother;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
-import cc.fascinated.fascinatedutils.systems.modules.impl.debug.hud.DebugHudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
-import cc.fascinated.fascinatedutils.turboentities.TurboEntities;
-import cc.fascinated.fascinatedutils.turboparticles.TurboParticles;
+import cc.fascinated.fascinatedutils.systems.modules.impl.debug.hud.DebugHudPanel;
+import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
+import cc.fascinated.fascinatedutils.systems.turboparticles.TurboParticles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

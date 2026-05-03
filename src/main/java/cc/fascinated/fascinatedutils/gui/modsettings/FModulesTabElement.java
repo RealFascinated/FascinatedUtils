@@ -119,8 +119,7 @@ public class FModulesTabElement extends FWidget implements ModSettingsModulesPre
 
     private UiView modulesViewportDeclarative(float viewportWidth, float viewportHeight) {
         syncScrollAnchors();
-        int stampCapture = compositePresentationStamp;
-        return ModSettingsModulesPresentationComponent.view(new ModSettingsModulesPresentationComponent.Props(this, viewportWidth, viewportHeight, stampCapture));
+        return ModSettingsModulesPresentationComponent.view(new ModSettingsModulesPresentationComponent.Props(this, viewportWidth, viewportHeight, compositePresentationStamp));
     }
 
     @Override

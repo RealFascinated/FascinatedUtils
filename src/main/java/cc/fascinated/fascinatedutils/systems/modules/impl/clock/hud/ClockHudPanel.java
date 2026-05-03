@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.clock.hud;
 
-import cc.fascinated.fascinatedutils.systems.modules.impl.clock.ClockWidget;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.modules.impl.clock.ClockWidget;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

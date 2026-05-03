@@ -1,10 +1,10 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
+import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.screens.ModSettingsScreen;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.toast.ToastManager;
-import cc.fascinated.fascinatedutils.gui.UIScale;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.turboparticles;
+package cc.fascinated.fascinatedutils.systems.turboparticles;
 
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
@@ -117,11 +117,10 @@ public class ParticleCullTask implements Runnable {
     }
 
     private void cullParticles() {
-        List<Particle> snapshot = this.particleCullSnapshot;
         int considered = 0;
         int culled = 0;
 
-        for (Particle particle : snapshot) {
+        for (Particle particle : this.particleCullSnapshot) {
             if (!(particle instanceof Cullable cullable)) {
                 continue;
             }
@@ -158,8 +157,7 @@ public class ParticleCullTask implements Runnable {
         }
 
         // Frustum Check
-        Frustum currentFrustum = frustum;
-        if (currentFrustum != null && !currentFrustum.isVisible(box)) {
+        if (frustum != null && !frustum.isVisible(box)) {
             return false;
         }
 

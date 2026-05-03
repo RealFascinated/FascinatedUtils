@@ -129,8 +129,7 @@ public class ToastManager {
         float stackTop = MARGIN_T;
         for (int idx = count - 1; idx >= 0; idx--) {
             Entry entry = entries.get(idx);
-            float targetY = stackTop;
-            entry.renderY += (targetY - entry.renderY) * Math.min(1f, Y_LERP_SPD * delta);
+            entry.renderY += (stackTop - entry.renderY) * Math.min(1f, Y_LERP_SPD * delta);
             stackTop += entry.effectiveHeight + GAP;
         }
     }

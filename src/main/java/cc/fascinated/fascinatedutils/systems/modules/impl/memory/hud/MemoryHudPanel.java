@@ -2,9 +2,9 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.memory.hud;
 
 import cc.fascinated.fascinatedutils.common.ByteFormatterUtil;
 import cc.fascinated.fascinatedutils.common.Colors;
-import cc.fascinated.fascinatedutils.systems.modules.impl.memory.MemoryWidget;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.modules.impl.memory.MemoryWidget;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;

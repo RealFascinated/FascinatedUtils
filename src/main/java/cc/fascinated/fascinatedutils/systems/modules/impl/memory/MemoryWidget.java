@@ -1,10 +1,10 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.memory;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
-import cc.fascinated.fascinatedutils.systems.modules.impl.memory.hud.MemoryHudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
+import cc.fascinated.fascinatedutils.systems.modules.impl.memory.hud.MemoryHudPanel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

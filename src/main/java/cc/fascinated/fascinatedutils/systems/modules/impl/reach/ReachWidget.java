@@ -1,10 +1,10 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.reach;
 
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
-import cc.fascinated.fascinatedutils.systems.modules.impl.reach.hud.ReachHudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
+import cc.fascinated.fascinatedutils.systems.modules.impl.reach.hud.ReachHudPanel;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;

@@ -2,9 +2,9 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.hud;
 
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.mixin.scoreboard.GuiScoreDisplayOrderAccessor;
-import cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.ScoreboardModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
+import cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.ScoreboardModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;

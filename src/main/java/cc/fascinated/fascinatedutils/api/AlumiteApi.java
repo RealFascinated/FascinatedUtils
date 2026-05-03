@@ -147,9 +147,8 @@ public class AlumiteApi {
     }
 
     private void scheduleTokenRefresh(String accessExpiresAt) {
-        ScheduledFuture<?> existing = tokenRefreshTask;
-        if (existing != null) {
-            existing.cancel(false);
+        if (tokenRefreshTask != null) {
+            tokenRefreshTask.cancel(false);
         }
         if (accessExpiresAt == null) {
             return;

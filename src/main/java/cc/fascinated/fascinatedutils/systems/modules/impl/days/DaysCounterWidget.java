@@ -1,14 +1,14 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.days;
 
-import cc.fascinated.fascinatedutils.systems.modules.impl.days.hud.DaysHudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
+import cc.fascinated.fascinatedutils.systems.modules.impl.days.hud.DaysHudPanel;
 
-public class DaysWidget extends HudHostModule {
+public class DaysCounterWidget extends HudHostModule {
 
-    public DaysWidget() {
-        super("days", "Days", HudDefaults.builder().build());
+    public DaysCounterWidget() {
+        super("days_counter", "Days Counter", HudDefaults.builder().build());
         MiniMessageHudChrome.register(this);
         registerHudPanel(new DaysHudPanel(this));
     }

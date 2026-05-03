@@ -36,8 +36,7 @@ public class AnimHandle {
      * @param deltaSeconds elapsed time this frame for the ease step, in seconds
      */
     public void tick(float deltaSeconds) {
-        float rate = speed;
-        float interpolation = 1f - (float) Math.exp(-rate * deltaSeconds);
+        float interpolation = 1f - (float) Math.exp(-speed * deltaSeconds);
         value = Mth.lerp(interpolation, value, target);
     }
 }

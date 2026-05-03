@@ -2,8 +2,8 @@ package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
+import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.hooks.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -162,8 +162,7 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
         }
         float borderThickness = 1f;
         float maxTrackCornerRadius = Math.max(0.5f, Math.min(toggleH * 0.5f - borderThickness * 0.5f, toggleW * 0.5f - borderThickness * 0.5f));
-        float trackCornerRadius = maxTrackCornerRadius;
-        graphics.fillRoundedRectFrame(toggle[0], titleOriginY, toggleW, toggleH, trackCornerRadius, trackBorder, trackFill, borderThickness, borderThickness, RectCornerRoundMask.ALL);
+        graphics.fillRoundedRectFrame(toggle[0], titleOriginY, toggleW, toggleH, maxTrackCornerRadius, trackBorder, trackFill, borderThickness, borderThickness, RectCornerRoundMask.ALL);
         float knobSize = toggleH - 4f;
         float knobTravelLeft = toggle[0] + 2f;
         float knobTravelRight = toggle[0] + toggleW - knobSize - 2f;

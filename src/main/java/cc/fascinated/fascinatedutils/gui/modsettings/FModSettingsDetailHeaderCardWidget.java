@@ -99,30 +99,26 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
 
     @Override
     public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-        float padY = CARD_PAD_Y_DESIGN;
-        float backSize = BACK_SIZE_DESIGN;
         float lineHeight = measure != null ? TextLayoutMetrics.layoutLineHeightPx(measure) : Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());
-        return 2f * padY + Math.max(lineHeight, backSize);
+        return 2f * CARD_PAD_Y_DESIGN + Math.max(lineHeight, BACK_SIZE_DESIGN);
     }
 
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
         if (searchWidget != null) {
-            float padX = CARD_PAD_X_DESIGN;
-            float backSize = BACK_SIZE_DESIGN;
             float hGap = 4f;
             float titleW = measure != null ? measure.measureTextWidth(titleText, false) : 0f;
             float resetW = 11f;
             float searchMaxW = 90f;
-            float availableX = layoutX + padX + backSize + hGap + titleW + hGap;
-            float availableRight = layoutX + layoutWidth - padX - resetW - hGap;
+            float availableX = layoutX + CARD_PAD_X_DESIGN + BACK_SIZE_DESIGN + hGap + titleW + hGap;
+            float availableRight = layoutX + layoutWidth - CARD_PAD_X_DESIGN - resetW - hGap;
             float searchW = Math.min(searchMaxW, Math.max(0f, availableRight - availableX));
             float searchX = availableRight - searchW;
             float searchH = layoutHeight - 2f * CARD_PAD_Y_DESIGN;
             searchWidget.layout(measure, searchX, layoutY + CARD_PAD_Y_DESIGN, searchW, searchH);
             resetButtonSize = resetW;
-            resetButtonX = layoutX + layoutWidth - padX - resetW;
+            resetButtonX = layoutX + layoutWidth - CARD_PAD_X_DESIGN - resetW;
             resetButtonY = layoutY + (layoutHeight - resetW) * 0.5f;
         }
     }
@@ -183,10 +179,8 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
         float textX = x() + (w() - textWidth) * 0.5f;
         float textY = y() + (h() - lineHeight) * 0.5f;
         if (searchWidget != null) {
-            float padX = CARD_PAD_X_DESIGN;
-            float backSize = BACK_SIZE_DESIGN;
             float hGap = 4f;
-            float titleX = x() + padX + backSize + hGap;
+            float titleX = x() + CARD_PAD_X_DESIGN + BACK_SIZE_DESIGN + hGap;
             graphics.drawMiniMessageText("<color:" + Colors.rgbHex(graphics.theme().textPrimary()) + ">" + titleText + "</color>", titleX, textY, false);
         }
         else {
@@ -216,10 +210,8 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
     }
 
     private float[] backButtonBounds() {
-        float padX = CARD_PAD_X_DESIGN;
-        float backSize = BACK_SIZE_DESIGN;
-        float backX = x() + padX;
-        float backY = y() + (h() - backSize) * 0.5f;
-        return new float[]{backX, backY, backSize, backSize};
+        float backX = x() + CARD_PAD_X_DESIGN;
+        float backY = y() + (h() - BACK_SIZE_DESIGN) * 0.5f;
+        return new float[]{backX, backY, BACK_SIZE_DESIGN, BACK_SIZE_DESIGN};
     }
 }

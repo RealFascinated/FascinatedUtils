@@ -63,14 +63,12 @@ public class ModSettingsWidgetsTabBuilder {
     }
 
     private static FWidget buildWidgetCardGrid(float paneWidth, List<HudPanel> hudPanels, Ref<Float> widgetsPaneScrollYRef, Callback<HudPanel> onOpenPanelSettings, Consumer<ColorSetting> openColorPicker) {
-        float gridMarginX = GRID_MARGIN_X_DESIGN;
-        float paddedInnerWidth = Math.max(0f, paneWidth - 2f * gridMarginX);
+        float paddedInnerWidth = Math.max(0f, paneWidth - 2f * GRID_MARGIN_X_DESIGN);
         float settingsContentWidth = Math.max(28f, paddedInnerWidth);
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
         float gapY = 6f;
         float gapX = 3f;
-        float minCellWidth = GRID_MIN_CELL_WIDTH_DESIGN;
-        int columnCount = computeCardGridColumnCount(settingsContentWidth, gapX, minCellWidth);
+        int columnCount = computeCardGridColumnCount(settingsContentWidth, gapX, GRID_MIN_CELL_WIDTH_DESIGN);
         float cellWidth = (settingsContentWidth - gapX * Math.max(0, columnCount - 1)) / Math.max(1, columnCount);
         float cellHeight = FHudWidgetVisibilityCardWidget.stackedCellOuterHeightPx();
 

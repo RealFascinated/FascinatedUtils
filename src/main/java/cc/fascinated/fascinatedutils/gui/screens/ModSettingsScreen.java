@@ -13,7 +13,6 @@ import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FShellTabStripWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;
-import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
@@ -35,6 +34,8 @@ import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 
 public class ModSettingsScreen extends WidgetScreen {
+
+    private static volatile String lastShellContentTabKeySession;
 
     private enum ShellContentTab {
         MODULES, SETTINGS
@@ -82,13 +83,13 @@ public class ModSettingsScreen extends WidgetScreen {
     @Override
     public void renderCustom(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         if (!appliedPersistedShellTab) {
-            ModConfig.uiState().loadLastShellContentTabKey().ifPresent(tabKey -> {
-                switch (tabKey) {
+            if (lastShellContentTabKeySession != null && !lastShellContentTabKeySession.isBlank()) {
+                switch (lastShellContentTabKeySession) {
                     case FShellTabStripWidget.TAB_KEY_SETTINGS -> shellContentTab = ShellContentTab.SETTINGS;
                     case FShellTabStripWidget.TAB_KEY_PROFILES -> shellContentTab = ShellContentTab.MODULES;
                     case FShellTabStripWidget.TAB_KEY_MODULES -> shellContentTab = ShellContentTab.MODULES;
                 }
-            });
+            }
             topBarTabStrip.setSelectedKey(selectedShellTabKey());
             appliedPersistedShellTab = true;
         }
@@ -272,14 +273,14 @@ public class ModSettingsScreen extends WidgetScreen {
         if (FShellTabStripWidget.TAB_KEY_SETTINGS.equals(tabKey)) {
             if (shellContentTab != ShellContentTab.SETTINGS) {
                 shellContentTab = ShellContentTab.SETTINGS;
-                ModConfig.uiState().saveLastShellContentTabKey(tabKey);
+                lastShellContentTabKeySession = tabKey;
             }
             return;
         }
         if (FShellTabStripWidget.TAB_KEY_MODULES.equals(tabKey)) {
             if (shellContentTab != ShellContentTab.MODULES) {
                 shellContentTab = ShellContentTab.MODULES;
-                ModConfig.uiState().saveLastShellContentTabKey(tabKey);
+                lastShellContentTabKeySession = tabKey;
             }
         }
         topBarTabStrip.setSelectedKey(selectedShellTabKey());

@@ -84,11 +84,10 @@ public class ZoomModule extends Module {
         if (!isEnabled()) {
             return 1f;
         }
-        float raw = appliedZoomScale;
-        if (raw >= 1f - ZOOM_SCALE_EPSILON) {
+        if (appliedZoomScale >= 1f - ZOOM_SCALE_EPSILON) {
             return 1f;
         }
-        return Mth.clamp(raw, ZOOM_MOUSE_LOOK_SCALE_MIN, 1f);
+        return Mth.clamp(appliedZoomScale, ZOOM_MOUSE_LOOK_SCALE_MIN, 1f);
     }
 
     /**

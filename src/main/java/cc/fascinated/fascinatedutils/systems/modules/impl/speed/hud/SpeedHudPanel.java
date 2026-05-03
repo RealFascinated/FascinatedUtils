@@ -1,9 +1,9 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.speed.hud;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.systems.modules.impl.speed.SpeedWidget;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.modules.impl.speed.SpeedWidget;
 
 import java.util.ArrayList;
 import java.util.List;

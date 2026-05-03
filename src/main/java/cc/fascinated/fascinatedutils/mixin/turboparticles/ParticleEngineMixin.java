@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.mixin.turboparticles;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
-import cc.fascinated.fascinatedutils.turboparticles.ParticleCullTask;
+import cc.fascinated.fascinatedutils.systems.turboparticles.ParticleCullTask;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;

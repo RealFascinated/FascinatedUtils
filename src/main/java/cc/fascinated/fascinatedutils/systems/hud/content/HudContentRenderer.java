@@ -30,15 +30,13 @@ public class HudContentRenderer {
     }
 
     private static Runnable prepareTextLines(GuiRenderer glRenderer, List<String> rawLines, HudHostModule host, HudPanel panel, boolean editorMode) {
-        if (rawLines == null || rawLines.isEmpty()) {
-            rawLines = List.of("");
-        }
+        List<String> lines = rawLines == null || rawLines.isEmpty() ? List.of("") : rawLines;
 
         float lineHeight = glRenderer.getFontHeight();
         float maxLineWidth = 0f;
-        float[] lineWidths = new float[rawLines.size()];
-        for (int index = 0; index < rawLines.size(); index++) {
-            String miniMessageLine = rawLines.get(index);
+        float[] lineWidths = new float[lines.size()];
+        for (int index = 0; index < lines.size(); index++) {
+            String miniMessageLine = lines.get(index);
             if (miniMessageLine == null) {
                 miniMessageLine = "";
             }
@@ -49,7 +47,7 @@ public class HudContentRenderer {
 
         float horizontalPadding = host.getPadding();
         float verticalPadding = host.getPadding();
-        float innerTextHeight = HUDPanelBackground.innerTextHeightForLineCount(rawLines.size(), lineHeight);
+        float innerTextHeight = HUDPanelBackground.innerTextHeightForLineCount(lines.size(), lineHeight);
         float layoutWidth = Math.max(1f, Math.max(panel.getMinWidth(), maxLineWidth + 2f * horizontalPadding));
         float layoutHeight = Math.max(1f, innerTextHeight + 2f * verticalPadding);
 
@@ -58,7 +56,6 @@ public class HudContentRenderer {
         panel.getHudState().setCommittedLayoutWidth(layoutWidth);
         panel.getHudState().setCommittedLayoutHeight(layoutHeight);
 
-        List<String> lines = rawLines;
         return () -> {
             host.drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
 

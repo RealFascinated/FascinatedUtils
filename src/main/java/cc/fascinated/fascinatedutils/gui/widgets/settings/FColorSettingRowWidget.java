@@ -108,25 +108,23 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
         float bodyLeft = x() + padX;
         float innerHeight = Math.max(0f, h() - 2f * padY);
 
-        float swatchSize = SWATCH_SIZE_DESIGN;
-        float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), swatchSize);
+        float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), SWATCH_SIZE_DESIGN);
         float titleOriginY = y() + padY + (innerHeight - titleRowHeight) * 0.5f;
 
         String label = colorSetting.getName();
         float[] swatch = swatchBounds();
         float labelMaxWidth = Math.max(0f, swatch[0] - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - bodyLeft);
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
-        float labelY = titleOriginY + Math.max(0f, (swatchSize - graphics.getFontCapHeight()) * 0.5f);
+        float labelY = titleOriginY + Math.max(0f, (SWATCH_SIZE_DESIGN - graphics.getFontCapHeight()) * 0.5f);
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
         graphics.drawMiniMessageText("<color:" + Colors.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, labelY, false);
 
         SettingColor color = colorSetting.getValue();
         int swatchArgb = color.isRainbow() ? RainbowColors.currentColor().getPackedArgb() | 0xFF000000 : color.getPackedArgb();
 
-        float cornerRadius = SWATCH_CORNER_RADIUS_DESIGN;
         float borderPx = 1f;
         int swatchBorder = hoveredSwatch && !locked ? graphics.theme().accentBright() : graphics.theme().border();
-        graphics.fillRoundedRectFrame(swatch[0], swatch[1], swatch[2], swatch[3], cornerRadius, swatchBorder, swatchArgb, borderPx, borderPx, RectCornerRoundMask.ALL);
+        graphics.fillRoundedRectFrame(swatch[0], swatch[1], swatch[2], swatch[3], SWATCH_CORNER_RADIUS_DESIGN, swatchBorder, swatchArgb, borderPx, borderPx, RectCornerRoundMask.ALL);
 
         if (color.isRainbow()) {
             float rainbowLabelX = swatch[0] + swatch[2] + 4f;
@@ -135,7 +133,7 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
         }
 
         float[] resetSquare = inlineResetSquare();
-        SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], swatchSize, hoveredReset && !locked, colorSetting.isAtDefault());
+        SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], SWATCH_SIZE_DESIGN, hoveredReset && !locked, colorSetting.isAtDefault());
     }
 
     private void openColorPicker() {
@@ -146,14 +144,13 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
         float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
         float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float innerHeight = Math.max(0f, h() - 2f * padY);
-        float swatchSize = SWATCH_SIZE_DESIGN;
-        float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), swatchSize);
+        float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), SWATCH_SIZE_DESIGN);
         float titleOriginY = y() + padY + (innerHeight - titleRowHeight) * 0.5f;
         float bodyLeft = x() + padX;
         float resetLeft = SettingRowResetLayout.trailingResetLeftX(x() + outerWidth);
-        float maxSwatchLeft = Math.max(bodyLeft, resetLeft - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - swatchSize);
+        float maxSwatchLeft = Math.max(bodyLeft, resetLeft - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - SWATCH_SIZE_DESIGN);
         float swatchLeft = Math.min(bodyLeft + valueColumnStartX, maxSwatchLeft);
-        return new float[]{swatchLeft, titleOriginY, swatchSize, swatchSize};
+        return new float[]{swatchLeft, titleOriginY, SWATCH_SIZE_DESIGN, SWATCH_SIZE_DESIGN};
     }
 
     private float[] inlineResetSquare() {

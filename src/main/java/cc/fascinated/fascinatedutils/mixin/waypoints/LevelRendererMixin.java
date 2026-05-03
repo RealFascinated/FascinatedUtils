@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.waypoints;
 
+import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.Waypoint;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
@@ -9,7 +10,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.renderer.LevelRenderer;
-import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.world.phys.Vec3;

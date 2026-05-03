@@ -2,12 +2,10 @@ package cc.fascinated.fascinatedutils.gui.declare;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
+import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
 import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
-
-import cc.fascinated.fascinatedutils.gui.core.Ref;
-
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;

@@ -75,16 +75,15 @@ public class RoundedRectCornerRadiiTexture {
      * @param lutRingStrokePx   logical stroke thickness in pixels for GPU ring draws; clamped to 0–255
      */
     public void uploadPacked(int packedCornerRadii, float lutRingStrokePx) {
-        DynamicTexture texture = backing;
-        if (texture == null) {
+        if (backing == null) {
             return;
         }
-        NativeImage image = texture.getPixels();
+        NativeImage image = backing.getPixels();
         if (image == null) {
             return;
         }
         writeRadiiLutPixels(image, packedCornerRadii, lutRingStrokePx);
-        texture.upload();
+        backing.upload();
     }
 
     /**

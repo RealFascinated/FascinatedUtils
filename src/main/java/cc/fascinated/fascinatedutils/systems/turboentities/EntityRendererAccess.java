@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.turboentities;
+package cc.fascinated.fascinatedutils.systems.turboentities;
 
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;

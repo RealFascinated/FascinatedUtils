@@ -1,8 +1,8 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.days.hud;
 
-import cc.fascinated.fascinatedutils.systems.modules.impl.days.DaysWidget;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.modules.impl.days.DaysCounterWidget;
 import net.minecraft.client.Minecraft;
 
 import java.util.List;
@@ -13,7 +13,7 @@ public class DaysHudPanel extends MiniMessageHudPanel {
     private static final long TICKS_PER_DAY = 24000L;
     private static final long UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(500L);
 
-    public DaysHudPanel(DaysWidget daysWidget) {
+    public DaysHudPanel(DaysCounterWidget daysWidget) {
         super(daysWidget, "days", HudHostModule.UTILITY_WIDGET_MIN_WIDTH);
     }
 

@@ -11,11 +11,7 @@ import cc.fascinated.fascinatedutils.api.ws.impl.C2SHeartbeatAckMessage;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
-import cc.fascinated.fascinatedutils.event.impl.social.FriendAddEvent;
-import cc.fascinated.fascinatedutils.event.impl.social.FriendRemoveEvent;
-import cc.fascinated.fascinatedutils.event.impl.social.FriendRequestIncomingEvent;
-import cc.fascinated.fascinatedutils.event.impl.social.FriendRequestRemovedEvent;
-import cc.fascinated.fascinatedutils.event.impl.social.PresenceUpdateEvent;
+import cc.fascinated.fascinatedutils.event.impl.social.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -94,16 +90,14 @@ class AlumiteGateway implements WebSocket.Listener {
 
     void disconnect() {
         running = false;
-        WebSocket current = ws;
-        if (current != null) {
-            current.sendClose(WebSocket.NORMAL_CLOSURE, "").whenComplete((_, _) -> ws = null);
+        if (ws != null) {
+            ws.sendClose(WebSocket.NORMAL_CLOSURE, "").whenComplete((_, _) -> ws = null);
         }
     }
 
     void send(OutboundMessage message) {
-        WebSocket current = ws;
-        if (current != null) {
-            current.sendText(message.toJson(), true);
+        if (ws != null) {
+            ws.sendText(message.toJson(), true);
         }
     }
 

@@ -5,12 +5,12 @@ import cc.fascinated.fascinatedutils.common.NumberUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.CoordinatesWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.CoordinatesWidget.CoordinatesLayout;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
+import cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.CoordinatesWidget;
+import cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.CoordinatesWidget.CoordinatesLayout;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.Identifier;
@@ -78,7 +78,8 @@ public class CoordinatesHudPanel extends HudPanel {
             for (String directionLabel : COMPASS_DIRECTIONS) {
                 maxFacingWidth = Math.max(maxFacingWidth, glRenderer.measureMiniMessageTextWidth(directionLabel));
             }
-            float innerWidth = xWidth + COLUMN_GAP + yWidth + COLUMN_GAP + zWidth + COLUMN_GAP + maxFacingWidth;
+            final float facingColumnBandWidth = maxFacingWidth;
+            float innerWidth = xWidth + COLUMN_GAP + yWidth + COLUMN_GAP + zWidth + COLUMN_GAP + facingColumnBandWidth;
             float padding = hudHostModule().getPadding();
             float layoutWidth = Math.max(1f, Math.max(getMinWidth(), innerWidth + 2f * padding));
             float layoutHeight = Math.max(1f, lineHeight + 2f * padding);
@@ -87,21 +88,16 @@ public class CoordinatesHudPanel extends HudPanel {
             getHudState().setCommittedLayoutWidth(layoutWidth);
             getHudState().setCommittedLayoutHeight(layoutHeight);
             boolean textShadow = hudHostModule().isTextShadowEnabled();
-            float capturedXWidth = xWidth;
-            float capturedYWidth = yWidth;
-            float capturedZWidth = zWidth;
-            float capturedMaxFacingWidth = maxFacingWidth;
             return () -> {
                 hudHostModule().drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
                 float availableInnerWidth = layoutWidth - 2f * padding;
                 float startX = padding + HudAnchorLayout.horizontalOffsetInInnerBand(availableInnerWidth, innerWidth, hudContentHorizontalAlignment());
-                float lineY = padding;
-                glRenderer.drawMiniMessageText(xPart, startX, lineY, textShadow);
-                glRenderer.drawMiniMessageText(yPart, startX + capturedXWidth + COLUMN_GAP, lineY, textShadow);
-                glRenderer.drawMiniMessageText(zPart, startX + capturedXWidth + COLUMN_GAP + capturedYWidth + COLUMN_GAP, lineY, textShadow);
-                float facingColumnX = startX + capturedXWidth + COLUMN_GAP + capturedYWidth + COLUMN_GAP + capturedZWidth + COLUMN_GAP;
+                glRenderer.drawMiniMessageText(xPart, startX, padding, textShadow);
+                glRenderer.drawMiniMessageText(yPart, startX + xWidth + COLUMN_GAP, padding, textShadow);
+                glRenderer.drawMiniMessageText(zPart, startX + xWidth + COLUMN_GAP + yWidth + COLUMN_GAP, padding, textShadow);
+                float facingColumnX = startX + xWidth + COLUMN_GAP + yWidth + COLUMN_GAP + zWidth + COLUMN_GAP;
                 float currentFacingHeadingWidth = glRenderer.measureMiniMessageTextWidth(facingKey);
-                glRenderer.drawMiniMessageText(facingKey, facingColumnX + (capturedMaxFacingWidth - currentFacingHeadingWidth), lineY, textShadow);
+                glRenderer.drawMiniMessageText(facingKey, facingColumnX + (facingColumnBandWidth - currentFacingHeadingWidth), padding, textShadow);
             };
         }
         List<String> leftLines = List.of("X: " + NumberUtils.formatNumber(coordX, decimals), "Y: " + NumberUtils.formatNumber(coordY, decimals), "Z: " + NumberUtils.formatNumber(coordZ, decimals), "Biome: " + biomeMini);
@@ -115,6 +111,8 @@ public class CoordinatesHudPanel extends HudPanel {
         for (String directionLabel : COMPASS_DIRECTIONS) {
             facingWidth = Math.max(facingWidth, glRenderer.measureMiniMessageTextWidth(directionLabel));
         }
+        final float leftColumnCommitWidth = leftColumnWidth;
+        final float facingCommitWidth = facingWidth;
         float innerHeight = lineCount * lineHeight + Math.max(0, lineCount - 1) * LINE_GAP_PX;
         float innerWidth = leftColumnWidth + COLUMN_GAP + facingWidth;
         float padding = hudHostModule().getPadding();
@@ -125,15 +123,12 @@ public class CoordinatesHudPanel extends HudPanel {
         getHudState().setCommittedLayoutWidth(layoutWidth);
         getHudState().setCommittedLayoutHeight(layoutHeight);
 
-        float capturedLeftColumnWidth = leftColumnWidth;
-        float capturedFacingWidth = facingWidth;
         boolean textShadow = hudHostModule().isTextShadowEnabled();
         return () -> {
             hudHostModule().drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
             float availableInnerWidth = layoutWidth - 2f * padding;
             float blockStartX = padding + HudAnchorLayout.horizontalOffsetInInnerBand(availableInnerWidth, innerWidth, hudContentHorizontalAlignment());
-            float innerTop = padding;
-            float cursorY = innerTop;
+            float cursorY = padding;
             for (int index = 0; index < lineCount; index++) {
                 glRenderer.drawMiniMessageText(leftLines.get(index), blockStartX, cursorY, textShadow);
                 cursorY += lineHeight;
@@ -141,10 +136,10 @@ public class CoordinatesHudPanel extends HudPanel {
                     cursorY += LINE_GAP_PX;
                 }
             }
-            float facingColumnStartX = blockStartX + capturedLeftColumnWidth + COLUMN_GAP;
+            float facingColumnStartX = blockStartX + leftColumnCommitWidth + COLUMN_GAP;
             float currentFacingHeadingWidth = glRenderer.measureMiniMessageTextWidth(facingKey);
-            float facingX = facingColumnStartX + (capturedFacingWidth - currentFacingHeadingWidth);
-            glRenderer.drawMiniMessageText(facingKey, facingX, innerTop, textShadow);
+            float facingX = facingColumnStartX + (facingCommitWidth - currentFacingHeadingWidth);
+            glRenderer.drawMiniMessageText(facingKey, facingX, padding, textShadow);
         };
     }
 

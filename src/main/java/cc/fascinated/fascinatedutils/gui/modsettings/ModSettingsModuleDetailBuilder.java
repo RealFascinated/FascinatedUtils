@@ -48,7 +48,6 @@ public class ModSettingsModuleDetailBuilder {
         FWidget detailHeaderPacked = packDetailHeader(settingsContentWidth, settingsInnerWidth, module, sharedSearchField, onBack, onSearchChanged);
 
         float bodyColumnGap = 3f;
-        float clipRowGap = bodyColumnGap;
         List<UiSlot> scrollSlots = new ArrayList<>();
 
         String searchLower = (settingsSearchRef.getValue() == null ? "" : settingsSearchRef.getValue()).toLowerCase(Locale.ROOT);
@@ -109,7 +108,7 @@ public class ModSettingsModuleDetailBuilder {
             }
         }
 
-        UiView scrollViewport = Ui.scrollTracked(clipRowGap, bodyColumnGap, true, settingsPaneScrollYRef::setValue,
+        UiView scrollViewport = Ui.scrollTracked(bodyColumnGap, bodyColumnGap, true, settingsPaneScrollYRef::setValue,
                 settingsPaneScrollYRef, scrollSlots);
 
         float sectionGap = ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X;

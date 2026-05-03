@@ -2,13 +2,13 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.hud;
 
 import cc.fascinated.fascinatedutils.common.DateUtils;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
+import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.StatusEffectsModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.StatusEffectsModule.DisplayMode;
 import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.StatusEffectsModule.SortMode;
-import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
-import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
-import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
-import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.core.Holder;
@@ -104,16 +104,14 @@ public class StatusEffectsHudPanel extends HudPanel {
 
                 float iconY = cursorY + (rowHeight - ICON_SIZE) * 0.5f;
                 float textBlockY = cursorY + (rowHeight - textBlockHeight) * 0.5f;
-                float nameY = textBlockY;
                 float durationY = textBlockY + fontHeight + TEXT_LINE_GAP;
 
                 float flashAlpha = effectRow.flashAlpha;
                 if (rightAligned) {
-                    float iconX = sharedIconXWhenRight;
                     if (detailedLayout) {
                         float nameX = textRightEdgeWhenRight - glRenderer.measureMiniMessageTextWidth(effectRow.nameText);
                         float durationX = textRightEdgeWhenRight - glRenderer.measureMiniMessageTextWidth(effectRow.durationText);
-                        glRenderer.drawMiniMessageText(effectRow.nameText, nameX, nameY, textShadow);
+                        glRenderer.drawMiniMessageText(effectRow.nameText, nameX, textBlockY, textShadow);
                         glRenderer.setMultiplyAlpha(flashAlpha);
                         glRenderer.drawMiniMessageText(effectRow.durationText, durationX, durationY, textShadow);
                         glRenderer.resetMultiplyAlpha();
@@ -122,26 +120,25 @@ public class StatusEffectsHudPanel extends HudPanel {
                         String compactLine = compactText(effectRow.nameText, effectRow.durationText, showDurationValue);
                         float compactX = textRightEdgeWhenRight - glRenderer.measureMiniMessageTextWidth(compactLine);
                         glRenderer.setMultiplyAlpha(flashAlpha);
-                        glRenderer.drawMiniMessageText(compactLine, compactX, nameY, textShadow);
+                        glRenderer.drawMiniMessageText(compactLine, compactX, textBlockY, textShadow);
                         glRenderer.resetMultiplyAlpha();
                     }
-                    glRenderer.drawSprite(effectRow.effectSprite, iconX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(1f));
+                    glRenderer.drawSprite(effectRow.effectSprite, sharedIconXWhenRight, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(1f));
                 }
                 else {
                     float rowWidth = ICON_SIZE + ICON_TEXT_GAP + textWidths[rowIndex];
                     float rowStartX = padding + HudAnchorLayout.horizontalOffsetInInnerBand(innerWidth, rowWidth, HudAnchorContentAlignment.Horizontal.LEFT);
-                    float iconX = rowStartX;
                     float textX = rowStartX + ICON_SIZE + ICON_TEXT_GAP;
-                    glRenderer.drawSprite(effectRow.effectSprite, iconX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(1f));
+                    glRenderer.drawSprite(effectRow.effectSprite, rowStartX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(1f));
                     if (detailedLayout) {
-                        glRenderer.drawMiniMessageText(effectRow.nameText, textX, nameY, textShadow);
+                        glRenderer.drawMiniMessageText(effectRow.nameText, textX, textBlockY, textShadow);
                         glRenderer.setMultiplyAlpha(flashAlpha);
                         glRenderer.drawMiniMessageText(effectRow.durationText, textX, durationY, textShadow);
                         glRenderer.resetMultiplyAlpha();
                     }
                     else {
                         glRenderer.setMultiplyAlpha(flashAlpha);
-                        glRenderer.drawMiniMessageText(compactText(effectRow.nameText, effectRow.durationText, showDurationValue), textX, nameY, textShadow);
+                        glRenderer.drawMiniMessageText(compactText(effectRow.nameText, effectRow.durationText, showDurationValue), textX, textBlockY, textShadow);
                         glRenderer.resetMultiplyAlpha();
                     }
                 }

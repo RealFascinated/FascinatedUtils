@@ -69,8 +69,7 @@ public class ModSettingsTheme {
      * @return size in logical shell pixels, at least 1
      */
     public static float titleBarSquareControlSizePx() {
-        float topBarHeightPx = TOPBAR_HEIGHT;
-        return Math.max(1f, Math.round(topBarHeightPx * TITLEBAR_CLOSE_BUTTON_HEIGHT_FRAC));
+        return Math.max(1f, Math.round(TOPBAR_HEIGHT * TITLEBAR_CLOSE_BUTTON_HEIGHT_FRAC));
     }
 
     /**

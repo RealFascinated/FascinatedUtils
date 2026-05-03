@@ -64,8 +64,7 @@ public class FIconCheckboxWidget extends FWidget {
 
     @Override
     public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-        float boxSize = CHECKBOX_SIZE_DESIGN;
-        return Math.max(boxSize, measure.getFontHeight());
+        return Math.max(CHECKBOX_SIZE_DESIGN, measure.getFontHeight());
     }
 
     @Override
@@ -111,12 +110,9 @@ public class FIconCheckboxWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        float boxSize = CHECKBOX_SIZE_DESIGN;
-        float boxCornerRadius = CHECKBOX_CORNER_RADIUS_DESIGN;
         float borderPx = 1f;
-        float labelGap = LABEL_GAP_DESIGN;
         float boxX = x();
-        float boxY = y() + (h() - boxSize) * 0.5f;
+        float boxY = y() + (h() - CHECKBOX_SIZE_DESIGN) * 0.5f;
 
         GuiTheme theme = graphics.theme();
         int borderColor = hovered ? theme.accentBright() : theme.border();
@@ -128,15 +124,15 @@ public class FIconCheckboxWidget extends FWidget {
             textColor = theme.textMuted();
         }
 
-        graphics.fillRoundedRectFrame(boxX, boxY, boxSize, boxSize, boxCornerRadius, borderColor, fillColor, borderPx, borderPx, RectCornerRoundMask.ALL);
+        graphics.fillRoundedRectFrame(boxX, boxY, CHECKBOX_SIZE_DESIGN, CHECKBOX_SIZE_DESIGN, CHECKBOX_CORNER_RADIUS_DESIGN, borderColor, fillColor, borderPx, borderPx, RectCornerRoundMask.ALL);
 
         if (checked) {
             float iconPad = 1f;
-            graphics.drawTexture(checkedTextureId, boxX + iconPad, boxY + iconPad, boxSize - iconPad * 2f, boxSize - iconPad * 2f, disabled ? dimColor(0xFFFFFFFF, 0.6f) : 0xFFFFFFFF);
+            graphics.drawTexture(checkedTextureId, boxX + iconPad, boxY + iconPad, CHECKBOX_SIZE_DESIGN - iconPad * 2f, CHECKBOX_SIZE_DESIGN - iconPad * 2f, disabled ? dimColor(0xFFFFFFFF, 0.6f) : 0xFFFFFFFF);
         }
 
         String label = labelSupplier.get();
-        float labelX = boxX + boxSize + labelGap;
+        float labelX = boxX + CHECKBOX_SIZE_DESIGN + LABEL_GAP_DESIGN;
         float labelY = y() + (h() - graphics.getFontCapHeight()) * 0.5f;
         graphics.drawText(label, labelX, labelY, textColor, false, false);
     }

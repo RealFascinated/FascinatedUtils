@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.turboentities;
 
-import cc.fascinated.fascinatedutils.turboentities.EntityRendererAccess;
+import cc.fascinated.fascinatedutils.systems.turboentities.EntityRendererAccess;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;

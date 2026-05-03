@@ -1,8 +1,8 @@
 package cc.fascinated.fascinatedutils.gui.themes;
 
 import cc.fascinated.fascinatedutils.gui.GuiTheme;
-import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
+import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 
 /**
  * Default FascinatedUtils GUI theme: Meteor-inspired dark violet-gray palette and layout scalars.

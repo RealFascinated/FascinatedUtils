@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.movement.hud;
 
-import cc.fascinated.fascinatedutils.systems.modules.impl.movement.MovementModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.modules.impl.movement.MovementModule;
 
 import java.util.List;
 

@@ -75,18 +75,17 @@ public class NumberUtils {
         if (num == null) {
             return null;
         }
-        Number number = num;
-        if (number instanceof BigDecimal bigDecimal) {
+        if (num instanceof BigDecimal bigDecimal) {
             return bigDecimal;
         }
-        if (number instanceof Long || number instanceof Integer || number instanceof Short || number instanceof Byte) {
-            return BigDecimal.valueOf(number.longValue());
+        if (num instanceof Long || num instanceof Integer || num instanceof Short || num instanceof Byte) {
+            return BigDecimal.valueOf(num.longValue());
         }
-        if (number instanceof Float || number instanceof Double) {
-            return BigDecimal.valueOf(number.doubleValue());
+        if (num instanceof Float || num instanceof Double) {
+            return BigDecimal.valueOf(num.doubleValue());
         }
         try {
-            return new BigDecimal(number.toString());
+            return new BigDecimal(num.toString());
         } catch (NumberFormatException ignored) {
             return null;
         }

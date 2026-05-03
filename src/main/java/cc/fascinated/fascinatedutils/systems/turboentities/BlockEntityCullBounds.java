@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.turboentities;
+package cc.fascinated.fascinatedutils.systems.turboentities;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BannerBlockEntity;

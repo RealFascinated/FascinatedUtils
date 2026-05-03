@@ -5,9 +5,9 @@ import cc.fascinated.fascinatedutils.common.FrameCounter;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
-import cc.fascinated.fascinatedutils.systems.modules.impl.fps.FpsWidget;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.modules.impl.fps.FpsWidget;
 
 import java.util.ArrayList;
 import java.util.List;

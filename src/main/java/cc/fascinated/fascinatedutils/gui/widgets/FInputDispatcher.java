@@ -151,11 +151,10 @@ public class FInputDispatcher {
         if (node.clipChildren() && !node.containsPoint(pointerX, pointerY)) {
             return null;
         }
-        float childPointerX = pointerX;
         float childPointerY = pointerY + node.childPointerYOffset();
         List<FWidget> kids = node.childrenView();
         for (int childIndex = kids.size() - 1; childIndex >= 0; childIndex--) {
-            FWidget hitChild = hitLeaf(kids.get(childIndex), childPointerX, childPointerY);
+            FWidget hitChild = hitLeaf(kids.get(childIndex), pointerX, childPointerY);
             if (hitChild != null) {
                 return hitChild;
             }

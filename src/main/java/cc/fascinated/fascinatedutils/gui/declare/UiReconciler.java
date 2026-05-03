@@ -2,29 +2,10 @@ package cc.fascinated.fascinatedutils.gui.declare;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Ref;
-import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FCellConstraints;
-import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FMaxCenterInsetsWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FMinWidthHostWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FRectWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FReconcileRoot;
-import cc.fascinated.fascinatedutils.gui.widgets.FRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FScrollColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
-
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Maps immutable {@link UiView} trees onto retained {@link FWidget} instances.

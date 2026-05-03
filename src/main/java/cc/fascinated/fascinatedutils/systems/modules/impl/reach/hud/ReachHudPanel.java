@@ -1,9 +1,9 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.reach.hud;
 
 import cc.fascinated.fascinatedutils.common.Colors;
-import cc.fascinated.fascinatedutils.systems.modules.impl.reach.ReachWidget;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.modules.impl.reach.ReachWidget;
 
 import java.util.List;
 import java.util.Locale;

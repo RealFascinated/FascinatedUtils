@@ -50,15 +50,13 @@ public class FShellTabStripWidget extends FWidget {
         trackX = layoutX + (layoutWidth - trackWidth) * 0.5f;
         trackY = layoutY + Math.max(0f, (layoutHeight - trackHeight) * 0.5f);
 
-        float segmentHeight = trackHeight;
-        float modulesSegmentX = trackX;
-        float settingsSegmentX = modulesSegmentX + modulesSegW + segmentGap;
+        float settingsSegmentX = trackX + modulesSegW + segmentGap;
 
         float cornerRadius = Math.max(0.5f, Math.min(ModSettingsTheme.SHELL_TAB_STRIP_SEGMENT_CORNER_RADIUS, trackHeight * 0.5f - 0.5f));
         modulesSegment.setShellSegmentFillet(cornerRadius, RectCornerRoundMask.ALL);
         settingsSegment.setShellSegmentFillet(cornerRadius, RectCornerRoundMask.ALL);
-        modulesSegment.layout(measure, modulesSegmentX, trackY, modulesSegW, segmentHeight);
-        settingsSegment.layout(measure, settingsSegmentX, trackY, settingsSegW, segmentHeight);
+        modulesSegment.layout(measure, trackX, trackY, modulesSegW, trackHeight);
+        settingsSegment.layout(measure, settingsSegmentX, trackY, settingsSegW, trackHeight);
     }
 
     @Override

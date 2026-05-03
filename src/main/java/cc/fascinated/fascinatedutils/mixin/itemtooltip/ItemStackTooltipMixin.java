@@ -2,16 +2,11 @@ package cc.fascinated.fascinatedutils.mixin.itemtooltip;
 
 import cc.fascinated.fascinatedutils.caches.ItemStackSizeCache;
 import cc.fascinated.fascinatedutils.common.ByteFormatterUtil;
-import cc.fascinated.fascinatedutils.common.LRUCache;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.ItemTooltipModule;
-import io.netty.buffer.Unpooled;
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;

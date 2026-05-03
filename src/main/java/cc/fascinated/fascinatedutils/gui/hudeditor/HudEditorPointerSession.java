@@ -192,13 +192,11 @@ public class HudEditorPointerSession {
             return true;
         }
         if (dragging != null) {
-            float canvasWidth = editorCanvasWidth;
-            float canvasHeight = editorCanvasHeight;
             float rawX = pointerX - dragOffsetX;
             float rawY = pointerY - dragOffsetY;
             float widgetWidth = dragging.getScaledWidth();
             float widgetHeight = dragging.getScaledHeight();
-            HUDEditorSnap.SnapResult snapped = HUDEditorSnap.snapTopLeft(rawX, rawY, widgetWidth, widgetHeight, canvasWidth, canvasHeight, HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets()), dragging);
+            HUDEditorSnap.SnapResult snapped = HUDEditorSnap.snapTopLeft(rawX, rawY, widgetWidth, widgetHeight, editorCanvasWidth, editorCanvasHeight, HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets()), dragging);
             dragging.getHudState().setPositionX(snapped.snappedLeft());
             dragging.getHudState().setPositionY(snapped.snappedTop());
             snapGuideX = snapped.hasVerticalGuide() ? snapped.verticalGuideX() : Float.NaN;
@@ -224,28 +222,24 @@ public class HudEditorPointerSession {
             scalingWidget = null;
             clearSnapGuides();
             widget.getHudState().setScale(HudEditorChrome.snapScaleNearUnity(widget.getHudState().getScale()));
-            float canvasWidth = editorCanvasWidth;
-            float canvasHeight = editorCanvasHeight;
-            float maxX = Math.max(0f, canvasWidth - widget.getScaledWidth());
-            float maxY = Math.max(0f, canvasHeight - widget.getScaledHeight());
+            float maxX = Math.max(0f, editorCanvasWidth - widget.getScaledWidth());
+            float maxY = Math.max(0f, editorCanvasHeight - widget.getScaledHeight());
             widget.getHudState().setPositionX(Mth.clamp(widget.getHudState().getPositionX(), 0f, maxX));
             widget.getHudState().setPositionY(Mth.clamp(widget.getHudState().getPositionY(), 0f, maxY));
-            widget.captureNearestHudAnchorFromPosition(canvasWidth, canvasHeight);
-            widget.applyHudAnchorToPosition(canvasWidth, canvasHeight);
+            widget.captureNearestHudAnchorFromPosition(editorCanvasWidth, editorCanvasHeight);
+            widget.applyHudAnchorToPosition(editorCanvasWidth, editorCanvasHeight);
             return true;
         }
         if (dragging != null) {
             HudPanel widget = dragging;
             dragging = null;
             clearSnapGuides();
-            float canvasWidth = editorCanvasWidth;
-            float canvasHeight = editorCanvasHeight;
-            float maxX = Math.max(0f, canvasWidth - widget.getScaledWidth());
-            float maxY = Math.max(0f, canvasHeight - widget.getScaledHeight());
+            float maxX = Math.max(0f, editorCanvasWidth - widget.getScaledWidth());
+            float maxY = Math.max(0f, editorCanvasHeight - widget.getScaledHeight());
             widget.getHudState().setPositionX(Mth.clamp(widget.getHudState().getPositionX(), 0f, maxX));
             widget.getHudState().setPositionY(Mth.clamp(widget.getHudState().getPositionY(), 0f, maxY));
-            widget.captureNearestHudAnchorFromPosition(canvasWidth, canvasHeight);
-            widget.applyHudAnchorToPosition(canvasWidth, canvasHeight);
+            widget.captureNearestHudAnchorFromPosition(editorCanvasWidth, editorCanvasHeight);
+            widget.applyHudAnchorToPosition(editorCanvasWidth, editorCanvasHeight);
             return true;
         }
         return delegateSuper.getAsBoolean();
@@ -286,8 +280,6 @@ public class HudEditorPointerSession {
         if (selected != null && (event.key() == GLFW.GLFW_KEY_LEFT || event.key() == GLFW.GLFW_KEY_RIGHT || event.key() == GLFW.GLFW_KEY_UP || event.key() == GLFW.GLFW_KEY_DOWN)) {
             boolean isShiftPressed = (event.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0;
             float nudgeDistance = isShiftPressed ? 5f : 1f;
-            float canvasWidth = editorCanvasWidth;
-            float canvasHeight = editorCanvasHeight;
 
             float newX = selected.getHudState().getPositionX();
             float newY = selected.getHudState().getPositionY();
@@ -299,12 +291,12 @@ public class HudEditorPointerSession {
                 case GLFW.GLFW_KEY_DOWN -> newY += nudgeDistance;
             }
 
-            newX = Mth.clamp(newX, 0f, Math.max(0f, canvasWidth - selected.getScaledWidth()));
-            newY = Mth.clamp(newY, 0f, Math.max(0f, canvasHeight - selected.getScaledHeight()));
+            newX = Mth.clamp(newX, 0f, Math.max(0f, editorCanvasWidth - selected.getScaledWidth()));
+            newY = Mth.clamp(newY, 0f, Math.max(0f, editorCanvasHeight - selected.getScaledHeight()));
 
             selected.getHudState().setPositionX(newX);
             selected.getHudState().setPositionY(newY);
-            selected.captureNearestHudAnchorFromPosition(canvasWidth, canvasHeight);
+            selected.captureNearestHudAnchorFromPosition(editorCanvasWidth, editorCanvasHeight);
             return true;
         }
 

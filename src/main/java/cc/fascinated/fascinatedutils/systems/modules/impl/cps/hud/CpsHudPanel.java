@@ -2,9 +2,9 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.cps.hud;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.gui.input.MouseClickRateTracker;
-import cc.fascinated.fascinatedutils.systems.modules.impl.cps.CpsWidget;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.modules.impl.cps.CpsWidget;
 
 import java.util.List;
 

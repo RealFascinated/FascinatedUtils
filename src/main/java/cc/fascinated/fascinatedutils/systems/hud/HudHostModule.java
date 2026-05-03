@@ -13,11 +13,8 @@ import cc.fascinated.fascinatedutils.systems.modules.ModuleDefaults;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 public abstract class HudHostModule extends Module {
     public static final float UTILITY_WIDGET_MIN_WIDTH = 90f;

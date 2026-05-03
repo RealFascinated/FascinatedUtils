@@ -3,10 +3,10 @@ package cc.fascinated.fascinatedutils.gui.widgets.settings;
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
+import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.hooks.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
-import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.theme.Icons;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
@@ -153,12 +153,11 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
         float toggleH = SettingsUiMetrics.BOOLEAN_TOGGLE_OUTER_H;
         float titleRowHeight = Math.max(ModSettingsTheme.shellDesignBodyLineHeight(), toggleH);
         float titleOriginY = titleRowTop(innerHeight, padY, titleRowHeight);
-        float labelX = bodyLeft;
-        float labelMaxWidth = Math.max(0f, toggle[0] - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - labelX);
+        float labelMaxWidth = Math.max(0f, toggle[0] - SettingsUiMetrics.SETTING_VALUE_CONTROL_GAP - bodyLeft);
         label = TextLineLayout.ellipsize(label, labelMaxWidth, segment -> graphics.measureTextWidth(segment, false));
         float labelY = titleOriginY + Math.max(0f, (toggleH - graphics.getFontCapHeight()) * 0.5f);
         int labelColor = locked ? graphics.theme().textMuted() : graphics.theme().textPrimary();
-        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(labelColor) + ">" + label + "</color>", labelX, labelY, false);
+        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(labelColor) + ">" + label + "</color>", bodyLeft, labelY, false);
         float progress = Mth.clamp(toggleProgressAnim.value(), 0f, 1f);
         boolean isHoveredToggle = rectContains(toggle, mouseX, mouseY);
         float[] resetSquare = inlineResetSquare();
@@ -173,8 +172,7 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
         }
         float borderThickness = 1f;
         float maxTrackCornerRadius = Math.max(0.5f, Math.min(toggleH * 0.5f - borderThickness * 0.5f, toggleW * 0.5f - borderThickness * 0.5f));
-        float trackCornerRadius = maxTrackCornerRadius;
-        graphics.fillRoundedRectFrame(toggle[0], titleOriginY, toggleW, toggleH, trackCornerRadius, trackBorder, trackFill, borderThickness, borderThickness, RectCornerRoundMask.ALL);
+        graphics.fillRoundedRectFrame(toggle[0], titleOriginY, toggleW, toggleH, maxTrackCornerRadius, trackBorder, trackFill, borderThickness, borderThickness, RectCornerRoundMask.ALL);
         float knobSize = toggleH - 4f;
         float knobTravelLeft = toggle[0] + 2f;
         float knobTravelRight = toggle[0] + toggleW - knobSize - 2f;

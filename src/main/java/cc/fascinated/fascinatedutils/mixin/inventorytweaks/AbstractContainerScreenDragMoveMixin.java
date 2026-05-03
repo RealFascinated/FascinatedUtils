@@ -100,9 +100,8 @@ public abstract class AbstractContainerScreenDragMoveMixin {
         }
         int slotId = menu.slots.indexOf(hoveredSlot);
         if (slotId >= 0) {
-            Slot slot = hoveredSlot;
             boolean visited = featureOpt.map(feature -> feature.tryVisitSlot(
-                    slot, slotId, fascinatedutils$visitedSlots, this::slotClicked)).orElse(false);
+                    hoveredSlot, slotId, fascinatedutils$visitedSlots, this::slotClicked)).orElse(false);
             if (visited) {
                 fascinatedutils$didDrag = true;
             }
@@ -153,9 +152,8 @@ public abstract class AbstractContainerScreenDragMoveMixin {
         }
         fascinatedutils$scrollAccumulator -= ticks;
 
-        Slot slot = hoveredSlot;
         featureOpt.ifPresent(feature -> feature.scroll(
-                ticks, slot, menu, this::slotClicked));
+                ticks, hoveredSlot, menu, this::slotClicked));
 
         cir.setReturnValue(true);
         cir.cancel();

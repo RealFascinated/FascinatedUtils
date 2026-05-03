@@ -75,9 +75,8 @@ public class AvatarTextureCache {
             }
             NativeImage image = NativeImage.read(response.body());
             Identifier identifier = Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, "avatar/" + uuid);
-            NativeImage finalImage = image;
             Minecraft.getInstance().execute(() -> {
-                DynamicTexture texture = new DynamicTexture(identifier::toString, finalImage);
+                DynamicTexture texture = new DynamicTexture(identifier::toString, image);
                 texture.upload();
                 Minecraft.getInstance().getTextureManager().register(identifier, texture);
                 loaded.put(uuid, identifier);

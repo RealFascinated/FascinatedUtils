@@ -4,12 +4,12 @@ import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.config.ConfigVersion;
-import cc.fascinated.fascinatedutils.systems.modules.impl.armor.hud.ArmorHudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
+import cc.fascinated.fascinatedutils.systems.modules.impl.armor.hud.ArmorHudPanel;
 
 @ConfigVersion(2)
 public class ArmorModule extends HudHostModule {

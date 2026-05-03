@@ -72,16 +72,14 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
     }
 
     public boolean isLocked() {
-        Supplier<Boolean> lockState = locked;
-        return lockState != null && Boolean.TRUE.equals(lockState.get());
+        return locked != null && Boolean.TRUE.equals(locked.get());
     }
 
     public @Nullable String getLockedReasonText() {
-        Supplier<String> reasonSupplier = lockedReason;
-        if (reasonSupplier == null) {
+        if (lockedReason == null) {
             return null;
         }
-        String reason = reasonSupplier.get();
+        String reason = lockedReason.get();
         return reason == null || reason.isBlank() ? null : reason;
     }
 

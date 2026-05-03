@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.renderer;
 
 import cc.fascinated.fascinatedutils.FascinatedUtils;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.api.v0.IrisProgram;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -9,7 +10,6 @@ import net.minecraft.client.renderer.rendertype.LayeringTransform;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
-import net.fabricmc.loader.api.FabricLoader;
 
 public class FascinatedWorldRenderTypes {
 

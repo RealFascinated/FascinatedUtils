@@ -6,7 +6,6 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.systems.config.impl.config.ConfigRepository;
 import cc.fascinated.fascinatedutils.systems.config.impl.config.FascinatedConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.profiles.ProfileRepository;
-import cc.fascinated.fascinatedutils.systems.config.impl.settings.UIStateRepository;
 import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.WaypointRepository;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -21,7 +20,6 @@ public class ModConfig {
 
     private final ProfileRepository profileRepository;
     private final ConfigRepository configRepository;
-    private final UIStateRepository uiStateRepository;
     private final WaypointRepository waypointRepository;
 
     private ModConfig() {
@@ -37,7 +35,6 @@ public class ModConfig {
         }
 
         configRepository = new ConfigRepository(configManager);
-        uiStateRepository = new UIStateRepository(configManager);
 
         waypointRepository = new WaypointRepository(getDirectory().resolve("waypoints.json"), GSON);
         waypointRepository.refreshCache();
@@ -57,10 +54,6 @@ public class ModConfig {
 
     public static ConfigRepository config() {
         return INSTANCE.configRepository;
-    }
-
-    public static UIStateRepository uiState() {
-        return INSTANCE.uiStateRepository;
     }
 
     public static WaypointRepository waypoints() {

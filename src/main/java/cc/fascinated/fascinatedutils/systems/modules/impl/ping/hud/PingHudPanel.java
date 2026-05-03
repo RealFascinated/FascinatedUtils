@@ -3,9 +3,9 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.ping.hud;
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.PingColors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.systems.modules.impl.ping.PingWidget;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.modules.impl.ping.PingWidget;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;

@@ -4,11 +4,11 @@ import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
-import cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.hud.ScoreboardHudPanel;
-import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
+import cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.hud.ScoreboardHudPanel;
 
 public class ScoreboardModule extends HudHostModule {
 

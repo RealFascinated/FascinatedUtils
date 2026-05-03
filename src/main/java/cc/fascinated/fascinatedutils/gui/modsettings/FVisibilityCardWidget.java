@@ -27,12 +27,9 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     private static final int ACTION_STRIP_COUNT = 2;
     private static final Map<Object, AnimHandle> TOGGLE_ANIM_CACHE = new IdentityHashMap<>();
     public static float stackedCellOuterHeightPx() {
-        float titleTopPad = TITLE_PAD_TOP_DESIGN;
-        float titleBottomPad = TITLE_PAD_BOTTOM_DESIGN;
-        float buttonBand = ACTION_STRIP_HEIGHT_DESIGN;
         float lineHeight = Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());
         float titleBlock = TITLE_MAX_LINES * lineHeight;
-        return titleTopPad + titleBlock + titleBottomPad + ACTION_STRIP_COUNT * buttonBand;
+        return TITLE_PAD_TOP_DESIGN + titleBlock + TITLE_PAD_BOTTOM_DESIGN + ACTION_STRIP_COUNT * ACTION_STRIP_HEIGHT_DESIGN;
     }
     private static boolean pointerInStrip(float[] strip, float pointerX, float pointerY) {
         return pointerX >= strip[0] && pointerY >= strip[1] && pointerX < strip[0] + strip[2] && pointerY < strip[1] + strip[3];
@@ -121,21 +118,18 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
         float corner = graphics.theme().cardCornerRadius();
         graphics.fillThemedSurfaceCardFrame(x(), y(), w(), h(), corner, RectCornerRoundMask.ALL);
-        float titleTopPad = TITLE_PAD_TOP_DESIGN;
-        float titleBottomPad = TITLE_PAD_BOTTOM_DESIGN;
         float[] settingsStrip = settingsStripBounds();
         float[] toggleStrip = toggleStripBounds();
-        float titleRegionBottom = settingsStrip[1] - titleBottomPad;
-        float titleTop = y() + titleTopPad;
+        float titleRegionBottom = settingsStrip[1] - TITLE_PAD_BOTTOM_DESIGN;
+        float titleTop = y() + TITLE_PAD_TOP_DESIGN;
         float titleRegionHeight = Math.max(0f, titleRegionBottom - titleTop);
         String title = titleSupplier.get();
-        float innerWidth = Math.max(0f, w() - 2f * titleTopPad);
-        float wrapBudget = innerWidth;
-        java.util.List<String> lines = TextLineLayout.wrapLines(title, wrapBudget, segment -> graphics.measureTextWidth(segment, false));
+        float innerWidth = Math.max(0f, w() - 2f * TITLE_PAD_TOP_DESIGN);
+        java.util.List<String> lines = TextLineLayout.wrapLines(title, innerWidth, segment -> graphics.measureTextWidth(segment, false));
         float lineHeight = TextLayoutMetrics.layoutLineHeightPx(graphics);
         int lineCount = Math.min(TITLE_MAX_LINES, lines.size());
         float textBlockHeight = lineCount * lineHeight;
-        float innerLeft = x() + titleTopPad;
+        float innerLeft = x() + TITLE_PAD_TOP_DESIGN;
         float cursorY = titleTop + Math.max(0f, (titleRegionHeight - textBlockHeight) * 0.5f);
         for (int lineIndex = 0; lineIndex < lineCount; lineIndex++) {
             String line = lines.get(lineIndex);

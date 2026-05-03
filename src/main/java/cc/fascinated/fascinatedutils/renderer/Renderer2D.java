@@ -304,7 +304,6 @@ public class Renderer2D {
      * @param bold      whether bold styling is applied
      */
     public void drawTextImmediate(String text, float positionX, float positionY, int color, boolean shadow, boolean bold) {
-        int argb = color;
         float sx = shellScaleX();
         float sy = shellScaleY();
         Matrix3x2fStack matrices = graphics.pose();
@@ -315,10 +314,10 @@ public class Renderer2D {
             matrices.translate(originX, originY);
             matrices.scale(sx, sy);
             if (!bold) {
-                guiTextRenderer.drawString(graphics, text, 0, 0, argb, shadow);
+                guiTextRenderer.drawString(graphics, text, 0, 0, color, shadow);
             }
             else {
-                guiTextRenderer.drawText(graphics, styledLiteral(text, true), 0, 0, argb, shadow);
+                guiTextRenderer.drawText(graphics, styledLiteral(text, true), 0, 0, color, shadow);
             }
             matrices.popMatrix();
         }
@@ -326,10 +325,10 @@ public class Renderer2D {
             int originX = Mth.floor(positionX);
             int originY = Math.round(positionY);
             if (!bold) {
-                guiTextRenderer.drawString(graphics, text, originX, originY, argb, shadow);
+                guiTextRenderer.drawString(graphics, text, originX, originY, color, shadow);
             }
             else {
-                guiTextRenderer.drawText(graphics, styledLiteral(text, true), originX, originY, argb, shadow);
+                guiTextRenderer.drawText(graphics, styledLiteral(text, true), originX, originY, color, shadow);
             }
         }
     }

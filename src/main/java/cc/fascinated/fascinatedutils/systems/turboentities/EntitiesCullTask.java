@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.turboentities;
+package cc.fascinated.fascinatedutils.systems.turboentities;
 
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
@@ -150,11 +150,10 @@ public class EntitiesCullTask implements Runnable {
     }
 
     private void cullEntities() {
-        List<Entity> entities = entityCullSnapshot;
         int considered = 0;
         int culled = 0;
 
-        for (Entity entity : entities) {
+        for (Entity entity : entityCullSnapshot) {
             if (entity == null) {
                 break;
             }
@@ -191,11 +190,10 @@ public class EntitiesCullTask implements Runnable {
     }
 
     private void cullBlockEntities() {
-        Map<BlockPos, BlockEntity> snapshot = blockEntityCullSnapshot;
         int considered = 0;
         int culled = 0;
 
-        for (BlockEntity blockEntity : snapshot.values()) {
+        for (BlockEntity blockEntity : blockEntityCullSnapshot.values()) {
             try {
                 if (!(blockEntity instanceof Cullable cullable)) {
                     continue;
@@ -235,8 +233,7 @@ public class EntitiesCullTask implements Runnable {
             return true;
         }
 
-        Frustum currentFrustum = frustum;
-        if (currentFrustum != null && !currentFrustum.isVisible(box)) {
+        if (frustum != null && !frustum.isVisible(box)) {
             return false;
         }
 

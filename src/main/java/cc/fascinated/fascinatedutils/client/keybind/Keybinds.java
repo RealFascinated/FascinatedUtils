@@ -3,8 +3,8 @@ package cc.fascinated.fascinatedutils.client.keybind;
 import cc.fascinated.fascinatedutils.gui.screens.SocialScreen;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.lwjgl.glfw.GLFW;
 

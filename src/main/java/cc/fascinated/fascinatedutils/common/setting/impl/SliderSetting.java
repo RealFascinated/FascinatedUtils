@@ -55,9 +55,8 @@ public class SliderSetting extends Setting<Number> {
      * {@link NumberUtils#formatCompactByStep(float, float)} with a multiplier suffix.
      */
     public String formatValueForDisplay() {
-        Function<Number, String> formatter = valueFormatter;
-        if (formatter != null) {
-            return formatter.apply(getValue());
+        if (valueFormatter != null) {
+            return valueFormatter.apply(getValue());
         }
         return NumberUtils.formatCompactByStep(getValue().floatValue(), step) + "×";
     }
