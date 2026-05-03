@@ -19,6 +19,7 @@ import cc.fascinated.fascinatedutils.systems.modules.impl.fps.FpsWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.hypixel.HypixelModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.memory.MemoryWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.movement.MovementModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.music.MusicModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.ping.PingWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.reach.ReachWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.ScoreboardModule;
@@ -92,6 +93,7 @@ public class ModuleRegistry {
         modules.add(new ItemTooltipModule());
         modules.add(new WaypointsModule());
         modules.add(new WorldSizeModule());
+        modules.add(new MusicModule());
 
         for (Module module : modules) {
             FascinatedEventBus.INSTANCE.subscribe(module);
