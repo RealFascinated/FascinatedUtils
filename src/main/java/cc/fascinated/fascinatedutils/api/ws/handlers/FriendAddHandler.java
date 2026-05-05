@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.api.ws.handlers;
 
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.friend.json.FriendEntryDTO;
 import cc.fascinated.fascinatedutils.api.ws.GatewayHandler;
@@ -12,7 +13,7 @@ public class FriendAddHandler implements GatewayHandler {
 
     @Override
     public void handle(Consumer<OutboundMessage> send, JsonElement data) {
-        FriendEntryDTO entry = Alumite.INSTANCE.getGsonForDTO().fromJson(data, FriendEntryDTO.class);
+        FriendEntryDTO entry = Constants.GSON.fromJson(data, FriendEntryDTO.class);
         Alumite.INSTANCE.users().onFriendAdd(entry);
     }
 }

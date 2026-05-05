@@ -369,7 +369,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 int borderColor = preferredPresenceMenuOpen.get() ? 0xFF6E7897 : containsPoint(mouseX, mouseY) && interactive ? 0xFF59617A : 0xFF454A60;
                 graphics.fillRoundedRectFrame(x(), y(), w(), h(), 6f, borderColor, fillColor, 1f, 1f, RectCornerRoundMask.ALL);
 
-                Presence presence = displayedPreferredPresence();
+                Presence presence = Alumite.INSTANCE.users().selfUser().preferredPresence();
                 float dotX = x() + 8f;
                 float dotY = y() + (h() - PRESENCE_PICKER_DOT) / 2f;
                 graphics.fillRoundedRect(dotX, dotY, PRESENCE_PICKER_DOT, PRESENCE_PICKER_DOT, PRESENCE_PICKER_DOT / 2f, presence.color(), RectCornerRoundMask.ALL);
@@ -479,7 +479,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
 
                 float checkmarkWidth = graphics.measureTextWidth("\u2713", false);
                 float rowY = y() + PRESENCE_MENU_PAD;
-                Presence currentPresence = displayedPreferredPresence();
+                Presence currentPresence = Alumite.INSTANCE.users().selfUser().preferredPresence();
                 for (Presence presence : SELECTABLE_PREFERRED_PRESENCES) {
                     boolean rowHovered = mouseX >= x() + 4f && mouseX < x() + w() - 4f && mouseY >= rowY && mouseY < rowY + PRESENCE_MENU_ROW_H;
                     boolean selected = currentPresence == presence;
@@ -734,12 +734,8 @@ public class SocialMainWorkspaceComponent extends FWidget {
         };
     }
 
-    private Presence displayedPreferredPresence() {
-        return Alumite.INSTANCE.currentPreferredPresence();
-    }
-
     private void updatePreferredPresence(Presence presence) {
-        Presence currentPresence = displayedPreferredPresence();
+        Presence currentPresence = Alumite.INSTANCE.users().selfUser().preferredPresence();
         preferredPresenceMenuOpen.set(false);
         if (currentPresence == presence) {
             return;
@@ -752,8 +748,6 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 Alumite.INSTANCE.updatePreferredPresence(presence);
             } catch (AlumiteApiException exception) {
                 Toast.show().message(SocialErrors.message(exception)).error();
-            } catch (Exception exception) {
-                Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
             }
 
             Minecraft.getInstance().execute(() -> preferredPresenceUpdatePending.set(false));

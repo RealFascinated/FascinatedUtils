@@ -137,7 +137,7 @@ class SocialChatMessagesHandler {
     }
 
     private FWidget buildMessageRow(ChannelMessage message, float width, String selectedChannelId) {
-        boolean own = Objects.equals(Alumite.INSTANCE.activeUserId(), message.authorId());
+        boolean own = Objects.equals(Alumite.INSTANCE.users().selfUser().user().id(), message.authorId());
         boolean isEditing = editingMessage != null && editingMessage.id().equals(message.id());
         BiConsumer<Float, Float> onContextMenu = own && !isEditing ? (mx, my) -> {
             contextMenuMessage = message;

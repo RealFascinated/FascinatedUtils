@@ -9,6 +9,7 @@ import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestDTO;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteHttpClient;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteModelMapper;
 import cc.fascinated.fascinatedutils.api.user.json.PublicUserDTO;
+import cc.fascinated.fascinatedutils.api.user.json.UserDTO;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendAddEvent;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendRemoveEvent;
@@ -44,7 +45,7 @@ public class AlumiteUsers {
     private volatile List<PendingFriendRequest> outgoingFriendRequests = List.of();
 
     @Getter
-    private volatile User selfUser;
+    private volatile SelfUser selfUser;
 
     public void clearSessionCaches() {
         usersById.clear();
@@ -54,8 +55,16 @@ public class AlumiteUsers {
         selfUser = null;
     }
 
-    public void setSelfUser(PublicUserDTO dto) {
-        selfUser = dto == null ? null : upsertUser(dto);
+    public void setSelfUser(UserDTO dto) {
+        selfUser = dto == null ? null : new SelfUser(alumite, AlumiteModelMapper.toUser(new PublicUserDTO(
+                dto.id(),
+                dto.minecraftUuid(),
+                dto.minecraftName(),
+                dto.role(),
+                dto.status(),
+                dto.presence(),
+                dto.lastSeen())
+        ), dto.preferredPresence());
     }
 
     public User cachedUser(String userId) {
@@ -79,16 +88,8 @@ public class AlumiteUsers {
         return upsertUser(dto);
     }
 
-    public SelfUser self() {
-        return new SelfUser(alumite);
-    }
-
     public void replaceSocialFromNetwork(List<FriendEntryDTO> friendsDto, List<PendingFriendRequestDTO> incomingDto, List<PendingFriendRequestDTO> outgoingDto) {
-        User activeSelfUser = selfUser;
         usersById.clear();
-        if (activeSelfUser != null) {
-            usersById.put(activeSelfUser.id(), activeSelfUser);
-        }
         friends = friendsDto == null ? List.of() : friendsDto.stream().map(this::toFriend).toList();
         incomingFriendRequests = incomingDto == null ? List.of() : incomingDto.stream().map(this::toPendingFriendRequest).toList();
         outgoingFriendRequests = outgoingDto == null ? List.of() : outgoingDto.stream().map(this::toPendingFriendRequest).toList();
@@ -107,13 +108,6 @@ public class AlumiteUsers {
                 return incomingUser;
             }
             existingUser.mergeFrom(incomingUser);
-            return existingUser;
-        });
-    }
-
-    public void mergePresenceUpdate(String userId, Presence status) {
-        usersById.computeIfPresent(userId, (_, existingUser) -> {
-            existingUser.setPresence(status);
             return existingUser;
         });
     }

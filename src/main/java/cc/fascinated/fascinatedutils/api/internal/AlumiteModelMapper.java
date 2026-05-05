@@ -9,9 +9,6 @@ import java.util.List;
 
 public class AlumiteModelMapper {
 
-    private AlumiteModelMapper() {
-    }
-
     public static User toUser(PublicUserDTO dto) {
         if (dto == null) {
             return null;

@@ -12,15 +12,13 @@ import cc.fascinated.fascinatedutils.api.friend.json.SendFriendRequestBodyDTO;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteHttpClient;
 import cc.fascinated.fascinatedutils.api.user.AlumiteUsers;
 import cc.fascinated.fascinatedutils.api.user.Presence;
-import cc.fascinated.fascinatedutils.api.user.json.PublicUserDTO;
 import cc.fascinated.fascinatedutils.api.user.json.UpdatePresenceBodyDTO;
-import cc.fascinated.fascinatedutils.api.user.json.UserMeDTO;
+import cc.fascinated.fascinatedutils.api.user.json.UserDTO;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.AlumiteAuthenticatedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
-import com.google.gson.Gson;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import meteordevelopment.orbit.EventHandler;
@@ -60,9 +58,7 @@ public class Alumite {
     @Getter
     private volatile String activeAccessToken;
     private volatile String activeRefreshToken;
-    @Getter
-    private volatile String activeUserId;
-    private volatile Presence activePreferredPresence = Presence.ONLINE;
+
     private volatile ScheduledFuture<?> tokenRefreshTask;
 
     private Alumite() {
@@ -72,38 +68,8 @@ public class Alumite {
         this.channels = new AlumiteChannels(this, http, users);
     }
 
-    private static Presence normalizePreferredPresence(Presence presence) {
-        if (presence == null || presence == Presence.OFFLINE) {
-            return Presence.ONLINE;
-        }
-        return presence;
-    }
-
-    private static PublicUserDTO toPublicDTO(UserMeDTO user) {
-        return new PublicUserDTO(user.id(), user.minecraftUuid(), user.minecraftName(), user.role(), user.status(), user.presence(), user.lastSeen());
-    }
-
-    public Gson getGsonForDTO() {
-        return Constants.GSON;
-    }
-
-    @EventHandler
-    private void fascinatedutils$onClientStarted(ClientStartedEvent event) {
-        FascinatedUtils.SCHEDULED_POOL.execute(() -> authenticate(event.minecraftClient()));
-    }
-
-    @EventHandler
-    private void fascinatedutils$onClientStopping(ClientStoppingEvent event) {
-        gateway.disconnect();
-    }
-
     private void authenticate(Minecraft minecraftClient) {
-        String nextAccountKey = minecraftClient.getUser().getProfileId().toString();
-        if (activeAccountKey == null || !activeAccountKey.equals(nextAccountKey)) {
-            activePreferredPresence = Presence.ONLINE;
-            activeUserId = null;
-        }
-        activeAccountKey = nextAccountKey;
+        activeAccountKey = minecraftClient.getUser().getProfileId().toString();
 
         String storedRefresh = tokenStore.load(activeAccountKey);
         if (storedRefresh != null && tryRefresh(activeAccountKey, storedRefresh)) {
@@ -136,18 +102,13 @@ public class Alumite {
         } catch (Exception exception) {
             activeAccessToken = null;
             activeRefreshToken = null;
-            activeUserId = null;
-            activePreferredPresence = Presence.ONLINE;
             Client.LOG.warn("[Alumite] Refresh failed: {}", exception.getMessage());
             return false;
         }
     }
 
     private void restoreActiveUserContext() {
-        UserMeDTO currentUser = http.getObject(ROUTE_USERS + "/@me", UserMeDTO.class, "get current user", "Failed to load current user.");
-        activeUserId = currentUser.id();
-        activePreferredPresence = normalizePreferredPresence(currentUser.preferredPresence());
-        users.setSelfUser(toPublicDTO(currentUser));
+        users.setSelfUser(http.getObject(ROUTE_USERS + "/@me", UserDTO.class, "get current user", "Failed to load current user."));
     }
 
     private void performFullLogin(Minecraft minecraftClient) {
@@ -172,9 +133,7 @@ public class Alumite {
             VerifyResponseDTO result = Constants.GSON.fromJson(verifyResponse.body(), VerifyResponseDTO.class);
             activeAccessToken = result.accessToken();
             activeRefreshToken = result.refreshToken();
-            activeUserId = result.user().id();
-            activePreferredPresence = normalizePreferredPresence(result.user().preferredPresence());
-            users.setSelfUser(toPublicDTO(result.user()));
+            users.setSelfUser(result.user());
             storeSession(activeAccountKey, result.refreshToken());
             scheduleTokenRefresh(result.accessExpiresAt());
             Client.LOG.info("[Alumite] Authenticated as {}", result.user().minecraftName());
@@ -210,7 +169,6 @@ public class Alumite {
         String currentRefresh = activeRefreshToken;
         activeAccessToken = null;
         activeRefreshToken = null;
-        activeUserId = null;
         FascinatedUtils.SCHEDULED_POOL.execute(() -> {
             if (currentRefresh != null && tryRefresh(activeAccountKey, currentRefresh)) {
                 gateway.connect();
@@ -233,11 +191,6 @@ public class Alumite {
         tokenStore.save(accountKey, newRefreshToken);
     }
 
-    @EventHandler
-    private void fascinatedutils$onAuthenticated(AlumiteAuthenticatedEvent event) {
-        FascinatedUtils.SCHEDULED_POOL.execute(this::refreshSocialCaches);
-    }
-
     private void refreshSocialCaches() {
         Client.LOG.info("[Alumite] Fetching channels and social data...");
         try {
@@ -252,20 +205,15 @@ public class Alumite {
         }
     }
 
-    public Presence currentPreferredPresence() {
-        return normalizePreferredPresence(activePreferredPresence);
-    }
-
     public void updatePreferredPresence(Presence presence) throws AlumiteApiException {
-        Presence resolvedPresence = normalizePreferredPresence(presence);
         if (presence == null) {
             throw new IllegalArgumentException("Preferred presence is required.");
         }
         if (presence == Presence.OFFLINE) {
             throw new IllegalArgumentException("Preferred presence cannot be offline.");
         }
-        http.sendAuthorizedChecked("PATCH", ROUTE_PRESENCE, Constants.GSON.toJson(new UpdatePresenceBodyDTO(resolvedPresence)), "update preferred presence", "Failed to update preferred presence.");
-        activePreferredPresence = resolvedPresence;
+        http.sendAuthorizedChecked("PATCH", ROUTE_PRESENCE, Constants.GSON.toJson(new UpdatePresenceBodyDTO(presence)), "update preferred presence", "Failed to update preferred presence.");
+        users().selfUser().preferredPresence(presence);
     }
 
     public PendingFriendRequest sendFriendRequest(String targetUsername) throws AlumiteApiException {
@@ -289,5 +237,20 @@ public class Alumite {
 
     public void removeFriend(String userId) throws AlumiteApiException {
         http.sendAuthorizedChecked("DELETE", ROUTE_FRIENDS + "/" + userId, null, "remove friend", "Failed to remove friend.");
+    }
+
+    @EventHandler
+    private void fascinatedutils$onClientStarted(ClientStartedEvent event) {
+        FascinatedUtils.SCHEDULED_POOL.execute(() -> authenticate(event.minecraftClient()));
+    }
+
+    @EventHandler
+    private void fascinatedutils$onClientStopping(ClientStoppingEvent event) {
+        gateway.disconnect();
+    }
+
+    @EventHandler
+    private void fascinatedutils$onAuthenticated(AlumiteAuthenticatedEvent event) {
+        FascinatedUtils.SCHEDULED_POOL.execute(this::refreshSocialCaches);
     }
 }

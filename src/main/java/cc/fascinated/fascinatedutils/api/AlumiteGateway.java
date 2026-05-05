@@ -52,10 +52,9 @@ class AlumiteGateway implements WebSocket.Listener {
         handlers.put(GatewayOpcode.FRIEND_REMOVE, new FriendRemoveHandler());
         handlers.put(GatewayOpcode.FRIEND_REQUEST_INCOMING, new FriendRequestIncomingHandler());
         handlers.put(GatewayOpcode.FRIEND_REQUEST_REMOVED, new FriendRequestRemovedHandler());
-        handlers.put(GatewayOpcode.PRESENCE_UPDATE, new PresenceUpdateHandler());
+        handlers.put(GatewayOpcode.USER_UPDATE, new UserUpdateHandler());
         handlers.put(GatewayOpcode.CHANNEL_CREATE, new ChannelCreateHandler());
         handlers.put(GatewayOpcode.CHANNEL_REMOVE, new ChannelRemoveHandler());
-        handlers.put(GatewayOpcode.USER_UPDATE, new UserUpdateHandler());
         handlers.put(GatewayOpcode.MESSAGE_CREATE, new MessageCreateHandler());
         handlers.put(GatewayOpcode.MESSAGE_UPDATE, new MessageUpdateHandler());
         handlers.put(GatewayOpcode.MESSAGE_DELETE, new MessageDeleteHandler());

@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.api.channel;
 
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.json.*;
@@ -67,7 +68,7 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
     }
 
     public void markRead(String lastReadMessageId) throws AlumiteApiException {
-        alumite.http().sendAuthorizedChecked("PATCH", route() + "/read", alumite.getGsonForDTO().toJson(new UpdateReadStateBodyDTO(lastReadMessageId)), "update read state", "Failed to update channel read state.");
+        alumite.http().sendAuthorizedChecked("PATCH", route() + "/read", Constants.GSON.toJson(new UpdateReadStateBodyDTO(lastReadMessageId)), "update read state", "Failed to update channel read state.");
         alumite.channels().cacheReadState(channelId, lastReadMessageId);
     }
 

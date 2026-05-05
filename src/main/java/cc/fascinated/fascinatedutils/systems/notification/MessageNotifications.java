@@ -14,11 +14,11 @@ import java.util.Objects;
 public class MessageNotifications {
     @EventHandler
     public void onMessageCreate(ChannelMessageCreateEvent event) {
-        if (Alumite.INSTANCE.currentPreferredPresence() == Presence.DO_NOT_DISTURB) {
+        if (Alumite.INSTANCE.users().selfUser().preferredPresence() == Presence.DO_NOT_DISTURB) {
             return;
         }
         String authorId = event.message().authorId();
-        if (Objects.equals(Alumite.INSTANCE.activeUserId(), authorId)) {
+        if (Objects.equals(Alumite.INSTANCE.users().selfUser().user().id(), authorId)) {
             return;
         }
         User user = Alumite.INSTANCE.users().cachedUser(authorId);
