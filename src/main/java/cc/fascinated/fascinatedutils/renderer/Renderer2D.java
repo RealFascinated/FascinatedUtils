@@ -18,8 +18,8 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.Mth;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.LivingEntity;
@@ -361,8 +361,7 @@ public class Renderer2D {
         graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, drawX, drawY, drawWidth, drawHeight, withAlpha(tintArgb));
     }
 
-    public void drawSprite(Identifier spriteId, int textureWidth, int textureHeight, int sourceX, int sourceY,
-                           float positionX, float positionY, float width, float height) {
+    public void drawSprite(Identifier spriteId, int textureWidth, int textureHeight, int sourceX, int sourceY, float positionX, float positionY, float width, float height) {
         if (width < 1e-3f || height < 1e-3f) {
             return;
         }

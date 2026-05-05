@@ -26,9 +26,7 @@ public class SignBackCullingMixin {
         }
 
         // Pick the transformation for whichever face this text belongs to
-        Transformation faceTransform = signText == state.frontText
-                ? state.transformations.frontText()
-                : state.transformations.backText();
+        Transformation faceTransform = signText == state.frontText ? state.transformations.frontText() : state.transformations.backText();
 
         // Derive face normal: local +Z transformed into world space
         Vector4f normal = new Vector4f(0f, 0f, 1f, 0f);

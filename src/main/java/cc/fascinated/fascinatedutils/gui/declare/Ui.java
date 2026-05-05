@@ -51,12 +51,8 @@ public final class Ui {
         return new UiView.UiScroll(new UiView.ScrollSpec(clipRowGap, bodyColumnGap, fillVertical, null, null), body);
     }
 
-    public static UiView scrollTracked(float clipRowGap, float bodyColumnGap, boolean fillVertical,
-                                       @Nullable Consumer<Float> scrollOffsetChangeListener,
-                                       @Nullable Ref<Float> scrollOffsetRef,
-                                       List<UiSlot> bodyChildren) {
-        return new UiView.UiScroll(new UiView.ScrollSpec(clipRowGap, bodyColumnGap, fillVertical,
-                scrollOffsetChangeListener, scrollOffsetRef), bodyChildren);
+    public static UiView scrollTracked(float clipRowGap, float bodyColumnGap, boolean fillVertical, @Nullable Consumer<Float> scrollOffsetChangeListener, @Nullable Ref<Float> scrollOffsetRef, List<UiSlot> bodyChildren) {
+        return new UiView.UiScroll(new UiView.ScrollSpec(clipRowGap, bodyColumnGap, fillVertical, scrollOffsetChangeListener, scrollOffsetRef), bodyChildren);
     }
 
     public static UiView spacer(float width, float height) {
@@ -117,9 +113,7 @@ public final class Ui {
      * @param <P>     props type
      * @return component view node
      */
-    public static <P> UiView component(Class<? extends UiComponent<P>> type,
-                                       Supplier<? extends UiComponent<P>> factory,
-                                       P props) {
+    public static <P> UiView component(Class<? extends UiComponent<P>> type, Supplier<? extends UiComponent<P>> factory, P props) {
         return new UiView.UiComponentNode<>(type, factory, props);
     }
 

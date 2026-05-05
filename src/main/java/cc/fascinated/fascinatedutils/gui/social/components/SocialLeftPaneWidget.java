@@ -8,18 +8,6 @@ import java.util.function.BooleanSupplier;
 
 public class SocialLeftPaneWidget {
 
-    public record Props(
-            float padding,
-            float tabHeight,
-            FRectWidget background,
-            FWidget header,
-            FWidget tabs,
-            FWidget list,
-            FWidget footer,
-            BooleanSupplier footerVisible
-    ) {
-    }
-
     public static FWidget build(Props props) {
         return new FWidget() {
             {
@@ -46,7 +34,8 @@ public class SocialLeftPaneWidget {
                 if (props.footerVisible().getAsBoolean()) {
                     props.footer().layout(measure, lx + props.padding(), cursorY, lw - 2f * props.padding(), footerHeight);
                     cursorY += footerHeight + 8f;
-                } else {
+                }
+                else {
                     props.footer().layout(measure, lx + props.padding(), cursorY, lw - 2f * props.padding(), 0f);
                 }
 
@@ -55,4 +44,7 @@ public class SocialLeftPaneWidget {
             }
         };
     }
+
+    public record Props(float padding, float tabHeight, FRectWidget background, FWidget header, FWidget tabs,
+                        FWidget list, FWidget footer, BooleanSupplier footerVisible) {}
 }

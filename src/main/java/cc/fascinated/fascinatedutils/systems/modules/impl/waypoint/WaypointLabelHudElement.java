@@ -52,7 +52,8 @@ public class WaypointLabelHudElement implements HudElement {
         String worldKey;
         if (minecraft.getSingleplayerServer() != null) {
             worldKey = "sp:" + minecraft.getSingleplayerServer().getWorldData().getLevelName();
-        } else {
+        }
+        else {
             ServerData serverData = minecraft.getCurrentServer();
             worldKey = "mp:" + (serverData != null ? serverData.ip : "unknown");
         }
@@ -134,9 +135,7 @@ public class WaypointLabelHudElement implements HudElement {
             double distZ = playerZ - waypoint.getZ();
             double dist = Math.sqrt(distX * distX + distY * distY + distZ * distZ);
 
-            String label = waypoint.isShowDistance()
-                    ? waypoint.getName() + " [" + (int) Math.round(dist) + "m]"
-                    : waypoint.getName();
+            String label = waypoint.isShowDistance() ? waypoint.getName() + " [" + (int) Math.round(dist) + "m]" : waypoint.getName();
 
             int textWidth = guiRenderer.measureTextWidth(label, false);
             float bgW = textWidth + labelPad * 2f;

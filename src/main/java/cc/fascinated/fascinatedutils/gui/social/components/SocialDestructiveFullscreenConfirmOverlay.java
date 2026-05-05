@@ -34,18 +34,14 @@ public final class SocialDestructiveFullscreenConfirmOverlay extends UiComponent
     /**
      * Input shared by fullscreen-sized overlay plus confirm/deny copy and callbacks.
      *
-     * @param title           dialog title
-     * @param message         optional body message
-     * @param confirmLabel    confirm button text
-     * @param denyLabel       deny button text
-     * @param onDeny          cancel / dismiss hook
-     * @param onConfirm       confirm hook
+     * @param title        dialog title
+     * @param message      optional body message
+     * @param confirmLabel confirm button text
+     * @param denyLabel    deny button text
+     * @param onDeny       cancel / dismiss hook
+     * @param onConfirm    confirm hook
      */
-    public record Props(String title,
-                        String message,
-                        String confirmLabel,
-                        String denyLabel,
-                        Runnable onDeny,
+    public record Props(String title, String message, String confirmLabel, String denyLabel, Runnable onDeny,
                         Runnable onConfirm) {
         private Props textualCopy() {
             return new Props(title, message, confirmLabel, denyLabel, () -> {}, () -> {});
@@ -62,9 +58,7 @@ public final class SocialDestructiveFullscreenConfirmOverlay extends UiComponent
             this.textualPropsSnapshot = overlayProps.textualCopy();
             this.latestDeclaredDeny = overlayProps.onDeny();
             this.latestDeclaredConfirm = overlayProps.onConfirm();
-            this.popupWidget = new FConfirmPopupWidget(textualPropsSnapshot.title(), textualPropsSnapshot.message(),
-                    textualPropsSnapshot.confirmLabel(), textualPropsSnapshot.denyLabel(),
-                    FConfirmPopupWidget.ConfirmStyle.DESTRUCTIVE, this::bridgeDeny, this::bridgeConfirm);
+            this.popupWidget = new FConfirmPopupWidget(textualPropsSnapshot.title(), textualPropsSnapshot.message(), textualPropsSnapshot.confirmLabel(), textualPropsSnapshot.denyLabel(), FConfirmPopupWidget.ConfirmStyle.DESTRUCTIVE, this::bridgeDeny, this::bridgeConfirm);
             addChild(popupWidget);
         }
 
@@ -74,9 +68,7 @@ public final class SocialDestructiveFullscreenConfirmOverlay extends UiComponent
             latestDeclaredConfirm = nextDeclaredProps.onConfirm();
             if (!nextTextual.equals(textualPropsSnapshot)) {
                 textualPropsSnapshot = nextTextual;
-                popupWidget = new FConfirmPopupWidget(textualPropsSnapshot.title(), textualPropsSnapshot.message(),
-                        textualPropsSnapshot.confirmLabel(), textualPropsSnapshot.denyLabel(),
-                        FConfirmPopupWidget.ConfirmStyle.DESTRUCTIVE, this::bridgeDeny, this::bridgeConfirm);
+                popupWidget = new FConfirmPopupWidget(textualPropsSnapshot.title(), textualPropsSnapshot.message(), textualPropsSnapshot.confirmLabel(), textualPropsSnapshot.denyLabel(), FConfirmPopupWidget.ConfirmStyle.DESTRUCTIVE, this::bridgeDeny, this::bridgeConfirm);
                 clearChildren();
                 addChild(popupWidget);
             }

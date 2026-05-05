@@ -26,14 +26,11 @@ public class ParticleEngineMixin {
                 return;
             }
             String id = key.getNamespace() + ":" + key.getPath();
-            module.getParticleToggles().stream()
-                    .filter(toggle -> toggle.getNameProvider().get().equals(id))
-                    .findFirst()
-                    .ifPresent(toggle -> {
-                        if (!toggle.getValue()) {
-                            cir.setReturnValue(null);
-                        }
-                    });
+            module.getParticleToggles().stream().filter(toggle -> toggle.getNameProvider().get().equals(id)).findFirst().ifPresent(toggle -> {
+                if (!toggle.getValue()) {
+                    cir.setReturnValue(null);
+                }
+            });
         });
     }
 }

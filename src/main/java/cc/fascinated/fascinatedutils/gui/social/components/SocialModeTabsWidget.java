@@ -1,8 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.social.components;
 
-import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
-
 import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -15,16 +14,6 @@ import java.util.function.BooleanSupplier;
 
 public class SocialModeTabsWidget {
 
-    public record Props(
-            String chatLabel,
-            String friendsLabel,
-            int incomingRequestCount,
-            BooleanSupplier chatActive,
-            Runnable onSelectChat,
-            Runnable onSelectFriends
-    ) {
-    }
-
     public static FWidget build(Props props) {
         return new FWidget() {
             @Override
@@ -34,8 +23,8 @@ public class SocialModeTabsWidget {
 
             @Override
             protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
+                float mouseX = frame.pointerX();
+                float mouseY = frame.pointerY();
                 float halfW = w() / 2f;
                 boolean chatSelected = props.chatActive().getAsBoolean();
                 boolean chatHovered = mouseX >= x() && mouseX < x() + halfW && mouseY >= y() && mouseY < y() + h();
@@ -46,11 +35,10 @@ public class SocialModeTabsWidget {
                 graphics.drawRect(x() + halfW, y(), halfW, h(), friendsBg);
                 float underlineH = 2f;
                 if (chatSelected) {
-                    graphics.fillRoundedRect(x() + 8f, y() + h() - underlineH, halfW - 16f, underlineH, underlineH / 2f,
-                            UITheme.COLOR_ACCENT, RectCornerRoundMask.ALL);
-                } else {
-                    graphics.fillRoundedRect(x() + halfW + 8f, y() + h() - underlineH, halfW - 16f, underlineH, underlineH / 2f,
-                            UITheme.COLOR_ACCENT, RectCornerRoundMask.ALL);
+                    graphics.fillRoundedRect(x() + 8f, y() + h() - underlineH, halfW - 16f, underlineH, underlineH / 2f, UITheme.COLOR_ACCENT, RectCornerRoundMask.ALL);
+                }
+                else {
+                    graphics.fillRoundedRect(x() + halfW + 8f, y() + h() - underlineH, halfW - 16f, underlineH, underlineH / 2f, UITheme.COLOR_ACCENT, RectCornerRoundMask.ALL);
                 }
                 int chatTextColor = chatSelected ? FascinatedGuiTheme.INSTANCE.textPrimary() : FascinatedGuiTheme.INSTANCE.textMuted();
                 int friendsTextColor = chatSelected ? FascinatedGuiTheme.INSTANCE.textMuted() : FascinatedGuiTheme.INSTANCE.textPrimary();
@@ -63,8 +51,7 @@ public class SocialModeTabsWidget {
                     float badgeRadius = 5f;
                     float badgeCenterX = x() + w() - badgeRadius - 3f;
                     float badgeCenterY = y() + badgeRadius + 2f;
-                    graphics.fillRoundedRect(badgeCenterX - badgeRadius, badgeCenterY - badgeRadius, badgeRadius * 2f, badgeRadius * 2f,
-                            badgeRadius, 0xFFCC2222, RectCornerRoundMask.ALL);
+                    graphics.fillRoundedRect(badgeCenterX - badgeRadius, badgeCenterY - badgeRadius, badgeRadius * 2f, badgeRadius * 2f, badgeRadius, 0xFFCC2222, RectCornerRoundMask.ALL);
                     graphics.drawCenteredText(badgeText, badgeCenterX, badgeCenterY - graphics.getFontCapHeight() / 2f, 0xFFFFFFFF, false, true);
                 }
             }
@@ -87,11 +74,15 @@ public class SocialModeTabsWidget {
                 float halfW = w() / 2f;
                 if (pointerX < x() + halfW) {
                     props.onSelectChat().run();
-                } else {
+                }
+                else {
                     props.onSelectFriends().run();
                 }
                 return true;
             }
         };
     }
+
+    public record Props(String chatLabel, String friendsLabel, int incomingRequestCount, BooleanSupplier chatActive,
+                        Runnable onSelectChat, Runnable onSelectFriends) {}
 }

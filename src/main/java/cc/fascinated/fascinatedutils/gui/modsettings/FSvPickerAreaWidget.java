@@ -1,9 +1,8 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
-
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -30,6 +29,10 @@ public class FSvPickerAreaWidget extends FWidget {
         this.saturation = initialSaturation;
         this.value = initialValue;
         this.onSvChanged = onSvChanged;
+    }
+
+    private static float clamp01(float val) {
+        return Math.max(0f, Math.min(1f, val));
     }
 
     public void setHue(float hue) {
@@ -105,9 +108,5 @@ public class FSvPickerAreaWidget extends FWidget {
         saturation = clamp01((pointerX - x()) / Math.max(1f, w()));
         value = 1f - clamp01((pointerY - y()) / Math.max(1f, h()));
         onSvChanged.accept(saturation, value);
-    }
-
-    private static float clamp01(float val) {
-        return Math.max(0f, Math.min(1f, val));
     }
 }

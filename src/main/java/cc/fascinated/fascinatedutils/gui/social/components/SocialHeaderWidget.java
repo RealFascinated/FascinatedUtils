@@ -1,9 +1,8 @@
 package cc.fascinated.fascinatedutils.gui.social.components;
 
-import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
-
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -18,24 +17,16 @@ import net.minecraft.resources.Identifier;
 import java.util.function.BooleanSupplier;
 
 public class SocialHeaderWidget {
-    public record Props(
-            Runnable onAddFriend,
-            Runnable onNewChat,
-            Runnable onSearch,
-            BooleanSupplier searchActive
-    ) {
-    }
-
     public static FWidget build(Props props) {
         return new FWidget() {
-            private float addFriendX;
-            private float newChatX;
-            private float searchX;
-            private float buttonY;
             private static final float BUTTON_W = 20f;
             private static final float BUTTON_H = 20f;
             private static final float BUTTON_GAP = 4f;
             private static final float SPRITE_INSET = 4f;
+            private float addFriendX;
+            private float newChatX;
+            private float searchX;
+            private float buttonY;
 
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
@@ -48,11 +39,10 @@ public class SocialHeaderWidget {
 
             @Override
             protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
+                float mouseX = frame.pointerX();
+                float mouseY = frame.pointerY();
                 float textY = y() + 3f;
-                graphics.drawText(Component.translatable("fascinatedutils.social.title").getString(),
-                        x(), textY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
+                graphics.drawText(Component.translatable("fascinatedutils.social.title").getString(), x(), textY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
 
                 boolean addHovered = inside(mouseX, mouseY, addFriendX, buttonY);
                 boolean newChatHovered = inside(mouseX, mouseY, newChatX, buttonY);
@@ -64,14 +54,13 @@ public class SocialHeaderWidget {
                 drawSearchButton(graphics, searchX, buttonY, searchHovered, searchOn);
 
                 if (addHovered) {
-                    WTooltip.draw(graphics, mouseX, mouseY,
-                            Component.translatable("fascinatedutils.social.header_tooltip_add_friend").getString());
-                } else if (newChatHovered) {
-                    WTooltip.draw(graphics, mouseX, mouseY,
-                            Component.translatable("fascinatedutils.social.header_tooltip_new_chat").getString());
-                } else if (searchHovered) {
-                    WTooltip.draw(graphics, mouseX, mouseY,
-                            Component.translatable("fascinatedutils.social.header_tooltip_search").getString());
+                    WTooltip.draw(graphics, mouseX, mouseY, Component.translatable("fascinatedutils.social.header_tooltip_add_friend").getString());
+                }
+                else if (newChatHovered) {
+                    WTooltip.draw(graphics, mouseX, mouseY, Component.translatable("fascinatedutils.social.header_tooltip_new_chat").getString());
+                }
+                else if (searchHovered) {
+                    WTooltip.draw(graphics, mouseX, mouseY, Component.translatable("fascinatedutils.social.header_tooltip_search").getString());
                 }
             }
 
@@ -79,12 +68,10 @@ public class SocialHeaderWidget {
                 int fill = hovered ? UITheme.COLOR_ACCENT_HOVER : UITheme.COLOR_ACCENT;
                 int border = hovered ? UITheme.COLOR_ACCENT_HOVER : UITheme.COLOR_ACCENT;
                 graphics.fillRoundedRectFrame(buttonX, iconY, BUTTON_W, BUTTON_H, 4f, border, fill, 1f, 1f, RectCornerRoundMask.ALL);
-                graphics.drawCenteredText(icon, buttonX + BUTTON_W / 2f, iconY + (BUTTON_H - graphics.getFontCapHeight()) / 2f,
-                        0xFFFFFFFF, false, false);
+                graphics.drawCenteredText(icon, buttonX + BUTTON_W / 2f, iconY + (BUTTON_H - graphics.getFontCapHeight()) / 2f, 0xFFFFFFFF, false, false);
             }
 
-            private void drawSurfaceSpriteButton(GuiRenderer graphics, float buttonX, float iconY, boolean hovered,
-                    Identifier spriteId) {
+            private void drawSurfaceSpriteButton(GuiRenderer graphics, float buttonX, float iconY, boolean hovered, Identifier spriteId) {
                 int fill = hovered ? 0xFF2A2F3E : 0xFF1E2230;
                 int border = hovered ? 0xFF6C7098 : UITheme.COLOR_BORDER;
                 graphics.fillRoundedRectFrame(buttonX, iconY, BUTTON_W, BUTTON_H, 4f, border, fill, 1f, 1f, RectCornerRoundMask.ALL);
@@ -108,9 +95,7 @@ public class SocialHeaderWidget {
 
             @Override
             public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
-                if (inside(pointerX, pointerY, addFriendX, buttonY)
-                        || inside(pointerX, pointerY, newChatX, buttonY)
-                        || inside(pointerX, pointerY, searchX, buttonY)) {
+                if (inside(pointerX, pointerY, addFriendX, buttonY) || inside(pointerX, pointerY, newChatX, buttonY) || inside(pointerX, pointerY, searchX, buttonY)) {
                     return UiPointerCursor.HAND;
                 }
                 return UiPointerCursor.DEFAULT;
@@ -137,9 +122,10 @@ public class SocialHeaderWidget {
             }
 
             private boolean inside(float pointerX, float pointerY, float buttonX, float iconY) {
-                return pointerX >= buttonX && pointerX < buttonX + BUTTON_W
-                        && pointerY >= iconY && pointerY < iconY + BUTTON_H;
+                return pointerX >= buttonX && pointerX < buttonX + BUTTON_W && pointerY >= iconY && pointerY < iconY + BUTTON_H;
             }
         };
     }
+
+    public record Props(Runnable onAddFriend, Runnable onNewChat, Runnable onSearch, BooleanSupplier searchActive) {}
 }

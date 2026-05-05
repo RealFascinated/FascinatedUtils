@@ -45,8 +45,7 @@ public class Waypoint implements GsonSerializable<Waypoint> {
     }
 
     public static Waypoint defaults() {
-        return new Waypoint(null, WaypointType.NORMAL, "", "", 0, 0, 0, "minecraft:overworld", true,
-                true, true, new SettingColor(255, 255, 255, 255));
+        return new Waypoint(null, WaypointType.NORMAL, "", "", 0, 0, 0, "minecraft:overworld", true, true, true, new SettingColor(255, 255, 255, 255));
     }
 
     @Override
@@ -70,19 +69,6 @@ public class Waypoint implements GsonSerializable<Waypoint> {
     @Override
     public Waypoint deserialize(JsonElement data, Gson gson) {
         JsonObject root = data.getAsJsonObject();
-        return new Waypoint(
-                UUID.fromString(root.get("id").getAsString()),
-                WaypointType.valueOf(root.get("type").getAsString()),
-                root.get("name").getAsString(),
-                root.get("world_key").getAsString(),
-                root.get("x").getAsDouble(),
-                root.get("y").getAsDouble(),
-                root.get("z").getAsDouble(),
-                root.get("dimension").getAsString(),
-                root.get("visible").getAsBoolean(),
-                !root.has("show_beam") || root.get("show_beam").getAsBoolean(),
-                !root.has("show_distance") || root.get("show_distance").getAsBoolean(),
-                new SettingColor().fromJson(root.get("color").getAsJsonObject())
-        );
+        return new Waypoint(UUID.fromString(root.get("id").getAsString()), WaypointType.valueOf(root.get("type").getAsString()), root.get("name").getAsString(), root.get("world_key").getAsString(), root.get("x").getAsDouble(), root.get("y").getAsDouble(), root.get("z").getAsDouble(), root.get("dimension").getAsString(), root.get("visible").getAsBoolean(), !root.has("show_beam") || root.get("show_beam").getAsBoolean(), !root.has("show_distance") || root.get("show_distance").getAsBoolean(), new SettingColor().fromJson(root.get("color").getAsJsonObject()));
     }
 }

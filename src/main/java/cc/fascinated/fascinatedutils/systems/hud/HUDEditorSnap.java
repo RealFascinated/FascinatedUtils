@@ -109,7 +109,8 @@ public class HUDEditorSnap {
         return new AxisSnapResult(Mth.clamp(best, 0f, maxCoord), bestGuide, bestIsCenter);
     }
 
-    public record SnapResult(float snappedLeft, float snappedTop, float verticalGuideX, float horizontalGuideY, boolean verticalGuideIsCenter, boolean horizontalGuideIsCenter) {
+    public record SnapResult(float snappedLeft, float snappedTop, float verticalGuideX, float horizontalGuideY,
+                             boolean verticalGuideIsCenter, boolean horizontalGuideIsCenter) {
         public boolean hasVerticalGuide() {
             return Float.isFinite(verticalGuideX);
         }

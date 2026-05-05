@@ -97,10 +97,7 @@ public class WaypointsModule extends Module {
         double z = event.player().getZ();
         String dimension = minecraft.level.dimension().identifier().toString();
         String worldKey = resolveWorldKey(minecraft);
-        int deathCount = (int) ModConfig.waypoints().getForWorld(worldKey).stream()
-                .filter(waypoint -> waypoint.getType() == WaypointType.DEATH)
-                .count() + 1;
-        ModConfig.waypoints().create("Death #" + deathCount, worldKey, WaypointType.DEATH, x, y, z, dimension,
-                new SettingColor(255, 50, 50, 255));
+        int deathCount = (int) ModConfig.waypoints().getForWorld(worldKey).stream().filter(waypoint -> waypoint.getType() == WaypointType.DEATH).count() + 1;
+        ModConfig.waypoints().create("Death #" + deathCount, worldKey, WaypointType.DEATH, x, y, z, dimension, new SettingColor(255, 50, 50, 255));
     }
 }

@@ -2,24 +2,16 @@ package cc.fascinated.fascinatedutils.api.channel;
 
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
-import cc.fascinated.fascinatedutils.api.channel.json.ChannelDetailWire;
-import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessagePageWire;
-import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessageWire;
-import cc.fascinated.fascinatedutils.api.channel.json.SendChannelMessageBodyWire;
-import cc.fascinated.fascinatedutils.api.channel.json.UpdateReadStateBodyWire;
-import cc.fascinated.fascinatedutils.common.UrlUtils;
+import cc.fascinated.fascinatedutils.api.channel.json.*;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteModelMapper;
 import cc.fascinated.fascinatedutils.client.Client;
+import cc.fascinated.fascinatedutils.common.UrlUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Getter
 @Accessors(fluent = true)
@@ -65,24 +57,14 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
     }
 
     public ChannelMessage sendMessage(String content) throws AlumiteApiException {
-        ChannelMessageWire wire = alumite.http().postObject(
-                route() + "/messages",
-                new SendChannelMessageBodyWire(content),
-                ChannelMessageWire.class,
-                "send message",
-                "Failed to send message.");
+        ChannelMessageWire wire = alumite.http().postObject(route() + "/messages", new SendChannelMessageBodyWire(content), ChannelMessageWire.class, "send message", "Failed to send message.");
         ChannelMessage message = AlumiteModelMapper.toChannelMessage(wire);
         alumite.channels().cacheSentMessage(channelId, message);
         return message;
     }
 
     public void markRead(int lastReadMessageId) throws AlumiteApiException {
-        alumite.http().sendAuthorizedChecked(
-                "PATCH",
-                route() + "/read",
-                alumite.getGsonForWire().toJson(new UpdateReadStateBodyWire(lastReadMessageId)),
-                "update read state",
-                "Failed to update channel read state.");
+        alumite.http().sendAuthorizedChecked("PATCH", route() + "/read", alumite.getGsonForWire().toJson(new UpdateReadStateBodyWire(lastReadMessageId)), "update read state", "Failed to update channel read state.");
         alumite.channels().cacheReadState(channelId, lastReadMessageId);
     }
 
@@ -90,16 +72,9 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         if (messagesOrNull() != null) {
             return;
         }
-        ChannelMessagePageWire page = alumite.http().getObject(
-                UrlUtils.buildUrl(route() + "/messages", Map.of("limit", limit)),
-                ChannelMessagePageWire.class,
-                "get messages",
-                "Failed to load messages.");
+        ChannelMessagePageWire page = alumite.http().getObject(UrlUtils.buildUrl(route() + "/messages", Map.of("limit", limit)), ChannelMessagePageWire.class, "get messages", "Failed to load messages.");
         List<ChannelMessageWire> wireMessages = page.messages() == null ? List.of() : page.messages();
-        List<ChannelMessage> loaded = wireMessages.stream()
-                .map(AlumiteModelMapper::toChannelMessage)
-                .sorted(Comparator.comparingInt(ChannelMessage::id))
-                .toList();
+        List<ChannelMessage> loaded = wireMessages.stream().map(AlumiteModelMapper::toChannelMessage).sorted(Comparator.comparingInt(ChannelMessage::id)).toList();
         alumite.channels().storeMessages(channelId, loaded);
     }
 
@@ -122,17 +97,11 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         if (afterMessageId != null) {
             queryParameters.put("after", afterMessageId);
         }
-        ChannelMessagePageWire page = alumite.http().getObject(
-                UrlUtils.buildUrl(route() + "/messages", queryParameters),
-                ChannelMessagePageWire.class,
-                "get messages",
-                "Failed to load messages.");
+        ChannelMessagePageWire page = alumite.http().getObject(UrlUtils.buildUrl(route() + "/messages", queryParameters), ChannelMessagePageWire.class, "get messages", "Failed to load messages.");
         if (page.messages() == null) {
             return List.of();
         }
-        return page.messages().stream()
-                .map(AlumiteModelMapper::toChannelMessage)
-                .toList();
+        return page.messages().stream().map(AlumiteModelMapper::toChannelMessage).toList();
     }
 
     public ChannelDetail resolveDetail() throws AlumiteApiException {
@@ -140,11 +109,7 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         if (detail != null) {
             return detail;
         }
-        ChannelDetailWire wire = alumite.http().getObject(
-                route(),
-                ChannelDetailWire.class,
-                "get channel",
-                "Failed to load channel.");
+        ChannelDetailWire wire = alumite.http().getObject(route(), ChannelDetailWire.class, "get channel", "Failed to load channel.");
         alumite.channels().cacheChannelDetail(wire);
         return detail();
     }

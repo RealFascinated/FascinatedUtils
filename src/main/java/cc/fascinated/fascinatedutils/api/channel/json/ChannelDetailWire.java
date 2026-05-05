@@ -10,7 +10,10 @@ public sealed interface ChannelDetailWire permits ChannelDetailWire.DmChannelDet
 
     Integer lastReadMessageId();
 
-    record DmChannelDetailWire(int id, Integer lastReadMessageId, PublicUserWire recipient) implements ChannelDetailWire {
+    ChannelKindWire type();
+
+    record DmChannelDetailWire(int id, Integer lastReadMessageId,
+                               PublicUserWire recipient) implements ChannelDetailWire {
 
         @Override
         public ChannelKindWire type() {
@@ -18,19 +21,12 @@ public sealed interface ChannelDetailWire permits ChannelDetailWire.DmChannelDet
         }
     }
 
-    record GroupChannelDetailWire(
-            int id,
-            Integer lastReadMessageId,
-            String name,
-            Integer ownerUserId,
-            List<ChannelMemberWire> members
-    ) implements ChannelDetailWire {
+    record GroupChannelDetailWire(int id, Integer lastReadMessageId, String name, Integer ownerUserId,
+                                  List<ChannelMemberWire> members) implements ChannelDetailWire {
 
         @Override
         public ChannelKindWire type() {
             return ChannelKindWire.GROUP;
         }
     }
-
-    ChannelKindWire type();
 }

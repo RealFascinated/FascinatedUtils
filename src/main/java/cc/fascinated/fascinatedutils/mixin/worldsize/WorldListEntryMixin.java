@@ -46,9 +46,7 @@ public class WorldListEntryMixin {
             this.infoText.setMaxWidth(this.list.getRowWidth() - this.getTextX() - 2);
             return;
         }
-        Component combined = Component.empty()
-                .append(baseInfo)
-                .append(Component.literal(" (" + size + ")").withStyle(Style.EMPTY.withColor(-8355712)));
+        Component combined = Component.empty().append(baseInfo).append(Component.literal(" (" + size + ")").withStyle(Style.EMPTY.withColor(-8355712)));
         this.infoText.setMessage(combined);
         this.infoText.setMaxWidth(this.list.getRowWidth() - this.getTextX() - 2);
     }

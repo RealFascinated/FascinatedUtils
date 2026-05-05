@@ -17,54 +17,10 @@ import java.util.List;
 
 public class AutoSwapTool extends Feature<InventoryTweaksModule> {
 
-    private static final List<TagKey<Item>> TOOL_TAGS = List.of(
-            ItemTags.PICKAXES,
-            ItemTags.AXES,
-            ItemTags.SWORDS,
-            ItemTags.SHOVELS,
-            ItemTags.HOES
-    );
+    private static final List<TagKey<Item>> TOOL_TAGS = List.of(ItemTags.PICKAXES, ItemTags.AXES, ItemTags.SWORDS, ItemTags.SHOVELS, ItemTags.HOES);
 
     public AutoSwapTool(InventoryTweaksModule module) {
         super(module);
-    }
-
-    /**
-     * Called by the mixin when a main-hand item stack reaches zero durability.
-     *
-     * @param player      the local player holding the broken tool
-     * @param brokenTool  the now-empty item stack that just broke
-     */
-    public void onToolBroke(LocalPlayer player, ItemStack brokenTool) {
-        if (getModule().getAutoSwapNextTool().isDisabled() || !getModule().isEnabled()) return;
-
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.screen != null) return;
-
-        Inventory inventory = player.getInventory();
-        InventorySelectedAccessorMixin accessor = (InventorySelectedAccessorMixin) inventory;
-        int currentSlot = accessor.fascinatedutils$getSelected();
-
-        for (int slot = 0; slot < 36; slot++) {
-            if (slot == currentSlot) continue;
-            ItemStack candidate = inventory.getItem(slot);
-            if (candidate.isEmpty() || !isSameTool(candidate, brokenTool)) continue;
-
-            if (slot < Inventory.getSelectionSize()) {
-                accessor.fascinatedutils$setSelected(slot);
-                player.connection.send(new ServerboundSetCarriedItemPacket(slot));
-            } else {
-                if (mc.gameMode != null) {
-                    mc.gameMode.handleContainerInput(
-                            player.inventoryMenu.containerId,
-                            slot,
-                            currentSlot,
-                            ContainerInput.SWAP,
-                            player);
-                }
-            }
-            return;
-        }
     }
 
     private static boolean isSameTool(ItemStack candidate, ItemStack brokenTool) {
@@ -77,5 +33,47 @@ public class AutoSwapTool extends Feature<InventoryTweaksModule> {
             }
         }
         return false;
+    }
+
+    /**
+     * Called by the mixin when a main-hand item stack reaches zero durability.
+     *
+     * @param player     the local player holding the broken tool
+     * @param brokenTool the now-empty item stack that just broke
+     */
+    public void onToolBroke(LocalPlayer player, ItemStack brokenTool) {
+        if (getModule().getAutoSwapNextTool().isDisabled() || !getModule().isEnabled()) {
+            return;
+        }
+
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen != null) {
+            return;
+        }
+
+        Inventory inventory = player.getInventory();
+        InventorySelectedAccessorMixin accessor = (InventorySelectedAccessorMixin) inventory;
+        int currentSlot = accessor.fascinatedutils$getSelected();
+
+        for (int slot = 0; slot < 36; slot++) {
+            if (slot == currentSlot) {
+                continue;
+            }
+            ItemStack candidate = inventory.getItem(slot);
+            if (candidate.isEmpty() || !isSameTool(candidate, brokenTool)) {
+                continue;
+            }
+
+            if (slot < Inventory.getSelectionSize()) {
+                accessor.fascinatedutils$setSelected(slot);
+                player.connection.send(new ServerboundSetCarriedItemPacket(slot));
+            }
+            else {
+                if (mc.gameMode != null) {
+                    mc.gameMode.handleContainerInput(player.inventoryMenu.containerId, slot, currentSlot, ContainerInput.SWAP, player);
+                }
+            }
+            return;
+        }
     }
 }

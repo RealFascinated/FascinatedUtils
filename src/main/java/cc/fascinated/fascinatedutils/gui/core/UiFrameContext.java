@@ -34,10 +34,10 @@ public final class UiFrameContext {
     /**
      * Builds a context by walking the widget tree in paint order (front-most child first).
      *
-     * @param root       layout root
-     * @param pointerX   logical pointer X
-     * @param pointerY   logical pointer Y
-     * @param focusedId  current focus id
+     * @param root      layout root
+     * @param pointerX  logical pointer X
+     * @param pointerY  logical pointer Y
+     * @param focusedId current focus id
      * @return immutable context; empty hit path when pointer misses all blocking widgets
      */
     public static UiFrameContext hitTest(FWidget root, float pointerX, float pointerY, int focusedId) {
@@ -46,6 +46,14 @@ public final class UiFrameContext {
         }
         List<FWidget> path = PointerHitTraversal.pathRootToLeaf(root, pointerX, pointerY);
         return new UiFrameContext(pointerX, pointerY, path, focusedId);
+    }
+
+    public static UiFrameContext empty(float pointerX, float pointerY, int focusedId) {
+        return new UiFrameContext(pointerX, pointerY, List.of(), focusedId);
+    }
+
+    public static List<FWidget> unmodifiableHitPath(List<FWidget> path) {
+        return Collections.unmodifiableList(path);
     }
 
     public FWidget hitTarget() {
@@ -96,15 +104,7 @@ public final class UiFrameContext {
         return false;
     }
 
-    public static UiFrameContext empty(float pointerX, float pointerY, int focusedId) {
-        return new UiFrameContext(pointerX, pointerY, List.of(), focusedId);
-    }
-
     public UiFrameContext withFocus(int newFocusedId) {
         return new UiFrameContext(pointerX, pointerY, hitPathRootToLeaf, newFocusedId);
-    }
-
-    public static List<FWidget> unmodifiableHitPath(List<FWidget> path) {
-        return Collections.unmodifiableList(path);
     }
 }

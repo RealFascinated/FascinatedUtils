@@ -1,13 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
-
 import cc.fascinated.fascinatedutils.common.Colors;
-import cc.fascinated.fascinatedutils.gui.core.Callback;
-import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
-import cc.fascinated.fascinatedutils.gui.core.TextLayoutMetrics;
-import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
-import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
+import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.hooks.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -29,14 +23,6 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     private static final int TITLE_MAX_LINES = 2;
     private static final int ACTION_STRIP_COUNT = 2;
     private static final Map<Object, AnimHandle> TOGGLE_ANIM_CACHE = new IdentityHashMap<>();
-    public static float stackedCellOuterHeightPx() {
-        float lineHeight = Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());
-        float titleBlock = TITLE_MAX_LINES * lineHeight;
-        return TITLE_PAD_TOP_DESIGN + titleBlock + TITLE_PAD_BOTTOM_DESIGN + ACTION_STRIP_COUNT * ACTION_STRIP_HEIGHT_DESIGN;
-    }
-    private static boolean pointerInStrip(float[] strip, float pointerX, float pointerY) {
-        return pointerX >= strip[0] && pointerY >= strip[1] && pointerX < strip[0] + strip[2] && pointerY < strip[1] + strip[3];
-    }
     private final float cardWidthLogical;
     private final float cardHeightLogical;
     private final Supplier<String> titleSupplier;
@@ -45,7 +31,6 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     private final Supplier<Boolean> enabledSupplier;
     private final Callback<Boolean> onEnabledChange;
     private final AnimHandle toggleStripProgressAnim;
-
     public FVisibilityCardWidget(Object animKey, float layoutWidth, float layoutHeight, Supplier<String> titleSupplier, Supplier<Boolean> settingsAvailableSupplier, Runnable onOpenSettings, Supplier<Boolean> enabledSupplier, Callback<Boolean> onEnabledChange) {
         this.cardWidthLogical = Math.max(0f, layoutWidth);
         this.cardHeightLogical = Math.max(0f, layoutHeight);
@@ -58,6 +43,16 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
             AnimHandle handle = new AnimHandle(enabledSupplier.get() ? 1f : 0f).speed(26f);
             return handle;
         });
+    }
+
+    public static float stackedCellOuterHeightPx() {
+        float lineHeight = Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());
+        float titleBlock = TITLE_MAX_LINES * lineHeight;
+        return TITLE_PAD_TOP_DESIGN + titleBlock + TITLE_PAD_BOTTOM_DESIGN + ACTION_STRIP_COUNT * ACTION_STRIP_HEIGHT_DESIGN;
+    }
+
+    private static boolean pointerInStrip(float[] strip, float pointerX, float pointerY) {
+        return pointerX >= strip[0] && pointerY >= strip[1] && pointerX < strip[0] + strip[2] && pointerY < strip[1] + strip[3];
     }
 
     @Override

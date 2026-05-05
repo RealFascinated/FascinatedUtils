@@ -5,34 +5,19 @@ import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import lombok.Getter;
+
 import java.util.Set;
 
 @Getter
 public class BlurModule extends Module {
 
-    private static final Set<String> DISABLED_SCREENS = Set.of(
-            "net.irisshaders.iris.gui.screen.ShaderPackScreen",
-            "net.minecraft.client.gui.screens.LevelLoadingScreen"
-    );
+    private static final Set<String> DISABLED_SCREENS = Set.of("net.irisshaders.iris.gui.screen.ShaderPackScreen", "net.minecraft.client.gui.screens.LevelLoadingScreen");
 
-    private final SliderSetting blurStrength = SliderSetting.builder().id("blur_strength")
-            .defaultValue(3f)
-            .minValue(1f)
-            .maxValue(10f)
-            .step(0.5f)
-            .build();
+    private final SliderSetting blurStrength = SliderSetting.builder().id("blur_strength").defaultValue(3f).minValue(1f).maxValue(10f).step(0.5f).build();
 
-    private final BooleanSetting animationEnabled = BooleanSetting.builder().id("animation_enabled")
-            .defaultValue(true)
-            .build();
+    private final BooleanSetting animationEnabled = BooleanSetting.builder().id("animation_enabled").defaultValue(true).build();
 
-    private final SliderSetting animationSpeed = SliderSetting.builder().id("animation_speed")
-            .defaultValue(750f)
-            .minValue(100f)
-            .maxValue(2000f)
-            .step(50f)
-            .valueFormatter((value) -> value.intValue() + "ms")
-            .build();
+    private final SliderSetting animationSpeed = SliderSetting.builder().id("animation_speed").defaultValue(750f).minValue(100f).maxValue(2000f).step(50f).valueFormatter((value) -> value.intValue() + "ms").build();
 
     // progress [0,1] driven per render frame; fadeIn is set each frame by ScreenBlurMixin
     private float progress = 0f;
@@ -81,10 +66,12 @@ public class BlurModule extends Module {
             float step = deltaSeconds * 1000f / animationSpeed.getValue().floatValue();
             if (progress < target) {
                 progress = Math.min(1f, progress + step);
-            } else {
+            }
+            else {
                 progress = Math.max(0f, progress - step);
             }
-        } else {
+        }
+        else {
             progress = target;
         }
     }

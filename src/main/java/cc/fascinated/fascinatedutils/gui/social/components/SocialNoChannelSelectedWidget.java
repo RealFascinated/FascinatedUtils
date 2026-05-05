@@ -18,10 +18,7 @@ public class SocialNoChannelSelectedWidget {
             @Override
             protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
                 String message = Component.translatable("fascinatedutils.social.dm.select_channel").getString();
-                graphics.drawCenteredText(message,
-                        x() + w() / 2f,
-                        y() + (h() - graphics.getFontCapHeight()) / 2f,
-                        FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                graphics.drawCenteredText(message, x() + w() / 2f, y() + (h() - graphics.getFontCapHeight()) / 2f, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
             }
         };
     }

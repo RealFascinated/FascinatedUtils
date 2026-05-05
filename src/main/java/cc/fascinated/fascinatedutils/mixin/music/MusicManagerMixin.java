@@ -22,6 +22,10 @@ public class MusicManagerMixin {
     @Shadow
     private SoundInstance currentMusic;
 
+    private static void withMusicModule(Consumer<MusicModule> consumer) {
+        ModuleRegistry.INSTANCE.getModule(MusicModule.class).ifPresent(consumer);
+    }
+
     @Inject(method = "tick", at = @At("HEAD"))
     private void fascinatedutils$clearDisconnectRetainWhenInWorld(CallbackInfo callbackInfo) {
         Minecraft minecraft = Minecraft.getInstance();
@@ -49,24 +53,13 @@ public class MusicManagerMixin {
         });
     }
 
-    @WrapOperation(
-            method = "tick",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundManager;stop(Lnet/minecraft/client/resources/sounds/SoundInstance;)V")
-    )
-    private void fascinatedutils$retainBackgroundMusicDuringDisconnect(
-            SoundManager soundManager,
-            SoundInstance soundInstance,
-            Operation<Void> original
-    ) {
+    @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundManager;stop(Lnet/minecraft/client/resources/sounds/SoundInstance;)V"))
+    private void fascinatedutils$retainBackgroundMusicDuringDisconnect(SoundManager soundManager, SoundInstance soundInstance, Operation<Void> original) {
         Minecraft minecraft = Minecraft.getInstance();
         ModuleRegistry.INSTANCE.getModule(MusicModule.class).ifPresentOrElse(module -> {
             if (!module.shouldSuppressStoppingCurrentMusicTrack(minecraft)) {
                 original.call(soundManager, soundInstance);
             }
         }, () -> original.call(soundManager, soundInstance));
-    }
-
-    private static void withMusicModule(Consumer<MusicModule> consumer) {
-        ModuleRegistry.INSTANCE.getModule(MusicModule.class).ifPresent(consumer);
     }
 }

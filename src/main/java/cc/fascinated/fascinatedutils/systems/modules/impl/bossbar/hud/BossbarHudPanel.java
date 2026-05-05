@@ -23,36 +23,10 @@ public class BossbarHudPanel extends HudPanel {
     private static final float NAME_BAR_GAP = 2f;
     private static final float ROW_GAP = 3f;
 
-    private static final Identifier[] BAR_BACKGROUND_SPRITES = {
-        Identifier.withDefaultNamespace("boss_bar/pink_background"),
-        Identifier.withDefaultNamespace("boss_bar/blue_background"),
-        Identifier.withDefaultNamespace("boss_bar/red_background"),
-        Identifier.withDefaultNamespace("boss_bar/green_background"),
-        Identifier.withDefaultNamespace("boss_bar/yellow_background"),
-        Identifier.withDefaultNamespace("boss_bar/purple_background"),
-        Identifier.withDefaultNamespace("boss_bar/white_background")
-    };
-    private static final Identifier[] BAR_PROGRESS_SPRITES = {
-        Identifier.withDefaultNamespace("boss_bar/pink_progress"),
-        Identifier.withDefaultNamespace("boss_bar/blue_progress"),
-        Identifier.withDefaultNamespace("boss_bar/red_progress"),
-        Identifier.withDefaultNamespace("boss_bar/green_progress"),
-        Identifier.withDefaultNamespace("boss_bar/yellow_progress"),
-        Identifier.withDefaultNamespace("boss_bar/purple_progress"),
-        Identifier.withDefaultNamespace("boss_bar/white_progress")
-    };
-    private static final Identifier[] OVERLAY_BACKGROUND_SPRITES = {
-        Identifier.withDefaultNamespace("boss_bar/notched_6_background"),
-        Identifier.withDefaultNamespace("boss_bar/notched_10_background"),
-        Identifier.withDefaultNamespace("boss_bar/notched_12_background"),
-        Identifier.withDefaultNamespace("boss_bar/notched_20_background")
-    };
-    private static final Identifier[] OVERLAY_PROGRESS_SPRITES = {
-        Identifier.withDefaultNamespace("boss_bar/notched_6_progress"),
-        Identifier.withDefaultNamespace("boss_bar/notched_10_progress"),
-        Identifier.withDefaultNamespace("boss_bar/notched_12_progress"),
-        Identifier.withDefaultNamespace("boss_bar/notched_20_progress")
-    };
+    private static final Identifier[] BAR_BACKGROUND_SPRITES = {Identifier.withDefaultNamespace("boss_bar/pink_background"), Identifier.withDefaultNamespace("boss_bar/blue_background"), Identifier.withDefaultNamespace("boss_bar/red_background"), Identifier.withDefaultNamespace("boss_bar/green_background"), Identifier.withDefaultNamespace("boss_bar/yellow_background"), Identifier.withDefaultNamespace("boss_bar/purple_background"), Identifier.withDefaultNamespace("boss_bar/white_background")};
+    private static final Identifier[] BAR_PROGRESS_SPRITES = {Identifier.withDefaultNamespace("boss_bar/pink_progress"), Identifier.withDefaultNamespace("boss_bar/blue_progress"), Identifier.withDefaultNamespace("boss_bar/red_progress"), Identifier.withDefaultNamespace("boss_bar/green_progress"), Identifier.withDefaultNamespace("boss_bar/yellow_progress"), Identifier.withDefaultNamespace("boss_bar/purple_progress"), Identifier.withDefaultNamespace("boss_bar/white_progress")};
+    private static final Identifier[] OVERLAY_BACKGROUND_SPRITES = {Identifier.withDefaultNamespace("boss_bar/notched_6_background"), Identifier.withDefaultNamespace("boss_bar/notched_10_background"), Identifier.withDefaultNamespace("boss_bar/notched_12_background"), Identifier.withDefaultNamespace("boss_bar/notched_20_background")};
+    private static final Identifier[] OVERLAY_PROGRESS_SPRITES = {Identifier.withDefaultNamespace("boss_bar/notched_6_progress"), Identifier.withDefaultNamespace("boss_bar/notched_10_progress"), Identifier.withDefaultNamespace("boss_bar/notched_12_progress"), Identifier.withDefaultNamespace("boss_bar/notched_20_progress")};
 
     private static final Component PREVIEW_NAME = Component.literal("Wither");
     private static final float PREVIEW_PROGRESS = 0.6f;
@@ -134,9 +108,7 @@ public class BossbarHudPanel extends HudPanel {
         Map<UUID, BossEvent> events = ((BossHealthOverlayEventsAccessor) Minecraft.getInstance().gui.getBossOverlay()).getEvents();
         if (events.isEmpty()) {
             if (editorMode) {
-                return List.of(new BossRow(PREVIEW_NAME, PREVIEW_PROGRESS,
-                    BossEvent.BossBarColor.PURPLE.ordinal(),
-                    BossEvent.BossBarOverlay.PROGRESS.ordinal()));
+                return List.of(new BossRow(PREVIEW_NAME, PREVIEW_PROGRESS, BossEvent.BossBarColor.PURPLE.ordinal(), BossEvent.BossBarOverlay.PROGRESS.ordinal()));
             }
             recordHudContentSkipped();
             return null;
@@ -150,13 +122,10 @@ public class BossbarHudPanel extends HudPanel {
         List<BossRow> rows = new ArrayList<>(events.size());
         float yOffset = 12f;
         for (BossEvent event : events.values()) {
-            if (yOffset >= maxY) break;
-            rows.add(new BossRow(
-                event.getName(),
-                event.getProgress(),
-                event.getColor().ordinal(),
-                event.getOverlay().ordinal()
-            ));
+            if (yOffset >= maxY) {
+                break;
+            }
+            rows.add(new BossRow(event.getName(), event.getProgress(), event.getColor().ordinal(), event.getOverlay().ordinal()));
             yOffset += stride;
         }
         return rows.isEmpty() ? null : rows;

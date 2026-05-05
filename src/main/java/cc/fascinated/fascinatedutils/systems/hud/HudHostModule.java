@@ -49,6 +49,10 @@ public abstract class HudHostModule extends Module {
         setEnabled(defaults.defaultState());
     }
 
+    private static String sanitizePanelSettingId(String panelId) {
+        return panelId.replace('.', '_').replace('-', '_');
+    }
+
     public List<HudPanel> registeredHudPanels() {
         return Collections.unmodifiableList(registeredHudPanelsList);
     }
@@ -66,11 +70,7 @@ public abstract class HudHostModule extends Module {
             if (hudPanelVisibilitySettings.containsKey(panelId)) {
                 continue;
             }
-            BooleanSetting visible = BooleanSetting.builder()
-                    .id("hud_panel_visible_" + sanitizePanelSettingId(panelId))
-                    .defaultValue(true)
-                    .categoryDisplayKey(HUD_PANELS_CATEGORY_DISPLAY_KEY)
-                    .build();
+            BooleanSetting visible = BooleanSetting.builder().id("hud_panel_visible_" + sanitizePanelSettingId(panelId)).defaultValue(true).categoryDisplayKey(HUD_PANELS_CATEGORY_DISPLAY_KEY).build();
             addSetting(visible);
             hudPanelVisibilitySettings.put(panelId, visible);
         }
@@ -84,10 +84,6 @@ public abstract class HudHostModule extends Module {
      */
     public java.util.Optional<BooleanSetting> hudPanelVisibilityToggle(String panelId) {
         return java.util.Optional.ofNullable(hudPanelVisibilitySettings.get(panelId));
-    }
-
-    private static String sanitizePanelSettingId(String panelId) {
-        return panelId.replace('.', '_').replace('-', '_');
     }
 
     public boolean isHudPanelUserVisible(String panelId) {
@@ -168,9 +164,7 @@ public abstract class HudHostModule extends Module {
     }
 
     void deserializeHudLayouts(JsonObject root, Gson gson) {
-        JsonObject hudPanelsJson = root.has("hudPanels") && root.get("hudPanels").isJsonObject()
-                ? root.get("hudPanels").getAsJsonObject()
-                : null;
+        JsonObject hudPanelsJson = root.has("hudPanels") && root.get("hudPanels").isJsonObject() ? root.get("hudPanels").getAsJsonObject() : null;
         if (hudPanelsJson != null && !registeredHudPanelsList.isEmpty()) {
             for (HudPanel hudPanel : registeredHudPanelsList) {
                 String panelKey = hudPanel.getId();

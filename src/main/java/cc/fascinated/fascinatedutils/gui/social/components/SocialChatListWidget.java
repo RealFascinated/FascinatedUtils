@@ -13,19 +13,12 @@ import java.util.function.Supplier;
 
 public class SocialChatListWidget {
 
-    public record Props(
-        List<Channel> channels,
-            float scrollY,
-            Consumer<Float> scrollYSink,
-        Function<Channel, FWidget> channelRowFactory,
-            Supplier<FWidget> emptyFactory
-    ) {}
-
     public static FScrollColumnWidget build(Props props) {
         FColumnWidget body = new FColumnWidget(4f, cc.fascinated.fascinatedutils.gui.core.Align.START);
         if (props.channels() == null || props.channels().isEmpty()) {
             body.addChild(props.emptyFactory().get());
-        } else {
+        }
+        else {
             for (Channel channel : props.channels()) {
                 body.addChild(props.channelRowFactory().apply(channel));
             }
@@ -35,4 +28,7 @@ public class SocialChatListWidget {
         scroll.setScrollOffsetChangeListener(props.scrollYSink());
         return scroll;
     }
+
+    public record Props(List<Channel> channels, float scrollY, Consumer<Float> scrollYSink,
+                        Function<Channel, FWidget> channelRowFactory, Supplier<FWidget> emptyFactory) {}
 }

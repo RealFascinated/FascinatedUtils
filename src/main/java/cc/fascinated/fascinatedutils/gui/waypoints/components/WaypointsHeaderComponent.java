@@ -23,9 +23,7 @@ public class WaypointsHeaderComponent extends UiComponent<WaypointsHeaderCompone
     private static final float ACTION_BUTTON_HEIGHT = 20f;
     private static final float BUTTON_GAP = 3f;
 
-    private final WaypointAccentAddChipButton addChipButton = new WaypointAccentAddChipButton(
-            () -> {},
-            () -> Component.translatable("fascinatedutils.waypoints.add").getString());
+    private final WaypointAccentAddChipButton addChipButton = new WaypointAccentAddChipButton(() -> {}, () -> Component.translatable("fascinatedutils.waypoints.add").getString());
 
     public static UiView view(Props props) {
         return Ui.component(WaypointsHeaderComponent.class, WaypointsHeaderComponent::new, props);
@@ -35,13 +33,7 @@ public class WaypointsHeaderComponent extends UiComponent<WaypointsHeaderCompone
     public UiView render() {
         Props currentProps = props();
         addChipButton.setOnClick(currentProps.onRequestAdd());
-        return Ui.row(BUTTON_GAP, Align.CENTER, List.of(
-                Ui.slot(new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f),
-                        Ui.label(Component.translatable("fascinatedutils.waypoints.title").getString(),
-                                FascinatedGuiTheme.INSTANCE.textPrimary(), true, TextOverflow.ELLIPSIS, Align.START)),
-                UiSlot.of(Ui.widgetSlot("waypoints.header.add", addChipButton)),
-                UiSlot.of(Ui.buttonClose(currentProps.onClose()))
-        ));
+        return Ui.row(BUTTON_GAP, Align.CENTER, List.of(Ui.slot(new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f), Ui.label(Component.translatable("fascinatedutils.waypoints.title").getString(), FascinatedGuiTheme.INSTANCE.textPrimary(), true, TextOverflow.ELLIPSIS, Align.START)), UiSlot.of(Ui.widgetSlot("waypoints.header.add", addChipButton)), UiSlot.of(Ui.buttonClose(currentProps.onClose()))));
     }
 
     /**
@@ -50,8 +42,7 @@ public class WaypointsHeaderComponent extends UiComponent<WaypointsHeaderCompone
      * @param onRequestAdd invoked when the accent add chip is clicked
      * @param onClose      invoked when the close button is clicked
      */
-    public record Props(Runnable onRequestAdd, Runnable onClose) {
-    }
+    public record Props(Runnable onRequestAdd, Runnable onClose) {}
 
     private static final class WaypointAccentAddChipButton extends FButtonWidget {
         WaypointAccentAddChipButton(Runnable onClick, java.util.function.Supplier<String> labelSupplier) {

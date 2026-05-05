@@ -32,13 +32,20 @@ public class ScrollMove extends Feature<InventoryTweaksModule> {
         int count = Math.abs(ticks);
         for (int i = 0; i < count; i++) {
             if (push) {
-                if (!hoveredSlot.hasItem()) break;
+                if (!hoveredSlot.hasItem()) {
+                    break;
+                }
                 moveOne(hoveredSlot, true, menu, clicker);
-            } else {
-                if (!hoveredSlot.hasItem()) break;
+            }
+            else {
+                if (!hoveredSlot.hasItem()) {
+                    break;
+                }
                 boolean hoveredInPlayerInv = hoveredSlot.container == Minecraft.getInstance().player.getInventory();
                 Slot source = findMatchingSource(!hoveredInPlayerInv, hoveredSlot.getItem(), menu);
-                if (source == null) break;
+                if (source == null) {
+                    break;
+                }
                 moveOne(source, true, menu, clicker);
             }
         }
@@ -46,13 +53,17 @@ public class ScrollMove extends Feature<InventoryTweaksModule> {
 
     private void moveOne(Slot source, boolean toOtherSide, AbstractContainerMenu menu, SlotClickAction clicker) {
         ItemStack sourceStack = source.getItem();
-        if (sourceStack.isEmpty()) return;
+        if (sourceStack.isEmpty()) {
+            return;
+        }
 
         boolean sourceInPlayerInv = source.container == Minecraft.getInstance().player.getInventory();
         boolean targetInPlayerInv = toOtherSide != sourceInPlayerInv;
 
         Slot target = findTarget(targetInPlayerInv, sourceStack, menu);
-        if (target == null) return;
+        if (target == null) {
+            return;
+        }
 
         int sourceId = menu.slots.indexOf(source);
         int targetId = menu.slots.indexOf(target);
@@ -68,14 +79,16 @@ public class ScrollMove extends Feature<InventoryTweaksModule> {
         Slot emptyFallback = null;
         for (Slot slot : menu.slots) {
             boolean slotInPlayerInv = slot.container == Minecraft.getInstance().player.getInventory();
-            if (slotInPlayerInv != inPlayerInv) continue;
+            if (slotInPlayerInv != inPlayerInv) {
+                continue;
+            }
             if (slot.hasItem()) {
                 ItemStack existing = slot.getItem();
-                if (ItemStack.isSameItemSameComponents(existing, item)
-                        && existing.getCount() < slot.getMaxStackSize(existing)) {
+                if (ItemStack.isSameItemSameComponents(existing, item) && existing.getCount() < slot.getMaxStackSize(existing)) {
                     return slot;
                 }
-            } else if (emptyFallback == null && slot.mayPlace(item)) {
+            }
+            else if (emptyFallback == null && slot.mayPlace(item)) {
                 emptyFallback = slot;
             }
         }
@@ -85,7 +98,9 @@ public class ScrollMove extends Feature<InventoryTweaksModule> {
     private Slot findMatchingSource(boolean inPlayerInv, ItemStack filter, AbstractContainerMenu menu) {
         for (Slot slot : menu.slots) {
             boolean slotInPlayerInv = slot.container == Minecraft.getInstance().player.getInventory();
-            if (slotInPlayerInv != inPlayerInv) continue;
+            if (slotInPlayerInv != inPlayerInv) {
+                continue;
+            }
             if (slot.hasItem() && ItemStack.isSameItemSameComponents(slot.getItem(), filter)) {
                 return slot;
             }

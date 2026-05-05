@@ -12,36 +12,6 @@ import java.util.*;
  */
 public final class UiReconciler {
 
-    public void sync(FReconcileRoot root, MountNode rootMount, UiView view) {
-        FWidget surface = reconcileInto(rootMount, view);
-        root.clearChildren();
-        if (surface != null) {
-            root.addChild(surface);
-        }
-    }
-
-    private FWidget reconcileInto(MountNode mount, UiView view) {
-        if (!isCompatibleMount(mount, view)) {
-            resetMountSubtree(mount);
-        }
-        return switch (view) {
-            case UiView.UiColumn column -> reconcileColumn(mount, column);
-            case UiView.UiRow row -> reconcileRow(mount, row);
-            case UiView.UiStack stack -> reconcileStack(mount, stack);
-            case UiView.UiScroll scroll -> reconcileScroll(mount, scroll);
-            case UiView.UiSpacer spacer -> reconcileSpacer(mount, spacer);
-            case UiView.UiMinWidth minWidth -> reconcileMinWidth(mount, minWidth);
-            case UiView.UiMaxCenter maxCenter -> reconcileMaxCenter(mount, maxCenter);
-            case UiView.UiRect rect -> reconcileRect(mount, rect);
-            case UiView.UiLabel label -> reconcileLabel(mount, label);
-            case UiView.UiButton button -> reconcileButton(mount, button);
-            case UiView.UiOutlinedPinned outlined -> reconcileOutlined(mount, outlined);
-            case UiView.UiCustom custom -> reconcileCustom(mount, custom);
-            case UiView.UiWidgetSlot slot -> reconcileWidgetSlot(mount, slot);
-            case UiView.UiComponentNode<?> component -> reconcileComponent(mount, component);
-        };
-    }
-
     private static boolean isCompatibleMount(MountNode mount, UiView view) {
         if (view instanceof UiView.UiComponentNode<?> componentNode) {
             return mount.component != null && mount.component.getClass() == componentNode.type();
@@ -71,6 +41,56 @@ public final class UiReconciler {
             case UiView.UiCustom ignored -> true;
             case UiView.UiWidgetSlot slot -> widget == slot.widget();
             case UiView.UiComponentNode<?> ignored -> false;
+        };
+    }
+
+    private static MountNode childMountAt(MountNode parent, int index) {
+        while (parent.childMounts.size() <= index) {
+            parent.childMounts.add(new MountNode());
+        }
+        return parent.childMounts.get(index);
+    }
+
+    private static void resetMountSubtree(MountNode mount) {
+        for (MountNode child : mount.childMounts) {
+            resetMountSubtree(child);
+        }
+        mount.childMounts.clear();
+        if (mount.component != null) {
+            mount.component.dispatchUnmount();
+            mount.component = null;
+        }
+        mount.widget = null;
+        mount.lastEffectiveKey = null;
+    }
+
+    public void sync(FReconcileRoot root, MountNode rootMount, UiView view) {
+        FWidget surface = reconcileInto(rootMount, view);
+        root.clearChildren();
+        if (surface != null) {
+            root.addChild(surface);
+        }
+    }
+
+    private FWidget reconcileInto(MountNode mount, UiView view) {
+        if (!isCompatibleMount(mount, view)) {
+            resetMountSubtree(mount);
+        }
+        return switch (view) {
+            case UiView.UiColumn column -> reconcileColumn(mount, column);
+            case UiView.UiRow row -> reconcileRow(mount, row);
+            case UiView.UiStack stack -> reconcileStack(mount, stack);
+            case UiView.UiScroll scroll -> reconcileScroll(mount, scroll);
+            case UiView.UiSpacer spacer -> reconcileSpacer(mount, spacer);
+            case UiView.UiMinWidth minWidth -> reconcileMinWidth(mount, minWidth);
+            case UiView.UiMaxCenter maxCenter -> reconcileMaxCenter(mount, maxCenter);
+            case UiView.UiRect rect -> reconcileRect(mount, rect);
+            case UiView.UiLabel label -> reconcileLabel(mount, label);
+            case UiView.UiButton button -> reconcileButton(mount, button);
+            case UiView.UiOutlinedPinned outlined -> reconcileOutlined(mount, outlined);
+            case UiView.UiCustom custom -> reconcileCustom(mount, custom);
+            case UiView.UiWidgetSlot slot -> reconcileWidgetSlot(mount, slot);
+            case UiView.UiComponentNode<?> component -> reconcileComponent(mount, component);
         };
     }
 
@@ -122,9 +142,7 @@ public final class UiReconciler {
 
     private FWidget reconcileScroll(MountNode mount, UiView.UiScroll scroll) {
         UiView.ScrollSpec spec = scroll.spec();
-        boolean compatible = mount.widget instanceof FScrollColumnWidget scrollWidget
-                && scrollWidget.scrollBodyRoot() instanceof FColumnWidget
-                && Math.abs(scrollWidget.scrollClipRowGap() - spec.scrollClipRowGap()) < 1e-3f;
+        boolean compatible = mount.widget instanceof FScrollColumnWidget scrollWidget && scrollWidget.scrollBodyRoot() instanceof FColumnWidget && Math.abs(scrollWidget.scrollClipRowGap() - spec.scrollClipRowGap()) < 1e-3f;
         if (!compatible) {
             resetMountSubtree(mount);
             FColumnWidget bodyColumn = new FColumnWidget(spec.bodyColumnGap(), Align.START);
@@ -155,9 +173,7 @@ public final class UiReconciler {
     }
 
     private FWidget reconcileSpacer(MountNode mount, UiView.UiSpacer spacer) {
-        if (!(mount.widget instanceof FSpacerWidget existing)
-                || Math.abs(existing.spacerWidth() - spacer.width()) > 1e-3f
-                || Math.abs(existing.spacerHeight() - spacer.height()) > 1e-3f) {
+        if (!(mount.widget instanceof FSpacerWidget existing) || Math.abs(existing.spacerWidth() - spacer.width()) > 1e-3f || Math.abs(existing.spacerHeight() - spacer.height()) > 1e-3f) {
             resetMountSubtree(mount);
             mount.widget = new FSpacerWidget(spacer.width(), spacer.height());
         }
@@ -167,9 +183,7 @@ public final class UiReconciler {
     private FWidget reconcileMinWidth(MountNode mount, UiView.UiMinWidth minWidth) {
         MountNode innerMount = childMountAt(mount, 0);
         FWidget innerSurface = reconcileInto(innerMount, minWidth.inner());
-        boolean needFreshHost = !(mount.widget instanceof FMinWidthHostWidget host)
-                || host.minimumWidth() != minWidth.minimumWidth()
-                || host.innerChild() != innerSurface;
+        boolean needFreshHost = !(mount.widget instanceof FMinWidthHostWidget host) || host.minimumWidth() != minWidth.minimumWidth() || host.innerChild() != innerSurface;
         if (needFreshHost) {
             resetMountSubtree(mount);
             mount.widget = new FMinWidthHostWidget(minWidth.minimumWidth(), innerSurface);
@@ -185,9 +199,7 @@ public final class UiReconciler {
     private FWidget reconcileMaxCenter(MountNode mount, UiView.UiMaxCenter maxCenter) {
         MountNode innerMount = childMountAt(mount, 0);
         FWidget innerSurface = reconcileInto(innerMount, maxCenter.inner());
-        boolean needFreshHost = !(mount.widget instanceof FMaxCenterInsetsWidget host)
-                || !host.matchesSpec(maxCenter.insetHorizontal(), maxCenter.insetVertical(), maxCenter.maxWidth(), maxCenter.maxHeight())
-                || host.inner() != innerSurface;
+        boolean needFreshHost = !(mount.widget instanceof FMaxCenterInsetsWidget host) || !host.matchesSpec(maxCenter.insetHorizontal(), maxCenter.insetVertical(), maxCenter.maxWidth(), maxCenter.maxHeight()) || host.inner() != innerSurface;
         if (needFreshHost) {
             resetMountSubtree(mount);
             mount.widget = new FMaxCenterInsetsWidget(maxCenter.insetHorizontal(), maxCenter.insetVertical(), maxCenter.maxWidth(), maxCenter.maxHeight(), innerSurface);
@@ -248,9 +260,7 @@ public final class UiReconciler {
         if (!(mount.widget instanceof FButtonWidget existing)) {
             resetMountSubtree(mount);
             UiView.ButtonSpec spec = buttonView.spec();
-            button = new FButtonWidget(spec.onClick(), spec.label(), spec.layoutWidthLogical(), spec.maxLabelLines(),
-                    spec.labelLineGapDesign(), spec.verticalPadDesign(), spec.heightScale(), spec.horizontalTextPadDesign(),
-                    spec.cornerRadiusDesign());
+            button = new FButtonWidget(spec.onClick(), spec.label(), spec.layoutWidthLogical(), spec.maxLabelLines(), spec.labelLineGapDesign(), spec.verticalPadDesign(), spec.heightScale(), spec.horizontalTextPadDesign(), spec.cornerRadiusDesign());
             mount.widget = button;
         }
         else {
@@ -289,8 +299,7 @@ public final class UiReconciler {
     }
 
     private <P> FWidget reconcileComponent(MountNode mount, UiView.UiComponentNode<P> componentNode) {
-        @SuppressWarnings("unchecked")
-        UiComponent<P> component = (UiComponent<P>) mount.component;
+        @SuppressWarnings("unchecked") UiComponent<P> component = (UiComponent<P>) mount.component;
         if (component == null) {
             component = componentNode.factory().get();
             mount.component = component;
@@ -337,26 +346,6 @@ public final class UiReconciler {
         }
     }
 
-    private static MountNode childMountAt(MountNode parent, int index) {
-        while (parent.childMounts.size() <= index) {
-            parent.childMounts.add(new MountNode());
-        }
-        return parent.childMounts.get(index);
-    }
-
-    private static void resetMountSubtree(MountNode mount) {
-        for (MountNode child : mount.childMounts) {
-            resetMountSubtree(child);
-        }
-        mount.childMounts.clear();
-        if (mount.component != null) {
-            mount.component.dispatchUnmount();
-            mount.component = null;
-        }
-        mount.widget = null;
-        mount.lastEffectiveKey = null;
-    }
-
     /**
      * Recursively disposes every component in the subtree by firing {@code onUnmount}. Intended
      * for screen teardown paths (for example {@link DeclarativeMountHost#dispose()}).
@@ -368,9 +357,9 @@ public final class UiReconciler {
     }
 
     public static final class MountNode {
+        final List<MountNode> childMounts = new ArrayList<>();
         @Nullable FWidget widget;
         @Nullable UiComponent<?> component;
         @Nullable String lastEffectiveKey;
-        final List<MountNode> childMounts = new ArrayList<>();
     }
 }

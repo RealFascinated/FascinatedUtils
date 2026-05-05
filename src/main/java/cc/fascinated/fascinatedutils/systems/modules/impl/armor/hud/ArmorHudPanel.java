@@ -32,6 +32,37 @@ public class ArmorHudPanel extends HudPanel {
         this.armorModule = armorModule;
     }
 
+    private static ItemStack previewStack(Item item, int damage) {
+        ItemStack stack = new ItemStack(item);
+        stack.setDamageValue(damage);
+        return stack;
+    }
+
+    private static ItemStack editorPreviewStackForRow(int rowIndex) {
+        return switch (rowIndex) {
+            case 0 -> previewStack(Items.DIAMOND_HELMET, 120);
+            case 1 -> previewStack(Items.DIAMOND_CHESTPLATE, 240);
+            case 2 -> previewStack(Items.DIAMOND_LEGGINGS, 180);
+            case 3 -> previewStack(Items.DIAMOND_BOOTS, 90);
+            case 4 -> previewStack(Items.SHIELD, 150);
+            case 5 -> previewStack(Items.DIAMOND_SWORD, 200);
+            default -> ItemStack.EMPTY;
+        };
+    }
+
+    private static ItemStack stackForRow(Player player, int rowIndex) {
+        if (rowIndex < ARMOR_SLOTS.length) {
+            return player.getItemBySlot(ARMOR_SLOTS[rowIndex]);
+        }
+        if (rowIndex == OFF_HAND_ROW_INDEX) {
+            return player.getOffhandItem();
+        }
+        if (rowIndex == MAIN_HAND_ROW_INDEX) {
+            return player.getMainHandItem();
+        }
+        return ItemStack.EMPTY;
+    }
+
     @Override
     protected @Nullable HudContent produceHudContent(float deltaSeconds, boolean editorMode) {
         List<HudContent.ItemRow> rows = new ArrayList<>(ArmorModule.ARMOR_HUD_ROW_COUNT);
@@ -65,37 +96,6 @@ public class ArmorHudPanel extends HudPanel {
             rows.add(new HudContent.ItemRow(displayStack, durabilityOnlyText(sourceStack, shouldColorRow(rowIndex))));
         }
         return rows.isEmpty() ? null : new HudContent.ItemRows(rows);
-    }
-
-    private static ItemStack previewStack(Item item, int damage) {
-        ItemStack stack = new ItemStack(item);
-        stack.setDamageValue(damage);
-        return stack;
-    }
-
-    private static ItemStack editorPreviewStackForRow(int rowIndex) {
-        return switch (rowIndex) {
-            case 0 -> previewStack(Items.DIAMOND_HELMET, 120);
-            case 1 -> previewStack(Items.DIAMOND_CHESTPLATE, 240);
-            case 2 -> previewStack(Items.DIAMOND_LEGGINGS, 180);
-            case 3 -> previewStack(Items.DIAMOND_BOOTS, 90);
-            case 4 -> previewStack(Items.SHIELD, 150);
-            case 5 -> previewStack(Items.DIAMOND_SWORD, 200);
-            default -> ItemStack.EMPTY;
-        };
-    }
-
-    private static ItemStack stackForRow(Player player, int rowIndex) {
-        if (rowIndex < ARMOR_SLOTS.length) {
-            return player.getItemBySlot(ARMOR_SLOTS[rowIndex]);
-        }
-        if (rowIndex == OFF_HAND_ROW_INDEX) {
-            return player.getOffhandItem();
-        }
-        if (rowIndex == MAIN_HAND_ROW_INDEX) {
-            return player.getMainHandItem();
-        }
-        return ItemStack.EMPTY;
     }
 
     private ItemStack resolvedRowStack(ItemStack stack, Player player) {
@@ -165,7 +165,8 @@ public class ArmorHudPanel extends HudPanel {
             float percent = (float) durability / stack.getMaxDamage();
             String colorHex = Colors.rgbHex(TpsColors.getTpsColor(percent * 20f));
             durabilityText = "<color:" + colorHex + ">" + durability + "</color>";
-        } else {
+        }
+        else {
             durabilityText = "<white>" + durability + "</white>";
         }
         return sizeAppend.isBlank() ? durabilityText : durabilityText + " " + sizeAppend;

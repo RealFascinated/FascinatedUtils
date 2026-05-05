@@ -37,18 +37,13 @@ public class SocialScreen extends WidgetScreen {
 
     public SocialScreen() {
         super(Component.translatable("fascinatedutils.social.title"));
-        addFriendInput = new FOutlinedTextInputWidget(FOCUS_ADD_FRIEND, 32, 22f,
-                () -> Component.translatable("fascinatedutils.social.add_friend_placeholder").getString());
+        addFriendInput = new FOutlinedTextInputWidget(FOCUS_ADD_FRIEND, 32, 22f, () -> Component.translatable("fascinatedutils.social.add_friend_placeholder").getString());
         addFriendInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
-        dmMessageInput = new FOutlinedTextInputWidget(FOCUS_DM_MESSAGE, 512, 22f,
-                () -> Component.translatable("fascinatedutils.social.dm.input_placeholder").getString());
+        dmMessageInput = new FOutlinedTextInputWidget(FOCUS_DM_MESSAGE, 512, 22f, () -> Component.translatable("fascinatedutils.social.dm.input_placeholder").getString());
         dmMessageInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
         Consumer<Boolean> presenceMenuOpenSink = menuOpen -> preferredPresenceMenuOpen = menuOpen;
-        declarativeMountHost = new DeclarativeMountHost((viewportWidth, viewportHeight) ->
-                SocialRootComponent.view(new SocialMainWorkspaceComponent.Props(viewportWidth, viewportHeight,
-                        addFriendInput, dmMessageInput, () -> Minecraft.getInstance().setScreen(null),
-                        presenceMenuOpenSink)));
+        declarativeMountHost = new DeclarativeMountHost((viewportWidth, viewportHeight) -> SocialRootComponent.view(new SocialMainWorkspaceComponent.Props(viewportWidth, viewportHeight, addFriendInput, dmMessageInput, () -> Minecraft.getInstance().setScreen(null), presenceMenuOpenSink)));
         host.setRoot(declarativeMountHost);
     }
 

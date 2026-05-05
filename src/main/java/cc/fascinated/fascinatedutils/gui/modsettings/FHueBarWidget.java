@@ -1,9 +1,8 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
-
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
@@ -24,6 +23,10 @@ public class FHueBarWidget extends FWidget {
     public FHueBarWidget(float initialHue, Consumer<Float> onHueChanged) {
         this.hue = initialHue;
         this.onHueChanged = onHueChanged;
+    }
+
+    private static float clamp01(float val) {
+        return Math.max(0f, Math.min(1f, val));
     }
 
     public void setHue(float hue) {
@@ -90,9 +93,5 @@ public class FHueBarWidget extends FWidget {
     private void updateFromPointer(float pointerX) {
         hue = clamp01((pointerX - x()) / Math.max(1f, w())) * 360f;
         onHueChanged.accept(hue);
-    }
-
-    private static float clamp01(float val) {
-        return Math.max(0f, Math.min(1f, val));
     }
 }

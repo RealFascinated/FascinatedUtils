@@ -13,12 +13,15 @@ public final class ModSettingsModulesPresentationComponent extends UiComponent<M
         return Ui.component(ModSettingsModulesPresentationComponent.class, ModSettingsModulesPresentationComponent::new, props);
     }
 
+    public static PresentationSurface presentationSurfaceShell() {
+        return new PresentationSurface();
+    }
+
     @Override
     public UiView render() {
         Props snapshot = props();
         return Ui.custom(previousWidget -> {
-            if (previousWidget instanceof PresentationSurface retained
-                    && retained.matches(snapshot.presentationStamp(), snapshot.viewportWidth(), snapshot.viewportHeight())) {
+            if (previousWidget instanceof PresentationSurface retained && retained.matches(snapshot.presentationStamp(), snapshot.viewportWidth(), snapshot.viewportHeight())) {
                 return retained;
             }
             FWidget nextSurface = snapshot.host().composeModulesPresentationSurface(snapshot.viewportWidth(), snapshot.viewportHeight());
@@ -30,8 +33,11 @@ public final class ModSettingsModulesPresentationComponent extends UiComponent<M
         });
     }
 
-    public static PresentationSurface presentationSurfaceShell() {
-        return new PresentationSurface();
+    /**
+     * Narrow host surface wired into this component via props.
+     */
+    public interface HostSurface {
+        FWidget composeModulesPresentationSurface(float viewportWidth, float viewportHeight);
     }
 
     public static final class PresentationSurface extends FAbsoluteStackWidget {
@@ -40,9 +46,7 @@ public final class ModSettingsModulesPresentationComponent extends UiComponent<M
         private float recordedHeight = Float.NaN;
 
         public boolean matches(int presentationStamp, float viewportWidth, float viewportHeight) {
-            return recordedStamp == presentationStamp
-                    && Math.abs(recordedWidth - viewportWidth) < LAYOUT_STABILITY_EPSILON
-                    && Math.abs(recordedHeight - viewportHeight) < LAYOUT_STABILITY_EPSILON;
+            return recordedStamp == presentationStamp && Math.abs(recordedWidth - viewportWidth) < LAYOUT_STABILITY_EPSILON && Math.abs(recordedHeight - viewportHeight) < LAYOUT_STABILITY_EPSILON;
         }
 
         public void capture(int presentationStamp, float viewportWidth, float viewportHeight) {
@@ -52,13 +56,5 @@ public final class ModSettingsModulesPresentationComponent extends UiComponent<M
         }
     }
 
-    /**
-     * Narrow host surface wired into this component via props.
-     */
-    public interface HostSurface {
-        FWidget composeModulesPresentationSurface(float viewportWidth, float viewportHeight);
-    }
-
-    public record Props(HostSurface host, float viewportWidth, float viewportHeight, int presentationStamp) {
-    }
+    public record Props(HostSurface host, float viewportWidth, float viewportHeight, int presentationStamp) {}
 }

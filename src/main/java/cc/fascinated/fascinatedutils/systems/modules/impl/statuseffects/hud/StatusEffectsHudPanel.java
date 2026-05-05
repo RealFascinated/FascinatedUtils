@@ -41,6 +41,39 @@ public class StatusEffectsHudPanel extends HudPanel {
         this.statusEffectsModule = statusEffectsModule;
     }
 
+    private static int whiteWithAlpha(float alpha) {
+        int alphaChannel = Mth.clamp(Math.round(alpha * 255f), 0, 255);
+        return (alphaChannel << 24) | 0x00FFFFFF;
+    }
+
+    private static Identifier spriteForMobEffect(Holder<MobEffect> effect) {
+        return effect.unwrapKey().map(ResourceKey::identifier).map(identifier -> identifier.withPrefix("mob_effect/")).orElseGet(MissingTextureAtlasSprite::getLocation);
+    }
+
+    private static String formatEffectNameWithAmplifier(MobEffectInstance effectInstance, boolean includeAmplifier) {
+        String effectName = effectInstance.getEffect().value().getDisplayName().getString();
+        if (!includeAmplifier) {
+            return effectName;
+        }
+        int amplifier = effectInstance.getAmplifier();
+        if (amplifier <= 0) {
+            return effectName;
+        }
+
+        int level = amplifier + 1;
+        String levelKey = "enchantment.level." + level;
+        String translatedLevel = Component.translatable(levelKey).getString();
+        String levelText = translatedLevel.equals(levelKey) ? Integer.toString(level) : translatedLevel;
+        return effectName + " " + levelText;
+    }
+
+    private static String compactText(String effectName, String durationText, boolean includeDuration) {
+        if (!includeDuration || durationText == null || durationText.isBlank()) {
+            return effectName;
+        }
+        return effectName + " " + durationText;
+    }
+
     @Override
     protected @Nullable HudContent produceHudContent(float deltaSeconds, boolean editorMode) {
         return null;
@@ -151,39 +184,6 @@ public class StatusEffectsHudPanel extends HudPanel {
         };
     }
 
-    private static int whiteWithAlpha(float alpha) {
-        int alphaChannel = Mth.clamp(Math.round(alpha * 255f), 0, 255);
-        return (alphaChannel << 24) | 0x00FFFFFF;
-    }
-
-    private static Identifier spriteForMobEffect(Holder<MobEffect> effect) {
-        return effect.unwrapKey().map(ResourceKey::identifier).map(identifier -> identifier.withPrefix("mob_effect/")).orElseGet(MissingTextureAtlasSprite::getLocation);
-    }
-
-    private static String formatEffectNameWithAmplifier(MobEffectInstance effectInstance, boolean includeAmplifier) {
-        String effectName = effectInstance.getEffect().value().getDisplayName().getString();
-        if (!includeAmplifier) {
-            return effectName;
-        }
-        int amplifier = effectInstance.getAmplifier();
-        if (amplifier <= 0) {
-            return effectName;
-        }
-
-        int level = amplifier + 1;
-        String levelKey = "enchantment.level." + level;
-        String translatedLevel = Component.translatable(levelKey).getString();
-        String levelText = translatedLevel.equals(levelKey) ? Integer.toString(level) : translatedLevel;
-        return effectName + " " + levelText;
-    }
-
-    private static String compactText(String effectName, String durationText, boolean includeDuration) {
-        if (!includeDuration || durationText == null || durationText.isBlank()) {
-            return effectName;
-        }
-        return effectName + " " + durationText;
-    }
-
     private float durationFlashAlpha(MobEffectInstance effectInstance) {
         if (effectInstance.isAmbient()) {
             return 1f;
@@ -215,9 +215,7 @@ public class StatusEffectsHudPanel extends HudPanel {
                 List<EffectRow> rows = new ArrayList<>(activeEffects.size());
                 for (MobEffectInstance effectInstance : activeEffects) {
                     String effectName = formatEffectNameWithAmplifier(effectInstance, includeAmplifier);
-                    String durationText = effectInstance.isInfiniteDuration()
-                            ? Component.translatable("effect.duration.infinite").getString()
-                            : DateUtils.formatDuration(effectInstance.getDuration());
+                    String durationText = effectInstance.isInfiniteDuration() ? Component.translatable("effect.duration.infinite").getString() : DateUtils.formatDuration(effectInstance.getDuration());
                     rows.add(new EffectRow(spriteForMobEffect(effectInstance.getEffect()), effectName, durationText, durationFlashAlpha(effectInstance)));
                 }
                 return rows;

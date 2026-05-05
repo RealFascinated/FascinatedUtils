@@ -10,11 +10,7 @@ import lombok.Getter;
 
 public class MemoryWidget extends HudHostModule {
 
-    private final EnumSetting<Format> memoryFormat = EnumSetting.<Format>builder().id("memory_format")
-            .defaultValue(Format.FULL)
-            .valueFormatter(Format::name)
-            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
-            .build();
+    private final EnumSetting<Format> memoryFormat = EnumSetting.<Format>builder().id("memory_format").defaultValue(Format.FULL).valueFormatter(Format::name).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
     public MemoryWidget() {
         super("process_memory", "Process Memory", HudDefaults.builder().build());
@@ -30,8 +26,7 @@ public class MemoryWidget extends HudHostModule {
     @Getter
     @AllArgsConstructor
     public enum Format {
-        FULL("Full"),
-        PERCENT("Percent");
+        FULL("Full"), PERCENT("Percent");
 
         private final String name;
     }

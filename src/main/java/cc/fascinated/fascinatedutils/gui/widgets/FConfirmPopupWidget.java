@@ -15,19 +15,10 @@ import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
  */
 public class FConfirmPopupWidget extends FPopupWidget {
 
-    /**
-     * Visual style applied to the confirm button.
-     */
-    public enum ConfirmStyle {
-        NEUTRAL,
-        DESTRUCTIVE
-    }
-
     private final FLabelWidget titleLabel;
     private final FLabelWidget messageLabel;
     private final FButtonWidget denyButton;
     private final FButtonWidget confirmButton;
-
     /**
      * Creates a confirm/deny popup.
      *
@@ -39,8 +30,7 @@ public class FConfirmPopupWidget extends FPopupWidget {
      * @param onDeny       callback fired when the user denies, cancels, or dismisses
      * @param onConfirm    callback fired when the user confirms
      */
-    public FConfirmPopupWidget(String title, String message, String confirmLabel, String denyLabel,
-                               ConfirmStyle confirmStyle, Runnable onDeny, Runnable onConfirm) {
+    public FConfirmPopupWidget(String title, String message, String confirmLabel, String denyLabel, ConfirmStyle confirmStyle, Runnable onDeny, Runnable onConfirm) {
         super(onDeny);
 
         titleLabel = new FLabelWidget();
@@ -56,7 +46,8 @@ public class FConfirmPopupWidget extends FPopupWidget {
             messageLabel.setAlignX(Align.START);
             messageLabel.setOverflow(TextOverflow.WRAP);
             messageLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
-        } else {
+        }
+        else {
             messageLabel = null;
         }
 
@@ -74,7 +65,8 @@ public class FConfirmPopupWidget extends FPopupWidget {
                     return hovered ? 0xFFFF8A8A : 0xFFE07171;
                 }
             };
-        } else {
+        }
+        else {
             confirmButton = new FButtonWidget(onConfirm, () -> confirmLabel, 100f, 1, 2f, 8f, 1f, 8f) {
                 @Override
                 protected int resolveButtonFillColorArgb(boolean hovered) {
@@ -108,9 +100,7 @@ public class FConfirmPopupWidget extends FPopupWidget {
         float messageHeight = messageLabel != null ? messageLabel.intrinsicHeightForColumn(measure, bodyWidth) : 0f;
         float actionsHeight = denyButton.intrinsicHeightForColumn(measure, bodyWidth);
 
-        float computedDialogHeight = verticalPadding + titleHeight
-                + (messageHeight > 0f ? rowGap + messageHeight : 0f)
-                + rowGap + actionsHeight + verticalPadding;
+        float computedDialogHeight = verticalPadding + titleHeight + (messageHeight > 0f ? rowGap + messageHeight : 0f) + rowGap + actionsHeight + verticalPadding;
         float popupHeight = Math.max(90f, computedDialogHeight);
         setDialogBounds(layoutX, layoutY, layoutWidth, layoutHeight, popupWidth, popupHeight);
 
@@ -126,9 +116,14 @@ public class FConfirmPopupWidget extends FPopupWidget {
         float actionsY = dialogY() + dialogHeight() - verticalPadding - actionsHeight;
         float actionGap = UITheme.GAP_SM;
         float actionWidth = Math.max(0f, (bodyWidth - actionGap) * 0.5f);
-        denyButton.layout(measure, dialogX() + horizontalPadding, actionsY, actionWidth,
-                denyButton.intrinsicHeightForColumn(measure, actionWidth));
-        confirmButton.layout(measure, dialogX() + horizontalPadding + actionWidth + actionGap, actionsY, actionWidth,
-                confirmButton.intrinsicHeightForColumn(measure, actionWidth));
+        denyButton.layout(measure, dialogX() + horizontalPadding, actionsY, actionWidth, denyButton.intrinsicHeightForColumn(measure, actionWidth));
+        confirmButton.layout(measure, dialogX() + horizontalPadding + actionWidth + actionGap, actionsY, actionWidth, confirmButton.intrinsicHeightForColumn(measure, actionWidth));
+    }
+
+    /**
+     * Visual style applied to the confirm button.
+     */
+    public enum ConfirmStyle {
+        NEUTRAL, DESTRUCTIVE
     }
 }

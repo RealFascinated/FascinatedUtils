@@ -17,55 +17,21 @@ public class ArmorModule extends HudHostModule {
     public static final int ARMOR_HUD_ROW_COUNT = 6;
     private static final String SLOTS_CATEGORY_DISPLAY_KEY = "Slots";
 
-    private final BooleanSetting[] slotRowVisibility = {
-            BooleanSetting.builder().id("show_head").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(),
-            BooleanSetting.builder().id("show_chest").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(),
-            BooleanSetting.builder().id("show_legs").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(),
-            BooleanSetting.builder().id("show_feet").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(),
-            BooleanSetting.builder().id("show_off_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(),
-            BooleanSetting.builder().id("show_main_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build()
-    };
+    private final BooleanSetting[] slotRowVisibility = {BooleanSetting.builder().id("show_head").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_chest").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_legs").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_feet").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_off_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_main_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build()};
 
-    private final BooleanSetting showItemStackSizeBytes = BooleanSetting.builder()
-            .id("show_item_stack_size_bytes")
-            .defaultValue(false)
-            .categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY)
-            .build();
+    private final BooleanSetting showItemStackSizeBytes = BooleanSetting.builder().id("show_item_stack_size_bytes").defaultValue(false).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
-    private final BooleanSetting showOffHandNextToMainHand = BooleanSetting.builder()
-            .id("show_off_hand_next_to_main_hand")
-            .defaultValue(false)
-            .categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY)
-            .build();
+    private final BooleanSetting showOffHandNextToMainHand = BooleanSetting.builder().id("show_off_hand_next_to_main_hand").defaultValue(false).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build();
 
-    private final BooleanSetting hideUnbreakableDurability = BooleanSetting.builder()
-            .id("hide_unbreakable_durability")
-            .defaultValue(false)
-            .categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY)
-            .build();
+    private final BooleanSetting hideUnbreakableDurability = BooleanSetting.builder().id("hide_unbreakable_durability").defaultValue(false).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
-    private final BooleanSetting showTotalInventoryCount = BooleanSetting.builder()
-            .id("show_total_item_count")
-            .defaultValue(true)
-            .categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting showTotalInventoryCount = BooleanSetting.builder().id("show_total_item_count").defaultValue(true).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
-    private final BooleanSetting colorArmorDurability = BooleanSetting.builder()
-            .id("color_armor_durability")
-            .defaultValue(true)
-            .categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY)
-            .build();
+    private final BooleanSetting colorArmorDurability = BooleanSetting.builder().id("color_armor_durability").defaultValue(true).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
-    private final BooleanSetting colorMainHandDurability = BooleanSetting.builder()
-            .id("color_main_hand_durability")
-            .defaultValue(true)
-            .categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY)
-            .build();
+    private final BooleanSetting colorMainHandDurability = BooleanSetting.builder().id("color_main_hand_durability").defaultValue(true).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
-    private final BooleanSetting colorOffHandDurability = BooleanSetting.builder()
-            .id("color_off_hand_durability")
-            .defaultValue(true)
-            .categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY)
-            .build();
+    private final BooleanSetting colorOffHandDurability = BooleanSetting.builder().id("color_off_hand_durability").defaultValue(true).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
     private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();

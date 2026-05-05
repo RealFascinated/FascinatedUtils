@@ -43,13 +43,13 @@ public final class TimeUtils {
     /**
      * Returns a human-readable "time ago" string for a timestamp.
      * Examples:
-     *  - just now
-     *  - 5s ago
-     *  - 3m, 12s ago
-     *  - 2d, 4h ago
+     * - just now
+     * - 5s ago
+     * - 3m, 12s ago
+     * - 2d, 4h ago
      *
      * @param inputMillis timestamp in millis
-     * @param maxUnits maximum number of units to display
+     * @param maxUnits    maximum number of units to display
      * @return formatted time-ago string
      */
     public static String timeAgo(long inputMillis, int maxUnits) {
@@ -123,14 +123,7 @@ public final class TimeUtils {
     @Getter(AccessLevel.PRIVATE)
     @ToString
     public enum AlumiteTimeUnit {
-        YEARS("y", TimeUnit.DAYS.toMillis(365L)),
-        MONTHS("mo", TimeUnit.DAYS.toMillis(30L)),
-        WEEKS("w", TimeUnit.DAYS.toMillis(7L)),
-        DAYS("d", TimeUnit.DAYS.toMillis(1L)),
-        HOURS("h", TimeUnit.HOURS.toMillis(1L)),
-        MINUTES("m", TimeUnit.MINUTES.toMillis(1L)),
-        SECONDS("s", TimeUnit.SECONDS.toMillis(1L)),
-        MILLISECONDS("ms", 1L);
+        YEARS("y", TimeUnit.DAYS.toMillis(365L)), MONTHS("mo", TimeUnit.DAYS.toMillis(30L)), WEEKS("w", TimeUnit.DAYS.toMillis(7L)), DAYS("d", TimeUnit.DAYS.toMillis(1L)), HOURS("h", TimeUnit.HOURS.toMillis(1L)), MINUTES("m", TimeUnit.MINUTES.toMillis(1L)), SECONDS("s", TimeUnit.SECONDS.toMillis(1L)), MILLISECONDS("ms", 1L);
 
         /**
          * Our cached unit values.

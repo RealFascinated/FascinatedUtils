@@ -1,12 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
-
 import cc.fascinated.fascinatedutils.common.Colors;
-import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
-import cc.fascinated.fascinatedutils.gui.core.TextLayoutMetrics;
-import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
+import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -23,32 +18,8 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
     private static final float CARD_PAD_X_DESIGN = 7f;
     private static final float CARD_PAD_Y_DESIGN = 3f;
     private static final float BACK_SIZE_DESIGN = 14f;
-
-    public static FWidget centeredInContentRow(float settingsContentWidth, float settingsInnerWidth, Runnable onBack, String titleText) {
-        float inner = Math.max(0f, settingsInnerWidth);
-        float content = Math.max(0f, settingsContentWidth);
-        float slack = Math.max(0f, (content - inner) * 0.5f);
-        FRowWidget row = new FRowWidget(0f, Align.CENTER);
-        row.addChild(new FSpacerWidget(slack, 0f));
-        row.addChild(new FModSettingsDetailHeaderCardWidget(onBack, titleText, inner, true));
-        row.addChild(new FSpacerWidget(slack, 0f));
-        return row;
-    }
-
     @Nullable
     private final FWidget searchWidget;
-
-    public static FWidget centeredTitleOnlyInContentRow(float settingsContentWidth, float settingsInnerWidth, String titleText) {
-        float inner = Math.max(0f, settingsInnerWidth);
-        float content = Math.max(0f, settingsContentWidth);
-        float slack = Math.max(0f, (content - inner) * 0.5f);
-        FRowWidget row = new FRowWidget(0f, Align.CENTER);
-        row.addChild(new FSpacerWidget(slack, 0f));
-        row.addChild(new FModSettingsDetailHeaderCardWidget(() -> {
-        }, titleText, inner, false));
-        row.addChild(new FSpacerWidget(slack, 0f));
-        return row;
-    }
     private final Runnable onBack;
     private final String titleText;
     private final float rowWidthPixels;
@@ -63,7 +34,6 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
     private FModSettingsDetailHeaderCardWidget(Runnable onBack, String titleText, float rowWidthPixels, boolean showBackButton) {
         this(onBack, titleText, rowWidthPixels, showBackButton, null, null);
     }
-
     private FModSettingsDetailHeaderCardWidget(Runnable onBack, String titleText, float rowWidthPixels, boolean showBackButton, @Nullable FWidget searchWidget, @Nullable Runnable onResetAll) {
         this.onBack = onBack;
         this.titleText = titleText == null ? "" : titleText;
@@ -74,6 +44,29 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
         if (searchWidget != null) {
             addChild(searchWidget);
         }
+    }
+
+    public static FWidget centeredInContentRow(float settingsContentWidth, float settingsInnerWidth, Runnable onBack, String titleText) {
+        float inner = Math.max(0f, settingsInnerWidth);
+        float content = Math.max(0f, settingsContentWidth);
+        float slack = Math.max(0f, (content - inner) * 0.5f);
+        FRowWidget row = new FRowWidget(0f, Align.CENTER);
+        row.addChild(new FSpacerWidget(slack, 0f));
+        row.addChild(new FModSettingsDetailHeaderCardWidget(onBack, titleText, inner, true));
+        row.addChild(new FSpacerWidget(slack, 0f));
+        return row;
+    }
+
+    public static FWidget centeredTitleOnlyInContentRow(float settingsContentWidth, float settingsInnerWidth, String titleText) {
+        float inner = Math.max(0f, settingsInnerWidth);
+        float content = Math.max(0f, settingsContentWidth);
+        float slack = Math.max(0f, (content - inner) * 0.5f);
+        FRowWidget row = new FRowWidget(0f, Align.CENTER);
+        row.addChild(new FSpacerWidget(slack, 0f));
+        row.addChild(new FModSettingsDetailHeaderCardWidget(() -> {
+        }, titleText, inner, false));
+        row.addChild(new FSpacerWidget(slack, 0f));
+        return row;
     }
 
     /**

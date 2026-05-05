@@ -8,12 +8,6 @@ import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import org.lwjgl.glfw.GLFW;
 
 public class SocialChatComposerWidget {
-    public record Props(
-            FOutlinedTextInputWidget input,
-            Runnable onSend
-    ) {
-    }
-
     public static FWidget build(Props props) {
         FButtonWidget sendButton = new FButtonWidget(props.onSend(), () -> ">", 26f, 1, 1f, 4f, 1f, 4f, 3f);
         return new FWidget() {
@@ -48,4 +42,6 @@ public class SocialChatComposerWidget {
             }
         };
     }
+
+    public record Props(FOutlinedTextInputWidget input, Runnable onSend) {}
 }

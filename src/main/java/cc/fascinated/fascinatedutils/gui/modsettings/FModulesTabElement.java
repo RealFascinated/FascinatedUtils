@@ -48,11 +48,7 @@ public class FModulesTabElement extends FWidget implements ModSettingsModulesPre
     public FModulesTabElement(Runnable onProfilesChanged, Runnable onOpenHudLayoutEditor) {
         this.onProfilesChanged = onProfilesChanged;
         this.onOpenHudLayoutEditor = onOpenHudLayoutEditor;
-        this.profilePopupController = new ProfilePopupController(
-            this::bumpCompositeStamp,
-                this::handleProfilesChanged,
-                () -> profilesScrollRef.setValue(0f)
-        );
+        this.profilePopupController = new ProfilePopupController(this::bumpCompositeStamp, this::handleProfilesChanged, () -> profilesScrollRef.setValue(0f));
         declarativeMountHost = new DeclarativeMountHost(this::modulesViewportDeclarative);
         addChild(declarativeMountHost);
     }
@@ -131,16 +127,13 @@ public class FModulesTabElement extends FWidget implements ModSettingsModulesPre
         float modulesPanelWidth = Math.max(0f, width - profilesPanelWidth - splitDividerWidth);
 
         FSplitRowWithDividerWidget splitLayout = new FSplitRowWithDividerWidget(profilesPanelWidth, splitDividerWidth);
-        splitLayout.addChild(ModSettingsProfilesTabBuilder.buildProfilesPane(profilesPanelWidth, height, profilesScrollRef, this::openCreateProfilePopup, profilePopupController.contextMenuCallback(),
-                this::handleProfilesChanged, onOpenHudLayoutEditor));
+        splitLayout.addChild(ModSettingsProfilesTabBuilder.buildProfilesPane(profilesPanelWidth, height, profilesScrollRef, this::openCreateProfilePopup, profilePopupController.contextMenuCallback(), this::handleProfilesChanged, onOpenHudLayoutEditor));
 
         FRectWidget splitDivider = new FRectWidget();
         splitDivider.setFillColorArgb(FascinatedGuiTheme.INSTANCE.borderMuted());
         splitLayout.addChild(splitDivider);
 
-        FWidget modulesPane = ModSettingsModulesTabBuilder.buildModulesTab(modulesPanelWidth, height, List.copyOf(ModuleRegistry.INSTANCE.getModules()), modulesGridScrollRef, moduleDetailModule,
-                this::closeModuleDetail, openModuleSettings, moduleSettingsScrollRef, moduleSearchRef, moduleCategoryFilterRef, this::onModuleFiltersChanged, moduleSettingsSearchRef,
-                this::onModuleSettingsSearchChanged, this::openColorPicker, this::lazyModuleDetailSearchField);
+        FWidget modulesPane = ModSettingsModulesTabBuilder.buildModulesTab(modulesPanelWidth, height, List.copyOf(ModuleRegistry.INSTANCE.getModules()), modulesGridScrollRef, moduleDetailModule, this::closeModuleDetail, openModuleSettings, moduleSettingsScrollRef, moduleSearchRef, moduleCategoryFilterRef, this::onModuleFiltersChanged, moduleSettingsSearchRef, this::onModuleSettingsSearchChanged, this::openColorPicker, this::lazyModuleDetailSearchField);
         splitLayout.addChild(modulesPane);
 
         ModSettingsModulesPresentationComponent.PresentationSurface rootSurface = ModSettingsModulesPresentationComponent.presentationSurfaceShell();

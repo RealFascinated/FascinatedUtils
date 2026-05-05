@@ -29,12 +29,9 @@ public class ModSettingsModulesTabBuilder {
     private static final int MODULE_CARD_GRID_MAX_COLUMNS = 3;
     private static final int MODULES_SEARCH_FOCUS_ID = 5001;
 
-    public static FWidget buildModulesTab(float paneWidth, float paneHeight, List<Module> modules, Ref<Float> modulesGridScrollYRef, Module settingsModule, Runnable onBackFromModuleSettings, Callback<Module> onOpenModuleSettings, Ref<Float> moduleSettingsScrollYRef, Ref<String> moduleSearchRef, Ref<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged, Ref<String> settingsSearchRef, Runnable onSettingsSearchChanged, Consumer<ColorSetting> openColorPicker,
-                                          Supplier<FOutlinedTextInputWidget> moduleDetailSearchFieldSupplier) {
+    public static FWidget buildModulesTab(float paneWidth, float paneHeight, List<Module> modules, Ref<Float> modulesGridScrollYRef, Module settingsModule, Runnable onBackFromModuleSettings, Callback<Module> onOpenModuleSettings, Ref<Float> moduleSettingsScrollYRef, Ref<String> moduleSearchRef, Ref<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged, Ref<String> settingsSearchRef, Runnable onSettingsSearchChanged, Consumer<ColorSetting> openColorPicker, Supplier<FOutlinedTextInputWidget> moduleDetailSearchFieldSupplier) {
         if (settingsModule != null) {
-            return new DeclarativeMountHost((paneLogicalWidth, paneLogicalHeight) -> ModSettingsModuleDetailBuilder.moduleDetailViewportUi(paneLogicalWidth,
-                    paneLogicalHeight, settingsModule, onBackFromModuleSettings, moduleSettingsScrollYRef, settingsSearchRef, onSettingsSearchChanged, openColorPicker,
-                    moduleDetailSearchFieldSupplier.get()));
+            return new DeclarativeMountHost((paneLogicalWidth, paneLogicalHeight) -> ModSettingsModuleDetailBuilder.moduleDetailViewportUi(paneLogicalWidth, paneLogicalHeight, settingsModule, onBackFromModuleSettings, moduleSettingsScrollYRef, settingsSearchRef, onSettingsSearchChanged, openColorPicker, moduleDetailSearchFieldSupplier.get()));
         }
         return buildModuleCardGrid(paneWidth, paneHeight, modules, modulesGridScrollYRef, onOpenModuleSettings, moduleSearchRef, moduleCategoryFilterRef, onFiltersChanged);
     }

@@ -44,17 +44,6 @@ public abstract class Module implements GsonSerializable<Module> {
     }
 
     /**
-     * Returns the config version of this module.
-     * Reads the {@link ConfigVersion} annotation on the concrete class; defaults to {@code 1} if absent.
-     *
-     * @return the module config version
-     */
-    public int getVersion() {
-        ConfigVersion annotation = getClass().getAnnotation(ConfigVersion.class);
-        return annotation != null ? annotation.value() : 1;
-    }
-
-    /**
      * Derives a stable module key from the concrete module class.
      *
      * @param moduleClass the module implementation class
@@ -66,6 +55,17 @@ public abstract class Module implements GsonSerializable<Module> {
             simple = simple.substring(0, simple.length() - "Module".length());
         }
         return simple.toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Returns the config version of this module.
+     * Reads the {@link ConfigVersion} annotation on the concrete class; defaults to {@code 1} if absent.
+     *
+     * @return the module config version
+     */
+    public int getVersion() {
+        ConfigVersion annotation = getClass().getAnnotation(ConfigVersion.class);
+        return annotation != null ? annotation.value() : 1;
     }
 
     /**

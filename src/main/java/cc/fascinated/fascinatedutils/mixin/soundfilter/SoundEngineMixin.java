@@ -16,14 +16,11 @@ public class SoundEngineMixin {
     private void onPlay(SoundInstance instance, CallbackInfoReturnable<SoundEngine.PlayResult> cir) {
         ModuleRegistry.INSTANCE.getModule(SoundFilterModule.class).ifPresent(module -> {
             String id = instance.getIdentifier().getNamespace() + ":" + instance.getIdentifier().getPath();
-            module.getSoundToggles().stream()
-                    .filter(toggle -> toggle.getNameProvider().get().equals(id))
-                    .findFirst()
-                    .ifPresent(toggle -> {
-                        if (!toggle.getValue()) {
-                            cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
-                        }
-                    });
+            module.getSoundToggles().stream().filter(toggle -> toggle.getNameProvider().get().equals(id)).findFirst().ifPresent(toggle -> {
+                if (!toggle.getValue()) {
+                    cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
+                }
+            });
         });
     }
 }

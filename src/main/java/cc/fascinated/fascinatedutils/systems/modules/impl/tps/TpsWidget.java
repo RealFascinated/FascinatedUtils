@@ -17,19 +17,9 @@ public class TpsWidget extends HudHostModule {
 
     public static final float MAX_TPS = 20f;
     public static final float MIN_WIDTH_WITH_MSPT = 110f;
-
-    private final BooleanSetting showMspt = BooleanSetting.builder().id("show_mspt")
-            .defaultValue(false)
-            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
-            .build();
-
-    private final BooleanSetting useTpsColor = BooleanSetting.builder().id("use_tps_color")
-            .defaultValue(true)
-            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
-            .build();
-
     private static final int RING_CAPACITY = 60;
-
+    private final BooleanSetting showMspt = BooleanSetting.builder().id("show_mspt").defaultValue(false).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final BooleanSetting useTpsColor = BooleanSetting.builder().id("use_tps_color").defaultValue(true).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final long[] ringWorldTimes = new long[RING_CAPACITY];
     private final long[] ringNanoTimes = new long[RING_CAPACITY];
     private int ringHead = 0;

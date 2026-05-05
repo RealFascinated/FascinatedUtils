@@ -30,10 +30,7 @@ public class WaypointDeletePopupComponent extends UiComponent<WaypointDeletePopu
         if (retainedPopup != null && previousWidget == retainedPopup && retainedWaypointName.equals(currentProps.waypointName())) {
             return retainedPopup;
         }
-        retainedPopup = new WaypointDeletePopupWidget(
-                currentProps.waypointName(),
-                currentProps.onCancel(),
-                currentProps.onConfirm());
+        retainedPopup = new WaypointDeletePopupWidget(currentProps.waypointName(), currentProps.onCancel(), currentProps.onConfirm());
         retainedWaypointName = currentProps.waypointName();
         return retainedPopup;
     }
@@ -45,6 +42,5 @@ public class WaypointDeletePopupComponent extends UiComponent<WaypointDeletePopu
      * @param onCancel     invoked when the user cancels or clicks outside
      * @param onConfirm    invoked when the user confirms deletion
      */
-    public record Props(String waypointName, Runnable onCancel, Runnable onConfirm) {
-    }
+    public record Props(String waypointName, Runnable onCancel, Runnable onConfirm) {}
 }

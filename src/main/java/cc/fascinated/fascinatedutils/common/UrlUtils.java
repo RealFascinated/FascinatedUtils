@@ -32,9 +32,7 @@ public class UrlUtils {
                 urlBuilder.append(wroteQuery ? '&' : '?');
             }
 
-            urlBuilder.append(encode(queryKey))
-                    .append('=')
-                    .append(encode(String.valueOf(queryValue)));
+            urlBuilder.append(encode(queryKey)).append('=').append(encode(String.valueOf(queryValue)));
 
             wroteQuery = true;
             needsSeparator = true;

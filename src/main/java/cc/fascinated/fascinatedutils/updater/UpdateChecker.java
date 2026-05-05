@@ -37,6 +37,13 @@ public class UpdateChecker {
     private static final Logger LOG = LoggerFactory.getLogger(UpdateChecker.class);
     private static final String GITHUB_LATEST_API = "https://api.github.com/repos/RealFascinated/FascinatedUtils/releases/latest";
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
+    private final HttpClient client;
+    private ScheduledExecutorService scheduler;
+
+    public UpdateChecker() {
+        this.client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
+    }
+
     private static String sha256Hex(Path path) throws IOException {
         MessageDigest digest;
         try {
@@ -53,19 +60,13 @@ public class UpdateChecker {
         }
         return hexLower(digest.digest());
     }
+
     private static String hexLower(byte[] digestBytes) {
         StringBuilder builder = new StringBuilder(digestBytes.length * 2);
         for (byte singleByte : digestBytes) {
             builder.append(String.format(Locale.ROOT, "%02x", singleByte));
         }
         return builder.toString();
-    }
-    private final HttpClient client;
-
-    private ScheduledExecutorService scheduler;
-
-    public UpdateChecker() {
-        this.client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
     }
 
     public void startPeriodicChecks() {

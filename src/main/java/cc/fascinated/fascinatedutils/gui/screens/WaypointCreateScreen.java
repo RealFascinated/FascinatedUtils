@@ -85,17 +85,7 @@ public class WaypointCreateScreen extends WidgetScreen {
         float innerMaxHeight = Math.min(viewportHeight - 80f, 640f);
         List<UiSlot> layers = new ArrayList<>();
         layers.add(UiSlot.of(Ui.rectPlain(0xB0000000)));
-        layers.add(UiSlot.of(Ui.centerMax(40f, 40f, cardWidth, innerMaxHeight,
-                WaypointCreateCardComponent.view(new WaypointCreateCardComponent.Props(
-                        dimension,
-                        color,
-                        nameInput,
-                        xInput,
-                        yInput,
-                        zInput,
-                        this::openColorPicker,
-                        () -> Minecraft.getInstance().setScreen(null),
-                        this::create)))));
+        layers.add(UiSlot.of(Ui.centerMax(40f, 40f, cardWidth, innerMaxHeight, WaypointCreateCardComponent.view(new WaypointCreateCardComponent.Props(dimension, color, nameInput, xInput, yInput, zInput, this::openColorPicker, () -> Minecraft.getInstance().setScreen(null), this::create)))));
         if (colorPickerWidget != null) {
             layers.add(UiSlot.keyed("waypoint-create-color-picker", Ui.widgetSlot("picker", colorPickerWidget)));
         }

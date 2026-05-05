@@ -49,6 +49,11 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
         addChild(bodyColumn);
     }
 
+    private static int applyAlphaFactor(int argb, float factor) {
+        int a = Math.round(((argb >>> 24) & 0xFF) * factor);
+        return (argb & 0x00FFFFFF) | (a << 24);
+    }
+
     public float scrollClipRowGap() {
         return rowGap;
     }
@@ -60,11 +65,6 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
      */
     public FWidget scrollBodyRoot() {
         return body;
-    }
-
-    private static int applyAlphaFactor(int argb, float factor) {
-        int a = Math.round(((argb >>> 24) & 0xFF) * factor);
-        return (argb & 0x00FFFFFF) | (a << 24);
     }
 
     public void setFixedViewportHeight(float viewportHeightLogicalPixels) {

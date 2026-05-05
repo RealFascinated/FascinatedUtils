@@ -2,19 +2,14 @@ package cc.fascinated.fascinatedutils.api;
 
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.FascinatedUtils;
-import cc.fascinated.fascinatedutils.api.internal.AlumiteHttpClient;
-import cc.fascinated.fascinatedutils.api.internal.AlumiteModelMapper;
-import cc.fascinated.fascinatedutils.api.auth.json.ChallengeResponseWire;
-import cc.fascinated.fascinatedutils.api.auth.json.RefreshRequestWire;
-import cc.fascinated.fascinatedutils.api.auth.json.RefreshResponseWire;
-import cc.fascinated.fascinatedutils.api.auth.json.VerifyRequestWire;
-import cc.fascinated.fascinatedutils.api.auth.json.VerifyResponseWire;
+import cc.fascinated.fascinatedutils.api.auth.json.*;
 import cc.fascinated.fascinatedutils.api.channel.AlumiteChannels;
 import cc.fascinated.fascinatedutils.api.channel.json.ChannelSummaryWire;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
 import cc.fascinated.fascinatedutils.api.friend.json.FriendEntryWire;
 import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestWire;
 import cc.fascinated.fascinatedutils.api.friend.json.SendFriendRequestBodyWire;
+import cc.fascinated.fascinatedutils.api.internal.AlumiteHttpClient;
 import cc.fascinated.fascinatedutils.api.user.AlumiteUsers;
 import cc.fascinated.fascinatedutils.api.user.Presence;
 import cc.fascinated.fascinatedutils.api.user.json.PublicUserWire;
@@ -77,15 +72,19 @@ public class Alumite {
         this.channels = new AlumiteChannels(this, http, users);
     }
 
-    public Gson getGsonForWire() {
-        return Constants.GSON;
-    }
-
     private static Presence normalizePreferredPresence(Presence presence) {
         if (presence == null || presence == Presence.OFFLINE) {
             return Presence.ONLINE;
         }
         return presence;
+    }
+
+    private static PublicUserWire toPublicWire(UserMeWire user) {
+        return new PublicUserWire(user.id(), user.minecraftUuid(), user.minecraftName(), user.role(), user.status(), user.presence(), user.lastSeen());
+    }
+
+    public Gson getGsonForWire() {
+        return Constants.GSON;
     }
 
     @EventHandler
@@ -149,18 +148,6 @@ public class Alumite {
         activeUserId = currentUser.id();
         activePreferredPresence = normalizePreferredPresence(currentUser.preferredPresence());
         users.setSelfUser(toPublicWire(currentUser));
-    }
-
-    private static PublicUserWire toPublicWire(UserMeWire user) {
-        return new PublicUserWire(
-                user.id(),
-                user.minecraftUuid(),
-                user.minecraftName(),
-                user.role(),
-                user.status(),
-                user.presence(),
-                user.lastSeen()
-        );
     }
 
     private void performFullLogin(Minecraft minecraftClient) {
@@ -256,11 +243,7 @@ public class Alumite {
         try {
             List<ChannelSummaryWire> channelWire = http.getList(ROUTE_CHANNELS, ChannelSummaryWire.class, "get channels", "Failed to load channels.");
             channels.replaceSummariesFromNetwork(channelWire);
-            users.replaceSocialFromNetwork(
-                    http.getList(ROUTE_FRIENDS, FriendEntryWire.class, "get friends", "Failed to load friends."),
-                    http.getList(ROUTE_FRIENDS_REQUESTS_INCOMING, PendingFriendRequestWire.class, "get incoming friend requests", "Failed to load incoming requests."),
-                    http.getList(ROUTE_FRIENDS_REQUESTS_OUTGOING, PendingFriendRequestWire.class, "get outgoing friend requests", "Failed to load outgoing requests.")
-            );
+            users.replaceSocialFromNetwork(http.getList(ROUTE_FRIENDS, FriendEntryWire.class, "get friends", "Failed to load friends."), http.getList(ROUTE_FRIENDS_REQUESTS_INCOMING, PendingFriendRequestWire.class, "get incoming friend requests", "Failed to load incoming requests."), http.getList(ROUTE_FRIENDS_REQUESTS_OUTGOING, PendingFriendRequestWire.class, "get outgoing friend requests", "Failed to load outgoing requests."));
             channels.preloadDetails();
             Client.LOG.info("[Alumite] Loaded {} channels", channels.all().size());
         } catch (AlumiteApiException exception) {

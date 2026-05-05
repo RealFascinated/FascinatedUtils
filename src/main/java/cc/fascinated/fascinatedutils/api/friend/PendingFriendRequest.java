@@ -6,12 +6,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 
-@Getter
-@RequiredArgsConstructor
 @Accessors(fluent = true)
-public class PendingFriendRequest {
+public record PendingFriendRequest(int requestId, User user, String createdAt) {
 
-    private final int requestId;
-    private final User user;
-    private final String createdAt;
 }

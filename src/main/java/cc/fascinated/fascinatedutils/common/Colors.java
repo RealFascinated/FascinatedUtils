@@ -16,7 +16,7 @@ public class Colors {
      * Resolves a packed RGB color on the good→warning→bad gradient for a given percentage.
      *
      * @param percentGood fraction of maximum, clamped to the inclusive unit interval; 1.0 = good (green), 0.0 = bad (red)
-     * @param reversed reverse the color scheme
+     * @param reversed    reverse the color scheme
      * @return RGB in the least significant 24 bits (alpha bits clear)
      */
     public static int getGoodBadColor(float percentGood, boolean reversed) {

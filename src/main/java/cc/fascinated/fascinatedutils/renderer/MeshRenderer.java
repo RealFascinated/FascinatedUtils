@@ -37,9 +37,9 @@ public class MeshRenderer {
      * The shader reads {@code vertexColor.a * minSidePx * 0.5} to recover the screen-pixel radius, so the shape
      * stays a perfect circle (or correctly-proportioned fillet) at any GUI scale.
      *
-     * @param argb              source color (alpha is replaced)
-     * @param cornerRadius      corner fillet radius in logical pixels
-     * @param halfMinPixelSide  half of the smaller pixel-quad dimension after floor/ceil snapping
+     * @param argb             source color (alpha is replaced)
+     * @param cornerRadius     corner fillet radius in logical pixels
+     * @param halfMinPixelSide half of the smaller pixel-quad dimension after floor/ceil snapping
      * @return packed color for all four quad vertices (same alpha byte on each)
      */
     public static int packArgbRadius(int argb, float cornerRadius, float halfMinPixelSide) {

@@ -21,6 +21,16 @@ public class TpsHudPanel extends MiniMessageHudPanel {
         this.tpsWidget = tpsWidget;
     }
 
+    private static List<String> formatLine(float tps, float mspt, boolean approximate, boolean showMspt, boolean useTpsColor) {
+        String formattedTps = String.format(Locale.ENGLISH, "%.2f", tps);
+        String tpsToken = useTpsColor ? String.format(Locale.ENGLISH, "<color:%s>%s</color>", Colors.rgbHex(TpsColors.getTpsColor(tps)), formattedTps) : formattedTps;
+        if (!showMspt) {
+            return List.of(String.format(Locale.ENGLISH, "%s TPS", tpsToken));
+        }
+        int roundedMspt = Math.round(mspt);
+        return List.of(String.format(Locale.ENGLISH, approximate ? "%s TPS (~%dms)" : "%s TPS (%dms)", tpsToken, roundedMspt));
+    }
+
     @Override
     protected long miniMessageLineUpdateIntervalNanos() {
         return UPDATE_INTERVAL_NANOS;
@@ -43,15 +53,5 @@ public class TpsHudPanel extends MiniMessageHudPanel {
         boolean showMspt = tpsWidget.getShowMspt().isEnabled();
         boolean useTpsColor = tpsWidget.getUseTpsColor().isEnabled();
         return formatLine(lastKnownTps, lastKnownMspt, !tpsWidget.isLastSampleIntegratedServer(), showMspt, useTpsColor);
-    }
-
-    private static List<String> formatLine(float tps, float mspt, boolean approximate, boolean showMspt, boolean useTpsColor) {
-        String formattedTps = String.format(Locale.ENGLISH, "%.2f", tps);
-        String tpsToken = useTpsColor ? String.format(Locale.ENGLISH, "<color:%s>%s</color>", Colors.rgbHex(TpsColors.getTpsColor(tps)), formattedTps) : formattedTps;
-        if (!showMspt) {
-            return List.of(String.format(Locale.ENGLISH, "%s TPS", tpsToken));
-        }
-        int roundedMspt = Math.round(mspt);
-        return List.of(String.format(Locale.ENGLISH, approximate ? "%s TPS (~%dms)" : "%s TPS (%dms)", tpsToken, roundedMspt));
     }
 }

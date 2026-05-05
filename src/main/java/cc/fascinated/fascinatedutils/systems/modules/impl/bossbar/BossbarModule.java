@@ -24,13 +24,7 @@ public class BossbarModule extends HudHostModule {
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
 
     public BossbarModule() {
-        super("bossbar", "Bossbar", HudDefaults.builder()
-            .defaultState(true)
-            .defaultAnchor(HUDWidgetAnchor.TOP)
-            .defaultXOffset(0)
-            .defaultYOffset(5)
-            .defaultPadding(0f)
-            .build());
+        super("bossbar", "Bossbar", HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.TOP).defaultXOffset(0).defaultYOffset(5).defaultPadding(0f).build());
         addSetting(hideBar);
         addSetting(showBackground);
         addSetting(roundedCorners);

@@ -28,10 +28,7 @@ public class FMaxCenterInsetsWidget extends FWidget {
     }
 
     public boolean matchesSpec(float insetHorizontalValue, float insetVerticalValue, float maxInnerWidthValue, float maxInnerHeightValue) {
-        return Math.abs(insetHorizontalValue - insetHorizontal) < 1e-3f
-                && Math.abs(insetVerticalValue - insetVertical) < 1e-3f
-                && Math.abs(maxInnerWidthValue - maxInnerWidth) < 1e-3f
-                && Math.abs(maxInnerHeightValue - maxInnerHeight) < 1e-3f;
+        return Math.abs(insetHorizontalValue - insetHorizontal) < 1e-3f && Math.abs(insetVerticalValue - insetVertical) < 1e-3f && Math.abs(maxInnerWidthValue - maxInnerWidth) < 1e-3f && Math.abs(maxInnerHeightValue - maxInnerHeight) < 1e-3f;
     }
 
     @Override

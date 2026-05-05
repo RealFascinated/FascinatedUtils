@@ -24,42 +24,36 @@ import java.util.Optional;
 @Mixin(LevelRenderer.class)
 public class BlockOutlineMixin {
 
-    @ModifyArg(
-            method = "renderBlockOutline",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/LevelRenderer;renderHitOutline(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;DDDLnet/minecraft/client/renderer/state/level/BlockOutlineRenderState;IF)V",
-                    ordinal = 0
-            ),
-            index = 6)
+    @Unique
+    private static int resolveColor(int defaultColor) {
+        Optional<BlockOutlineModule> module = ModuleRegistry.INSTANCE.getModule(BlockOutlineModule.class);
+        if (module.isPresent() && module.get().isEnabled() && module.get().getShowOutline().isEnabled()) {
+            return module.get().getOutlineColor().getResolvedArgb();
+        }
+        return defaultColor;
+    }
+
+    @ModifyArg(method = "renderBlockOutline", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderHitOutline(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;DDDLnet/minecraft/client/renderer/state/level/BlockOutlineRenderState;IF)V", ordinal = 0), index = 6)
     private int fascinatedutils$modifyOutlineColorFirst(int color) {
         return resolveColor(color);
     }
 
-    @ModifyArg(
-            method = "renderBlockOutline",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/LevelRenderer;renderHitOutline(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;DDDLnet/minecraft/client/renderer/state/level/BlockOutlineRenderState;IF)V",
-                    ordinal = 1
-            ),
-            index = 6)
+    @ModifyArg(method = "renderBlockOutline", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderHitOutline(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;DDDLnet/minecraft/client/renderer/state/level/BlockOutlineRenderState;IF)V", ordinal = 1), index = 6)
     private int fascinatedutils$modifyOutlineColorSecond(int color) {
         return resolveColor(color);
     }
 
     @Inject(method = "renderBlockOutline", at = @At("TAIL"))
-    private void fascinatedutils$renderFullBlock(
-            MultiBufferSource.BufferSource bufferSource,
-            PoseStack poseStack,
-            boolean isTranslucent,
-            LevelRenderState levelRenderState,
-            CallbackInfo ci) {
+    private void fascinatedutils$renderFullBlock(MultiBufferSource.BufferSource bufferSource, PoseStack poseStack, boolean isTranslucent, LevelRenderState levelRenderState, CallbackInfo ci) {
         Optional<BlockOutlineModule> opt = ModuleRegistry.INSTANCE.getModule(BlockOutlineModule.class);
-        if (opt.isEmpty() || !opt.get().isEnabled() || !opt.get().getShowBlockColor().isEnabled()) return;
+        if (opt.isEmpty() || !opt.get().isEnabled() || !opt.get().getShowBlockColor().isEnabled()) {
+            return;
+        }
 
         BlockOutlineRenderState outlineState = levelRenderState.blockOutlineRenderState;
-        if (outlineState == null || outlineState.isTranslucent() != isTranslucent) return;
+        if (outlineState == null || outlineState.isTranslucent() != isTranslucent) {
+            return;
+        }
 
         BlockOutlineModule module = opt.get();
         Vec3 cameraPos = levelRenderState.cameraRenderState.pos;
@@ -114,14 +108,5 @@ public class BlockOutlineMixin {
         consumer.addVertex(pose, maxX, minY, maxZ).setColor(red, green, blue, alpha);
 
         bufferSource.endBatch(FascinatedWorldRenderTypes.WORLD_BEAM);
-    }
-
-    @Unique
-    private static int resolveColor(int defaultColor) {
-        Optional<BlockOutlineModule> module = ModuleRegistry.INSTANCE.getModule(BlockOutlineModule.class);
-        if (module.isPresent() && module.get().isEnabled() && module.get().getShowOutline().isEnabled()) {
-            return module.get().getOutlineColor().getResolvedArgb();
-        }
-        return defaultColor;
     }
 }

@@ -44,19 +44,10 @@ public class WaypointsScreen extends WidgetScreen {
     }
 
     private UiView viewportView(float viewportWidth, float viewportHeight, WaypointsListComponent.DimensionLabelFormatter dimensionLabelFormatter) {
-        return Ui.component(WaypointsRootComponent.class, WaypointsRootComponent::new,
-                new WaypointsRootComponent.Props(
-                        viewportWidth,
-                        viewportHeight,
-                        ModConfig.waypoints().getForWorld(worldKey),
-                        this::openCreateScreen,
-                        () -> Minecraft.getInstance().setScreen(null),
-                        waypoint -> Minecraft.getInstance().setScreen(new WaypointEditScreen(waypoint)),
-                        waypoint -> {
-                            waypoint.setVisible(!waypoint.isVisible());
-                            ModConfig.waypoints().save();
-                        },
-                        dimensionLabelFormatter));
+        return Ui.component(WaypointsRootComponent.class, WaypointsRootComponent::new, new WaypointsRootComponent.Props(viewportWidth, viewportHeight, ModConfig.waypoints().getForWorld(worldKey), this::openCreateScreen, () -> Minecraft.getInstance().setScreen(null), waypoint -> Minecraft.getInstance().setScreen(new WaypointEditScreen(waypoint)), waypoint -> {
+            waypoint.setVisible(!waypoint.isVisible());
+            ModConfig.waypoints().save();
+        }, dimensionLabelFormatter));
     }
 
     private String formatDimension(String dimensionId) {

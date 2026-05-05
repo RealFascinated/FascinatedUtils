@@ -14,11 +14,7 @@ public class FProfilesTabElement extends FWidget {
 
     public FProfilesTabElement(Runnable onProfilesChanged) {
         this.onProfilesChanged = onProfilesChanged;
-        this.profilePopupController = new ProfilePopupController(
-                () -> {},
-                this::handleProfilesChanged,
-                () -> profilesScrollRef.setValue(0f)
-        );
+        this.profilePopupController = new ProfilePopupController(() -> {}, this::handleProfilesChanged, () -> profilesScrollRef.setValue(0f));
     }
 
     @Override

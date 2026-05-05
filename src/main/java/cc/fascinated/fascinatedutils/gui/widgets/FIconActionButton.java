@@ -1,8 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
-import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
-
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 
 import java.util.function.Supplier;

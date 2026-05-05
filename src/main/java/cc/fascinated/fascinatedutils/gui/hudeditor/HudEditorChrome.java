@@ -105,15 +105,15 @@ public class HudEditorChrome {
      * Draws clipped HUD preview, post-stabilization, and widget action buttons.
      * Buttons are drawn only when the pointer is over the widget or the widget is selected.
      *
-     * @param glRenderer          renderer for this pass
-     * @param widget              widget being painted
-     * @param selectedWidget      currently selected widget, or null
-     * @param deltaSeconds        animation delta in seconds
-     * @param canvasWidth         logical canvas width
-     * @param canvasHeight        logical canvas height
+     * @param glRenderer           renderer for this pass
+     * @param widget               widget being painted
+     * @param selectedWidget       currently selected widget, or null
+     * @param deltaSeconds         animation delta in seconds
+     * @param canvasWidth          logical canvas width
+     * @param canvasHeight         logical canvas height
      * @param repositionFromAnchor whether to reposition from anchor before drawing
-     * @param pointerX            logical pointer X for hover detection
-     * @param pointerY            logical pointer Y for hover detection
+     * @param pointerX             logical pointer X for hover detection
+     * @param pointerY             logical pointer Y for hover detection
      */
     public static void drawWidgetEditorChrome(GuiRenderer glRenderer, HudPanel widget, HudPanel selectedWidget, float deltaSeconds, float canvasWidth, float canvasHeight, boolean repositionFromAnchor, float pointerX, float pointerY) {
         Runnable draw = widget.prepareAndDraw(glRenderer, deltaSeconds, true);

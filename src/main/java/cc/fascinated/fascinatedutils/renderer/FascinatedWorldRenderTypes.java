@@ -13,10 +13,7 @@ import net.minecraft.resources.Identifier;
 
 public class FascinatedWorldRenderTypes {
 
-    private static final RenderPipeline WORLD_BEAM_PIPELINE = RenderPipelines.register(
-            RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
-                    .withLocation(Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, "pipeline/world_beam"))
-                    .build());
+    private static final RenderPipeline WORLD_BEAM_PIPELINE = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET).withLocation(Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, "pipeline/world_beam")).build());
 
     /**
      * Iris-compatible replacement for {@code RenderTypes.debugFilledBox()}.
@@ -25,12 +22,7 @@ public class FascinatedWorldRenderTypes {
      * shader programs, avoiding the "Missing program minecraft:pipeline/debug_filled_box"
      * error when shaders are active.
      */
-    public static final RenderType WORLD_BEAM = RenderType.create(
-            "fascinatedutils_world_beam",
-            RenderSetup.builder(WORLD_BEAM_PIPELINE)
-                    .sortOnUpload()
-                    .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-                    .createRenderSetup());
+    public static final RenderType WORLD_BEAM = RenderType.create("fascinatedutils_world_beam", RenderSetup.builder(WORLD_BEAM_PIPELINE).sortOnUpload().setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING).createRenderSetup());
 
     /**
      * Registers {@link #WORLD_BEAM_PIPELINE} with Iris so it is included in the override list

@@ -10,25 +10,13 @@ import lombok.Getter;
 @Getter
 public class BlockOutlineModule extends Module {
 
-    private final ColorSetting outlineColor = ColorSetting.builder()
-            .id("outline_color")
-            .defaultValue(new SettingColor(255, 255, 255, 255))
-            .build();
+    private final ColorSetting outlineColor = ColorSetting.builder().id("outline_color").defaultValue(new SettingColor(255, 255, 255, 255)).build();
 
-    private final BooleanSetting showOutline = BooleanSetting.builder()
-            .id("show_outline")
-            .defaultValue(true)
-            .build();
+    private final BooleanSetting showOutline = BooleanSetting.builder().id("show_outline").defaultValue(true).build();
 
-    private final ColorSetting blockColor = ColorSetting.builder()
-            .id("block_color")
-            .defaultValue(new SettingColor(255, 255, 255, 80))
-            .build();
+    private final ColorSetting blockColor = ColorSetting.builder().id("block_color").defaultValue(new SettingColor(255, 255, 255, 80)).build();
 
-    private final BooleanSetting showBlockColor = BooleanSetting.builder()
-            .id("show_block_color")
-            .defaultValue(false)
-            .build();
+    private final BooleanSetting showBlockColor = BooleanSetting.builder().id("show_block_color").defaultValue(false).build();
 
     public BlockOutlineModule() {
         super("Block Outline", ModuleCategory.GENERAL);

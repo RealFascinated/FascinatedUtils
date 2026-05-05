@@ -10,32 +10,10 @@ import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 
 public class FTheme {
-    public interface Components {
-        FModuleVisibilityCardWidget createModuleVisibilityCard(Module module, float layoutWidth, float layoutHeight, Callback<Module> onOpenSettings, Callback<Boolean> onEnabledChange);
-
-        FHudWidgetVisibilityCardWidget createHudWidgetVisibilityCard(HudPanel panel, float layoutWidth, float layoutHeight, Callback<Boolean> onVisibilityChange, Callback<HudPanel> onOpenSettings);
-
-        FScrollColumnWidget createScrollColumn(FWidget bodyColumn, float rowGap);
-    }
-
-    private static class DefaultComponents implements Components {
-        @Override
-        public FModuleVisibilityCardWidget createModuleVisibilityCard(Module module, float layoutWidth, float layoutHeight, Callback<Module> onOpenSettings, Callback<Boolean> onEnabledChange) {
-            return new FModuleVisibilityCardWidget(module, layoutWidth, layoutHeight, onOpenSettings, onEnabledChange);
-        }
-
-        @Override
-        public FHudWidgetVisibilityCardWidget createHudWidgetVisibilityCard(HudPanel panel, float layoutWidth, float layoutHeight, Callback<Boolean> onVisibilityChange, Callback<HudPanel> onOpenSettings) {
-            return new FHudWidgetVisibilityCardWidget(panel, layoutWidth, layoutHeight, onVisibilityChange, onOpenSettings);
-        }
-
-        @Override
-        public FScrollColumnWidget createScrollColumn(FWidget bodyColumn, float rowGap) {
-            return new FScrollColumnWidget(bodyColumn, rowGap);
-        }
-    }
-
     private static Components components = new DefaultComponents();
+
+    private FTheme() {
+    }
 
     public static int textPrimary() {
         return FascinatedGuiTheme.INSTANCE.textPrimary();
@@ -85,6 +63,28 @@ public class FTheme {
         FTheme.components = components == null ? new DefaultComponents() : components;
     }
 
-    private FTheme() {
+    public interface Components {
+        FModuleVisibilityCardWidget createModuleVisibilityCard(Module module, float layoutWidth, float layoutHeight, Callback<Module> onOpenSettings, Callback<Boolean> onEnabledChange);
+
+        FHudWidgetVisibilityCardWidget createHudWidgetVisibilityCard(HudPanel panel, float layoutWidth, float layoutHeight, Callback<Boolean> onVisibilityChange, Callback<HudPanel> onOpenSettings);
+
+        FScrollColumnWidget createScrollColumn(FWidget bodyColumn, float rowGap);
+    }
+
+    private static class DefaultComponents implements Components {
+        @Override
+        public FModuleVisibilityCardWidget createModuleVisibilityCard(Module module, float layoutWidth, float layoutHeight, Callback<Module> onOpenSettings, Callback<Boolean> onEnabledChange) {
+            return new FModuleVisibilityCardWidget(module, layoutWidth, layoutHeight, onOpenSettings, onEnabledChange);
+        }
+
+        @Override
+        public FHudWidgetVisibilityCardWidget createHudWidgetVisibilityCard(HudPanel panel, float layoutWidth, float layoutHeight, Callback<Boolean> onVisibilityChange, Callback<HudPanel> onOpenSettings) {
+            return new FHudWidgetVisibilityCardWidget(panel, layoutWidth, layoutHeight, onVisibilityChange, onOpenSettings);
+        }
+
+        @Override
+        public FScrollColumnWidget createScrollColumn(FWidget bodyColumn, float rowGap) {
+            return new FScrollColumnWidget(bodyColumn, rowGap);
+        }
     }
 }

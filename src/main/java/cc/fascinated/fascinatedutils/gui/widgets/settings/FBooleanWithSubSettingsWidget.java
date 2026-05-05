@@ -29,23 +29,6 @@ public class FBooleanWithSubSettingsWidget extends FWidget {
     private final float booleanRowHeight;
     private boolean expanded = false;
 
-    /**
-     * Factory that creates an editor widget for a single setting in the sub-panel.
-     */
-    @FunctionalInterface
-    public interface SubSettingEditorFactory {
-
-        /**
-         * Creates a row editor for the given sub-setting.
-         *
-         * @param setting              the sub-setting to edit
-         * @param innerWidth           available row width inside the sub-panel
-         * @param sliderValueColumnStartX value-column alignment offset
-         * @return editor widget, or {@code null} to skip
-         */
-        @Nullable FWidget create(Setting<?> setting, float innerWidth, float sliderValueColumnStartX);
-    }
-
     public FBooleanWithSubSettingsWidget(BooleanSetting booleanSetting, Runnable onPersist, float outerWidth, float rowHeight, float valueColumnStartX, SubSettingEditorFactory subEditorFactory) {
         this.booleanRowHeight = rowHeight;
 
@@ -97,5 +80,22 @@ public class FBooleanWithSubSettingsWidget extends FWidget {
             float subHeight = Math.max(0f, layoutHeight - booleanRowHeight - SUB_PANEL_TOP_GAP);
             subPanel.layout(measure, subX, subY, subWidth, subHeight);
         }
+    }
+
+    /**
+     * Factory that creates an editor widget for a single setting in the sub-panel.
+     */
+    @FunctionalInterface
+    public interface SubSettingEditorFactory {
+
+        /**
+         * Creates a row editor for the given sub-setting.
+         *
+         * @param setting                 the sub-setting to edit
+         * @param innerWidth              available row width inside the sub-panel
+         * @param sliderValueColumnStartX value-column alignment offset
+         * @return editor widget, or {@code null} to skip
+         */
+        @Nullable FWidget create(Setting<?> setting, float innerWidth, float sliderValueColumnStartX);
     }
 }

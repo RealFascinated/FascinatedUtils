@@ -103,25 +103,20 @@ public class ProfilePopupController {
         UUID selectedProfileId = contextMenuProfileId;
         closeContextMenu();
         if (action == ProfileContextMenuAction.RENAME && selectedProfileId != null) {
-            ModConfig.profiles().listProfiles().stream()
-                    .filter(profile -> profile.getProfileId().equals(selectedProfileId))
-                    .findFirst()
-                    .ifPresent(profile -> {
-                        renameProfileId = profile.getProfileId();
-                        renameProfileName = profile.getProfileName();
-                        showRenameProfilePopup = true;
-                        markDirty.run();
-                    });
-        } else if (action == ProfileContextMenuAction.DELETE && selectedProfileId != null) {
-            ModConfig.profiles().listProfiles().stream()
-                    .filter(profile -> profile.getProfileId().equals(selectedProfileId))
-                    .findFirst()
-                    .ifPresent(profile -> {
-                        deleteConfirmProfileId = profile.getProfileId();
-                        deleteConfirmProfileName = profile.getProfileName();
-                        showDeleteProfilePopup = true;
-                        markDirty.run();
-                    });
+            ModConfig.profiles().listProfiles().stream().filter(profile -> profile.getProfileId().equals(selectedProfileId)).findFirst().ifPresent(profile -> {
+                renameProfileId = profile.getProfileId();
+                renameProfileName = profile.getProfileName();
+                showRenameProfilePopup = true;
+                markDirty.run();
+            });
+        }
+        else if (action == ProfileContextMenuAction.DELETE && selectedProfileId != null) {
+            ModConfig.profiles().listProfiles().stream().filter(profile -> profile.getProfileId().equals(selectedProfileId)).findFirst().ifPresent(profile -> {
+                deleteConfirmProfileId = profile.getProfileId();
+                deleteConfirmProfileName = profile.getProfileName();
+                showDeleteProfilePopup = true;
+                markDirty.run();
+            });
         }
     }
 

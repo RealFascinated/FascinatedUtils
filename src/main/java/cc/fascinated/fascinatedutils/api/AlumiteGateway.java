@@ -4,20 +4,7 @@ import cc.fascinated.fascinatedutils.FascinatedUtils;
 import cc.fascinated.fascinatedutils.api.ws.GatewayHandler;
 import cc.fascinated.fascinatedutils.api.ws.GatewayOpcode;
 import cc.fascinated.fascinatedutils.api.ws.OutboundMessage;
-import cc.fascinated.fascinatedutils.api.ws.handlers.AuthAckHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.ChannelCreateHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.ChannelRemoveHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.FriendAddHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.FriendRemoveHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.FriendRequestIncomingHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.FriendRequestRemovedHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.HeartbeatHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.HelloHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.MessageCreateHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.MessageDeleteHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.MessageUpdateHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.PresenceUpdateHandler;
-import cc.fascinated.fascinatedutils.api.ws.handlers.UserUpdateHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.*;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
 import com.google.gson.Gson;
@@ -44,10 +31,9 @@ class AlumiteGateway implements WebSocket.Listener {
     private final Runnable onAuthExpired;
     private final Gson parseGson;
     private final Map<GatewayOpcode, GatewayHandler> handlers = new EnumMap<>(GatewayOpcode.class);
-
+    private final StringBuilder messageBuffer = new StringBuilder();
     private volatile WebSocket ws;
     private volatile boolean running;
-    private final StringBuilder messageBuffer = new StringBuilder();
     private int reconnectDelayMs = 1_000;
 
     AlumiteGateway(HttpClient httpClient, Supplier<String> tokenSupplier, Runnable onAuthExpired, Gson parseGson) {
@@ -100,16 +86,15 @@ class AlumiteGateway implements WebSocket.Listener {
             Client.LOG.warn("[AlumiteGateway] No access token available, skipping connect.");
             return;
         }
-        httpClient.newWebSocketBuilder()
-                .buildAsync(URI.create(AlumiteEnvironment.GATEWAY_URL + "/gateway"), this)
-                .whenComplete((socket, throwable) -> {
-                    if (throwable != null) {
-                        Client.LOG.warn("[AlumiteGateway] Connection failed: {}", throwable.getMessage());
-                        scheduleReconnect();
-                    } else {
-                        ws = socket;
-                    }
-                });
+        httpClient.newWebSocketBuilder().buildAsync(URI.create(AlumiteEnvironment.GATEWAY_URL + "/gateway"), this).whenComplete((socket, throwable) -> {
+            if (throwable != null) {
+                Client.LOG.warn("[AlumiteGateway] Connection failed: {}", throwable.getMessage());
+                scheduleReconnect();
+            }
+            else {
+                ws = socket;
+            }
+        });
     }
 
     @Override
@@ -138,7 +123,8 @@ class AlumiteGateway implements WebSocket.Listener {
         if (statusCode == CLOSE_AUTH_FAILURE) {
             running = false;
             onAuthExpired.run();
-        } else if (running) {
+        }
+        else if (running) {
             scheduleReconnect();
         }
         return null;

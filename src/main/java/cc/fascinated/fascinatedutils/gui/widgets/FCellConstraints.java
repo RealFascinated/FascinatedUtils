@@ -9,6 +9,20 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public class FCellConstraints {
     public static final FCellConstraints DEFAULT = new FCellConstraints();
+    private float marginStart;
+    private float marginEnd;
+    private float marginTop;
+    private float marginBottom;
+    private float growWeight = 1f;
+    private boolean expandHorizontal;
+    private boolean expandVertical;
+    private Align alignHorizontal;
+    private Align alignVertical;
+    private String widthGroupKey;
+    private float minWidth;
+    private float minHeight;
+    private float maxWidth = Float.POSITIVE_INFINITY;
+    private float maxHeight = Float.POSITIVE_INFINITY;
 
     /**
      * Returns a detached copy suitable for attaching to widgets without mutating a shared DEFAULT instance.
@@ -37,20 +51,6 @@ public class FCellConstraints {
         duplicate.maxHeight = source.maxHeight;
         return duplicate;
     }
-    private float marginStart;
-    private float marginEnd;
-    private float marginTop;
-    private float marginBottom;
-    private float growWeight = 1f;
-    private boolean expandHorizontal;
-    private boolean expandVertical;
-    private Align alignHorizontal;
-    private Align alignVertical;
-    private String widthGroupKey;
-    private float minWidth;
-    private float minHeight;
-    private float maxWidth = Float.POSITIVE_INFINITY;
-    private float maxHeight = Float.POSITIVE_INFINITY;
 
     public FCellConstraints setMarginStart(float marginStart) {
         this.marginStart = Math.max(0f, marginStart);

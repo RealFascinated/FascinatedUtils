@@ -35,12 +35,8 @@ import java.util.function.IntSupplier;
 
 public class ModSettingsScreen extends WidgetScreen {
 
-    private static volatile String lastShellContentTabKeySession;
-
-    private enum ShellContentTab {
-        MODULES, SETTINGS
-    }
     private static final ModSettingsShellHitRegions EMPTY_SHELL_HIT = new ModSettingsShellHitRegions(new ModSettingsShellLayout.ShellBounds(0f, 0f, 0f, 0f), new ModSettingsShellLayout.ShellBounds(0f, 0f, 0f, 0f), new ModSettingsShellLayout.ShellBounds(0f, 0f, 0f, 0f), 0f, 0f, 0f, 0f);
+    private static volatile String lastShellContentTabKeySession;
     private final FWidgetHost root = new FWidgetHost();
     private final FWidgetHost topBarTabsHost = new FWidgetHost();
     private final FWidgetHost hudLayoutButtonHost = new FWidgetHost();
@@ -49,15 +45,14 @@ public class ModSettingsScreen extends WidgetScreen {
     private final FModulesTabElement modulesTabElement;
     private final FSettingsTabElement settingsTabElement;
     private final @Nullable Module navigateToModuleDetailOnOpen;
+    @Nullable
+    private final Screen returnToScreen;
     private float scrollAccum;
     private boolean appliedPersistedShellTab;
     private ShellContentTab shellContentTab = ShellContentTab.MODULES;
     private ModSettingsShellHitRegions shellHitRegions = EMPTY_SHELL_HIT;
 
     private boolean navigateToModuleDetailApplied;
-    @Nullable
-    private final Screen returnToScreen;
-
     public ModSettingsScreen(Component title, IntSupplier getFocusId, IntConsumer setFocusId, @Nullable Module navigateToModuleDetailOnOpen, @Nullable Screen returnToScreen) {
         super(title);
         this.returnToScreen = returnToScreen;
@@ -75,9 +70,7 @@ public class ModSettingsScreen extends WidgetScreen {
         if (bodyLogicalWidth <= 0f || bodyLogicalHeight <= 0f) {
             throw new IllegalStateException("Declarative shell body viewport must be positive");
         }
-        return Ui.widgetSlot(
-                "modsettings.shell." + shellContentTab.name(),
-                shellContentTab == ShellContentTab.MODULES ? modulesTabElement : settingsTabElement);
+        return Ui.widgetSlot("modsettings.shell." + shellContentTab.name(), shellContentTab == ShellContentTab.MODULES ? modulesTabElement : settingsTabElement);
     }
 
     @Override
@@ -311,7 +304,8 @@ public class ModSettingsScreen extends WidgetScreen {
         if (returnToScreen != null) {
             HUDManager.INSTANCE.markEditModeActive();
             Minecraft.getInstance().setScreen(returnToScreen);
-        } else {
+        }
+        else {
             Minecraft.getInstance().setScreen(null);
         }
     }
@@ -324,8 +318,13 @@ public class ModSettingsScreen extends WidgetScreen {
         if (returnToScreen != null) {
             HUDManager.INSTANCE.markEditModeActive();
             Minecraft.getInstance().setScreen(returnToScreen);
-        } else {
+        }
+        else {
             HUDManager.INSTANCE.setEditMode(true);
         }
+    }
+
+    private enum ShellContentTab {
+        MODULES, SETTINGS
     }
 }

@@ -1,10 +1,9 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
-import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
-
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.hooks.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -53,8 +52,8 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
      * Wires a chevron button that controls an expand/collapse state. When set, a chevron icon is rendered between the
      * toggle and the reset glyph; clicking it calls {@code onToggle}.
      *
-     * @param expanded  supplier for whether the sub-panel is currently expanded
-     * @param onToggle  called when the user clicks the chevron
+     * @param expanded supplier for whether the sub-panel is currently expanded
+     * @param onToggle called when the user clicks the chevron
      */
     public void setChevronHandlers(BooleanSupplier expanded, Runnable onToggle) {
         this.expandedState = expanded;

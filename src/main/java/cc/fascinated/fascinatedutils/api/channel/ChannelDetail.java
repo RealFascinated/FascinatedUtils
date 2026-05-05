@@ -10,6 +10,8 @@ public sealed interface ChannelDetail permits ChannelDetail.DmChannelDetail, Cha
 
     Integer lastReadMessageId();
 
+    ChannelKind kind();
+
     record DmChannelDetail(int id, Integer lastReadMessageId, User recipient) implements ChannelDetail {
 
         @Override
@@ -18,19 +20,12 @@ public sealed interface ChannelDetail permits ChannelDetail.DmChannelDetail, Cha
         }
     }
 
-    record GroupChannelDetail(
-            int id,
-            Integer lastReadMessageId,
-            String name,
-            int ownerUserId,
-            List<GroupMember> members
-    ) implements ChannelDetail {
+    record GroupChannelDetail(int id, Integer lastReadMessageId, String name, int ownerUserId,
+                              List<GroupMember> members) implements ChannelDetail {
 
         @Override
         public ChannelKind kind() {
             return ChannelKind.GROUP;
         }
     }
-
-    ChannelKind kind();
 }

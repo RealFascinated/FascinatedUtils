@@ -29,10 +29,7 @@ public class WaypointRenamePopupComponent extends UiComponent<WaypointRenamePopu
         if (retainedPopup != null && previousWidget == retainedPopup && retainedName.equals(currentProps.currentName())) {
             return retainedPopup;
         }
-        retainedPopup = new WaypointRenamePopupWidget(
-                currentProps.currentName(),
-                currentProps.onCancel(),
-                newName -> currentProps.onSubmit().accept(newName));
+        retainedPopup = new WaypointRenamePopupWidget(currentProps.currentName(), currentProps.onCancel(), newName -> currentProps.onSubmit().accept(newName));
         retainedName = currentProps.currentName();
         return retainedPopup;
     }
@@ -44,6 +41,5 @@ public class WaypointRenamePopupComponent extends UiComponent<WaypointRenamePopu
      * @param onCancel    invoked when the user cancels or clicks outside
      * @param onSubmit    invoked with the trimmed new name
      */
-    public record Props(String currentName, Runnable onCancel, java.util.function.Consumer<String> onSubmit) {
-    }
+    public record Props(String currentName, Runnable onCancel, java.util.function.Consumer<String> onSubmit) {}
 }

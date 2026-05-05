@@ -12,18 +12,8 @@ import cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.hud.Coordi
 
 public class CoordinatesWidget extends HudHostModule {
 
-    public enum CoordinatesLayout {
-        VERTICAL, HORIZONTAL
-    }
-
-    private final EnumSetting<CoordinatesLayout> layout = EnumSetting.<CoordinatesLayout>builder()
-            .id("layout")
-            .defaultValue(CoordinatesLayout.VERTICAL)
-            .valueFormatter(coordsLayout -> coordsLayout == CoordinatesLayout.VERTICAL ? "Vertical" : "Horizontal")
-            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
-            .build();
-    private final SliderSetting blockPrecision = SliderSetting.builder().id("block_precision")
-            .defaultValue(0f).minValue(0f).maxValue(3f).step(1f).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final EnumSetting<CoordinatesLayout> layout = EnumSetting.<CoordinatesLayout>builder().id("layout").defaultValue(CoordinatesLayout.VERTICAL).valueFormatter(coordsLayout -> coordsLayout == CoordinatesLayout.VERTICAL ? "Vertical" : "Horizontal").categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final SliderSetting blockPrecision = SliderSetting.builder().id("block_precision").defaultValue(0f).minValue(0f).maxValue(3f).step(1f).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
     private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
     private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
@@ -31,7 +21,6 @@ public class CoordinatesWidget extends HudHostModule {
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
-
     public CoordinatesWidget() {
         super("coordinates", "Coordinates", HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.TOP_LEFT).defaultXOffset(5).defaultYOffset(5).build());
         addSetting(layout);
@@ -56,5 +45,9 @@ public class CoordinatesWidget extends HudHostModule {
 
     public float coordinatesHudBlockDecimals() {
         return blockPrecision.getValue().floatValue();
+    }
+
+    public enum CoordinatesLayout {
+        VERTICAL, HORIZONTAL
     }
 }

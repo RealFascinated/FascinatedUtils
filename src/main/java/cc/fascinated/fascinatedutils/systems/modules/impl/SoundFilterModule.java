@@ -24,13 +24,7 @@ public class SoundFilterModule extends Module {
     private void initSoundToggles() {
         for (Identifier identifier : BuiltInRegistries.SOUND_EVENT.keySet()) {
             String id = identifier.getNamespace() + ":" + identifier.getPath();
-            BooleanSetting soundToggle = BooleanSetting.builder()
-                    .categoryDisplayKey("fascinatedutils.setting.category.sound_filter")
-                    .id(id)
-                    .displayName(() -> id)
-                    .tooltip(() -> I18n.get("fascinatedutils.module.soundfilter.toggle.description"))
-                    .defaultValue(true)
-                    .build();
+            BooleanSetting soundToggle = BooleanSetting.builder().categoryDisplayKey("fascinatedutils.setting.category.sound_filter").id(id).displayName(() -> id).tooltip(() -> I18n.get("fascinatedutils.module.soundfilter.toggle.description")).defaultValue(true).build();
             soundToggles.add(soundToggle);
             addSetting(soundToggle);
         }

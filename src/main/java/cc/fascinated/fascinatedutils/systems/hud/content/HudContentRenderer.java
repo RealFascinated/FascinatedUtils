@@ -23,7 +23,8 @@ public class HudContentRenderer {
      */
     public static Runnable prepare(GuiRenderer glRenderer, HudContent content, HudHostModule host, HudPanel panel, boolean editorMode) {
         return switch (content) {
-            case HudContent.TextLines textLines -> prepareTextLines(glRenderer, textLines.miniMessageLines(), host, panel, editorMode);
+            case HudContent.TextLines textLines ->
+                    prepareTextLines(glRenderer, textLines.miniMessageLines(), host, panel, editorMode);
             case HudContent.ItemRows itemRows -> prepareItemRows(glRenderer, itemRows.rows(), host, panel, editorMode);
             case HudContent.Custom _ -> null;
         };

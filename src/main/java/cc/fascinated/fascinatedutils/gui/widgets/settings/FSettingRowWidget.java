@@ -29,6 +29,18 @@ public abstract class FSettingRowWidget extends FWidget {
         this(outerWidth, outerHeight, onPersist, 0f);
     }
 
+    /**
+     * Hit-tests a {@code float[4]} bounding rect of the form {@code [left, top, width, height]}.
+     *
+     * @param rect     bounding rect as {@code [left, top, width, height]}
+     * @param pointerX pointer X in logical pixels
+     * @param pointerY pointer Y in logical pixels
+     * @return true if the pointer is inside the rect
+     */
+    protected static boolean rectContains(float[] rect, float pointerX, float pointerY) {
+        return pointerX >= rect[0] && pointerY >= rect[1] && pointerX < rect[0] + rect[2] && pointerY < rect[1] + rect[3];
+    }
+
     @Override
     public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
         return outerHeight;
@@ -47,17 +59,5 @@ public abstract class FSettingRowWidget extends FWidget {
     @Override
     public PointerHitKind pointerHitKind() {
         return PointerHitKind.TARGET;
-    }
-
-    /**
-     * Hit-tests a {@code float[4]} bounding rect of the form {@code [left, top, width, height]}.
-     *
-     * @param rect     bounding rect as {@code [left, top, width, height]}
-     * @param pointerX pointer X in logical pixels
-     * @param pointerY pointer Y in logical pixels
-     * @return true if the pointer is inside the rect
-     */
-    protected static boolean rectContains(float[] rect, float pointerX, float pointerY) {
-        return pointerX >= rect[0] && pointerY >= rect[1] && pointerX < rect[0] + rect[2] && pointerY < rect[1] + rect[3];
     }
 }

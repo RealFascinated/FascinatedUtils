@@ -24,19 +24,6 @@ public class SystemCpuUsageHudPanel extends MiniMessageHudPanel {
         this.systemCpuWidget = systemCpuUsageWidget;
     }
 
-    @Override
-    protected List<String> computeMiniMessageLines(float deltaSeconds, boolean editorMode) {
-        float systemCpuPercent = systemCpuWidget.sampleSystemCpuPercent();
-        if (!Float.isFinite(systemCpuPercent)) {
-            return List.of("<grey>CPU N/A</grey>");
-        }
-        float clampedPercent = clampPercent(systemCpuPercent);
-        int roundedPercent = Math.round(clampedPercent);
-        BooleanSetting useCpuColorSetting = systemCpuWidget.getUseCpuColor();
-        int color = useCpuColorSetting.isEnabled() ? cpuColorArgb(clampedPercent) : UITheme.COLOR_TEXT_PRIMARY;
-        return List.of("<color:" + Colors.rgbHex(color) + "><white>" + roundedPercent + "% CPU");
-    }
-
     private static float clampPercent(float cpuPercent) {
         return Math.max(0f, Math.min(100f, cpuPercent));
     }
@@ -56,5 +43,18 @@ public class SystemCpuUsageHudPanel extends MiniMessageHudPanel {
     private static float smoothstep(float value) {
         float clamped = Mth.clamp(value, 0f, 1f);
         return clamped * clamped * (3f - 2f * clamped);
+    }
+
+    @Override
+    protected List<String> computeMiniMessageLines(float deltaSeconds, boolean editorMode) {
+        float systemCpuPercent = systemCpuWidget.sampleSystemCpuPercent();
+        if (!Float.isFinite(systemCpuPercent)) {
+            return List.of("<grey>CPU N/A</grey>");
+        }
+        float clampedPercent = clampPercent(systemCpuPercent);
+        int roundedPercent = Math.round(clampedPercent);
+        BooleanSetting useCpuColorSetting = systemCpuWidget.getUseCpuColor();
+        int color = useCpuColorSetting.isEnabled() ? cpuColorArgb(clampedPercent) : UITheme.COLOR_TEXT_PRIMARY;
+        return List.of("<color:" + Colors.rgbHex(color) + "><white>" + roundedPercent + "% CPU");
     }
 }

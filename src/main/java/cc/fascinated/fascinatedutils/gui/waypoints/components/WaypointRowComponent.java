@@ -49,9 +49,7 @@ public class WaypointRowComponent extends UiComponent<WaypointRowComponent.Props
      * @return keyed, height-constrained slot
      */
     public static UiSlot rowSlot(String slotKey, Props props) {
-        return UiSlot.keyed(slotKey,
-                new FCellConstraints().setMinHeight(ROW_HEIGHT).setMaxHeight(ROW_HEIGHT),
-                view(props));
+        return UiSlot.keyed(slotKey, new FCellConstraints().setMinHeight(ROW_HEIGHT).setMaxHeight(ROW_HEIGHT), view(props));
     }
 
     /**
@@ -62,6 +60,14 @@ public class WaypointRowComponent extends UiComponent<WaypointRowComponent.Props
      */
     public static UiView view(Props props) {
         return Ui.component(WaypointRowComponent.class, WaypointRowComponent::new, props);
+    }
+
+    private static FCellConstraints fixedColumnConstraints(float width) {
+        return new FCellConstraints().setMinWidth(width).setMaxWidth(width);
+    }
+
+    private static FCellConstraints iconButtonConstraints() {
+        return new FCellConstraints().setMinWidth(ACTION_BUTTON_SIZE).setMaxWidth(ACTION_BUTTON_SIZE).setMinHeight(ACTION_BUTTON_SIZE).setMaxHeight(ACTION_BUTTON_SIZE).setAlignVertical(Align.CENTER);
     }
 
     @Override
@@ -82,57 +88,20 @@ public class WaypointRowComponent extends UiComponent<WaypointRowComponent.Props
 
         UiView background = Ui.rectDecorated(UITheme.COLOR_BACKGROUND, 5f, null, null);
 
-        UiView contentRow = Ui.row(0f, Align.CENTER, List.of(
-                Ui.slot(fixedColumnConstraints(COLOR_BAR_WIDTH).setMarginTop(2f).setMarginBottom(2f),
-                        Ui.rectDecorated(waypoint.getColor().getResolvedArgb(), 3f, null, null)),
-                Ui.slot(new FCellConstraints()
-                                .setGrowWeight(1f)
-                                .setMarginStart(CONTENT_PAD)
-                                .setMarginEnd(CONTENT_PAD)
-                                .setMarginTop(VERT_PAD)
-                                .setMarginBottom(VERT_PAD),
-                        Ui.column(2f, Align.START, List.of(
-                                UiSlot.of(Ui.label(nameDisplay, nameColorArgb, true, TextOverflow.ELLIPSIS, Align.START)),
-                                UiSlot.of(Ui.label(coordsDisplay, subColorArgb, false, TextOverflow.ELLIPSIS, Align.START)),
-                                UiSlot.of(Ui.label(currentProps.dimensionLabelText(), subColorArgb, false, TextOverflow.ELLIPSIS, Align.START))
-                        ))),
-                Ui.slot(iconButtonConstraints(), Ui.widgetSlot("waypoint-row.edit", editButton)),
-                Ui.slot(iconButtonConstraints().setMarginStart(BUTTON_GAP), Ui.widgetSlot("waypoint-row.visibility", visibilityButton)),
-                Ui.slot(iconButtonConstraints().setMarginStart(BUTTON_GAP), Ui.widgetSlot("waypoint-row.delete", deleteButton))
-        ));
+        UiView contentRow = Ui.row(0f, Align.CENTER, List.of(Ui.slot(fixedColumnConstraints(COLOR_BAR_WIDTH).setMarginTop(2f).setMarginBottom(2f), Ui.rectDecorated(waypoint.getColor().getResolvedArgb(), 3f, null, null)), Ui.slot(new FCellConstraints().setGrowWeight(1f).setMarginStart(CONTENT_PAD).setMarginEnd(CONTENT_PAD).setMarginTop(VERT_PAD).setMarginBottom(VERT_PAD), Ui.column(2f, Align.START, List.of(UiSlot.of(Ui.label(nameDisplay, nameColorArgb, true, TextOverflow.ELLIPSIS, Align.START)), UiSlot.of(Ui.label(coordsDisplay, subColorArgb, false, TextOverflow.ELLIPSIS, Align.START)), UiSlot.of(Ui.label(currentProps.dimensionLabelText(), subColorArgb, false, TextOverflow.ELLIPSIS, Align.START))))), Ui.slot(iconButtonConstraints(), Ui.widgetSlot("waypoint-row.edit", editButton)), Ui.slot(iconButtonConstraints().setMarginStart(BUTTON_GAP), Ui.widgetSlot("waypoint-row.visibility", visibilityButton)), Ui.slot(iconButtonConstraints().setMarginStart(BUTTON_GAP), Ui.widgetSlot("waypoint-row.delete", deleteButton))));
 
-        return Ui.stackLayers(
-                UiSlot.of(background),
-                UiSlot.of(contentRow)
-        );
-    }
-
-    private static FCellConstraints fixedColumnConstraints(float width) {
-        return new FCellConstraints().setMinWidth(width).setMaxWidth(width);
-    }
-
-    private static FCellConstraints iconButtonConstraints() {
-        return new FCellConstraints()
-                .setMinWidth(ACTION_BUTTON_SIZE)
-                .setMaxWidth(ACTION_BUTTON_SIZE)
-                .setMinHeight(ACTION_BUTTON_SIZE)
-                .setMaxHeight(ACTION_BUTTON_SIZE)
-                .setAlignVertical(Align.CENTER);
+        return Ui.stackLayers(UiSlot.of(background), UiSlot.of(contentRow));
     }
 
     /**
      * Props for {@link WaypointRowComponent}.
      *
-     * @param waypoint            model row; read on every render for live visibility/color
-     * @param onEdit              invoked when the edit icon is clicked
-     * @param onToggleVisible     invoked when the visibility icon is clicked
-     * @param onRequestDelete     invoked when the delete icon is clicked
-     * @param dimensionLabelText  pre-formatted dimension label text
+     * @param waypoint           model row; read on every render for live visibility/color
+     * @param onEdit             invoked when the edit icon is clicked
+     * @param onToggleVisible    invoked when the visibility icon is clicked
+     * @param onRequestDelete    invoked when the delete icon is clicked
+     * @param dimensionLabelText pre-formatted dimension label text
      */
-    public record Props(Waypoint waypoint,
-                        Runnable onEdit,
-                        Runnable onToggleVisible,
-                        Runnable onRequestDelete,
-                        String dimensionLabelText) {
-    }
+    public record Props(Waypoint waypoint, Runnable onEdit, Runnable onToggleVisible, Runnable onRequestDelete,
+                        String dimensionLabelText) {}
 }

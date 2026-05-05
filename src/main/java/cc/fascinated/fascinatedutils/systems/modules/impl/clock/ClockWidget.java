@@ -10,11 +10,7 @@ import lombok.Getter;
 
 public class ClockWidget extends HudHostModule {
 
-    private final EnumSetting<ClockFormat> clockFormat = EnumSetting.<ClockFormat>builder().id("clock_format")
-            .defaultValue(ClockFormat.DMY_24H)
-            .valueFormatter(ClockFormat::getFormat)
-            .categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY)
-            .build();
+    private final EnumSetting<ClockFormat> clockFormat = EnumSetting.<ClockFormat>builder().id("clock_format").defaultValue(ClockFormat.DMY_24H).valueFormatter(ClockFormat::getFormat).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
     public ClockWidget() {
         super("clock", "Clock", HudDefaults.builder().build());

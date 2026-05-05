@@ -6,15 +6,6 @@ import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 
 public class SocialRightPaneWidget {
 
-    public record Props(
-            float padding,
-            FRectWidget background,
-            FWidget header,
-            FWidget body,
-            FWidget footer
-    ) {
-    }
-
     public static FWidget build(Props props) {
         return new FWidget() {
             {
@@ -38,4 +29,6 @@ public class SocialRightPaneWidget {
             }
         };
     }
+
+    public record Props(float padding, FRectWidget background, FWidget header, FWidget body, FWidget footer) {}
 }

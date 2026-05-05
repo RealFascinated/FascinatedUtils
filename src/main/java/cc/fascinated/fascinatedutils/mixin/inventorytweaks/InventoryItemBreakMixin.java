@@ -16,13 +16,18 @@ public abstract class InventoryItemBreakMixin {
     @Inject(method = "setItem", at = @At("HEAD"))
     private void fascinatedutils$onSetItem(int slot, ItemStack newStack, CallbackInfo ci) {
         Inventory inventory = (Inventory) (Object) this;
-        if (!(inventory.player instanceof LocalPlayer localPlayer)) return;
-        if (slot != inventory.getSelectedSlot()) return;
+        if (!(inventory.player instanceof LocalPlayer localPlayer)) {
+            return;
+        }
+        if (slot != inventory.getSelectedSlot()) {
+            return;
+        }
 
         ItemStack current = inventory.getItem(slot);
-        if (current.isEmpty() || !newStack.isEmpty()) return;
+        if (current.isEmpty() || !newStack.isEmpty()) {
+            return;
+        }
 
-        ModuleRegistry.INSTANCE.getModule(InventoryTweaksModule.class)
-                .ifPresent(module -> module.getAutoSwapToolFeature().onToolBroke(localPlayer, current));
+        ModuleRegistry.INSTANCE.getModule(InventoryTweaksModule.class).ifPresent(module -> module.getAutoSwapToolFeature().onToolBroke(localPlayer, current));
     }
 }

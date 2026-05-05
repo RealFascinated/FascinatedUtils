@@ -9,7 +9,8 @@ import com.google.gson.JsonObject;
 import java.util.UUID;
 
 @ConfigVersion(1)
-public record FascinatedConfig(UUID activeProfileId, JsonObject globalSettings) implements GsonSerializable<FascinatedConfig> {
+public record FascinatedConfig(UUID activeProfileId,
+                               JsonObject globalSettings) implements GsonSerializable<FascinatedConfig> {
 
     public static FascinatedConfig defaults() {
         return new FascinatedConfig(null, new JsonObject());

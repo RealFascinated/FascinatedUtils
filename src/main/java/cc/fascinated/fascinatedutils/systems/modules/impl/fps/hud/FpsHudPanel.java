@@ -27,6 +27,19 @@ public class FpsHudPanel extends MiniMessageHudPanel {
         this.fpsWidget = fpsWidget;
     }
 
+    private static int fpsColorArgb(int fps) {
+        if (fps >= 55) {
+            return UITheme.COLOR_TEXT_PRIMARY;
+        }
+        if (fps >= 40) {
+            return FPS_COLOR_YELLOW;
+        }
+        if (fps >= 30) {
+            return FPS_COLOR_AMBER;
+        }
+        return FPS_COLOR_RED;
+    }
+
     @Override
     protected long miniMessageLineUpdateIntervalNanos() {
         return UPDATE_INTERVAL_NANOS;
@@ -49,18 +62,5 @@ public class FpsHudPanel extends MiniMessageHudPanel {
             lines.add("<grey>0.1%: <" + Colors.rgbHex(fpsColorArgb(pointOnePercentLowFps)) + "><white>" + pointOnePercentLowFps);
         }
         return lines;
-    }
-
-    private static int fpsColorArgb(int fps) {
-        if (fps >= 55) {
-            return UITheme.COLOR_TEXT_PRIMARY;
-        }
-        if (fps >= 40) {
-            return FPS_COLOR_YELLOW;
-        }
-        if (fps >= 30) {
-            return FPS_COLOR_AMBER;
-        }
-        return FPS_COLOR_RED;
     }
 }

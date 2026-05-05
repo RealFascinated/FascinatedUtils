@@ -1,6 +1,6 @@
 #version 330
 
-layout(std140) uniform Globals {
+layout (std140) uniform Globals {
     ivec3 CameraBlockPos;
     vec3 CameraOffset;
     vec2 ScreenSize;

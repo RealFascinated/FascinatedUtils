@@ -18,27 +18,12 @@ import java.util.Locale;
 @Getter
 public class MovementModule extends HudHostModule {
 
-    private final BooleanSetting enableFlightSpeedModifier = BooleanSetting.builder().id("enable_flight_speed_modifier")
-            .defaultValue(false)
-            .categoryDisplayKey("Flight Speed")
-            .build();
+    private final BooleanSetting enableFlightSpeedModifier = BooleanSetting.builder().id("enable_flight_speed_modifier").defaultValue(false).categoryDisplayKey("Flight Speed").build();
 
-    private final SliderSetting flightSpeedModifier = SliderSetting.builder().id("flight_speed_modifier")
-            .defaultValue(2f)
-            .minValue(2f)
-            .maxValue(10f)
-            .step(1f)
-            .categoryDisplayKey("Flight Speed")
-            .build();
+    private final SliderSetting flightSpeedModifier = SliderSetting.builder().id("flight_speed_modifier").defaultValue(2f).minValue(2f).maxValue(10f).step(1f).categoryDisplayKey("Flight Speed").build();
 
     public MovementModule() {
-        super("movement", "Movement", HudDefaults.builder()
-                .defaultState(true)
-                .defaultAnchor(HUDWidgetAnchor.TOP_RIGHT)
-                .defaultXOffset(5)
-                .defaultYOffset(5)
-                .build()
-        );
+        super("movement", "Movement", HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.TOP_RIGHT).defaultXOffset(5).defaultYOffset(5).build());
         MiniMessageHudChrome.register(this);
         addSetting(enableFlightSpeedModifier);
         addSetting(flightSpeedModifier);
@@ -59,11 +44,14 @@ public class MovementModule extends HudHostModule {
         String line;
         if (flying) {
             line = "Flying";
-        } else if (sprintToggledOn) {
+        }
+        else if (sprintToggledOn) {
             line = "Sprinting (Toggled)";
-        } else if (player.isSprinting()) {
+        }
+        else if (player.isSprinting()) {
             line = "Sprinting";
-        } else {
+        }
+        else {
             return editorMode ? List.of("<grey>Movement</grey>") : null;
         }
 

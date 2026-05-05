@@ -1,9 +1,9 @@
 package cc.fascinated.fascinatedutils.api.user;
 
-import java.util.Date;
-
 import lombok.Getter;
 import lombok.experimental.Accessors;
+
+import java.util.Date;
 
 @Getter
 @Accessors(fluent = true)
@@ -22,15 +22,7 @@ public class User {
         this.id = id;
     }
 
-    public User(
-            int id,
-            String minecraftUuid,
-            String minecraftName,
-            String role,
-            String status,
-            Presence presence,
-            Date lastSeen
-    ) {
+    public User(int id, String minecraftUuid, String minecraftName, String role, String status, Presence presence, Date lastSeen) {
         this.id = id;
         this.minecraftUuid = minecraftUuid;
         this.minecraftName = minecraftName;
@@ -39,6 +31,13 @@ public class User {
         this.presence = presence;
         this.lastSeen = lastSeen;
         this.resolved = true;
+    }
+
+    private static String mergeString(String existingValue, String incomingValue) {
+        if (incomingValue == null || incomingValue.isBlank()) {
+            return existingValue;
+        }
+        return incomingValue;
     }
 
     void mergeFrom(User incomingUser) {
@@ -63,12 +62,5 @@ public class User {
 
     void setPresence(Presence presence) {
         this.presence = presence;
-    }
-
-    private static String mergeString(String existingValue, String incomingValue) {
-        if (incomingValue == null || incomingValue.isBlank()) {
-            return existingValue;
-        }
-        return incomingValue;
     }
 }

@@ -62,10 +62,7 @@ public class WorldSizeModule extends Module {
 
     private long computeSize(Path dir) throws IOException {
         try (Stream<Path> stream = Files.walk(dir)) {
-            return stream
-                    .filter(Files::isRegularFile)
-                    .mapToLong(path -> path.toFile().length())
-                    .sum();
+            return stream.filter(Files::isRegularFile).mapToLong(path -> path.toFile().length()).sum();
         }
     }
 }

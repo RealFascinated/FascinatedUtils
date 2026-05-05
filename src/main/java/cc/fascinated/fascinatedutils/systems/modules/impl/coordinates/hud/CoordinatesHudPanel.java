@@ -34,6 +34,28 @@ public class CoordinatesHudPanel extends HudPanel {
         this.coordinatesWidget = coordinatesWidget;
     }
 
+    private static String biomeColoredMiniMessage(String biomeIdRaw) {
+        Identifier biomeId = Identifier.tryParse(biomeIdRaw);
+        String path = biomeId == null ? biomeIdRaw : biomeId.getPath();
+        String label = Arrays.stream(path.replace("_", " ").split(" ")).map(StringUtils::capitalize).collect(Collectors.joining(" "));
+        int biomeColorArgb = BiomeColors.colorForBiomeId(Identifier.tryParse(biomeIdRaw));
+        return "<color:" + Colors.rgbHex(biomeColorArgb) + ">" + label + "</color>";
+    }
+
+    private static String compassFromLook(Vec3 look) {
+        double horizontalX = look.x;
+        double horizontalZ = look.z;
+        if (Math.hypot(horizontalX, horizontalZ) < 1e-5d) {
+            return "—";
+        }
+        double degrees = Math.toDegrees(Math.atan2(horizontalX, horizontalZ));
+        if (degrees < 0d) {
+            degrees += 360d;
+        }
+        int sector = (int) Math.floor((degrees + 22.5d) / 45d) & 7;
+        return COMPASS_DIRECTIONS[sector];
+    }
+
     @Override
     protected @Nullable HudContent produceHudContent(float deltaSeconds, boolean editorMode) {
         return null;
@@ -141,27 +163,5 @@ public class CoordinatesHudPanel extends HudPanel {
             float facingX = facingColumnStartX + (facingCommitWidth - currentFacingHeadingWidth);
             glRenderer.drawMiniMessageText(facingKey, facingX, padding, textShadow);
         };
-    }
-
-    private static String biomeColoredMiniMessage(String biomeIdRaw) {
-        Identifier biomeId = Identifier.tryParse(biomeIdRaw);
-        String path = biomeId == null ? biomeIdRaw : biomeId.getPath();
-        String label = Arrays.stream(path.replace("_", " ").split(" ")).map(StringUtils::capitalize).collect(Collectors.joining(" "));
-        int biomeColorArgb = BiomeColors.colorForBiomeId(Identifier.tryParse(biomeIdRaw));
-        return "<color:" + Colors.rgbHex(biomeColorArgb) + ">" + label + "</color>";
-    }
-
-    private static String compassFromLook(Vec3 look) {
-        double horizontalX = look.x;
-        double horizontalZ = look.z;
-        if (Math.hypot(horizontalX, horizontalZ) < 1e-5d) {
-            return "—";
-        }
-        double degrees = Math.toDegrees(Math.atan2(horizontalX, horizontalZ));
-        if (degrees < 0d) {
-            degrees += 360d;
-        }
-        int sector = (int) Math.floor((degrees + 22.5d) / 45d) & 7;
-        return COMPASS_DIRECTIONS[sector];
     }
 }

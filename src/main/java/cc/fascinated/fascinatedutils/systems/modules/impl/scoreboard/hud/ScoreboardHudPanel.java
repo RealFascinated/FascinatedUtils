@@ -21,11 +21,7 @@ import java.util.List;
 public class ScoreboardHudPanel extends HudPanel {
 
     private static final Component PREVIEW_TITLE = Component.literal("My Server");
-    private static final List<ScoreRow> PREVIEW_ROWS = List.of(
-            new ScoreRow(Component.literal("Player1"), Component.empty(), 0),
-            new ScoreRow(Component.literal("Player2"), Component.empty(), 0),
-            new ScoreRow(Component.literal("Player3"), Component.empty(), 0),
-            new ScoreRow(Component.literal("Player4"), Component.empty(), 0));
+    private static final List<ScoreRow> PREVIEW_ROWS = List.of(new ScoreRow(Component.literal("Player1"), Component.empty(), 0), new ScoreRow(Component.literal("Player2"), Component.empty(), 0), new ScoreRow(Component.literal("Player3"), Component.empty(), 0), new ScoreRow(Component.literal("Player4"), Component.empty(), 0));
 
     private final ScoreboardModule scoreboardModule;
 

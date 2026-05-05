@@ -28,9 +28,11 @@ public class AtmosphericFogModifierMixin {
         float multiplier;
         if (level.dimension().equals(Level.NETHER)) {
             multiplier = module.getNetherFogStrength().getValue().floatValue();
-        } else if (level.dimension().equals(Level.END)) {
+        }
+        else if (level.dimension().equals(Level.END)) {
             multiplier = module.getEndFogStrength().getValue().floatValue();
-        } else {
+        }
+        else {
             multiplier = module.getAtmosphericFogStrength().getValue().floatValue();
         }
         if (multiplier <= 0f) {

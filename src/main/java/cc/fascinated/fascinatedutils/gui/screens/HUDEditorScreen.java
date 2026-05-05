@@ -77,7 +77,8 @@ public class HUDEditorScreen extends WidgetScreen {
         brandingAnim.tick(deltaSeconds);
         if (idleHudSelection && screenAnim.progress().value() >= 0.80f) {
             brandingAnim.show();
-        } else {
+        }
+        else {
             brandingAnim.hide();
         }
         final float finalCanvasWidth = canvasWidth;

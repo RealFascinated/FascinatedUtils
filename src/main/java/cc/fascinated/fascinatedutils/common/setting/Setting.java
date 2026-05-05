@@ -25,9 +25,9 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
     private final @Nullable Supplier<String> lockedReason;
     private final Supplier<String> nameProvider;
     private final Supplier<@Nullable String> tooltipProvider;
+    private final List<Setting<?>> subSettings = new ArrayList<>();
     private String translationKeyPrefix = "fascinatedutils.setting";
     private T value;
-    private final List<Setting<?>> subSettings = new ArrayList<>();
     private boolean subSetting;
 
     protected Setting(Builder<T, ?> builder) {
@@ -37,12 +37,8 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
         this.categoryDisplayKey = builder.categoryDisplayKey;
         this.locked = builder.locked;
         this.lockedReason = builder.lockedReason;
-        this.nameProvider = builder.nameProvider != null
-                ? builder.nameProvider
-                : this::resolveTranslatedDisplayName;
-        this.tooltipProvider = builder.tooltipProvider != null
-                ? builder.tooltipProvider
-                : this::resolveTranslatedTooltip;
+        this.nameProvider = builder.nameProvider != null ? builder.nameProvider : this::resolveTranslatedDisplayName;
+        this.tooltipProvider = builder.tooltipProvider != null ? builder.tooltipProvider : this::resolveTranslatedTooltip;
     }
 
     private String resolveTranslatedDisplayName() {

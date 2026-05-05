@@ -34,8 +34,7 @@ public class WaypointsRootComponent extends UiComponent<WaypointsRootComponent.P
     private @Nullable UUID pendingDeleteId;
 
     public WaypointsRootComponent() {
-        this.searchInput = new FOutlinedTextInputWidget(FOCUS_SEARCH, 64, 24f,
-                () -> Component.translatable("fascinatedutils.waypoints.search").getString());
+        this.searchInput = new FOutlinedTextInputWidget(FOCUS_SEARCH, 64, 24f, () -> Component.translatable("fascinatedutils.waypoints.search").getString());
         this.searchInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
         this.searchInput.setOnChange(value -> scrollOffsetRef.setValue(0f));
     }
@@ -58,14 +57,10 @@ public class WaypointsRootComponent extends UiComponent<WaypointsRootComponent.P
             UUID idForDelete = pendingDeleteId;
             Optional<Waypoint> waypointOptional = ModConfig.waypoints().findById(idForDelete);
             if (waypointOptional.isPresent()) {
-                deckLayers.add(UiSlot.keyed("waypoints.delete_popup",
-                        WaypointDeletePopupComponent.view(new WaypointDeletePopupComponent.Props(
-                                waypointOptional.get().getName(),
-                                () -> pendingDeleteId = null,
-                                () -> {
-                                    ModConfig.waypoints().delete(idForDelete);
-                                    pendingDeleteId = null;
-                                }))));
+                deckLayers.add(UiSlot.keyed("waypoints.delete_popup", WaypointDeletePopupComponent.view(new WaypointDeletePopupComponent.Props(waypointOptional.get().getName(), () -> pendingDeleteId = null, () -> {
+                    ModConfig.waypoints().delete(idForDelete);
+                    pendingDeleteId = null;
+                }))));
             }
             else {
                 pendingDeleteId = null;
@@ -76,26 +71,8 @@ public class WaypointsRootComponent extends UiComponent<WaypointsRootComponent.P
     }
 
     private UiView cardStack(float cardWidth, FCellConstraints horizontalCardPad, Props currentProps) {
-        UiView columnBody = Ui.column(0f, Align.START, List.of(
-                Ui.slot(new FCellConstraints().setMargins(0f, CARD_PAD), Ui.spacer(cardWidth, 0f)),
-                Ui.slot(horizontalCardPad, WaypointsHeaderComponent.view(
-                        new WaypointsHeaderComponent.Props(currentProps.onRequestAdd(), currentProps.onClose()))),
-                Ui.slot(horizontalCardPad, Ui.spacer(cardWidth, 6f)),
-                Ui.slot(horizontalCardPad, Ui.outlinedPinned(searchInput, null, value -> scrollOffsetRef.setValue(0f))),
-                Ui.slot(horizontalCardPad, Ui.spacer(cardWidth, 8f)),
-                Ui.slot(new FCellConstraints().setExpandVertical(true),
-                        WaypointsListComponent.view(new WaypointsListComponent.Props(
-                                currentProps.worldWaypoints(),
-                                searchInput.value(),
-                                scrollOffsetRef,
-                                currentProps.onEditWaypoint(),
-                                currentProps.onToggleVisibility(),
-                                waypointId -> pendingDeleteId = waypointId,
-                                currentProps.dimensionLabelFormatter())))
-        ));
-        return Ui.stackLayers(
-                UiSlot.of(Ui.rectDecorated(UITheme.COLOR_SURFACE, 8f, UITheme.COLOR_BORDER, 1f)),
-                UiSlot.of(columnBody));
+        UiView columnBody = Ui.column(0f, Align.START, List.of(Ui.slot(new FCellConstraints().setMargins(0f, CARD_PAD), Ui.spacer(cardWidth, 0f)), Ui.slot(horizontalCardPad, WaypointsHeaderComponent.view(new WaypointsHeaderComponent.Props(currentProps.onRequestAdd(), currentProps.onClose()))), Ui.slot(horizontalCardPad, Ui.spacer(cardWidth, 6f)), Ui.slot(horizontalCardPad, Ui.outlinedPinned(searchInput, null, value -> scrollOffsetRef.setValue(0f))), Ui.slot(horizontalCardPad, Ui.spacer(cardWidth, 8f)), Ui.slot(new FCellConstraints().setExpandVertical(true), WaypointsListComponent.view(new WaypointsListComponent.Props(currentProps.worldWaypoints(), searchInput.value(), scrollOffsetRef, currentProps.onEditWaypoint(), currentProps.onToggleVisibility(), waypointId -> pendingDeleteId = waypointId, currentProps.dimensionLabelFormatter())))));
+        return Ui.stackLayers(UiSlot.of(Ui.rectDecorated(UITheme.COLOR_SURFACE, 8f, UITheme.COLOR_BORDER, 1f)), UiSlot.of(columnBody));
     }
 
     @Override
@@ -106,13 +83,8 @@ public class WaypointsRootComponent extends UiComponent<WaypointsRootComponent.P
     /**
      * Props for {@link WaypointsRootComponent}.
      */
-    public record Props(float viewportWidth,
-                        float viewportHeight,
-                        List<Waypoint> worldWaypoints,
-                        Runnable onRequestAdd,
-                        Runnable onClose,
-                        java.util.function.Consumer<Waypoint> onEditWaypoint,
+    public record Props(float viewportWidth, float viewportHeight, List<Waypoint> worldWaypoints, Runnable onRequestAdd,
+                        Runnable onClose, java.util.function.Consumer<Waypoint> onEditWaypoint,
                         java.util.function.Consumer<Waypoint> onToggleVisibility,
-                        WaypointsListComponent.DimensionLabelFormatter dimensionLabelFormatter) {
-    }
+                        WaypointsListComponent.DimensionLabelFormatter dimensionLabelFormatter) {}
 }

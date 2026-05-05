@@ -83,25 +83,15 @@ public class AlumiteUsers {
         return new SelfUser(alumite);
     }
 
-    public void replaceSocialFromNetwork(
-            List<FriendEntryWire> friendsWire,
-            List<PendingFriendRequestWire> incomingWire,
-            List<PendingFriendRequestWire> outgoingWire
-    ) {
+    public void replaceSocialFromNetwork(List<FriendEntryWire> friendsWire, List<PendingFriendRequestWire> incomingWire, List<PendingFriendRequestWire> outgoingWire) {
         User activeSelfUser = selfUser;
         usersById.clear();
         if (activeSelfUser != null) {
             usersById.put(activeSelfUser.id(), activeSelfUser);
         }
-        friends = friendsWire == null ? List.of() : friendsWire.stream()
-                .map(this::toFriend)
-                .toList();
-        incomingFriendRequests = incomingWire == null ? List.of() : incomingWire.stream()
-                .map(this::toPendingFriendRequest)
-                .toList();
-        outgoingFriendRequests = outgoingWire == null ? List.of() : outgoingWire.stream()
-                .map(this::toPendingFriendRequest)
-                .toList();
+        friends = friendsWire == null ? List.of() : friendsWire.stream().map(this::toFriend).toList();
+        incomingFriendRequests = incomingWire == null ? List.of() : incomingWire.stream().map(this::toPendingFriendRequest).toList();
+        outgoingFriendRequests = outgoingWire == null ? List.of() : outgoingWire.stream().map(this::toPendingFriendRequest).toList();
     }
 
     public User upsertUser(PublicUserWire wire) {
@@ -130,24 +120,17 @@ public class AlumiteUsers {
 
     public void onFriendAdd(FriendEntryWire entry) {
         User user = upsertUser(entry.user());
-        boolean wasOutgoing = outgoingFriendRequests.stream()
-                .anyMatch(request -> request.user().id() == user.id());
+        boolean wasOutgoing = outgoingFriendRequests.stream().anyMatch(request -> request.user().id() == user.id());
         List<Friend> updatedFriends = new ArrayList<>(friends);
         updatedFriends.add(new Friend(user, entry.since()));
         friends = List.copyOf(updatedFriends);
-        outgoingFriendRequests = outgoingFriendRequests.stream()
-                .filter(request -> request.user().id() != user.id())
-                .toList();
-        incomingFriendRequests = incomingFriendRequests.stream()
-                .filter(request -> request.user().id() != user.id())
-                .toList();
+        outgoingFriendRequests = outgoingFriendRequests.stream().filter(request -> request.user().id() != user.id()).toList();
+        incomingFriendRequests = incomingFriendRequests.stream().filter(request -> request.user().id() != user.id()).toList();
         FascinatedEventBus.INSTANCE.post(new FriendAddEvent(user, entry.since(), wasOutgoing));
     }
 
     public void onFriendRemove(int userId) {
-        friends = friends.stream()
-                .filter(entry -> entry.user().id() != userId)
-                .toList();
+        friends = friends.stream().filter(entry -> entry.user().id() != userId).toList();
         FascinatedEventBus.INSTANCE.post(new FriendRemoveEvent(userId));
     }
 
@@ -156,20 +139,12 @@ public class AlumiteUsers {
         List<PendingFriendRequest> updatedRequests = new ArrayList<>(incomingFriendRequests);
         updatedRequests.add(pendingRequest);
         incomingFriendRequests = List.copyOf(updatedRequests);
-        FascinatedEventBus.INSTANCE.post(new FriendRequestIncomingEvent(
-                request.requestId(),
-                pendingRequest.user(),
-                request.createdAt()
-        ));
+        FascinatedEventBus.INSTANCE.post(new FriendRequestIncomingEvent(request.requestId(), pendingRequest.user(), request.createdAt()));
     }
 
     public void onFriendRequestRemoved(int requestId, String reason) {
-        incomingFriendRequests = incomingFriendRequests.stream()
-                .filter(request -> request.requestId() != requestId)
-                .toList();
-        outgoingFriendRequests = outgoingFriendRequests.stream()
-                .filter(request -> request.requestId() != requestId)
-                .toList();
+        incomingFriendRequests = incomingFriendRequests.stream().filter(request -> request.requestId() != requestId).toList();
+        outgoingFriendRequests = outgoingFriendRequests.stream().filter(request -> request.requestId() != requestId).toList();
         FascinatedEventBus.INSTANCE.post(new FriendRequestRemovedEvent(requestId, reason));
     }
 

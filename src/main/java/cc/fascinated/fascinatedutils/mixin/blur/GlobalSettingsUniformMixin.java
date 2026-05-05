@@ -21,7 +21,8 @@ import java.nio.ByteBuffer;
 @Mixin(GlobalSettingsUniform.class)
 public abstract class GlobalSettingsUniformMixin {
 
-    @Shadow private GpuBuffer buffer;
+    @Shadow
+    private GpuBuffer buffer;
 
     /**
      * Replaces the vanilla UBO write to use a {@code float} for {@code MenuBlurRadius} instead
@@ -31,32 +32,16 @@ public abstract class GlobalSettingsUniformMixin {
      * identical to vanilla when the module is off.
      */
     @Inject(method = "update", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$writeFloatBlurRadius(
-            int width, int height, double glintAlpha, long gameTime,
-            DeltaTracker deltaTracker, int menuBlurRadius,
-            Vec3 cameraPos, boolean useRgss, CallbackInfo ci) {
+    private void fascinatedutils$writeFloatBlurRadius(int width, int height, double glintAlpha, long gameTime, DeltaTracker deltaTracker, int menuBlurRadius, Vec3 cameraPos, boolean useRgss, CallbackInfo ci) {
 
         BlurModule module = ModuleRegistry.INSTANCE.getModule(BlurModule.class).orElse(null);
-        float floatRadius = (module != null && module.isEnabled())
-                ? module.getBlurStrength().getValue().floatValue() * module.getProgress()
-                : (float) menuBlurRadius;
+        float floatRadius = (module != null && module.isEnabled()) ? module.getBlurStrength().getValue().floatValue() * module.getProgress() : (float) menuBlurRadius;
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             int cameraX = Mth.floor(cameraPos.x);
             int cameraY = Mth.floor(cameraPos.y);
             int cameraZ = Mth.floor(cameraPos.z);
-            ByteBuffer data = Std140Builder.onStack(stack, GlobalSettingsUniform.UBO_SIZE)
-                    .putIVec3(cameraX, cameraY, cameraZ)
-                    .putVec3(
-                            (float) ((double) cameraX - cameraPos.x),
-                            (float) ((double) cameraY - cameraPos.y),
-                            (float) ((double) cameraZ - cameraPos.z))
-                    .putVec2(width, height)
-                    .putFloat((float) glintAlpha)
-                    .putFloat(((float) (gameTime % 24000L) + deltaTracker.getGameTimeDeltaPartialTick(false)) / 24000.0f)
-                    .putFloat(floatRadius)
-                    .putInt(useRgss ? 1 : 0)
-                    .get();
+            ByteBuffer data = Std140Builder.onStack(stack, GlobalSettingsUniform.UBO_SIZE).putIVec3(cameraX, cameraY, cameraZ).putVec3((float) ((double) cameraX - cameraPos.x), (float) ((double) cameraY - cameraPos.y), (float) ((double) cameraZ - cameraPos.z)).putVec2(width, height).putFloat((float) glintAlpha).putFloat(((float) (gameTime % 24000L) + deltaTracker.getGameTimeDeltaPartialTick(false)) / 24000.0f).putFloat(floatRadius).putInt(useRgss ? 1 : 0).get();
             RenderSystem.getDevice().createCommandEncoder().writeToBuffer(this.buffer.slice(), data);
         }
         RenderSystem.setGlobalSettingsUniform(this.buffer);

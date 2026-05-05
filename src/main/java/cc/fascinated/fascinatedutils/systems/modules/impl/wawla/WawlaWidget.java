@@ -93,11 +93,37 @@ public class WawlaWidget extends HudHostModule {
         ENTITY_EXTENSIONS.add(extension);
     }
 
+    private static String formatSourceName(String namespace) {
+        if (namespace == null || namespace.isBlank()) {
+            return "Minecraft";
+        }
+        String[] words = namespace.replace('_', ' ').toLowerCase(Locale.ROOT).split(" ");
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < words.length; i++) {
+            if (i > 0) {
+                builder.append(' ');
+            }
+            builder.append(StringUtils.capitalize(words[i]));
+        }
+        return builder.toString();
+    }
+
+    private static float resolveBreakProgress(Minecraft mc, BlockPos blockPos) {
+        if (mc.gameMode == null || !mc.gameMode.isDestroying()) {
+            return 0f;
+        }
+        ClientPlayerInteractionManagerAccessorMixin accessor = (ClientPlayerInteractionManagerAccessorMixin) mc.gameMode;
+        BlockPos currentBreakingPos = accessor.fascinatedutils$getCurrentBreakingPos();
+        if (currentBreakingPos == null || !currentBreakingPos.equals(blockPos)) {
+            return 0f;
+        }
+        return Mth.clamp(accessor.fascinatedutils$getCurrentBreakingProgress(), 0f, 1f);
+    }
+
     public @Nullable CrosshairTarget resolveCrosshairTarget(boolean editorMode) {
         if (editorMode) {
             if (editorCrosshairPreview == null) {
-                editorCrosshairPreview = new CrosshairTarget("Sandstone", null, "Minecraft", new ItemStack(Items.SANDSTONE),
-                        0.65f, true, List.of());
+                editorCrosshairPreview = new CrosshairTarget("Sandstone", null, "Minecraft", new ItemStack(Items.SANDSTONE), 0.65f, true, List.of());
             }
             return editorCrosshairPreview;
         }
@@ -132,46 +158,16 @@ public class WawlaWidget extends HudHostModule {
             if (entity instanceof Player player) {
                 iconStack = new ItemStack(Items.PLAYER_HEAD);
                 iconStack.set(DataComponents.PROFILE, player.getProfile());
-            } else {
+            }
+            else {
                 iconStack = SpawnEggItem.byId(entity.getType()).map(ItemStack::new).orElse(ItemStack.EMPTY);
             }
-            List<String> entitySubtitleLines = ENTITY_EXTENSIONS.stream()
-                    .filter(ext -> ext.matches(entity))
-                    .flatMap(ext -> ext.apply(entity).stream())
-                    .toList();
+            List<String> entitySubtitleLines = ENTITY_EXTENSIONS.stream().filter(ext -> ext.matches(entity)).flatMap(ext -> ext.apply(entity).stream()).toList();
             return new CrosshairTarget(displayName, entityName, sourceName, iconStack, 0f, false, entitySubtitleLines);
         }
         return null;
     }
 
-    private static String formatSourceName(String namespace) {
-        if (namespace == null || namespace.isBlank()) {
-            return "Minecraft";
-        }
-        String[] words = namespace.replace('_', ' ').toLowerCase(Locale.ROOT).split(" ");
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < words.length; i++) {
-            if (i > 0) {
-                builder.append(' ');
-            }
-            builder.append(StringUtils.capitalize(words[i]));
-        }
-        return builder.toString();
-    }
-
-    private static float resolveBreakProgress(Minecraft mc, BlockPos blockPos) {
-        if (mc.gameMode == null || !mc.gameMode.isDestroying()) {
-            return 0f;
-        }
-        ClientPlayerInteractionManagerAccessorMixin accessor = (ClientPlayerInteractionManagerAccessorMixin) mc.gameMode;
-        BlockPos currentBreakingPos = accessor.fascinatedutils$getCurrentBreakingPos();
-        if (currentBreakingPos == null || !currentBreakingPos.equals(blockPos)) {
-            return 0f;
-        }
-        return Mth.clamp(accessor.fascinatedutils$getCurrentBreakingProgress(), 0f, 1f);
-    }
-
     public record CrosshairTarget(String displayName, String entityName, String sourceName, ItemStack iconStack,
-                                  float breakProgress, boolean showBreakBar,
-                                  List<String> subtitleLines) {}
+                                  float breakProgress, boolean showBreakBar, List<String> subtitleLines) {}
 }

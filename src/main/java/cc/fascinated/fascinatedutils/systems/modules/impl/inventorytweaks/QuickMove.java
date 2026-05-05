@@ -28,7 +28,9 @@ public class QuickMove extends Feature<InventoryTweaksModule> {
      * @return {@code true} if the slot was newly visited and a click was sent
      */
     public boolean tryVisitSlot(Slot slot, int slotId, Set<Integer> visitedSlots, SlotClickAction clicker) {
-        if (!visitedSlots.add(slotId)) return false;
+        if (!visitedSlots.add(slotId)) {
+            return false;
+        }
         clicker.click(slot, slotId, 0, ContainerInput.QUICK_MOVE);
         return true;
     }

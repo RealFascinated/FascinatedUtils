@@ -29,21 +29,22 @@ import java.util.Set;
 @Mixin(AbstractContainerScreen.class)
 public abstract class AbstractContainerScreenDragMoveMixin {
 
-    @Shadow protected Slot hoveredSlot;
-    @Final
-    @Shadow protected AbstractContainerMenu menu;
-
+    @Unique
+    private final Set<Integer> fascinatedutils$visitedSlots = new HashSet<>();
     @Shadow
-    protected abstract void slotClicked(Slot slot, int slotId, int buttonNum, ContainerInput containerInput);
-
+    protected Slot hoveredSlot;
+    @Final
+    @Shadow
+    protected AbstractContainerMenu menu;
     @Unique
     private boolean fascinatedutils$shiftDragging = false;
     @Unique
     private boolean fascinatedutils$didDrag = false;
     @Unique
-    private final Set<Integer> fascinatedutils$visitedSlots = new HashSet<>();
-    @Unique
     private double fascinatedutils$scrollAccumulator = 0;
+
+    @Shadow
+    protected abstract void slotClicked(Slot slot, int slotId, int buttonNum, ContainerInput containerInput);
 
     @Inject(method = "mouseClicked", at = @At("RETURN"))
     private void fascinatedutils$afterMouseClicked(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
@@ -64,8 +65,7 @@ public abstract class AbstractContainerScreenDragMoveMixin {
             }
             return;
         }
-        boolean clickLeftRoomForDragOutsideSlots = hoveredSlot != null
-                || !Boolean.TRUE.equals(cir.getReturnValue());
+        boolean clickLeftRoomForDragOutsideSlots = hoveredSlot != null || !Boolean.TRUE.equals(cir.getReturnValue());
         if (!clickLeftRoomForDragOutsideSlots) {
             fascinatedutils$abortQuickMoveDragSession();
             return;
@@ -88,9 +88,7 @@ public abstract class AbstractContainerScreenDragMoveMixin {
             return;
         }
         com.mojang.blaze3d.platform.Window window = Minecraft.getInstance().getWindow();
-        boolean shiftHeld = event.hasShiftDown()
-                || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_SHIFT)
-                || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_SHIFT);
+        boolean shiftHeld = event.hasShiftDown() || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_SHIFT) || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_SHIFT);
         if (event.button() != 0 || !shiftHeld) {
             fascinatedutils$abortQuickMoveDragSession();
             return;
@@ -100,8 +98,7 @@ public abstract class AbstractContainerScreenDragMoveMixin {
         }
         int slotId = menu.slots.indexOf(hoveredSlot);
         if (slotId >= 0) {
-            boolean visited = featureOpt.map(feature -> feature.tryVisitSlot(
-                    hoveredSlot, slotId, fascinatedutils$visitedSlots, this::slotClicked)).orElse(false);
+            boolean visited = featureOpt.map(feature -> feature.tryVisitSlot(hoveredSlot, slotId, fascinatedutils$visitedSlots, this::slotClicked)).orElse(false);
             if (visited) {
                 fascinatedutils$didDrag = true;
             }
@@ -152,8 +149,7 @@ public abstract class AbstractContainerScreenDragMoveMixin {
         }
         fascinatedutils$scrollAccumulator -= ticks;
 
-        featureOpt.ifPresent(feature -> feature.scroll(
-                ticks, hoveredSlot, menu, this::slotClicked));
+        featureOpt.ifPresent(feature -> feature.scroll(ticks, hoveredSlot, menu, this::slotClicked));
 
         cir.setReturnValue(true);
         cir.cancel();

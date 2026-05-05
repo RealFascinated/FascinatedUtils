@@ -21,14 +21,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AvatarTextureCache {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AvatarTextureCache.class);
-
     public static final AvatarTextureCache INSTANCE = new AvatarTextureCache();
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(AvatarTextureCache.class);
     private static final String AVATAR_URL = "https://mc.fascinated.cc/api/skins/%s/face.png?size=64";
-    private static final HttpClient HTTP = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(5))
-            .build();
+    private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
     private final ConcurrentHashMap<String, Identifier> loaded = new ConcurrentHashMap<>();
     private final Set<String> inFlight = ConcurrentHashMap.newKeySet();
@@ -60,12 +56,7 @@ public class AvatarTextureCache {
 
     private void download(String uuid, Runnable onLoad) {
         try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(String.format(AVATAR_URL, uuid)))
-                    .timeout(Duration.ofSeconds(5))
-                    .header("User-Agent", AlumiteEnvironment.USER_AGENT)
-                    .GET()
-                    .build();
+            HttpRequest request = HttpRequest.newBuilder().uri(URI.create(String.format(AVATAR_URL, uuid))).timeout(Duration.ofSeconds(5)).header("User-Agent", AlumiteEnvironment.USER_AGENT).GET().build();
             HttpResponse<byte[]> response = HTTP.send(request, HttpResponse.BodyHandlers.ofByteArray());
             if (response.statusCode() != 200) {
                 LOGGER.warn("Failed to fetch avatar for {}: HTTP {}", uuid, response.statusCode());

@@ -1,17 +1,7 @@
 package cc.fascinated.fascinatedutils.api.internal;
 
-import cc.fascinated.fascinatedutils.api.channel.ChannelDetail;
-import cc.fascinated.fascinatedutils.api.channel.ChannelKind;
-import cc.fascinated.fascinatedutils.api.channel.ChannelMessage;
-import cc.fascinated.fascinatedutils.api.channel.ChannelSummary;
-import cc.fascinated.fascinatedutils.api.channel.GroupMember;
-import cc.fascinated.fascinatedutils.api.channel.LastMessagePreview;
-import cc.fascinated.fascinatedutils.api.channel.json.ChannelDetailWire;
-import cc.fascinated.fascinatedutils.api.channel.json.ChannelKindWire;
-import cc.fascinated.fascinatedutils.api.channel.json.ChannelMemberWire;
-import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessageWire;
-import cc.fascinated.fascinatedutils.api.channel.json.ChannelSummaryWire;
-import cc.fascinated.fascinatedutils.api.channel.json.LastMessagePreviewWire;
+import cc.fascinated.fascinatedutils.api.channel.*;
+import cc.fascinated.fascinatedutils.api.channel.json.*;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.json.PublicUserWire;
 
@@ -19,19 +9,14 @@ import java.util.List;
 
 public class AlumiteModelMapper {
 
+    private AlumiteModelMapper() {
+    }
+
     public static User toUser(PublicUserWire wire) {
         if (wire == null) {
             return null;
         }
-        return new User(
-                wire.id(),
-                wire.minecraftUuid(),
-                wire.minecraftName(),
-                wire.role(),
-                wire.status(),
-                wire.presence(),
-                wire.lastSeen()
-        );
+        return new User(wire.id(), wire.minecraftUuid(), wire.minecraftName(), wire.role(), wire.status(), wire.presence(), wire.lastSeen());
     }
 
     public static ChannelKind toChannelKind(ChannelKindWire wire) {
@@ -55,28 +40,14 @@ public class AlumiteModelMapper {
         if (wire == null) {
             return null;
         }
-        return new ChannelSummary(
-                wire.id(),
-                toChannelKind(wire.type()),
-                wire.name(),
-                wire.lastMessageAt(),
-                toLastMessagePreview(wire.lastMessagePreview()),
-                wire.lastReadMessageId()
-        );
+        return new ChannelSummary(wire.id(), toChannelKind(wire.type()), wire.name(), wire.lastMessageAt(), toLastMessagePreview(wire.lastMessagePreview()), wire.lastReadMessageId());
     }
 
     public static ChannelMessage toChannelMessage(ChannelMessageWire wire) {
         if (wire == null) {
             return null;
         }
-        return new ChannelMessage(
-                wire.id(),
-                wire.channelId(),
-                wire.authorId(),
-                wire.content(),
-                wire.createdAt(),
-                wire.editedAt()
-        );
+        return new ChannelMessage(wire.id(), wire.channelId(), wire.authorId(), wire.content(), wire.createdAt(), wire.editedAt());
     }
 
     public static GroupMember toGroupMember(ChannelMemberWire wire) {
@@ -90,29 +61,21 @@ public class AlumiteModelMapper {
         if (wire == null) {
             return null;
         }
-        if (wire instanceof ChannelDetailWire.DmChannelDetailWire dm) {
-            return new ChannelDetail.DmChannelDetail(dm.id(), dm.lastReadMessageId(), toUser(dm.recipient()));
+        if (wire instanceof ChannelDetailWire.DmChannelDetailWire(
+                int id1, Integer readMessageId, PublicUserWire recipient
+        )) {
+            return new ChannelDetail.DmChannelDetail(id1, readMessageId, toUser(recipient));
         }
-        if (wire instanceof ChannelDetailWire.GroupChannelDetailWire group) {
-            Integer ownerUserId = group.ownerUserId();
+        if (wire instanceof ChannelDetailWire.GroupChannelDetailWire(
+                int id, Integer lastReadMessageId, String name, Integer ownerUserId, List<ChannelMemberWire> members1
+        )) {
             int ownerId = 0;
             if (ownerUserId != null) {
                 ownerId = ownerUserId.intValue();
             }
-            List<GroupMember> members = group.members() == null
-                    ? List.of()
-                    : group.members().stream().map(AlumiteModelMapper::toGroupMember).toList();
-            return new ChannelDetail.GroupChannelDetail(
-                    group.id(),
-                    group.lastReadMessageId(),
-                    group.name(),
-                    ownerId,
-                    members
-            );
+            List<GroupMember> members = members1 == null ? List.of() : members1.stream().map(AlumiteModelMapper::toGroupMember).toList();
+            return new ChannelDetail.GroupChannelDetail(id, lastReadMessageId, name, ownerId, members);
         }
         return null;
-    }
-
-    private AlumiteModelMapper() {
     }
 }

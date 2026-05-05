@@ -13,15 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(SoundEngine.class)
 public class MusicSoundEngineMixin {
 
-    @Inject(
-            method = "play",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/resources/sounds/SoundInstance;getSound()Lnet/minecraft/client/resources/sounds/Sound;",
-                    shift = At.Shift.AFTER
-            ),
-            cancellable = true
-    )
+    @Inject(method = "play", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/sounds/SoundInstance;getSound()Lnet/minecraft/client/resources/sounds/Sound;", shift = At.Shift.AFTER), cancellable = true)
     private void fascinatedutils$legacyMusicStreams(SoundInstance instance, CallbackInfoReturnable<SoundEngine.PlayResult> cir) {
         ModuleRegistry.INSTANCE.getModule(MusicModule.class).ifPresent(module -> {
             LegacyMusicFeature legacyMusic = module.getLegacyMusicFeature();

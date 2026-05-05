@@ -6,11 +6,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 
-@Getter
-@RequiredArgsConstructor
 @Accessors(fluent = true)
-public class Friend {
+public record Friend(User user, String since) {
 
-    private final User user;
-    private final String since;
 }

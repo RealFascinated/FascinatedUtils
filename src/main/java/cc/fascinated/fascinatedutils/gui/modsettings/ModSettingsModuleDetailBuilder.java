@@ -31,9 +31,7 @@ public class ModSettingsModuleDetailBuilder {
 
     private static final int MODULE_SETTINGS_SEARCH_FOCUS_ID = 5002;
 
-    public static UiView moduleDetailViewportUi(float paneWidth, float paneHeight, Module module, Runnable onBack, Ref<Float> settingsPaneScrollYRef,
-                                                Ref<String> settingsSearchRef, Runnable onSearchChanged, Consumer<ColorSetting> openColorPicker,
-                                                FOutlinedTextInputWidget sharedSearchField) {
+    public static UiView moduleDetailViewportUi(float paneWidth, float paneHeight, Module module, Runnable onBack, Ref<Float> settingsPaneScrollYRef, Ref<String> settingsSearchRef, Runnable onSearchChanged, Consumer<ColorSetting> openColorPicker, FOutlinedTextInputWidget sharedSearchField) {
         float settingsContentWidth = Math.max(28f, paneWidth);
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
 
@@ -60,8 +58,7 @@ public class ModSettingsModuleDetailBuilder {
                 hudHost.hudPanelVisibilityToggle(hudPanel.getId()).ifPresent(panelToggle -> {
                     float toggleHeight = SettingsUiMetrics.booleanOuterHeight();
                     FBooleanSettingRowWidget rowWidget = new FBooleanSettingRowWidget(hudHost, panelToggle, settingsInnerWidth, toggleHeight, paddedInnerHost);
-                    FWidget hudRowWrapped = ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth,
-                            new FMinWidthHostWidget(paddedInnerHost, rowWidget));
+                    FWidget hudRowWrapped = ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(paddedInnerHost, rowWidget));
                     scrollSlots.add(Ui.slot(Ui.widgetSlot("hudVis:" + hudPanel.getId(), hudRowWrapped)));
                 });
             }
@@ -73,53 +70,38 @@ public class ModSettingsModuleDetailBuilder {
             empty.setText(Component.translatable("fascinatedutils.setting.shell.no_settings").getString());
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.START);
-            scrollSlots.add(Ui.slot(Ui.widgetSlot("detailEmptyNoSettings",
-                    ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth,
-                            new FMinWidthHostWidget(ModSettingsCategoryRows.settingsDetailPaddedInnerWidth(settingsInnerWidth), empty)))));
+            scrollSlots.add(Ui.slot(Ui.widgetSlot("detailEmptyNoSettings", ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(ModSettingsCategoryRows.settingsDetailPaddedInnerWidth(settingsInnerWidth), empty)))));
             scrollSlots.add(UiSlot.of(Ui.spacer(settingsContentWidth, 4f)));
         }
         else {
             List<ModSettingsCategoryRows.CategoryBlock> categoryBlocks = new ArrayList<>();
             for (SettingCategory category : module.getSettingCategories()) {
-                List<Setting<?>> filtered = isFiltering
-                        ? category.settings().stream().filter(setting -> setting.getName().toLowerCase(Locale.ROOT).contains(searchLower)).toList()
-                        : List.copyOf(category.settings());
+                List<Setting<?>> filtered = isFiltering ? category.settings().stream().filter(setting -> setting.getName().toLowerCase(Locale.ROOT).contains(searchLower)).toList() : List.copyOf(category.settings());
                 categoryBlocks.add(new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), filtered));
             }
-            List<Setting<?>> filteredTopLevel = isFiltering
-                    ? module.getSettings().stream().filter(setting -> setting.getName().toLowerCase(Locale.ROOT).contains(searchLower)).toList()
-                    : module.getSettings();
+            List<Setting<?>> filteredTopLevel = isFiltering ? module.getSettings().stream().filter(setting -> setting.getName().toLowerCase(Locale.ROOT).contains(searchLower)).toList() : module.getSettings();
             boolean anyVisible = !filteredTopLevel.isEmpty() || categoryBlocks.stream().anyMatch(block -> !block.settings().isEmpty());
             if (!anyVisible) {
                 FLabelWidget empty = new FLabelWidget();
                 empty.setText(Component.translatable("fascinatedutils.setting.shell.empty_modules").getString());
                 empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
                 empty.setAlignX(Align.START);
-                scrollSlots.add(Ui.slot(Ui.widgetSlot("detailEmptyFiltered",
-                        ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth,
-                                new FMinWidthHostWidget(ModSettingsCategoryRows.settingsDetailPaddedInnerWidth(settingsInnerWidth), empty)))));
+                scrollSlots.add(Ui.slot(Ui.widgetSlot("detailEmptyFiltered", ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(ModSettingsCategoryRows.settingsDetailPaddedInnerWidth(settingsInnerWidth), empty)))));
                 scrollSlots.add(UiSlot.of(Ui.spacer(settingsContentWidth, 4f)));
             }
             else {
-                scrollSlots.addAll(ModSettingsCategoryRows.declarativeSlotsTopLevelThenCategories(settingsContentWidth, settingsInnerWidth,
-                        categoryBlocks, filteredTopLevel, (setting, innerWidth, sliderValueColumnStartX) -> editorForModuleSetting(module, setting,
-                                innerWidth, sliderValueColumnStartX, openColorPicker)));
+                scrollSlots.addAll(ModSettingsCategoryRows.declarativeSlotsTopLevelThenCategories(settingsContentWidth, settingsInnerWidth, categoryBlocks, filteredTopLevel, (setting, innerWidth, sliderValueColumnStartX) -> editorForModuleSetting(module, setting, innerWidth, sliderValueColumnStartX, openColorPicker)));
                 scrollSlots.add(UiSlot.of(Ui.spacer(settingsContentWidth, ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET)));
             }
         }
 
-        UiView scrollViewport = Ui.scrollTracked(bodyColumnGap, bodyColumnGap, true, settingsPaneScrollYRef::setValue,
-                settingsPaneScrollYRef, scrollSlots);
+        UiView scrollViewport = Ui.scrollTracked(bodyColumnGap, bodyColumnGap, true, settingsPaneScrollYRef::setValue, settingsPaneScrollYRef, scrollSlots);
 
         float sectionGap = ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X;
-        return Ui.column(0f, Align.START, List.of(
-                Ui.slot(new FCellConstraints().setExpandHorizontal(true), Ui.widgetSlot("detailHeaderPacked", detailHeaderPacked)),
-                Ui.slot(Ui.spacer(settingsContentWidth, sectionGap)),
-                Ui.slot(new FCellConstraints().setExpandHorizontal(true).setExpandVertical(true), scrollViewport)));
+        return Ui.column(0f, Align.START, List.of(Ui.slot(new FCellConstraints().setExpandHorizontal(true), Ui.widgetSlot("detailHeaderPacked", detailHeaderPacked)), Ui.slot(Ui.spacer(settingsContentWidth, sectionGap)), Ui.slot(new FCellConstraints().setExpandHorizontal(true).setExpandVertical(true), scrollViewport)));
     }
 
-    private static FWidget packDetailHeader(float settingsContentWidth, float settingsInnerWidth, Module module, FOutlinedTextInputWidget searchInput,
-                                           Runnable onBack, Runnable onSearchChanged) {
+    private static FWidget packDetailHeader(float settingsContentWidth, float settingsInnerWidth, Module module, FOutlinedTextInputWidget searchInput, Runnable onBack, Runnable onSearchChanged) {
         FColumnWidget headerColumn = new FColumnWidget(0f, Align.START);
         headerColumn.addChild(FModSettingsDetailHeaderCardWidget.centeredWithSearchAndResetInContentRow(settingsContentWidth, settingsInnerWidth, onBack, module.getDisplayName(), searchInput, () -> {
             module.resetToDefault();
@@ -134,8 +116,7 @@ public class ModSettingsModuleDetailBuilder {
      * Search field sizing for module detail pane; callers should construct one instance per mods tab session while a module is pinned.
      */
     public static FOutlinedTextInputWidget createSharedModuleDetailSearchField() {
-        return new FOutlinedTextInputWidget(MODULE_SETTINGS_SEARCH_FOCUS_ID, 180, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN,
-                () -> Component.translatable("fascinatedutils.setting.shell.search_settings").getString());
+        return new FOutlinedTextInputWidget(MODULE_SETTINGS_SEARCH_FOCUS_ID, 180, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN, () -> Component.translatable("fascinatedutils.setting.shell.search_settings").getString());
     }
 
     private static FWidget editorForModuleSetting(Module module, Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX, Consumer<ColorSetting> openColorPicker) {

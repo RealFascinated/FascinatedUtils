@@ -29,6 +29,18 @@ public class WaypointEditCardComponent extends UiComponent<WaypointEditCardCompo
         return Ui.component(WaypointEditCardComponent.class, WaypointEditCardComponent::new, props);
     }
 
+    private static UiView sectionLabel(String text, boolean bold, int colorArgb) {
+        return Ui.label(text, colorArgb, bold, TextOverflow.VISIBLE, Align.START);
+    }
+
+    private static UiView axisColumn(String axis, UiView inputView) {
+        return Ui.column(UITheme.GAP_SM, Align.START, List.of(UiSlot.of(sectionLabel(axis, false, FascinatedGuiTheme.INSTANCE.textMuted())), UiSlot.of(inputView)));
+    }
+
+    private static FCellConstraints coordConstraints() {
+        return new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f);
+    }
+
     @Override
     public UiView render() {
         Props currentProps = props();
@@ -43,66 +55,15 @@ public class WaypointEditCardComponent extends UiComponent<WaypointEditCardCompo
         UiView yInputView = Ui.outlinedPinned(currentProps.yInput(), null, value -> {});
         UiView zInputView = Ui.outlinedPinned(currentProps.zInput(), null, value -> {});
 
-        UiView coordsRow = Ui.row(gap, Align.START, List.of(
-                Ui.slot(coordConstraints(), axisColumn("X", xInputView)),
-                Ui.slot(coordConstraints(), axisColumn("Y", yInputView)),
-                Ui.slot(coordConstraints(), axisColumn("Z", zInputView))
-        ));
+        UiView coordsRow = Ui.row(gap, Align.START, List.of(Ui.slot(coordConstraints(), axisColumn("X", xInputView)), Ui.slot(coordConstraints(), axisColumn("Y", yInputView)), Ui.slot(coordConstraints(), axisColumn("Z", zInputView))));
 
-        UiView actionsRow = Ui.row(gap, Align.CENTER, List.of(
-                Ui.slot(new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f),
-                        Ui.buttonStandard(currentProps.onCancel(),
-                                () -> Component.translatable("fascinatedutils.waypoints.popup.cancel").getString(), 100f)),
-                Ui.slot(new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f),
-                        Ui.buttonStandard(currentProps.onSubmit(),
-                                () -> Component.translatable("fascinatedutils.waypoints.edit.confirm").getString(), 100f))
-        ));
+        UiView actionsRow = Ui.row(gap, Align.CENTER, List.of(Ui.slot(new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f), Ui.buttonStandard(currentProps.onCancel(), () -> Component.translatable("fascinatedutils.waypoints.popup.cancel").getString(), 100f)), Ui.slot(new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f), Ui.buttonStandard(currentProps.onSubmit(), () -> Component.translatable("fascinatedutils.waypoints.edit.confirm").getString(), 100f))));
 
-        UiView body = Ui.column(0f, Align.START, List.of(
-                UiSlot.of(sectionLabel(Component.translatable("fascinatedutils.waypoints.edit.title").getString(),
-                        true, FascinatedGuiTheme.INSTANCE.textPrimary())),
-                UiSlot.of(Ui.spacer(0f, sectionGap)),
-                UiSlot.of(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.name").getString(),
-                        false, FascinatedGuiTheme.INSTANCE.textMuted())),
-                UiSlot.of(Ui.spacer(0f, gap)),
-                UiSlot.of(nameInputView),
-                UiSlot.of(Ui.spacer(0f, sectionGap)),
-                UiSlot.of(coordsRow),
-                UiSlot.of(Ui.spacer(0f, sectionGap)),
-                UiSlot.of(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.color").getString(),
-                        false, FascinatedGuiTheme.INSTANCE.textMuted())),
-                UiSlot.of(Ui.spacer(0f, gap)),
-                UiSlot.of(Ui.widgetSlot("waypoint-edit.color-swatch", colorSwatchButton)),
-                UiSlot.of(Ui.spacer(0f, sectionGap)),
-                UiSlot.of(Ui.widgetSlot("waypoint-edit.beam", currentProps.beamCheckbox())),
-                UiSlot.of(Ui.spacer(0f, sectionGap)),
-                UiSlot.of(Ui.widgetSlot("waypoint-edit.distance", currentProps.distanceCheckbox())),
-                UiSlot.of(Ui.spacer(0f, sectionGap)),
-                UiSlot.of(actionsRow)
-        ));
+        UiView body = Ui.column(0f, Align.START, List.of(UiSlot.of(sectionLabel(Component.translatable("fascinatedutils.waypoints.edit.title").getString(), true, FascinatedGuiTheme.INSTANCE.textPrimary())), UiSlot.of(Ui.spacer(0f, sectionGap)), UiSlot.of(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.name").getString(), false, FascinatedGuiTheme.INSTANCE.textMuted())), UiSlot.of(Ui.spacer(0f, gap)), UiSlot.of(nameInputView), UiSlot.of(Ui.spacer(0f, sectionGap)), UiSlot.of(coordsRow), UiSlot.of(Ui.spacer(0f, sectionGap)), UiSlot.of(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.color").getString(), false, FascinatedGuiTheme.INSTANCE.textMuted())), UiSlot.of(Ui.spacer(0f, gap)), UiSlot.of(Ui.widgetSlot("waypoint-edit.color-swatch", colorSwatchButton)), UiSlot.of(Ui.spacer(0f, sectionGap)), UiSlot.of(Ui.widgetSlot("waypoint-edit.beam", currentProps.beamCheckbox())), UiSlot.of(Ui.spacer(0f, sectionGap)), UiSlot.of(Ui.widgetSlot("waypoint-edit.distance", currentProps.distanceCheckbox())), UiSlot.of(Ui.spacer(0f, sectionGap)), UiSlot.of(actionsRow)));
 
-        UiView paddedBody = Ui.column(0f, Align.START, List.of(
-                Ui.slot(new FCellConstraints().setMargins(pad, pad), body)
-        ));
+        UiView paddedBody = Ui.column(0f, Align.START, List.of(Ui.slot(new FCellConstraints().setMargins(pad, pad), body)));
 
-        return Ui.stackLayers(
-                UiSlot.of(Ui.rectDecorated(UITheme.COLOR_SURFACE, 6f, UITheme.COLOR_BORDER, 1f)),
-                UiSlot.of(paddedBody));
-    }
-
-    private static UiView sectionLabel(String text, boolean bold, int colorArgb) {
-        return Ui.label(text, colorArgb, bold, TextOverflow.VISIBLE, Align.START);
-    }
-
-    private static UiView axisColumn(String axis, UiView inputView) {
-        return Ui.column(UITheme.GAP_SM, Align.START, List.of(
-                UiSlot.of(sectionLabel(axis, false, FascinatedGuiTheme.INSTANCE.textMuted())),
-                UiSlot.of(inputView)
-        ));
-    }
-
-    private static FCellConstraints coordConstraints() {
-        return new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f);
+        return Ui.stackLayers(UiSlot.of(Ui.rectDecorated(UITheme.COLOR_SURFACE, 6f, UITheme.COLOR_BORDER, 1f)), UiSlot.of(paddedBody));
     }
 
     /**
@@ -119,17 +80,10 @@ public class WaypointEditCardComponent extends UiComponent<WaypointEditCardCompo
      * @param onCancel          invoked from the cancel button
      * @param onSubmit          invoked from the submit button
      */
-    public record Props(SettingColor color,
-                        FOutlinedTextInputWidget nameInput,
-                        FOutlinedTextInputWidget xInput,
-                        FOutlinedTextInputWidget yInput,
-                        FOutlinedTextInputWidget zInput,
-                        FIconCheckboxWidget beamCheckbox,
-                        FIconCheckboxWidget distanceCheckbox,
-                        Runnable onOpenColorPicker,
-                        Runnable onCancel,
-                        Runnable onSubmit) {
-    }
+    public record Props(SettingColor color, FOutlinedTextInputWidget nameInput, FOutlinedTextInputWidget xInput,
+                        FOutlinedTextInputWidget yInput, FOutlinedTextInputWidget zInput,
+                        FIconCheckboxWidget beamCheckbox, FIconCheckboxWidget distanceCheckbox,
+                        Runnable onOpenColorPicker, Runnable onCancel, Runnable onSubmit) {}
 
     private static final class EditColorSwatchButton extends FButtonWidget {
         private SettingColor boundColor;
@@ -138,13 +92,13 @@ public class WaypointEditCardComponent extends UiComponent<WaypointEditCardCompo
             super(() -> {}, changeColorLabel(), 0f, 1, 2f, 6f, 1f, 8f);
         }
 
+        private static Supplier<String> changeColorLabel() {
+            return () -> Component.translatable("fascinatedutils.waypoints.create.change_color").getString();
+        }
+
         void configure(SettingColor color, Runnable onClick) {
             this.boundColor = color;
             setOnClick(onClick);
-        }
-
-        private static Supplier<String> changeColorLabel() {
-            return () -> Component.translatable("fascinatedutils.waypoints.create.change_color").getString();
         }
 
         @Override

@@ -48,11 +48,11 @@ public class WaypointEditScreen extends WidgetScreen {
     private final FOutlinedTextInputWidget zInput;
 
     private final SettingColor color;
+    private final FIconCheckboxWidget beamCheckbox;
+    private final FIconCheckboxWidget distanceCheckbox;
     private FColorPickerPopupWidget colorPickerWidget;
     private boolean showBeam;
     private boolean showDistance;
-    private final FIconCheckboxWidget beamCheckbox;
-    private final FIconCheckboxWidget distanceCheckbox;
 
     public WaypointEditScreen(Waypoint editedWaypoint) {
         super(Component.translatable("fascinatedutils.waypoints.edit.title"));
@@ -78,10 +78,8 @@ public class WaypointEditScreen extends WidgetScreen {
         zInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
         float checkboxBodyWidth = Math.max(0f, 460f - 2f * UITheme.PADDING_MD);
-        beamCheckbox = new FIconCheckboxWidget(showBeam, value -> showBeam = value,
-                () -> Component.translatable("fascinatedutils.waypoints.edit.show_beam").getString(), checkboxBodyWidth);
-        distanceCheckbox = new FIconCheckboxWidget(showDistance, value -> showDistance = value,
-                () -> Component.translatable("fascinatedutils.waypoints.edit.show_distance").getString(), checkboxBodyWidth);
+        beamCheckbox = new FIconCheckboxWidget(showBeam, value -> showBeam = value, () -> Component.translatable("fascinatedutils.waypoints.edit.show_beam").getString(), checkboxBodyWidth);
+        distanceCheckbox = new FIconCheckboxWidget(showDistance, value -> showDistance = value, () -> Component.translatable("fascinatedutils.waypoints.edit.show_distance").getString(), checkboxBodyWidth);
 
         declarativeMountHost = new DeclarativeMountHost(this::buildViewport);
         host.setRoot(declarativeMountHost);
@@ -92,18 +90,7 @@ public class WaypointEditScreen extends WidgetScreen {
         float innerMaxHeight = Math.min(viewportHeight - 80f, 640f);
         List<UiSlot> layers = new ArrayList<>();
         layers.add(UiSlot.of(Ui.rectPlain(0xB0000000)));
-        layers.add(UiSlot.of(Ui.centerMax(40f, 40f, cardWidth, innerMaxHeight,
-                WaypointEditCardComponent.view(new WaypointEditCardComponent.Props(
-                        color,
-                        nameInput,
-                        xInput,
-                        yInput,
-                        zInput,
-                        beamCheckbox,
-                        distanceCheckbox,
-                        this::openColorPicker,
-                        () -> Minecraft.getInstance().setScreen(new WaypointsScreen()),
-                        this::save)))));
+        layers.add(UiSlot.of(Ui.centerMax(40f, 40f, cardWidth, innerMaxHeight, WaypointEditCardComponent.view(new WaypointEditCardComponent.Props(color, nameInput, xInput, yInput, zInput, beamCheckbox, distanceCheckbox, this::openColorPicker, () -> Minecraft.getInstance().setScreen(new WaypointsScreen()), this::save)))));
         if (colorPickerWidget != null) {
             layers.add(UiSlot.keyed("waypoint-edit-color-picker", Ui.widgetSlot("picker", colorPickerWidget)));
         }

@@ -59,11 +59,9 @@ public abstract class GameRendererMixin implements IGameRenderer {
         float uiWidth = UIScale.uiWidth();
         float uiHeight = UIScale.uiHeight();
         float deltaSeconds = deltaTracker.getGameTimeDeltaTicks() / 20f;
-        cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer toastRenderer =
-                new cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer(drawContext, FascinatedGuiTheme.INSTANCE);
+        cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer toastRenderer = new cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer(drawContext, FascinatedGuiTheme.INSTANCE);
         toastRenderer.begin(uiWidth, uiHeight);
-        ToastManager.INSTANCE.render(toastRenderer, uiWidth, uiHeight,
-                UIScale.uiPointerX(), UIScale.uiPointerY(), deltaSeconds);
+        ToastManager.INSTANCE.render(toastRenderer, uiWidth, uiHeight, UIScale.uiPointerX(), UIScale.uiPointerY(), deltaSeconds);
         toastRenderer.end();
         RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(Objects.requireNonNull(minecraft.getMainRenderTarget().getDepthTexture()), 1.0);
         guiRenderer.render(fogRenderer.getBuffer(FogRenderer.FogMode.NONE));

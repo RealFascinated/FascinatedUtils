@@ -14,22 +14,6 @@ import java.util.function.Supplier;
 
 public class SocialFriendsListWidget {
 
-    public record Props(
-            List<Friend> friends,
-            List<PendingFriendRequest> incomingRequests,
-            List<PendingFriendRequest> outgoingRequests,
-            float scrollY,
-            Consumer<Float> scrollYSink,
-            Function<Friend, FWidget> friendRowFactory,
-            Function<PendingFriendRequest, FWidget> incomingRowFactory,
-            Function<PendingFriendRequest, FWidget> outgoingRowFactory,
-            Function<String, FWidget> sectionLabelFactory,
-            String incomingLabel,
-            String outgoingLabel,
-            Supplier<FWidget> emptyFactory,
-            Supplier<FWidget> emptyFriendsFactory
-    ) {}
-
     public static FScrollColumnWidget build(Props props) {
         FColumnWidget body = new FColumnWidget(4f, cc.fascinated.fascinatedutils.gui.core.Align.START);
         List<Friend> friends = props.friends();
@@ -42,12 +26,14 @@ public class SocialFriendsListWidget {
 
         if (!hasFriends && !hasIncoming && !hasOutgoing) {
             body.addChild(props.emptyFactory().get());
-        } else {
+        }
+        else {
             if (hasFriends) {
                 for (Friend friend : friends) {
                     body.addChild(props.friendRowFactory().apply(friend));
                 }
-            } else {
+            }
+            else {
                 body.addChild(props.emptyFriendsFactory().get());
             }
             if (hasIncoming) {
@@ -69,4 +55,12 @@ public class SocialFriendsListWidget {
         scroll.setScrollOffsetChangeListener(props.scrollYSink());
         return scroll;
     }
+
+    public record Props(List<Friend> friends, List<PendingFriendRequest> incomingRequests,
+                        List<PendingFriendRequest> outgoingRequests, float scrollY, Consumer<Float> scrollYSink,
+                        Function<Friend, FWidget> friendRowFactory,
+                        Function<PendingFriendRequest, FWidget> incomingRowFactory,
+                        Function<PendingFriendRequest, FWidget> outgoingRowFactory,
+                        Function<String, FWidget> sectionLabelFactory, String incomingLabel, String outgoingLabel,
+                        Supplier<FWidget> emptyFactory, Supplier<FWidget> emptyFriendsFactory) {}
 }

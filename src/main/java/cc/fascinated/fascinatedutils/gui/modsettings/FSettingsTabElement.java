@@ -15,8 +15,7 @@ public class FSettingsTabElement extends FWidget implements ModSettingsSettingsP
 
     private final Ref<Float> generalRegistryScrollRef = Ref.of(0f);
     private final Ref<Float> performanceRegistryScrollRef = Ref.of(0f);
-    private final Ref<ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab> registrySubTabRef =
-            Ref.of(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
+    private final Ref<ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab> registrySubTabRef = Ref.of(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
     private final DeclarativeMountHost declarativeMountHost;
     private int compositePresentationStamp;
 
@@ -58,8 +57,7 @@ public class FSettingsTabElement extends FWidget implements ModSettingsSettingsP
     }
 
     private UiView settingsViewportDeclarative(float viewportWidth, float viewportHeight) {
-        return ModSettingsSettingsPresentationComponent.view(
-                new ModSettingsSettingsPresentationComponent.Props(this, viewportWidth, viewportHeight, compositePresentationStamp));
+        return ModSettingsSettingsPresentationComponent.view(new ModSettingsSettingsPresentationComponent.Props(this, viewportWidth, viewportHeight, compositePresentationStamp));
     }
 
     @Override
@@ -105,9 +103,7 @@ public class FSettingsTabElement extends FWidget implements ModSettingsSettingsP
         mainColumn.addChild(new FSpacerWidget(width, tabStripTopInset));
         mainColumn.addChild(paddedTabStrip);
 
-        Ref<Float> activeScroll = registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL
-                ? generalRegistryScrollRef
-                : performanceRegistryScrollRef;
+        Ref<Float> activeScroll = registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL ? generalRegistryScrollRef : performanceRegistryScrollRef;
         float settingsPaneHeight = Math.max(1f, height - tabStripHeight);
         FWidget settingsContent = ModSettingsRegistrySettingsTabBuilder.buildSettingsTab(width, settingsPaneHeight, activeScroll, registrySubTabRef.getValue());
         settingsContent.setCellConstraints(new FCellConstraints().setExpandVertical(true));
@@ -136,8 +132,7 @@ public class FSettingsTabElement extends FWidget implements ModSettingsSettingsP
                 registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
                 bumpCompositeStamp();
             }
-        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_general"), 56f, 1, 1f, 6f, 1.12f, 7f, 2f,
-                () -> registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL) {
+        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_general"), 56f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
@@ -149,8 +144,7 @@ public class FSettingsTabElement extends FWidget implements ModSettingsSettingsP
                 registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE);
                 bumpCompositeStamp();
             }
-        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_performance"), 92f, 1, 1f, 6f, 1.12f, 7f, 2f,
-                () -> registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE) {
+        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_performance"), 92f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;

@@ -8,7 +8,5 @@ package cc.fascinated.fascinatedutils.gui.core;
  * still blocks hits like {@link #BLOCK}.</p>
  */
 public enum PointerHitKind {
-    NONE,
-    BLOCK,
-    TARGET
+    NONE, BLOCK, TARGET
 }

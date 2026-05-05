@@ -40,9 +40,7 @@ public class HudEditorOverlays {
      * @return true when the MODS hit region exists and contains the point
      */
     public static boolean hitTestModsButton(float pointerX, float pointerY) {
-        return modsHitValid
-                && pointerX >= modsLeft && pointerY >= modsTop
-                && pointerX <= modsLeft + modsWidth && pointerY <= modsTop + modsHeight;
+        return modsHitValid && pointerX >= modsLeft && pointerY >= modsTop && pointerX <= modsLeft + modsWidth && pointerY <= modsTop + modsHeight;
     }
 
     /**
@@ -130,13 +128,13 @@ public class HudEditorOverlays {
      * Draws alignment snap guides when coordinates are finite. Center-axis guides are rendered in a
      * distinct golden color to distinguish them from edge and widget alignment guides.
      *
-     * @param glRenderer           renderer for this pass
-     * @param canvasWidth          logical canvas width
-     * @param canvasHeight         logical canvas height
-     * @param snapGuideX           vertical guide X, or NaN to skip
-     * @param snapGuideY           horizontal guide Y, or NaN to skip
-     * @param snapGuideXIsCenter   whether the vertical guide is a center-axis snap
-     * @param snapGuideYIsCenter   whether the horizontal guide is a center-axis snap
+     * @param glRenderer         renderer for this pass
+     * @param canvasWidth        logical canvas width
+     * @param canvasHeight       logical canvas height
+     * @param snapGuideX         vertical guide X, or NaN to skip
+     * @param snapGuideY         horizontal guide Y, or NaN to skip
+     * @param snapGuideXIsCenter whether the vertical guide is a center-axis snap
+     * @param snapGuideYIsCenter whether the horizontal guide is a center-axis snap
      */
     public static void drawSnapGuides(GuiRenderer glRenderer, float canvasWidth, float canvasHeight, float snapGuideX, float snapGuideY, boolean snapGuideXIsCenter, boolean snapGuideYIsCenter) {
         if (Float.isFinite(snapGuideX)) {

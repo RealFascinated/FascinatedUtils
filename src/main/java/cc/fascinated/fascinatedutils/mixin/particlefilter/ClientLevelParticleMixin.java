@@ -20,14 +20,11 @@ public class ClientLevelParticleMixin {
             if (!module.isEnabled()) {
                 return;
             }
-            module.getParticleToggles().stream()
-                    .filter(toggle -> toggle.getNameProvider().get().equals("minecraft:block_crumble"))
-                    .findFirst()
-                    .ifPresent(toggle -> {
-                        if (!toggle.getValue()) {
-                            ci.cancel();
-                        }
-                    });
+            module.getParticleToggles().stream().filter(toggle -> toggle.getNameProvider().get().equals("minecraft:block_crumble")).findFirst().ifPresent(toggle -> {
+                if (!toggle.getValue()) {
+                    ci.cancel();
+                }
+            });
         });
     }
 
@@ -37,14 +34,11 @@ public class ClientLevelParticleMixin {
             if (!module.isEnabled()) {
                 return;
             }
-            module.getParticleToggles().stream()
-                    .filter(toggle -> toggle.getNameProvider().get().equals("minecraft:block"))
-                    .findFirst()
-                    .ifPresent(toggle -> {
-                        if (!toggle.getValue()) {
-                            ci.cancel();
-                        }
-                    });
+            module.getParticleToggles().stream().filter(toggle -> toggle.getNameProvider().get().equals("minecraft:block")).findFirst().ifPresent(toggle -> {
+                if (!toggle.getValue()) {
+                    ci.cancel();
+                }
+            });
         });
     }
 }

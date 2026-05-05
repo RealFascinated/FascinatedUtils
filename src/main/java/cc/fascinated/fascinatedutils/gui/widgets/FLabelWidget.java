@@ -1,12 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
-import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
-
 import cc.fascinated.fascinatedutils.common.Colors;
-import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.TextLayoutMetrics;
-import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
-import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
+import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import lombok.Setter;

@@ -21,6 +21,11 @@ public class FColumnWidget extends FWidget {
         setHorizontalAlignInternal(horizontalAlign);
     }
 
+    public static float clampScrollOffset(float contentHeight, float viewportHeight, float scrollOffset) {
+        float maxScroll = Math.max(0f, contentHeight - viewportHeight);
+        return Mth.clamp(scrollOffset, 0f, maxScroll);
+    }
+
     private void setGapInternal(float gapValue) {
         this.gap = gapValue;
     }
@@ -35,11 +40,6 @@ public class FColumnWidget extends FWidget {
 
     public void setHorizontalAlign(Align horizontalAlignValue) {
         setHorizontalAlignInternal(horizontalAlignValue);
-    }
-
-    public static float clampScrollOffset(float contentHeight, float viewportHeight, float scrollOffset) {
-        float maxScroll = Math.max(0f, contentHeight - viewportHeight);
-        return Mth.clamp(scrollOffset, 0f, maxScroll);
     }
 
     @Override

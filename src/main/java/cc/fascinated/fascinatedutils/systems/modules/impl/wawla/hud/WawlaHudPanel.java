@@ -30,11 +30,11 @@ public class WawlaHudPanel extends HudPanel {
     private static final int BREAK_BAR_FILL = UiColor.argb("#ffffffff");
 
     private final WawlaWidget wawlaWidget;
+    private final FadeInAnim fadeAnim = new FadeInAnim(100f);
+    private final FadeInAnim breakBarAnim = new FadeInAnim(150f);
     @Nullable
     private CrosshairTarget lastCrosshairTarget;
     private float smoothedBreakProgress;
-    private final FadeInAnim fadeAnim = new FadeInAnim(100f);
-    private final FadeInAnim breakBarAnim = new FadeInAnim(150f);
 
     public WawlaHudPanel(WawlaWidget wawlaWidget) {
         super(wawlaWidget, "wawla", 0f);
@@ -55,7 +55,8 @@ public class WawlaHudPanel extends HudPanel {
         if (displayTarget != null) {
             lastCrosshairTarget = displayTarget;
             fadeAnim.show();
-        } else {
+        }
+        else {
             fadeAnim.hide();
         }
         if (!fadeAnim.isVisible()) {
@@ -77,9 +78,7 @@ public class WawlaHudPanel extends HudPanel {
         String rawDisplayName = target.displayName();
         String strippedDisplayName = rawDisplayName == null ? "" : rawDisplayName.replaceAll("§.", "").trim();
         String titleMini = "<color:" + Colors.rgbHex(TITLE_COLOR) + ">" + (strippedDisplayName.isEmpty() ? target.entityName() : rawDisplayName) + "</color>";
-        List<String> subtitleMinis = subtitleLines.stream()
-                .map(line -> "<color:" + Colors.rgbHex(SUBTITLE_COLOR) + ">" + line + "</color>")
-                .toList();
+        List<String> subtitleMinis = subtitleLines.stream().map(line -> "<color:" + Colors.rgbHex(SUBTITLE_COLOR) + ">" + line + "</color>").toList();
         float[] subtitleWidths = new float[subtitleMinis.size()];
         float subtitleMaxWidth = 0f;
         for (int subtitleIndex = 0; subtitleIndex < subtitleMinis.size(); subtitleIndex++) {
@@ -95,12 +94,11 @@ public class WawlaHudPanel extends HudPanel {
 
         if (target.showBreakBar()) {
             float targetBreakProgress = Mth.clamp(target.breakProgress(), 0f, 1f);
-            float lerpFactor = targetBreakProgress >= smoothedBreakProgress
-                ? Mth.clamp(deltaSeconds * 20f, 0f, 1f)
-                : Mth.clamp(deltaSeconds * BREAK_BAR_LERP_SPEED, 0f, 1f);
+            float lerpFactor = targetBreakProgress >= smoothedBreakProgress ? Mth.clamp(deltaSeconds * 20f, 0f, 1f) : Mth.clamp(deltaSeconds * BREAK_BAR_LERP_SPEED, 0f, 1f);
             smoothedBreakProgress = Mth.lerp(lerpFactor, smoothedBreakProgress, targetBreakProgress);
             breakBarAnim.show();
-        } else {
+        }
+        else {
             breakBarAnim.hide();
             if (!breakBarAnim.isVisible()) {
                 smoothedBreakProgress = 0f;
@@ -134,7 +132,8 @@ public class WawlaHudPanel extends HudPanel {
                     glRenderer.drawMiniMessageText(subtitleMinis.get(si), textX, textBlockY + (lineHeight + LINE_GAP) * (si + 1), textShadow);
                 }
                 glRenderer.drawMiniMessageText(sourceMini, textX, textBlockY + (lineHeight + LINE_GAP) * (extraLines + 1), textShadow);
-            } else {
+            }
+            else {
                 float iconX = layoutWidth - panelPadding - ICON_SIZE;
                 glRenderer.drawGuiItem(target.iconStack(), iconX, iconY);
                 float textRightEdge = iconX - ICON_TEXT_GAP;

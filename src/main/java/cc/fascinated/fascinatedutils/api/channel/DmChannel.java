@@ -40,12 +40,7 @@ public non-sealed class DmChannel extends Channel {
     }
 
     public void hide() throws AlumiteApiException {
-        alumite().http().sendAuthorizedExpectNoContent(
-                "DELETE",
-                "/channels/" + id() + "/hidden",
-                null,
-                "hide channel",
-                "Failed to close direct message.");
+        alumite().http().sendAuthorizedExpectNoContent("DELETE", "/channels/" + id() + "/hidden", null, "hide channel", "Failed to close direct message.");
         alumite().channels().hideChannelLocal(id());
     }
 }

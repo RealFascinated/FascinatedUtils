@@ -9,13 +9,6 @@ import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 
 public class SocialMessageBubbleWidget {
-    public record Props(
-            String headerText,
-            String content,
-            boolean ownMessage
-    ) {
-    }
-
     public static FWidget build(Props props, float width) {
         return new FWidget() {
             @Override
@@ -31,14 +24,13 @@ public class SocialMessageBubbleWidget {
 
             @Override
             protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
+                float mouseX = frame.pointerX();
+                float mouseY = frame.pointerY();
                 float contentWidth = Math.max(90f, graphics.measureTextWidth(longestLine(props.content()), false) + 18f);
                 float bubbleW = Math.min(w() * 0.78f, contentWidth);
                 float bubbleX = props.ownMessage() ? x() + w() - bubbleW : x();
                 graphics.drawText(props.headerText(), bubbleX, y(), FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
-                graphics.fillRoundedRect(bubbleX, y() + 10f, bubbleW, h() - 10f, 4f,
-                        props.ownMessage() ? 0xFF2D80F0 : 0xFF2C313C, RectCornerRoundMask.ALL);
+                graphics.fillRoundedRect(bubbleX, y() + 10f, bubbleW, h() - 10f, 4f, props.ownMessage() ? 0xFF2D80F0 : 0xFF2C313C, RectCornerRoundMask.ALL);
 
                 float textY = y() + 16f;
                 for (String line : splitLines(props.content())) {
@@ -69,4 +61,6 @@ public class SocialMessageBubbleWidget {
         }
         return longest;
     }
+
+    public record Props(String headerText, String content, boolean ownMessage) {}
 }

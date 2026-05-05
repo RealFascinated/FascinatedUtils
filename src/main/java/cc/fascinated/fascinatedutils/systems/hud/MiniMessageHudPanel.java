@@ -21,6 +21,25 @@ public abstract class MiniMessageHudPanel extends HudPanel {
     }
 
     /**
+     * @param host                   settings host for {@link HudHostModule#SETTING_REMOVE_MIN_WIDTH}
+     * @param resolvedMinWidthBefore width after panel rules but before stripping
+     * @return zero when remove-min-width is enabled, otherwise {@code resolvedMinWidthBefore}
+     */
+    protected static float applyRemoveMinimumWidthFromHost(HudHostModule host, float resolvedMinWidthBefore) {
+        if (host.getSetting(BooleanSetting.class, HudHostModule.SETTING_REMOVE_MIN_WIDTH).filter(BooleanSetting::isEnabled).isPresent()) {
+            return 0f;
+        }
+        return resolvedMinWidthBefore;
+    }
+
+    private static List<String> normalizeMiniMessageLines(List<String> rawLines) {
+        if (rawLines == null || rawLines.isEmpty()) {
+            return List.of("");
+        }
+        return List.copyOf(rawLines);
+    }
+
+    /**
      * Lines to measure and draw this frame before normalization.
      *
      * @param deltaSeconds frame delta in seconds
@@ -49,31 +68,12 @@ public abstract class MiniMessageHudPanel extends HudPanel {
     }
 
     /**
-     * @param host                   settings host for {@link HudHostModule#SETTING_REMOVE_MIN_WIDTH}
-     * @param resolvedMinWidthBefore width after panel rules but before stripping
-     * @return zero when remove-min-width is enabled, otherwise {@code resolvedMinWidthBefore}
-     */
-    protected static float applyRemoveMinimumWidthFromHost(HudHostModule host, float resolvedMinWidthBefore) {
-        if (host.getSetting(BooleanSetting.class, HudHostModule.SETTING_REMOVE_MIN_WIDTH).filter(BooleanSetting::isEnabled).isPresent()) {
-            return 0f;
-        }
-        return resolvedMinWidthBefore;
-    }
-
-    /**
      * Optional horizontal alignment for centered MiniMessage lines ({@code null} = centered band).
      *
      * @return alignment override, or {@code null} for default
      */
     protected HudAnchorContentAlignment.@Nullable Horizontal textLineHorizontalAlignmentOverrideForPanel() {
         return null;
-    }
-
-    private static List<String> normalizeMiniMessageLines(List<String> rawLines) {
-        if (rawLines == null || rawLines.isEmpty()) {
-            return List.of("");
-        }
-        return List.copyOf(rawLines);
     }
 
     private List<String> miniMessageLinesWithCache(float deltaSeconds, boolean editorMode) {

@@ -134,10 +134,7 @@ public abstract class HudPanel implements HudRenderablePanel {
     }
 
     public boolean containsPoint(float pointerX, float pointerY) {
-        return pointerX >= hudState.getPositionX()
-                && pointerX <= hudState.getPositionX() + getScaledWidth()
-                && pointerY >= hudState.getPositionY()
-                && pointerY <= hudState.getPositionY() + getScaledHeight();
+        return pointerX >= hudState.getPositionX() && pointerX <= hudState.getPositionX() + getScaledWidth() && pointerY >= hudState.getPositionY() && pointerY <= hudState.getPositionY() + getScaledHeight();
     }
 
     public void applyHudAnchorToPosition(float canvasWidth, float canvasHeight) {

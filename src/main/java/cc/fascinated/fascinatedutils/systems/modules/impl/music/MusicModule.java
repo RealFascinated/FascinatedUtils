@@ -15,9 +15,7 @@ public class MusicModule extends Module {
 
     private final LegacyMusicFeature legacyMusicFeature;
 
-    private final BooleanSetting continueMusicAfterLeaving = BooleanSetting.builder().id("continue_music_after_leaving")
-            .defaultValue(false)
-            .build();
+    private final BooleanSetting continueMusicAfterLeaving = BooleanSetting.builder().id("continue_music_after_leaving").defaultValue(false).build();
 
     private volatile boolean disconnectMusicRetainActive;
 
@@ -44,9 +42,7 @@ public class MusicModule extends Module {
      * @return {@code true} when there is no loaded level, retain mode is on, and the setting is active
      */
     public boolean shouldSuppressStoppingCurrentMusicTrack(Minecraft minecraft) {
-        return minecraft.level == null
-                && disconnectMusicRetainActive
-                && shouldContinueMusicAfterLeavingSession();
+        return minecraft.level == null && disconnectMusicRetainActive && shouldContinueMusicAfterLeavingSession();
     }
 
     public void activateDisconnectMusicRetain() {
@@ -61,8 +57,8 @@ public class MusicModule extends Module {
      * Handles {@code Minecraft.updateLevelInEngines} sound teardown: either vanilla {@link SoundManager#stop()} or
      * non-music-only stops when continuing background music across leaving or re-joining after retain.
      *
-     * @param soundManager client sound manager
-     * @param newLevel level being applied, or {@code null} when clearing the session
+     * @param soundManager   client sound manager
+     * @param newLevel       level being applied, or {@code null} when clearing the session
      * @param vanillaStopAll runs full {@link SoundManager#stop()}
      */
     public void applyUpdateLevelEnginesSoundStop(SoundManager soundManager, ClientLevel newLevel, Runnable vanillaStopAll) {
@@ -71,7 +67,8 @@ public class MusicModule extends Module {
             clearDisconnectMusicRetain();
             if (wasRetaining && shouldContinueMusicAfterLeavingSession()) {
                 stopAllSoundsExceptMusic(soundManager);
-            } else {
+            }
+            else {
                 vanillaStopAll.run();
             }
             return;

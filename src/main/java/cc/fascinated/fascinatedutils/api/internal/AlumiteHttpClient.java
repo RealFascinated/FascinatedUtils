@@ -30,12 +30,7 @@ public final class AlumiteHttpClient {
     private final Supplier<String> accessTokenSupplier;
     private final BooleanSupplier refreshActiveToken;
 
-    public AlumiteHttpClient(
-            HttpClient httpClient,
-            Gson gson,
-            Supplier<String> accessTokenSupplier,
-            BooleanSupplier refreshActiveToken
-    ) {
+    public AlumiteHttpClient(HttpClient httpClient, Gson gson, Supplier<String> accessTokenSupplier, BooleanSupplier refreshActiveToken) {
         this.httpClient = httpClient;
         this.gson = gson;
         this.accessTokenSupplier = accessTokenSupplier;
@@ -144,12 +139,7 @@ public final class AlumiteHttpClient {
     }
 
     private HttpRequest buildRequest(String path, String method, String body, String token) {
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(AlumiteEnvironment.API_BASE_URL + path))
-                .header("Content-Type", "application/json")
-                .header("User-Agent", AlumiteEnvironment.USER_AGENT)
-                .timeout(Duration.ofSeconds(15))
-                .method(method, body != null ? HttpRequest.BodyPublishers.ofString(body) : HttpRequest.BodyPublishers.noBody());
+        HttpRequest.Builder builder = HttpRequest.newBuilder().uri(URI.create(AlumiteEnvironment.API_BASE_URL + path)).header("Content-Type", "application/json").header("User-Agent", AlumiteEnvironment.USER_AGENT).timeout(Duration.ofSeconds(15)).method(method, body != null ? HttpRequest.BodyPublishers.ofString(body) : HttpRequest.BodyPublishers.noBody());
         if (token != null) {
             builder.header("Authorization", "Bearer " + token);
         }
