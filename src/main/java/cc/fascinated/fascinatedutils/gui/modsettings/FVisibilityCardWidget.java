@@ -1,7 +1,10 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
+import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.core.TextLayoutMetrics;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
@@ -73,8 +76,8 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     }
 
     @Override
-    public boolean wantsPointer() {
-        return true;
+    public PointerHitKind pointerHitKind() {
+        return PointerHitKind.TARGET;
     }
 
     @Override
@@ -115,7 +118,9 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         float corner = graphics.theme().cardCornerRadius();
         graphics.fillThemedSurfaceCardFrame(x(), y(), w(), h(), corner, RectCornerRoundMask.ALL);
         float[] settingsStrip = settingsStripBounds();

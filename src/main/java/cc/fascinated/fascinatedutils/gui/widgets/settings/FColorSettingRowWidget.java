@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
@@ -94,14 +96,18 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
     }
 
     @Override
-    public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    public void renderOverlayAfterChildren(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         if (hoveredSwatch || hoveredReset) {
             WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, colorSetting, hoveredReset);
         }
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         boolean locked = colorSetting.isLocked();
         float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
         float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;

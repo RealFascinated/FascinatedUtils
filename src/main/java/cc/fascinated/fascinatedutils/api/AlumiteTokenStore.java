@@ -30,7 +30,7 @@ class AlumiteTokenStore {
             String content = Files.readString(path).strip();
             return content.isEmpty() ? null : content;
         } catch (IOException ioException) {
-            Client.LOG.warn("[AlumiteApi] Failed to read session store: {}", ioException.getMessage());
+            Client.LOG.warn("[Alumite] Failed to read session store: {}", ioException.getMessage());
             return null;
         }
     }
@@ -41,7 +41,7 @@ class AlumiteTokenStore {
             Files.createDirectories(path.getParent());
             Files.writeString(path, refreshToken, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException ioException) {
-            Client.LOG.warn("[AlumiteApi] Failed to save session: {}", ioException.getMessage());
+            Client.LOG.warn("[Alumite] Failed to save session: {}", ioException.getMessage());
         }
     }
 
@@ -49,7 +49,7 @@ class AlumiteTokenStore {
         try {
             Files.deleteIfExists(storePath(accountKey));
         } catch (IOException ioException) {
-            Client.LOG.warn("[AlumiteApi] Failed to clear session: {}", ioException.getMessage());
+            Client.LOG.warn("[Alumite] Failed to clear session: {}", ioException.getMessage());
         }
     }
 

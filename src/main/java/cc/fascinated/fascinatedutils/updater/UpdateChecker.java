@@ -1,9 +1,11 @@
 package cc.fascinated.fascinatedutils.updater;
 
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.common.types.GitHubAsset;
 import cc.fascinated.fascinatedutils.common.types.GitHubRelease;
 import cc.fascinated.fascinatedutils.common.types.ReleaseVersionInfo;
-import com.google.gson.*;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.Minecraft;
@@ -60,13 +62,10 @@ public class UpdateChecker {
     }
     private final HttpClient client;
 
-    private final Gson gson;
-
     private ScheduledExecutorService scheduler;
 
     public UpdateChecker() {
         this.client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
-        this.gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
     }
 
     public void startPeriodicChecks() {
@@ -152,7 +151,7 @@ public class UpdateChecker {
             LOG.debug("GitHub API returned non-OK status: {}", res.statusCode());
             return null;
         }
-        return gson.fromJson(res.body(), GitHubRelease.class);
+        return Constants.GSON.fromJson(res.body(), GitHubRelease.class);
     }
 
     private Optional<ReleaseVersionInfo> tryFetchReleaseVersionInfo(List<GitHubAsset> assets) {
@@ -169,7 +168,7 @@ public class UpdateChecker {
                 return Optional.empty();
             }
 
-            ReleaseVersionInfo parsed = gson.fromJson(res.body(), ReleaseVersionInfo.class);
+            ReleaseVersionInfo parsed = Constants.GSON.fromJson(res.body(), ReleaseVersionInfo.class);
             return Optional.ofNullable(parsed);
         } catch (Exception exception) {
             LOG.warn("Failed to fetch release_info.json, proceeding without artifact hash", exception);

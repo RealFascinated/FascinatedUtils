@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
+import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 
@@ -44,8 +45,8 @@ public abstract class FSettingRowWidget extends FWidget {
     }
 
     @Override
-    public boolean wantsPointer() {
-        return true;
+    public PointerHitKind pointerHitKind() {
+        return PointerHitKind.TARGET;
     }
 
     /**

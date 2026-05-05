@@ -57,8 +57,7 @@ public class AxisTexColorQuadRenderState implements GuiElementRenderState {
     @Override
     public ScreenRectangle bounds() {
         if (bounds == null) {
-            ScreenRectangle axis = RoundedRectTexRenderState.axisBounds(x0, y0, x1, y1);
-            bounds = axis.transformMaxBounds(pose);
+            bounds = RoundedRectTexRenderState.clippedBounds(x0, y0, x1, y1, pose, scissorArea);
         }
         return bounds;
     }

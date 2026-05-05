@@ -1,13 +1,11 @@
 package cc.fascinated.fascinatedutils.api.ws;
 
-import com.google.gson.Gson;
+import cc.fascinated.fascinatedutils.Constants;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 public abstract class OutboundMessage {
-
-    private static final Gson GSON = new Gson();
 
     private final GatewayOpcode op;
 
@@ -34,6 +32,6 @@ public abstract class OutboundMessage {
         if (!data.isJsonNull()) {
             obj.add("data", data);
         }
-        return GSON.toJson(obj);
+        return Constants.GSON.toJson(obj);
     }
 }

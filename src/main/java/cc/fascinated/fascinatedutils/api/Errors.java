@@ -1,5 +1,10 @@
 package cc.fascinated.fascinatedutils.api;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum Errors {
     INVALID_CHALLENGE("invalid_challenge", "The login challenge expired. Try again."),
     INVALID_MINECRAFT_TOKEN("invalid_minecraft_token", "Your Minecraft session is invalid. Rejoin and try again."),
@@ -14,23 +19,19 @@ public enum Errors {
     ALREADY_FRIENDS("already_friends", "You are already friends with that user."),
     FRIEND_REQUEST_EXISTS("friend_request_exists", "A friend request already exists for that user."),
     FRIEND_REQUEST_NOT_FOUND("friend_request_not_found", "That friend request no longer exists."),
-    NOT_FRIENDS("not_friends", "You are not friends with that user.");
+    NOT_FRIENDS("not_friends", "You are not friends with that user."),
+    CHANNEL_NOT_FOUND("channel_not_found", "That channel no longer exists."),
+    MESSAGE_NOT_FOUND("message_not_found", "That message no longer exists."),
+    NOT_CHANNEL_OWNER("not_channel_owner", "Only the channel owner can do that."),
+    FORBIDDEN_ACTION("forbidden_action", "You cannot do that in this channel."),
+    CANNOT_REMOVE_OWNER("cannot_remove_owner", "Transfer ownership before removing the owner."),
+    INVALID_READ_CURSOR("invalid_read_cursor", "The selected read position is invalid."),
+    SELF_DM("self_dm", "You cannot open a DM with yourself."),
+    GROUP_FULL("group_full", "That group is already at member limit."),
+    BAD_MESSAGE_BODY("bad_message_body", "One or more provided fields are invalid.");
 
     private final String code;
     private final String displayText;
-
-    Errors(String code, String displayText) {
-        this.code = code;
-        this.displayText = displayText;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public String getDisplayText() {
-        return displayText;
-    }
 
     public static Errors fromCode(String code) {
         if (code == null || code.isBlank()) {

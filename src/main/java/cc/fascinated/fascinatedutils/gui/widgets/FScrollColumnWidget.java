@@ -1,10 +1,14 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
+import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.core.ScrollChrome;
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -18,8 +22,12 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
     private static final float SCROLLBAR_FADE_DRAG_ALPHA = 1.00f;
     private final FWidget body;
     private final float rowGap;
+    @Getter
+    @Accessors(fluent = true)
     private float scrollOffsetY;
     private float targetScrollOffsetY;
+    @Getter
+    @Accessors(fluent = true)
     private float contentHeight;
     @Setter
     private boolean fillVerticalInColumn;
@@ -74,10 +82,6 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
         return fillVerticalInColumn && !fixedViewportHeightEnabled;
     }
 
-    public float scrollOffsetY() {
-        return scrollOffsetY;
-    }
-
     public void setScrollOffsetY(float scrollOffsetY) {
         this.scrollOffsetY = scrollOffsetY;
         this.targetScrollOffsetY = scrollOffsetY;
@@ -87,18 +91,14 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
         this.scrollOffsetChangeListener = scrollOffsetChangeListener == null ? offset -> {} : scrollOffsetChangeListener;
     }
 
-    public float contentHeight() {
-        return contentHeight;
-    }
-
     @Override
     public boolean clipChildren() {
         return true;
     }
 
     @Override
-    public boolean wantsPointer() {
-        return true;
+    public PointerHitKind pointerHitKind() {
+        return PointerHitKind.TARGET;
     }
 
     @Override
@@ -166,7 +166,6 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
 
     @Override
     public boolean mouseLeave(float pointerX, float pointerY) {
-        super.mouseLeave(pointerX, pointerY);
         if (!thumbDragging) {
             thumbHovered = false;
         }
@@ -202,12 +201,12 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
     }
 
     @Override
-    public void render(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    public void render(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
         if (!visible()) {
             return;
         }
         graphics.pushClipWithLogicalOutset(x(), y(), w(), h(), FTheme.scrollClipHorizontalOutsetLogical(), 0f);
-        renderVisibleContent(graphics, mouseX, mouseY, deltaSeconds);
+        renderVisibleContent(graphics, frame, deltaSeconds);
         graphics.popClip();
         if (isScrollbarVisible()) {
             renderScrollbar(graphics);
@@ -245,9 +244,9 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
         return px >= cachedThumbX - SCROLLBAR_HIT_SLOP_PX && px <= cachedThumbX + cachedThumbW + SCROLLBAR_HIT_SLOP_PX && py >= cachedThumbY - SCROLLBAR_HIT_SLOP_PX && py <= cachedThumbY + cachedThumbH + SCROLLBAR_HIT_SLOP_PX;
     }
 
-    private void renderVisibleContent(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    private void renderVisibleContent(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
         if (!(body instanceof FColumnWidget)) {
-            body.render(graphics, mouseX, mouseY, deltaSeconds);
+            body.render(graphics, frame, deltaSeconds);
             return;
         }
         for (FWidget child : body.childrenView()) {
@@ -258,7 +257,7 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
             if (childBottom < y() || child.y() > y() + h()) {
                 continue;
             }
-            child.render(graphics, mouseX, mouseY, deltaSeconds);
+            child.render(graphics, frame, deltaSeconds);
         }
     }
 

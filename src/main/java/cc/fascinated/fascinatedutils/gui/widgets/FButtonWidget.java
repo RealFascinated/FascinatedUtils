@@ -1,7 +1,9 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.common.Colors;
+import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -97,8 +99,8 @@ public class FButtonWidget extends FWidget {
     }
 
     @Override
-    public boolean wantsPointer() {
-        return true;
+    public PointerHitKind pointerHitKind() {
+        return PointerHitKind.TARGET;
     }
 
     @Override
@@ -136,7 +138,10 @@ public class FButtonWidget extends FWidget {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
+        boolean hovered = frame.isHitTarget(this);
         int fillColor = resolveButtonFillColorArgb(hovered);
         int borderColor = resolveButtonBorderColorArgb(hovered);
         float borderThicknessX = UITheme.BORDER_THICKNESS_PX;

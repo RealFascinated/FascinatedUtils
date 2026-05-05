@@ -1,5 +1,13 @@
 package cc.fascinated.fascinatedutils.gui.toast;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
+@Getter
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@Accessors(fluent = true)
 public class Toast {
 
     public enum Type {
@@ -10,18 +18,6 @@ public class Toast {
     private final String message;
     private final Type type;
     private final float durationSeconds;
-
-    Toast(String title, String message, Type type, float durationSeconds) {
-        this.title = title;
-        this.message = message;
-        this.type = type;
-        this.durationSeconds = durationSeconds;
-    }
-
-    public String title() { return title; }
-    public String message() { return message; }
-    public Type type() { return type; }
-    public float durationSeconds() { return durationSeconds; }
 
     public static Builder show() {
         return new Builder();

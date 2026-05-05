@@ -12,11 +12,14 @@ import cc.fascinated.fascinatedutils.renderer.MeshBuilder;
 import cc.fascinated.fascinatedutils.renderer.Renderer2D;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.navigation.ScreenPosition;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -55,7 +58,7 @@ public class GuiRenderer implements UIRenderer {
         this.drawContext = drawContext;
         this.minecraftClient = Minecraft.getInstance();
         this.guiTheme = guiTheme;
-        this.backend = new Renderer2D(drawContext, guiTheme);
+        this.backend = new Renderer2D(drawContext, guiTheme, this::currentScissorArea);
     }
 
     @Override
@@ -85,11 +88,20 @@ public class GuiRenderer implements UIRenderer {
     }
 
     private void enableScissor(Scissor.Region region) {
+        drawContext.enableScissor(region.ix0, region.iy0, region.ix1, region.iy1);
+    }
+
+    @Nullable
+    private ScreenRectangle currentScissorArea() {
+        if (scissorStack.isEmpty()) {
+            return null;
+        }
+        Scissor.Region region = scissorStack.peek();
         int x0 = Mth.floor(region.x * logicalToVanillaScaleX);
         int y0 = Mth.floor(region.y * logicalToVanillaScaleY);
         int x1 = Math.max(x0, Mth.ceil((region.x + region.width) * logicalToVanillaScaleX));
         int y1 = Math.max(y0, Mth.ceil((region.y + region.height) * logicalToVanillaScaleY));
-        drawContext.enableScissor(x0, y0, x1, y1);
+        return new ScreenRectangle(new ScreenPosition(x0, y0), Math.max(0, x1 - x0), Math.max(0, y1 - y0));
     }
 
     /**
@@ -143,6 +155,7 @@ public class GuiRenderer implements UIRenderer {
             Scissor.Region parent = scissorStack.peek();
             region = Scissor.intersect(parent, clipX, clipY, clipW, clipH);
             endRenderSegment();
+            drawContext.nextStratum();
         }
         else {
             region = new Scissor.Region(clipX, clipY, Math.max(0f, clipW), Math.max(0f, clipH));
@@ -155,16 +168,13 @@ public class GuiRenderer implements UIRenderer {
     @Override
     public void popClip() {
         endRenderSegment();
+        drawContext.nextStratum();
         Scissor.Region closed = scissorStack.pop();
         for (Runnable task : closed.postTasks) {
             task.run();
         }
         closed.postTasks.clear();
         drawContext.disableScissor();
-        if (!scissorStack.isEmpty()) {
-            Scissor.Region parent = scissorStack.peek();
-            enableScissor(parent);
-        }
         MeshBuilder.INSTANCE.beginSegment(drawContext);
     }
 
@@ -184,6 +194,7 @@ public class GuiRenderer implements UIRenderer {
         for (Runnable task : absolutePostTasks) {
             task.run();
         }
+        endRenderSegment();
         absolutePostTasks.clear();
         MeshBuilder.INSTANCE.endFrame(drawContext);
         drawContext.pose().popMatrix();

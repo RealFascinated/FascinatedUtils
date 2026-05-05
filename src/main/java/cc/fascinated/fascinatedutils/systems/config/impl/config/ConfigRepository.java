@@ -1,10 +1,10 @@
 package cc.fascinated.fascinatedutils.systems.config.impl.config;
 
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import cc.fascinated.fascinatedutils.systems.config.ConfigManager;
-import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class ConfigRepository {
         for (Setting<?> setting : SettingsRegistry.INSTANCE.getSettings().getSettings()) {
             JsonElement element = settingsJson.get(setting.getSettingKey());
             if (element != null && !element.isJsonNull()) {
-                setting.deserialize(element, ModConfig.GSON);
+                setting.deserialize(element, Constants.GSON);
             }
         }
     }
@@ -32,7 +32,7 @@ public class ConfigRepository {
             if (setting instanceof KeybindSetting) {
                 continue;
             }
-            JsonElement serialized = setting.serialize(ModConfig.GSON);
+            JsonElement serialized = setting.serialize(Constants.GSON);
             if (!serialized.isJsonNull()) {
                 captured.add(setting.getSettingKey(), serialized);
             }

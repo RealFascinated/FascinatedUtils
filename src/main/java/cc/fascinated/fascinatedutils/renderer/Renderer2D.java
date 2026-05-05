@@ -13,10 +13,13 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.LivingEntity;
@@ -24,6 +27,8 @@ import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
 import org.joml.Vector2f;
+
+import java.util.function.Supplier;
 
 /**
  * Low-level GUI draw bridge: batched mesh quads (rounded rects, gradients, {@link #drawBorder}) via {@link MeshBuilder}
@@ -37,13 +42,15 @@ public class Renderer2D {
     private final GuiGraphicsExtractor graphics;
     private final GuiTheme guiTheme;
     private final TextRenderer guiTextRenderer;
+    private final Supplier<ScreenRectangle> scissorSupplier;
     private float multiplyAlpha = 1f;
     private float multiplyAlphaText = 1f;
 
-    public Renderer2D(GuiGraphicsExtractor graphics, GuiTheme guiTheme) {
+    public Renderer2D(GuiGraphicsExtractor graphics, GuiTheme guiTheme, Supplier<ScreenRectangle> scissorSupplier) {
         this.graphics = graphics;
         this.guiTheme = guiTheme;
         this.guiTextRenderer = guiTheme.textRenderer(graphics);
+        this.scissorSupplier = scissorSupplier;
     }
 
     /**
@@ -129,7 +136,7 @@ public class Renderer2D {
             return;
         }
         int argb = withAlpha(color);
-        MeshRenderer.INSTANCE.enqueueAxisTexQuad(graphics, positionX, positionY, width, height, argb, argb, argb, argb);
+        MeshRenderer.INSTANCE.enqueueAxisTexQuad(graphics, currentScissor(), positionX, positionY, width, height, argb, argb, argb, argb);
     }
 
     public void drawLine(float x1, float y1, float x2, float y2, float thickness, int color) {
@@ -157,11 +164,11 @@ public class Renderer2D {
         }
         int top = withAlpha(colorTop);
         int bottom = withAlpha(colorBottom);
-        MeshRenderer.INSTANCE.enqueueAxisTexQuad(graphics, positionX, positionY, width, height, top, bottom, bottom, top);
+        MeshRenderer.INSTANCE.enqueueAxisTexQuad(graphics, currentScissor(), positionX, positionY, width, height, top, bottom, bottom, top);
     }
 
     public void fillRoundedGradientVertical(float positionX, float positionY, float width, float height, float cornerRadius, int colorTop, int colorBottom, int cornerRoundMask) {
-        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, positionX, positionY, width, height, cornerRadius, colorTop, colorBottom, cornerRoundMask);
+        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, currentScissor(), positionX, positionY, width, height, cornerRadius, colorTop, colorBottom, cornerRoundMask);
     }
 
     public void drawBorder(float positionX, float positionY, float width, float height, float thickness, int color) {
@@ -173,7 +180,7 @@ public class Renderer2D {
     }
 
     public void fillRoundedRect(float positionX, float positionY, float width, float height, float cornerRadius, int fillArgb, int cornerRoundMask) {
-        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, positionX, positionY, width, height, cornerRadius, fillArgb, fillArgb, cornerRoundMask, 0f);
+        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, currentScissor(), positionX, positionY, width, height, cornerRadius, fillArgb, fillArgb, cornerRoundMask, 0f);
     }
 
     /**
@@ -186,14 +193,15 @@ public class Renderer2D {
 
     public void fillRoundedRectFrame(float positionX, float positionY, float width, float height, float cornerRadius, int borderArgb, int fillArgb, float borderThicknessX, float borderThicknessY, int cornerRoundMask) {
         float thickness = roundedRectFrameBorderThickness(borderThicknessX, borderThicknessY);
-        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, positionX, positionY, width, height, cornerRadius, borderArgb, borderArgb, cornerRoundMask, 0f);
+        ScreenRectangle scissor = currentScissor();
+        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, scissor, positionX, positionY, width, height, cornerRadius, borderArgb, borderArgb, cornerRoundMask, 0f);
         float innerX = positionX + thickness;
         float innerY = positionY + thickness;
         float innerW = Math.max(0f, width - 2f * thickness);
         float innerH = Math.max(0f, height - 2f * thickness);
         float innerRadius = Math.max(0f, cornerRadius - thickness);
         if (innerW > 0.5f && innerH > 0.5f) {
-            MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, innerX, innerY, innerW, innerH, innerRadius, fillArgb, fillArgb, cornerRoundMask, 0f);
+            MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, scissor, innerX, innerY, innerW, innerH, innerRadius, fillArgb, fillArgb, cornerRoundMask, 0f);
         }
     }
 
@@ -307,29 +315,20 @@ public class Renderer2D {
         float sx = shellScaleX();
         float sy = shellScaleY();
         Matrix3x2fStack matrices = graphics.pose();
+        FormattedCharSequence literalText = styledLiteralSequence(text, bold);
         if (Math.abs(sx - 1f) > 1e-4f || Math.abs(sy - 1f) > 1e-4f) {
             int originX = Mth.floor(positionX);
             int originY = Math.round(positionY);
             matrices.pushMatrix();
             matrices.translate(originX, originY);
             matrices.scale(sx, sy);
-            if (!bold) {
-                guiTextRenderer.drawString(graphics, text, 0, 0, color, shadow);
-            }
-            else {
-                guiTextRenderer.drawText(graphics, styledLiteral(text, true), 0, 0, color, shadow);
-            }
+            guiTextRenderer.drawText(graphics, literalText, 0, 0, color, shadow);
             matrices.popMatrix();
         }
         else {
             int originX = Mth.floor(positionX);
             int originY = Math.round(positionY);
-            if (!bold) {
-                guiTextRenderer.drawString(graphics, text, originX, originY, color, shadow);
-            }
-            else {
-                guiTextRenderer.drawText(graphics, styledLiteral(text, true), originX, originY, color, shadow);
-            }
+            guiTextRenderer.drawText(graphics, literalText, originX, originY, color, shadow);
         }
     }
 
@@ -339,7 +338,7 @@ public class Renderer2D {
         }
         Object raw = Minecraft.getInstance().getTextureManager().getTexture(texture);
         if (raw instanceof DynamicTexture dynamicTexture) {
-            MeshRenderer.INSTANCE.enqueueTexturedQuad(graphics, dynamicTexture, positionX, positionY, width, height, withAlpha(tintArgb));
+            MeshRenderer.INSTANCE.enqueueTexturedQuad(graphics, currentScissor(), dynamicTexture, positionX, positionY, width, height, withAlpha(tintArgb));
             return;
         }
         flushMeshSegmentBeforeImmediateDraw();
@@ -394,7 +393,7 @@ public class Renderer2D {
     }
 
     public int measureTextWidth(String text, boolean bold) {
-        double vanilla = bold ? guiTextRenderer.getWidth(styledLiteral(text, true)) : guiTextRenderer.getWidth(text);
+        double vanilla = guiTextRenderer.getWidth(styledLiteralSequence(text, bold));
         return Math.max(1, Mth.ceil(vanilla * shellScaleX()));
     }
 
@@ -413,6 +412,10 @@ public class Renderer2D {
     private void flushMeshSegmentBeforeImmediateDraw() {
         MeshBuilder.INSTANCE.endSegment(graphics);
         MeshBuilder.INSTANCE.beginSegment(graphics);
+    }
+
+    private ScreenRectangle currentScissor() {
+        return scissorSupplier == null ? null : scissorSupplier.get();
     }
 
     private int withAlpha(int color) {
@@ -438,13 +441,11 @@ public class Renderer2D {
         Minecraft mc = Minecraft.getInstance();
         float guiScale = mc.getWindow().getWidth() / Math.max(1f, (float) mc.getWindow().getGuiScaledWidth());
         float strokeForLut = ringStrokeLogicalPx * poseScale * guiScale * 0.5f;
-        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, positionX, positionY, width, height, cornerRadius, borderArgb, borderArgb, cornerRoundMask, strokeForLut);
+        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, currentScissor(), positionX, positionY, width, height, cornerRadius, borderArgb, borderArgb, cornerRoundMask, strokeForLut);
     }
 
-    private net.minecraft.network.chat.Component styledLiteral(String raw, boolean bold) {
-        if (!bold) {
-            return net.minecraft.network.chat.Component.literal(raw);
-        }
-        return net.minecraft.network.chat.Component.literal(raw).withStyle(style -> style.withBold(true));
+    private FormattedCharSequence styledLiteralSequence(String raw, boolean bold) {
+        Style style = bold ? Style.EMPTY.withBold(true) : Style.EMPTY;
+        return FormattedCharSequence.forward(raw == null ? "" : raw, style);
     }
 }

@@ -2,13 +2,17 @@ package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import net.minecraft.util.Mth;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Accessors(fluent = true)
 public class FColumnWidget extends FWidget {
+    @Getter
     private float gap;
     private Align horizontalAlign;
 
@@ -36,10 +40,6 @@ public class FColumnWidget extends FWidget {
     public static float clampScrollOffset(float contentHeight, float viewportHeight, float scrollOffset) {
         float maxScroll = Math.max(0f, contentHeight - viewportHeight);
         return Mth.clamp(scrollOffset, 0f, maxScroll);
-    }
-
-    public float gap() {
-        return gap;
     }
 
     @Override

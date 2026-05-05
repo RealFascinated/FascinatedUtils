@@ -3,21 +3,22 @@ package cc.fascinated.fascinatedutils.gui.widgets;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Accessors(fluent = true)
 public class FRowWidget extends FWidget {
+    @Getter
     private float gap;
     private Align verticalAlign;
 
     public FRowWidget(float gap, Align verticalAlign) {
         setGapInternal(gap);
         setVerticalAlignInternal(verticalAlign);
-    }
-
-    public float gap() {
-        return gap;
     }
 
     public void setGap(float gapValue) {

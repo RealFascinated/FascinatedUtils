@@ -1,6 +1,8 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
+import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.core.UiFocusIds;
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -15,7 +17,6 @@ public abstract class FWidget {
     private FWidget parent;
     @Setter
     private boolean visible = true;
-    protected boolean hovered;
     private float positionX;
     private float positionY;
     private float width;
@@ -108,17 +109,19 @@ public abstract class FWidget {
 
     public abstract void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight);
 
-    public void render(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    public void render(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
         if (!visible) {
             return;
         }
-        renderSelf(graphics, mouseX, mouseY, deltaSeconds);
+        renderSelf(graphics, frame, deltaSeconds);
         for (FWidget child : children) {
-            child.render(graphics, mouseX, mouseY, deltaSeconds);
+            child.render(graphics, frame, deltaSeconds);
         }
     }
 
-    public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    public void renderOverlayAfterChildren(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
     }
 
     public boolean fillsHorizontalInRow() {
@@ -141,8 +144,11 @@ public abstract class FWidget {
         return UiFocusIds.NO_FOCUS_ID;
     }
 
-    public boolean wantsPointer() {
-        return false;
+    /**
+     * Hit-test participation for this widget's bounds after children are tested.
+     */
+    public PointerHitKind pointerHitKind() {
+        return PointerHitKind.NONE;
     }
 
     public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
@@ -182,12 +188,10 @@ public abstract class FWidget {
     }
 
     public boolean mouseEnter(float pointerX, float pointerY) {
-        hovered = true;
         return false;
     }
 
     public boolean mouseLeave(float pointerX, float pointerY) {
-        hovered = false;
         return false;
     }
 
@@ -215,6 +219,8 @@ public abstract class FWidget {
         return false;
     }
 
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
     }
 }

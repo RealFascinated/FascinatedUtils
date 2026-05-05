@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
@@ -131,7 +133,9 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
     }
 
     @Override
-    public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    public void renderOverlayAfterChildren(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         boolean isHoveredToggle = rectContains(toggleBounds(), mouseX, mouseY);
         boolean isHoveredReset = SettingRowResetLayout.resetGlyphHitActive(inlineResetSquare(), mouseX, mouseY, booleanSetting.isAtDefault());
         boolean isHoveredChevron = expandedState != null && SettingRowResetLayout.rectContains(chevronBounds(), mouseX, mouseY);
@@ -141,7 +145,9 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         boolean locked = booleanSetting.isLocked();
         float innerHeight = Math.max(0f, h() - 2f * SettingsUiMetrics.SETTING_ROW_PADDING_Y);
         float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;

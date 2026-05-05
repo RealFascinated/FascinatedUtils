@@ -9,6 +9,8 @@ import cc.fascinated.fascinatedutils.systems.hud.HUDEditorSnap;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -20,6 +22,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
+@Accessors(fluent = true)
 public class HudEditorPointerSession {
 
     /**
@@ -29,19 +32,26 @@ public class HudEditorPointerSession {
     private float editorCanvasWidth = HudLayoutCanvas.width();
     private float editorCanvasHeight = HudLayoutCanvas.height();
     @Nullable
+    @Getter
     private HudPanel dragging;
     private float dragOffsetX;
     private float dragOffsetY;
     @Nullable
+    @Getter
     private HudPanel selected;
     @Nullable
+    @Getter
     private HudPanel scalingWidget;
     private float scaleDragReferenceDistance;
     private float scaleDragStartScale;
     private int modMenuFocusScratch = UiFocusIds.NO_FOCUS_ID;
+    @Getter
     private float snapGuideX = Float.NaN;
+    @Getter
     private float snapGuideY = Float.NaN;
+    @Getter
     private boolean snapGuideXIsCenter = false;
+    @Getter
     private boolean snapGuideYIsCenter = false;
     @Nullable
     private Screen parentScreen;
@@ -64,37 +74,6 @@ public class HudEditorPointerSession {
     public void syncEditorCanvas(float canvasWidth, float canvasHeight) {
         editorCanvasWidth = canvasWidth;
         editorCanvasHeight = canvasHeight;
-    }
-
-    @Nullable
-    public HudPanel selected() {
-        return selected;
-    }
-
-    @Nullable
-    public HudPanel dragging() {
-        return dragging;
-    }
-
-    @Nullable
-    public HudPanel scalingWidget() {
-        return scalingWidget;
-    }
-
-    public float snapGuideX() {
-        return snapGuideX;
-    }
-
-    public float snapGuideY() {
-        return snapGuideY;
-    }
-
-    public boolean snapGuideXIsCenter() {
-        return snapGuideXIsCenter;
-    }
-
-    public boolean snapGuideYIsCenter() {
-        return snapGuideYIsCenter;
     }
 
     public void clearSnapGuides() {

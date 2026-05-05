@@ -2,15 +2,20 @@ package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
 /**
  * Centers a child within the host bounds and caps its size with {@code maxInnerWidth}/{@code maxInnerHeight}
  * after subtracting symmetric insets.
  */
+@Accessors(fluent = true)
 public class FMaxCenterInsetsWidget extends FWidget {
     private final float insetHorizontal;
     private final float insetVertical;
     private final float maxInnerWidth;
     private final float maxInnerHeight;
+    @Getter
     private final FWidget inner;
 
     public FMaxCenterInsetsWidget(float insetHorizontal, float insetVertical, float maxInnerWidth, float maxInnerHeight, FWidget inner) {
@@ -27,10 +32,6 @@ public class FMaxCenterInsetsWidget extends FWidget {
                 && Math.abs(insetVerticalValue - insetVertical) < 1e-3f
                 && Math.abs(maxInnerWidthValue - maxInnerWidth) < 1e-3f
                 && Math.abs(maxInnerHeightValue - maxInnerHeight) < 1e-3f;
-    }
-
-    public FWidget inner() {
-        return inner;
     }
 
     @Override

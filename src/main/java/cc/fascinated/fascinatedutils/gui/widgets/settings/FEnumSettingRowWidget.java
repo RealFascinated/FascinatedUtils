@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
@@ -42,11 +44,6 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
             return 0f;
         }
         return client.font.width(text);
-    }
-
-    @Override
-    public boolean wantsPointer() {
-        return true;
     }
 
     @Override
@@ -118,7 +115,9 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
     }
 
     @Override
-    public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    public void renderOverlayAfterChildren(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         if (hoveredChip) {
             WSettingTooltip.drawEnumTooltipForCurrentValue(graphics, mouseX, mouseY, enumSetting);
             return;
@@ -129,7 +128,9 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         boolean locked = enumSetting.isLocked();
         float innerHeight = Math.max(0f, h() - 2f * SettingsUiMetrics.SETTING_ROW_PADDING_Y);
         float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;

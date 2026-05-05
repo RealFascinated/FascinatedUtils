@@ -2,22 +2,20 @@ package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
+@Accessors(fluent = true)
 public class FMinWidthHostWidget extends FWidget {
+    @Getter
     private final float minimumWidth;
+    @Getter
     private final FWidget innerChild;
 
     public FMinWidthHostWidget(float minimumWidth, FWidget innerChild) {
         this.minimumWidth = Math.max(0f, minimumWidth);
         this.innerChild = innerChild;
         addChild(innerChild);
-    }
-
-    public float minimumWidth() {
-        return minimumWidth;
-    }
-
-    public FWidget innerChild() {
-        return innerChild;
     }
 
     @Override

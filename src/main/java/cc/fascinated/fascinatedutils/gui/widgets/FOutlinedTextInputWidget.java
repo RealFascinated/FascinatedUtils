@@ -1,22 +1,26 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
-import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
+@Accessors(fluent = true)
 public class FOutlinedTextInputWidget extends FWidget {
+    @Getter
     private final int focusId;
     private final int maxLength;
     private final float intrinsicHeightDesign;
 
+    @Getter
     private String value = "";
     private int caretIndex;
     private int selectionAnchor = -1;
@@ -30,7 +34,7 @@ public class FOutlinedTextInputWidget extends FWidget {
         this.focusId = focusId;
         this.maxLength = Math.max(0, maxLength);
         this.intrinsicHeightDesign = Math.max(0f, intrinsicHeightDesign);
-        setPlaceholderSupplier(placeholderSupplier);
+        this.placeholderSupplier = placeholderSupplier == null ? () -> "" : placeholderSupplier;
     }
 
     public void setValue(String value) {
@@ -57,10 +61,6 @@ public class FOutlinedTextInputWidget extends FWidget {
         scrollOffsetX = 0f;
     }
 
-    public String value() {
-        return value;
-    }
-
     public void setOnChange(Callback<String> onChange) {
         this.onChange = onChange == null ? ignored -> {} : onChange;
     }
@@ -74,13 +74,8 @@ public class FOutlinedTextInputWidget extends FWidget {
     }
 
     @Override
-    public int focusId() {
-        return focusId;
-    }
-
-    @Override
-    public boolean wantsPointer() {
-        return true;
+    public PointerHitKind pointerHitKind() {
+        return PointerHitKind.TARGET;
     }
 
     @Override
@@ -288,7 +283,7 @@ public class FOutlinedTextInputWidget extends FWidget {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
         boolean focused = fieldFocused();
         int borderArgb = focused ? graphics.theme().accentBright() : graphics.theme().border();
         int fillArgb = focused ? graphics.theme().surfaceElevated() : graphics.theme().surface();
@@ -296,7 +291,7 @@ public class FOutlinedTextInputWidget extends FWidget {
         float cornerRadius = Mth.clamp(UITheme.CORNER_RADIUS_SM, 0.5f, Math.min(w(), h()) * 0.5f - borderThickness * 0.5f - 0.01f);
         graphics.fillRoundedRectFrame(x(), y(), w(), h(), cornerRadius, borderArgb, fillArgb, borderThickness, borderThickness, RectCornerRoundMask.ALL);
 
-        float pad = padX(graphics);
+        float pad = padX();
         float visibleW = w() - pad * 2f;
         float lineH = TextLayoutMetrics.layoutLineHeightPx(graphics);
         float textY = y() + Math.max(0f, h() - graphics.getFontCapHeight()) * 0.5f;
@@ -342,7 +337,7 @@ public class FOutlinedTextInputWidget extends FWidget {
         }
 
         graphics.pushClip(x() + pad, y(), visibleW, h());
-        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(displayColor) + ">" + displayText + "</color>", textDrawX, textY, false);
+        graphics.drawText(displayText, textDrawX, textY, displayColor, false, false);
         graphics.popClip();
 
         if (focused && !hasSelection()) {
@@ -441,12 +436,12 @@ public class FOutlinedTextInputWidget extends FWidget {
         clampCaret();
     }
 
-    private float padX(GuiRenderer g) {
+    private float padX() {
         return UITheme.INPUT_PAD_X;
     }
 
     private void scrollToCaret(GuiRenderer g) {
-        float pad = padX(g);
+        float pad = padX();
         float visibleW = w() - pad * 2f;
         if (visibleW <= 0f) {
             return;

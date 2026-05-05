@@ -1,6 +1,9 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
+import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
@@ -33,8 +36,8 @@ public class FHueBarWidget extends FWidget {
     }
 
     @Override
-    public boolean wantsPointer() {
-        return true;
+    public PointerHitKind pointerHitKind() {
+        return PointerHitKind.TARGET;
     }
 
     @Override
@@ -65,7 +68,9 @@ public class FHueBarWidget extends FWidget {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         int segments = 48;
         float segmentWidth = w() / segments;
         for (int segment = 0; segment < segments; segment++) {

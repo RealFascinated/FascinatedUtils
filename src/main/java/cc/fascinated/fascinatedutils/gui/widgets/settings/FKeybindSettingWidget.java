@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
@@ -109,14 +111,18 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
     }
 
     @Override
-    public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    public void renderOverlayAfterChildren(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         if (hoveredChip || hoveredReset) {
             WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, keybindSetting, hoveredReset);
         }
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         boolean locked = keybindSetting.isLocked();
         float bodyPadX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float bodyLeft = x() + bodyPadX;

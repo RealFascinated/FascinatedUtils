@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.social.components;
 
+import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.declare.Ui;
 import cc.fascinated.fascinatedutils.gui.declare.UiComponent;
 import cc.fascinated.fascinatedutils.gui.declare.UiView;
@@ -95,8 +96,8 @@ public final class SocialDestructiveFullscreenConfirmOverlay extends UiComponent
         }
 
         @Override
-        public boolean wantsPointer() {
-            return true;
+        public PointerHitKind pointerHitKind() {
+            return PointerHitKind.BLOCK;
         }
 
         @Override

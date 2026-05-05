@@ -10,6 +10,12 @@ public enum GatewayOpcode {
     FRIEND_REMOVE(5),
     PRESENCE_UPDATE(6),
     FRIEND_REQUEST_REMOVED(7),
+    MESSAGE_CREATE(8),
+    MESSAGE_UPDATE(9),
+    MESSAGE_DELETE(10),
+    CHANNEL_CREATE(11),
+    CHANNEL_REMOVE(12),
+    USER_UPDATE(13),
 
     // Client -> Server
     HEARTBEAT_ACK(1000),

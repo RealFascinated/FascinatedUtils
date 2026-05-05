@@ -84,6 +84,18 @@ public class RoundedRectTexRenderState implements GuiElementRenderState {
         return new ScreenRectangle(new ScreenPosition(minX, minY), maxX - minX, maxY - minY);
     }
 
+    public static ScreenRectangle clippedBounds(int x0, int y0, int x1, int y1, Matrix3x2f pose,
+                                                @Nullable ScreenRectangle scissorArea) {
+        ScreenRectangle transformedBounds = axisBounds(x0, y0, x1, y1).transformMaxBounds(pose);
+        if (scissorArea == null) {
+            return transformedBounds;
+        }
+        if (!transformedBounds.intersects(scissorArea)) {
+            return ScreenRectangle.empty();
+        }
+        return transformedBounds.intersection(scissorArea);
+    }
+
     public int packedCornerRadiiLut() {
         return packedCornerRadiiLut;
     }
@@ -96,8 +108,7 @@ public class RoundedRectTexRenderState implements GuiElementRenderState {
     @Override
     public ScreenRectangle bounds() {
         if (bounds == null) {
-            ScreenRectangle axis = axisBounds(x0, y0, x1, y1);
-            bounds = axis.transformMaxBounds(pose);
+            bounds = clippedBounds(x0, y0, x1, y1, pose, scissorArea);
         }
         return bounds;
     }

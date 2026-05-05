@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.client;
 
 import cc.fascinated.fascinatedutils.FascinatedUtils;
-import cc.fascinated.fascinatedutils.api.AlumiteApi;
+import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.client.command.ClientCommandBootstrap;
 import cc.fascinated.fascinatedutils.client.keybind.Keybinds;
 import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
@@ -13,7 +13,7 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.gui.ModUiClientEntry;
 import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.social.SocialRegistry;
+import cc.fascinated.fascinatedutils.systems.notification.MessageNotifications;
 import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
 import cc.fascinated.fascinatedutils.systems.turboparticles.TurboParticles;
 import cc.fascinated.fascinatedutils.updater.UpdateManager;
@@ -36,10 +36,10 @@ public class Client implements ClientModInitializer {
     public void onInitializeClient() {
         FascinatedEventBus eventBus = FascinatedEventBus.INSTANCE;
         eventBus.ensureSetup();
-        eventBus.subscribe(AlumiteApi.INSTANCE);
-        eventBus.subscribe(SocialRegistry.INSTANCE);
+        eventBus.subscribe(Alumite.INSTANCE);
         eventBus.subscribe(TURBO_PARTICLES);
         eventBus.subscribe(TURBO_ENTITIES);
+        eventBus.subscribe(new MessageNotifications());
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> eventBus.post(new ClientStartedEvent(client)));
         ModuleRegistry.INSTANCE.initialize();

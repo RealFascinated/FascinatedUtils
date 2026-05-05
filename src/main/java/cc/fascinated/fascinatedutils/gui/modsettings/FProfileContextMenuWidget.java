@@ -1,6 +1,9 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.Colors;
+import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -50,8 +53,8 @@ public class FProfileContextMenuWidget extends FWidget {
     }
 
     @Override
-    public boolean wantsPointer() {
-        return true;
+    public PointerHitKind pointerHitKind() {
+        return PointerHitKind.BLOCK;
     }
 
     @Override
@@ -110,7 +113,9 @@ public class FProfileContextMenuWidget extends FWidget {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         float cornerRadius = Math.max(0.5f, Math.min(6f, Math.min(menuWidth, menuHeight) * 0.5f - 0.01f));
         float borderThickness = 1f;
         graphics.fillRoundedRectFrame(menuX, menuY, menuWidth, menuHeight, cornerRadius, graphics.theme().border(), graphics.theme().surface(), borderThickness, borderThickness, RectCornerRoundMask.ALL);
@@ -135,8 +140,8 @@ public class FProfileContextMenuWidget extends FWidget {
         }
 
         @Override
-        public boolean wantsPointer() {
-            return true;
+        public PointerHitKind pointerHitKind() {
+            return PointerHitKind.TARGET;
         }
 
         @Override
@@ -154,7 +159,10 @@ public class FProfileContextMenuWidget extends FWidget {
         }
 
         @Override
-        protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+        protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+            float mouseX = frame.pointerX();
+            float mouseY = frame.pointerY();
+            boolean hovered = frame.isHitTarget(this);
             if (hovered) {
                 float cornerRadius = Math.max(0.5f, Math.min(4f, Math.min(w(), h()) * 0.5f - 0.01f));
                 graphics.fillRoundedRect(x(), y(), w(), h(), cornerRadius, graphics.theme().moduleListRowHover(), RectCornerRoundMask.ALL);

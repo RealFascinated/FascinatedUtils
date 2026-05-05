@@ -4,6 +4,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 
 /**
  * Routes GUI text through the vanilla {@link net.minecraft.client.gui.Font}.
@@ -20,12 +22,17 @@ public class VanillaTextRenderer implements TextRenderer {
             return 0;
         }
         String slice = length >= text.length() ? text : text.substring(0, length);
-        int w = font().width(slice);
+        int w = font().width(FormattedCharSequence.forward(slice, Style.EMPTY));
         return shadow ? w + 1 : w;
     }
 
     @Override
     public int getWidth(Component text) {
+        return Math.max(1, font().width(text));
+    }
+
+    @Override
+    public int getWidth(FormattedCharSequence text) {
         return Math.max(1, font().width(text));
     }
 
@@ -36,6 +43,11 @@ public class VanillaTextRenderer implements TextRenderer {
 
     @Override
     public void drawString(GuiGraphicsExtractor drawContext, String text, int originX, int originY, int colorArgb, boolean shadow) {
+        drawContext.text(font(), FormattedCharSequence.forward(text, Style.EMPTY), originX, originY, colorArgb, shadow);
+    }
+
+    @Override
+    public void drawText(GuiGraphicsExtractor drawContext, FormattedCharSequence text, int originX, int originY, int colorArgb, boolean shadow) {
         drawContext.text(font(), text, originX, originY, colorArgb, shadow);
     }
 

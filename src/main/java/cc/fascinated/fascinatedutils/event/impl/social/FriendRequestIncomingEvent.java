@@ -1,8 +1,6 @@
 package cc.fascinated.fascinatedutils.event.impl.social;
 
-import cc.fascinated.fascinatedutils.api.dto.friend.PendingFriendRequestDto;
+import cc.fascinated.fascinatedutils.api.user.User;
 
-/**
- * Fired when a new incoming friend request arrives over the gateway.
- */
-public record FriendRequestIncomingEvent(PendingFriendRequestDto request) {}
+public record FriendRequestIncomingEvent(int requestId, User user, String createdAt) {
+}

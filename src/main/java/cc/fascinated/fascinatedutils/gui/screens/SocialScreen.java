@@ -7,6 +7,7 @@ import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.declare.DeclarativeMountHost;
 import cc.fascinated.fascinatedutils.gui.input.UiCursorController;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.social.components.SocialMainWorkspaceComponent;
 import cc.fascinated.fascinatedutils.gui.social.components.SocialRootComponent;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
@@ -24,26 +25,30 @@ import java.util.function.Consumer;
 
 public class SocialScreen extends WidgetScreen {
     private static final int FOCUS_ADD_FRIEND = 7110;
+    private static final int FOCUS_DM_MESSAGE = 7111;
 
     private final FWidgetHost host = new FWidgetHost();
     private final DeclarativeMountHost declarativeMountHost;
     private final FOutlinedTextInputWidget addFriendInput;
+    private final FOutlinedTextInputWidget dmMessageInput;
 
     private float scrollAccum;
     private boolean preferredPresenceMenuOpen;
-    private SocialRootComponent.PresenceHitTest presenceHitTest;
 
     public SocialScreen() {
         super(Component.translatable("fascinatedutils.social.title"));
         addFriendInput = new FOutlinedTextInputWidget(FOCUS_ADD_FRIEND, 32, 22f,
                 () -> Component.translatable("fascinatedutils.social.add_friend_placeholder").getString());
         addFriendInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
+        dmMessageInput = new FOutlinedTextInputWidget(FOCUS_DM_MESSAGE, 512, 22f,
+                () -> Component.translatable("fascinatedutils.social.dm.input_placeholder").getString());
+        dmMessageInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
         Consumer<Boolean> presenceMenuOpenSink = menuOpen -> preferredPresenceMenuOpen = menuOpen;
         declarativeMountHost = new DeclarativeMountHost((viewportWidth, viewportHeight) ->
-                SocialRootComponent.view(new SocialRootComponent.Props(viewportWidth, viewportHeight,
-                        addFriendInput, () -> Minecraft.getInstance().setScreen(null),
-                        presenceMenuOpenSink, hitTest -> presenceHitTest = hitTest)));
+                SocialRootComponent.view(new SocialMainWorkspaceComponent.Props(viewportWidth, viewportHeight,
+                        addFriendInput, dmMessageInput, () -> Minecraft.getInstance().setScreen(null),
+                        presenceMenuOpenSink)));
         host.setRoot(declarativeMountHost);
     }
 
@@ -65,7 +70,6 @@ public class SocialScreen extends WidgetScreen {
         host.layoutAndRender(renderer, 0f, 0f, uiWidth, uiHeight, pointerX, pointerY, deltaSeconds);
         renderer.end();
 
-        host.dispatchInput(new InputEvent.MouseMove(pointerX, pointerY));
         UiCursorController.apply(minecraftClient.getWindow().handle(), host.pointerCursorAt(pointerX, pointerY));
 
         if (scrollAccum != 0f) {
@@ -78,9 +82,6 @@ public class SocialScreen extends WidgetScreen {
     public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubled) {
         float pointerX = UIScale.uiPointerX();
         float pointerY = UIScale.uiPointerY();
-        if (preferredPresenceMenuOpen && presenceHitTest != null && !presenceHitTest.contains(pointerX, pointerY)) {
-            preferredPresenceMenuOpen = false;
-        }
         boolean handled = host.dispatchInput(new InputEvent.MousePress(pointerX, pointerY, event.button()));
         return handled || super.mouseClicked(event, doubled);
     }

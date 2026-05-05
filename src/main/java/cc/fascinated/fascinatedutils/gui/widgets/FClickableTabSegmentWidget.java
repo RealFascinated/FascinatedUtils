@@ -1,7 +1,10 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
+import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -37,8 +40,8 @@ public class FClickableTabSegmentWidget extends FWidget {
     }
 
     @Override
-    public boolean wantsPointer() {
-        return true;
+    public PointerHitKind pointerHitKind() {
+        return PointerHitKind.TARGET;
     }
 
     @Override
@@ -51,7 +54,10 @@ public class FClickableTabSegmentWidget extends FWidget {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
+        boolean hovered = frame.isHitTarget(this);
         boolean selected = tabKey.equals(selectedKey);
         int fillColor = selected ? graphics.theme().accent() : hovered ? graphics.theme().moduleListRowHover() : 0x20ffffff;
         int textColor = selected ? graphics.theme().textPrimary() : graphics.theme().textMuted();

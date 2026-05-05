@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.TextLayoutMetrics;
@@ -86,7 +88,9 @@ public class FLabelWidget extends FWidget {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         float lineBlockH = graphics.getFontCapHeight();
         float textOriginY = y();
         if (alignY == Align.CENTER) {

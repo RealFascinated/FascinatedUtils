@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
@@ -133,8 +135,10 @@ public class FColorPickerPopupWidget extends FPopupWidget {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
-        super.renderSelf(graphics, mouseX, mouseY, deltaSeconds);
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
+        super.renderSelf(graphics, frame, deltaSeconds);
         float titleY = dialogY() + 7f;
         graphics.drawCenteredText("Color Picker", dialogX() + dialogWidth() * 0.5f, titleY, graphics.theme().textPrimary(), false, true);
         renderHexRow(graphics);

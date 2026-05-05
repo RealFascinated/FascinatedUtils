@@ -1,7 +1,10 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.hooks.AnimHandle;
@@ -58,8 +61,8 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
     }
 
     @Override
-    public boolean wantsPointer() {
-        return true;
+    public PointerHitKind pointerHitKind() {
+        return PointerHitKind.TARGET;
     }
 
     @Override
@@ -120,7 +123,9 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
     }
 
     @Override
-    public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    public void renderOverlayAfterChildren(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         float[] toggle = toggleBounds();
         boolean isHoveredToggle = SettingRowResetLayout.rectContains(toggle[0], toggle[1], toggle[2], toggle[3], mouseX, mouseY);
         boolean isHoveredReset = SettingRowResetLayout.resetGlyphHitActive(inlineResetSquare(), mouseX, mouseY, booleanSetting.isAtDefault());
@@ -130,7 +135,9 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         boolean locked = booleanSetting.isLocked();
         float innerHeight = Math.max(0f, h() - 2f * SettingsUiMetrics.SETTING_ROW_PADDING_Y);
         float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;

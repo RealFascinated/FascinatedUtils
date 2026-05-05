@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.config;
 
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.FascinatedUtils;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
@@ -7,15 +8,12 @@ import cc.fascinated.fascinatedutils.systems.config.impl.config.ConfigRepository
 import cc.fascinated.fascinatedutils.systems.config.impl.config.FascinatedConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.profiles.ProfileRepository;
 import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.WaypointRepository;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import meteordevelopment.orbit.EventHandler;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.nio.file.Path;
 
 public class ModConfig {
-    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     public static final ModConfig INSTANCE = new ModConfig();
 
     private final ProfileRepository profileRepository;
@@ -25,10 +23,10 @@ public class ModConfig {
     private ModConfig() {
         FascinatedEventBus.INSTANCE.subscribe(this);
 
-        ConfigManager<FascinatedConfig> configManager = new ConfigManager<>(getConfigPath(), FascinatedConfig.class, FascinatedConfig::defaults, GSON);
+        ConfigManager<FascinatedConfig> configManager = new ConfigManager<>(getConfigPath(), FascinatedConfig.class, FascinatedConfig::defaults, Constants.GSON);
         configManager.load();
 
-        profileRepository = new ProfileRepository(getDirectory().resolve("profiles"), GSON, configManager);
+        profileRepository = new ProfileRepository(getDirectory().resolve("profiles"), Constants.GSON, configManager);
         profileRepository.refreshCache();
         if (!profileRepository.profileNameExists(ProfileRepository.DEFAULT_PROFILE_NAME)) {
             profileRepository.createProfile(ProfileRepository.DEFAULT_PROFILE_NAME);
@@ -36,7 +34,7 @@ public class ModConfig {
 
         configRepository = new ConfigRepository(configManager);
 
-        waypointRepository = new WaypointRepository(getDirectory().resolve("waypoints.json"), GSON);
+        waypointRepository = new WaypointRepository(getDirectory().resolve("waypoints.json"), Constants.GSON);
         waypointRepository.refreshCache();
     }
 

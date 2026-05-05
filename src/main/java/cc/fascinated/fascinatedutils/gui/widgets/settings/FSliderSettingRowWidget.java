@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
@@ -121,14 +123,18 @@ public class FSliderSettingRowWidget extends FSettingRowWidget {
     }
 
     @Override
-    public void renderOverlayAfterChildren(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    public void renderOverlayAfterChildren(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         if (hoveredTrack || hoveredReset) {
             WSettingTooltip.drawTooltipForSetting(graphics, mouseX, mouseY, sliderSetting, hoveredReset);
         }
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         boolean locked = sliderSetting.isLocked();
         float bodyLeft = x() + bodyPadX();
         float textLineHeight = Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());

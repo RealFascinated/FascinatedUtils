@@ -49,7 +49,7 @@ public class FModulesTabElement extends FWidget implements ModSettingsModulesPre
         this.onProfilesChanged = onProfilesChanged;
         this.onOpenHudLayoutEditor = onOpenHudLayoutEditor;
         this.profilePopupController = new ProfilePopupController(
-                () -> {},
+            this::bumpCompositeStamp,
                 this::handleProfilesChanged,
                 () -> profilesScrollRef.setValue(0f)
         );
@@ -160,9 +160,12 @@ public class FModulesTabElement extends FWidget implements ModSettingsModulesPre
             setting.setValue(newColor);
             ModConfig.profiles().saveActiveProfile();
             colorPickerWidget = null;
+            bumpCompositeStamp();
         }, () -> {
             colorPickerWidget = null;
+            bumpCompositeStamp();
         });
+        bumpCompositeStamp();
     }
 
     private void openCreateProfilePopup() {
@@ -172,6 +175,7 @@ public class FModulesTabElement extends FWidget implements ModSettingsModulesPre
         showCreateProfilePopup = true;
         newProfileNameRef.setValue("");
         copyDefaultProfileSettingsRef.setValue(false);
+        bumpCompositeStamp();
     }
 
     private void closeCreateProfilePopup() {
@@ -179,6 +183,7 @@ public class FModulesTabElement extends FWidget implements ModSettingsModulesPre
             return;
         }
         showCreateProfilePopup = false;
+        bumpCompositeStamp();
     }
 
     private void submitCreateProfilePopup(String requestedProfileName, boolean copyDefaultProfileSettings) {

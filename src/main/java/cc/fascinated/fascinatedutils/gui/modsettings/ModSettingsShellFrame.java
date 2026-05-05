@@ -1,6 +1,8 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.Colors;
+import cc.fascinated.fascinatedutils.gui.core.InputEvent;
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.input.MouseButtons;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
@@ -118,11 +120,19 @@ public class ModSettingsShellFrame {
                 glUiRenderer.fillRoundedRectFrame(closeButtonRect.positionX(), closeButtonRect.positionY(), closeButtonRect.width(), closeButtonRect.height(), closeButtonCornerRadius, closeBorder, closeBg, UITheme.BORDER_THICKNESS_PX, UITheme.BORDER_THICKNESS_PX, RectCornerRoundMask.ALL);
                 Icons.paintModSettingsCloseIcon(glUiRenderer, closeButtonRect.positionX(), closeButtonRect.positionY(), closeButtonRect.width(), closeButtonRect.height(), closeText);
                 glUiRenderer.drawMiniMessageText("<color:" + Colors.rgbHex(glUiRenderer.theme().textPrimary()) + ">" + titleStr + "</color>", titleStartX, innerTitleTop + (innerTitleHeight - glUiRenderer.getFontCapHeight()) * 0.5f, false);
-                topBarTabsHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);
+                topBarTabsHost.dispatchInput(new InputEvent.MouseMove(pointerLayoutX, pointerLayoutY));
                 if (showHudLayoutChip) {
-                    hudLayoutButtonHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);
+                    hudLayoutButtonHost.dispatchInput(new InputEvent.MouseMove(pointerLayoutX, pointerLayoutY));
                 }
-                bodyHost.renderOnly(glUiRenderer, pointerLayoutX, pointerLayoutY, deltaSeconds);
+                bodyHost.dispatchInput(new InputEvent.MouseMove(pointerLayoutX, pointerLayoutY));
+                UiFrameContext topBarFrame = UiFrameContext.hitTest(topBarTabsHost.root(), pointerLayoutX, pointerLayoutY, topBarTabsHost.focusedId());
+                topBarTabsHost.renderOnly(glUiRenderer, topBarFrame, deltaSeconds);
+                if (showHudLayoutChip) {
+                    UiFrameContext hudChipFrame = UiFrameContext.hitTest(hudLayoutButtonHost.root(), pointerLayoutX, pointerLayoutY, hudLayoutButtonHost.focusedId());
+                    hudLayoutButtonHost.renderOnly(glUiRenderer, hudChipFrame, deltaSeconds);
+                }
+                UiFrameContext bodyFrame = UiFrameContext.hitTest(bodyHost.root(), pointerLayoutX, pointerLayoutY, bodyHost.focusedId());
+                bodyHost.renderOnly(glUiRenderer, bodyFrame, deltaSeconds);
                 glUiRenderer.resetMultiplyAlpha();
             } finally {
                 drawMatrices.popMatrix();

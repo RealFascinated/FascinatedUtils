@@ -12,9 +12,8 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.Mth;
 import org.joml.Matrix3x2f;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,8 +23,6 @@ import java.util.List;
  */
 public class MeshRenderer {
     public static final MeshRenderer INSTANCE = new MeshRenderer();
-    private static final Field GUI_SCISSOR_STACK_FIELD = resolveScissorStackField();
-    private static final Method GUI_SCISSOR_PEEK_METHOD = resolveScissorPeekMethod();
     private final List<GuiElementRenderState> pendingSolid = new ArrayList<>();
     private final List<GuiElementRenderState> pendingTextured = new ArrayList<>();
     private final List<DynamicTexture> disposableCornerRadiiLuts = new ArrayList<>();
@@ -49,48 +46,6 @@ public class MeshRenderer {
         float fraction = halfMinPixelSide > 1e-4f ? cornerRadius / halfMinPixelSide : 0f;
         int radiusByte = Mth.clamp(Math.round(fraction * 255f), 0, 255);
         return (argb & 0x00FFFFFF) | (radiusByte << 24);
-    }
-
-    private static Field resolveScissorStackField() {
-        try {
-            Field field = GuiGraphicsExtractor.class.getDeclaredField("scissorStack");
-            field.setAccessible(true);
-            return field;
-        } catch (ReflectiveOperationException ignored) {
-            return null;
-        }
-    }
-
-    private static Method resolveScissorPeekMethod() {
-        if (GUI_SCISSOR_STACK_FIELD == null) {
-            return null;
-        }
-        try {
-            Method method = GUI_SCISSOR_STACK_FIELD.getType().getDeclaredMethod("peek");
-            method.setAccessible(true);
-            return method;
-        } catch (ReflectiveOperationException ignored) {
-            return null;
-        }
-    }
-
-    /**
-     * Reads the active GUI scissor from the extractor's stack when reflection resolves the stack type; otherwise returns
-     * {@code null}.
-     *
-     * @param drawContext draw context whose scissor stack is queried
-     * @return current scissor in screen pixels, or {@code null} when unavailable
-     */
-    private static ScreenRectangle currentScissor(GuiGraphicsExtractor drawContext) {
-        if (GUI_SCISSOR_STACK_FIELD == null || GUI_SCISSOR_PEEK_METHOD == null) {
-            return null;
-        }
-        try {
-            Object stack = GUI_SCISSOR_STACK_FIELD.get(drawContext);
-            return (ScreenRectangle) GUI_SCISSOR_PEEK_METHOD.invoke(stack);
-        } catch (ReflectiveOperationException ignored) {
-            return null;
-        }
     }
 
     /**
@@ -138,9 +93,8 @@ public class MeshRenderer {
     /**
      * Queue an axis-aligned solid {@code pos_color} quad (four corner colors).
      */
-    public void enqueueSolidQuad(@NonNull GuiGraphicsExtractor drawContext, float positionX, float positionY, float width, float height, int colorTopLeft, int colorBottomLeft, int colorBottomRight, int colorTopRight) {
+    public void enqueueSolidQuad(@NonNull GuiGraphicsExtractor drawContext, @Nullable ScreenRectangle scissor, float positionX, float positionY, float width, float height, int colorTopLeft, int colorBottomLeft, int colorBottomRight, int colorTopRight) {
         Matrix3x2f pose = new Matrix3x2f(drawContext.pose());
-        ScreenRectangle scissor = currentScissor(drawContext);
         int x0 = Mth.floor(positionX);
         int y0 = Mth.floor(positionY);
         int x1 = Mth.ceil(positionX + width);
@@ -151,9 +105,8 @@ public class MeshRenderer {
     /**
      * Queue an axis-aligned textured quad sampling from an explicit {@link DynamicTexture} (e.g. a downloaded avatar).
      */
-    public void enqueueTexturedQuad(@NonNull GuiGraphicsExtractor drawContext, @NonNull DynamicTexture texture, float positionX, float positionY, float width, float height, int color) {
+    public void enqueueTexturedQuad(@NonNull GuiGraphicsExtractor drawContext, @Nullable ScreenRectangle scissor, @NonNull DynamicTexture texture, float positionX, float positionY, float width, float height, int color) {
         Matrix3x2f pose = new Matrix3x2f(drawContext.pose());
-        ScreenRectangle scissor = currentScissor(drawContext);
         int x0 = Mth.floor(positionX);
         int y0 = Mth.floor(positionY);
         int x1 = Mth.ceil(positionX + width);
@@ -165,9 +118,8 @@ public class MeshRenderer {
     /**
      * Queue an axis-aligned textured quad (white texture) with four corner colors (tinted rect or vertical gradient).
      */
-    public void enqueueAxisTexQuad(@NonNull GuiGraphicsExtractor drawContext, float positionX, float positionY, float width, float height, int colorTopLeft, int colorBottomLeft, int colorBottomRight, int colorTopRight) {
+    public void enqueueAxisTexQuad(@NonNull GuiGraphicsExtractor drawContext, @Nullable ScreenRectangle scissor, float positionX, float positionY, float width, float height, int colorTopLeft, int colorBottomLeft, int colorBottomRight, int colorTopRight) {
         Matrix3x2f pose = new Matrix3x2f(drawContext.pose());
-        ScreenRectangle scissor = currentScissor(drawContext);
         int x0 = Mth.floor(positionX);
         int y0 = Mth.floor(positionY);
         int x1 = Mth.ceil(positionX + width);
@@ -178,8 +130,8 @@ public class MeshRenderer {
     /**
      * Queue a filled rounded rectangle (vertical gradient supported via top/bottom colors).
      */
-    public void enqueueRoundedGradient(@NonNull GuiGraphicsExtractor drawContext, float positionX, float positionY, float width, float height, float cornerRadius, int colorTop, int colorBottom, int cornerRoundMask) {
-        enqueueRoundedGradient(drawContext, positionX, positionY, width, height, cornerRadius, colorTop, colorBottom, cornerRoundMask, 0f);
+    public void enqueueRoundedGradient(@NonNull GuiGraphicsExtractor drawContext, @Nullable ScreenRectangle scissor, float positionX, float positionY, float width, float height, float cornerRadius, int colorTop, int colorBottom, int cornerRoundMask) {
+        enqueueRoundedGradient(drawContext, scissor, positionX, positionY, width, height, cornerRadius, colorTop, colorBottom, cornerRoundMask, 0f);
     }
 
     /**
@@ -187,16 +139,15 @@ public class MeshRenderer {
      * outer border band of that thickness (LUT texel {@code (4,0)}) and the preset opaque fast path is disabled so the
      * LUT shader always runs.
      */
-    public void enqueueRoundedGradient(@NonNull GuiGraphicsExtractor drawContext, float positionX, float positionY, float width, float height, float cornerRadius, int colorTop, int colorBottom, int cornerRoundMask, float lutOuterRingStrokePx) {
+    public void enqueueRoundedGradient(@NonNull GuiGraphicsExtractor drawContext, @Nullable ScreenRectangle scissor, float positionX, float positionY, float width, float height, float cornerRadius, int colorTop, int colorBottom, int cornerRoundMask, float lutOuterRingStrokePx) {
         if (width < 1e-3f || height < 1e-3f) {
             return;
         }
         if (cornerRoundMask == RectCornerRoundMask.NONE) {
-            enqueueAxisTexQuad(drawContext, positionX, positionY, width, height, colorTop, colorBottom, colorBottom, colorTop);
+            enqueueAxisTexQuad(drawContext, scissor, positionX, positionY, width, height, colorTop, colorBottom, colorBottom, colorTop);
             return;
         }
         Matrix3x2f pose = new Matrix3x2f(drawContext.pose());
-        ScreenRectangle scissor = currentScissor(drawContext);
         int x0 = Mth.floor(positionX);
         int y0 = Mth.floor(positionY);
         int x1 = Mth.ceil(positionX + width);

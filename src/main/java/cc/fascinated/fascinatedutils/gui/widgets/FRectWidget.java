@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
+import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -28,7 +30,14 @@ public class FRectWidget extends FWidget {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    public PointerHitKind pointerHitKind() {
+        return PointerHitKind.BLOCK;
+    }
+
+    @Override
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         if (cornerRadius > 0.5f && borderColorArgb != null) {
             graphics.fillRoundedRectFrame(x(), y(), w(), h(), cornerRadius, borderColorArgb, fillColorArgb, borderThickness, borderThickness, cornerRoundMask);
         }

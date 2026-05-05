@@ -2,10 +2,12 @@ package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.gui.UiSounds;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
+import cc.fascinated.fascinatedutils.gui.core.PointerHitTraversal;
 import cc.fascinated.fascinatedutils.gui.core.UiFocusIds;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
@@ -122,17 +124,33 @@ public class FInputDispatcher {
         return any;
     }
 
-    private static void walkBubbleMouseLeave(FWidget leaf, float pointerX, float pointerY) {
-        List<FWidget> chain = pathToRoot(leaf);
-        for (FWidget element : chain) {
-            element.mouseLeave(pointerX, pointerY);
+    private static List<FWidget> pathRootToLeaf(FWidget leaf) {
+        if (leaf == null) {
+            return List.of();
         }
+        List<FWidget> bottomUp = pathToRoot(leaf);
+        List<FWidget> topDown = new ArrayList<>(bottomUp);
+        Collections.reverse(topDown);
+        return topDown;
     }
 
-    private static void walkBubbleMouseEnter(FWidget leaf, float pointerX, float pointerY) {
-        List<FWidget> chain = pathToRoot(leaf);
-        for (FWidget element : chain) {
-            element.mouseEnter(pointerX, pointerY);
+    /**
+     * DOM-like mouseenter/mouseleave: only nodes leaving or entering the hit subtree, not every
+     * ancestor on each move.
+     */
+    private static void transitionHoverTarget(FWidget previousLeaf, FWidget nextLeaf, float pointerX, float pointerY) {
+        List<FWidget> oldPath = pathRootToLeaf(previousLeaf);
+        List<FWidget> newPath = pathRootToLeaf(nextLeaf);
+        int commonDepth = 0;
+        int maxCommon = Math.min(oldPath.size(), newPath.size());
+        while (commonDepth < maxCommon && oldPath.get(commonDepth) == newPath.get(commonDepth)) {
+            commonDepth++;
+        }
+        for (int index = oldPath.size() - 1; index >= commonDepth; index--) {
+            oldPath.get(index).mouseLeave(pointerX, pointerY);
+        }
+        for (int index = commonDepth; index < newPath.size(); index++) {
+            newPath.get(index).mouseEnter(pointerX, pointerY);
         }
     }
 
@@ -142,27 +160,6 @@ public class FInputDispatcher {
             out.add(cursor);
         }
         return out;
-    }
-
-    private static FWidget hitLeaf(FWidget node, float pointerX, float pointerY) {
-        if (node == null || !node.visible()) {
-            return null;
-        }
-        if (node.clipChildren() && !node.containsPoint(pointerX, pointerY)) {
-            return null;
-        }
-        float childPointerY = pointerY + node.childPointerYOffset();
-        List<FWidget> kids = node.childrenView();
-        for (int childIndex = kids.size() - 1; childIndex >= 0; childIndex--) {
-            FWidget hitChild = hitLeaf(kids.get(childIndex), pointerX, childPointerY);
-            if (hitChild != null) {
-                return hitChild;
-            }
-        }
-        if (node.wantsPointer() && node.containsPoint(pointerX, pointerY)) {
-            return node;
-        }
-        return null;
     }
 
     public boolean dispatch(FWidget root, InputEvent raw, int focusedId, IntConsumer setFocusedId, IntSupplier getFocusedId) {
@@ -186,7 +183,7 @@ public class FInputDispatcher {
         if (root == null) {
             return UiPointerCursor.DEFAULT;
         }
-        FWidget leaf = hitLeaf(root, pointerX, pointerY);
+        FWidget leaf = PointerHitTraversal.hitLeaf(root, pointerX, pointerY);
         if (leaf == null) {
             return UiPointerCursor.DEFAULT;
         }
@@ -197,14 +194,9 @@ public class FInputDispatcher {
         if (pressedOn != null) {
             return walkBubbleMouseMove(pressedOn, pointerX, pointerY);
         }
-        FWidget next = hitLeaf(root, pointerX, pointerY);
+        FWidget next = PointerHitTraversal.hitLeaf(root, pointerX, pointerY);
         if (next != hoverLeaf) {
-            if (hoverLeaf != null) {
-                walkBubbleMouseLeave(hoverLeaf, pointerX, pointerY);
-            }
-            if (next != null) {
-                walkBubbleMouseEnter(next, pointerX, pointerY);
-            }
+            transitionHoverTarget(hoverLeaf, next, pointerX, pointerY);
             hoverLeaf = next;
         }
         if (next == null) {
@@ -215,7 +207,7 @@ public class FInputDispatcher {
 
     private boolean handlePress(FWidget root, float pointerX, float pointerY, int button, IntConsumer setFocusedId) {
         clickSoundPlayedOnPress = false;
-        FWidget leaf = hitLeaf(root, pointerX, pointerY);
+        FWidget leaf = PointerHitTraversal.hitLeaf(root, pointerX, pointerY);
         pressedOn = leaf;
         if (leaf == null) {
             setFocusedId.accept(UiFocusIds.NO_FOCUS_ID);
@@ -235,7 +227,7 @@ public class FInputDispatcher {
         boolean consumed = false;
         FWidget upTarget = pressedOn;
         if (upTarget == null) {
-            upTarget = hitLeaf(root, pointerX, pointerY);
+            upTarget = PointerHitTraversal.hitLeaf(root, pointerX, pointerY);
         }
         if (upTarget != null) {
             consumed = walkMouseUp(upTarget, pointerX, pointerY, button);
@@ -254,7 +246,7 @@ public class FInputDispatcher {
     }
 
     private boolean handleScroll(FWidget root, float pointerX, float pointerY, float delta) {
-        FWidget leaf = hitLeaf(root, pointerX, pointerY);
+        FWidget leaf = PointerHitTraversal.hitLeaf(root, pointerX, pointerY);
         if (leaf == null) {
             return false;
         }

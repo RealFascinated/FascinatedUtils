@@ -1,7 +1,10 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.Align;
+import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.core.TextLayoutMetrics;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -124,8 +127,8 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
     }
 
     @Override
-    public boolean wantsPointer() {
-        return showBackButton || onResetAll != null;
+    public PointerHitKind pointerHitKind() {
+        return showBackButton || onResetAll != null ? PointerHitKind.TARGET : PointerHitKind.NONE;
     }
 
     @Override
@@ -170,7 +173,9 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
         float corner = graphics.theme().cardCornerRadius();
         float borderThickness = UITheme.BORDER_THICKNESS_PX;
         graphics.fillRoundedRectFrame(x(), y(), w(), h(), corner, graphics.theme().border(), graphics.theme().surface(), borderThickness, borderThickness, RectCornerRoundMask.ALL);

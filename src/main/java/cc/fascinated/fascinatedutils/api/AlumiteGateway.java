@@ -1,17 +1,25 @@
 package cc.fascinated.fascinatedutils.api;
 
 import cc.fascinated.fascinatedutils.FascinatedUtils;
-import cc.fascinated.fascinatedutils.api.dto.friend.FriendEntryDto;
-import cc.fascinated.fascinatedutils.api.dto.friend.PendingFriendRequestDto;
 import cc.fascinated.fascinatedutils.api.ws.GatewayHandler;
 import cc.fascinated.fascinatedutils.api.ws.GatewayOpcode;
 import cc.fascinated.fascinatedutils.api.ws.OutboundMessage;
-import cc.fascinated.fascinatedutils.api.ws.impl.C2SAuthMessage;
-import cc.fascinated.fascinatedutils.api.ws.impl.C2SHeartbeatAckMessage;
+import cc.fascinated.fascinatedutils.api.ws.handlers.AuthAckHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.ChannelCreateHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.ChannelRemoveHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.FriendAddHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.FriendRemoveHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.FriendRequestIncomingHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.FriendRequestRemovedHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.HeartbeatHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.HelloHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.MessageCreateHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.MessageDeleteHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.MessageUpdateHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.PresenceUpdateHandler;
+import cc.fascinated.fascinatedutils.api.ws.handlers.UserUpdateHandler;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
-import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
-import cc.fascinated.fascinatedutils.event.impl.social.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -30,11 +38,11 @@ class AlumiteGateway implements WebSocket.Listener {
 
     private static final int CLOSE_AUTH_FAILURE = 4001;
     private static final int MAX_RECONNECT_DELAY_MS = 30_000;
-    private static final Gson GSON = new Gson();
 
     private final HttpClient httpClient;
     private final Supplier<String> tokenSupplier;
     private final Runnable onAuthExpired;
+    private final Gson parseGson;
     private final Map<GatewayOpcode, GatewayHandler> handlers = new EnumMap<>(GatewayOpcode.class);
 
     private volatile WebSocket ws;
@@ -42,44 +50,29 @@ class AlumiteGateway implements WebSocket.Listener {
     private final StringBuilder messageBuffer = new StringBuilder();
     private int reconnectDelayMs = 1_000;
 
-    AlumiteGateway(HttpClient httpClient, Supplier<String> tokenSupplier, Runnable onAuthExpired) {
+    AlumiteGateway(HttpClient httpClient, Supplier<String> tokenSupplier, Runnable onAuthExpired, Gson parseGson) {
         this.httpClient = httpClient;
         this.tokenSupplier = tokenSupplier;
         this.onAuthExpired = onAuthExpired;
+        this.parseGson = parseGson;
         registerHandlers();
     }
 
     private void registerHandlers() {
-        handlers.put(GatewayOpcode.HELLO, (send, data) -> {
-            int heartbeatInterval = data.getAsJsonObject().get("heartbeatInterval").getAsInt();
-            Client.LOG.info("[AlumiteGateway] HELLO received (heartbeatInterval={}ms), authenticating...", heartbeatInterval);
-            send.accept(new C2SAuthMessage(tokenSupplier.get()));
-        });
-        handlers.put(GatewayOpcode.HEARTBEAT, (send, data) -> send.accept(new C2SHeartbeatAckMessage()));
-        handlers.put(GatewayOpcode.AUTH_ACK, (send, data) -> {
-            Client.LOG.info("[AlumiteGateway] Authenticated successfully.");
-            reconnectDelayMs = 1_000;
-        });
-        handlers.put(GatewayOpcode.FRIEND_ADD, (send, data) -> {
-            FriendEntryDto entry = GSON.fromJson(data, FriendEntryDto.class);
-            FascinatedEventBus.INSTANCE.post(new FriendAddEvent(entry));
-        });
-        handlers.put(GatewayOpcode.FRIEND_REMOVE, (send, data) -> {
-            int userId = data.getAsJsonObject().get("userId").getAsInt();
-            FascinatedEventBus.INSTANCE.post(new FriendRemoveEvent(userId));
-        });
-        handlers.put(GatewayOpcode.FRIEND_REQUEST_INCOMING, (send, data) -> {
-            PendingFriendRequestDto dto = GSON.fromJson(data, PendingFriendRequestDto.class);
-            FascinatedEventBus.INSTANCE.post(new FriendRequestIncomingEvent(dto));
-        });
-        handlers.put(GatewayOpcode.FRIEND_REQUEST_REMOVED, (send, data) -> {
-            FriendRequestRemovedEvent event = GSON.fromJson(data, FriendRequestRemovedEvent.class);
-            FascinatedEventBus.INSTANCE.post(event);
-        });
-        handlers.put(GatewayOpcode.PRESENCE_UPDATE, (send, data) -> {
-            PresenceUpdateEvent event = GSON.fromJson(data, PresenceUpdateEvent.class);
-            FascinatedEventBus.INSTANCE.post(event);
-        });
+        handlers.put(GatewayOpcode.HELLO, new HelloHandler(tokenSupplier));
+        handlers.put(GatewayOpcode.HEARTBEAT, new HeartbeatHandler());
+        handlers.put(GatewayOpcode.AUTH_ACK, new AuthAckHandler(() -> reconnectDelayMs = 1_000));
+        handlers.put(GatewayOpcode.FRIEND_ADD, new FriendAddHandler());
+        handlers.put(GatewayOpcode.FRIEND_REMOVE, new FriendRemoveHandler());
+        handlers.put(GatewayOpcode.FRIEND_REQUEST_INCOMING, new FriendRequestIncomingHandler());
+        handlers.put(GatewayOpcode.FRIEND_REQUEST_REMOVED, new FriendRequestRemovedHandler());
+        handlers.put(GatewayOpcode.PRESENCE_UPDATE, new PresenceUpdateHandler());
+        handlers.put(GatewayOpcode.CHANNEL_CREATE, new ChannelCreateHandler());
+        handlers.put(GatewayOpcode.CHANNEL_REMOVE, new ChannelRemoveHandler());
+        handlers.put(GatewayOpcode.USER_UPDATE, new UserUpdateHandler());
+        handlers.put(GatewayOpcode.MESSAGE_CREATE, new MessageCreateHandler());
+        handlers.put(GatewayOpcode.MESSAGE_UPDATE, new MessageUpdateHandler());
+        handlers.put(GatewayOpcode.MESSAGE_DELETE, new MessageDeleteHandler());
     }
 
     void connect() {
@@ -162,7 +155,7 @@ class AlumiteGateway implements WebSocket.Listener {
 
     private void dispatch(String raw) {
         try {
-            JsonObject obj = GSON.fromJson(raw, JsonObject.class);
+            JsonObject obj = parseGson.fromJson(raw, JsonObject.class);
             GatewayOpcode opcode = GatewayOpcode.fromId(obj.get("op").getAsInt());
             if (opcode == null) {
                 return;

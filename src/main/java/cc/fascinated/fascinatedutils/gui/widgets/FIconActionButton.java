@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
+import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 
@@ -42,7 +44,10 @@ public class FIconActionButton extends FButtonWidget {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer graphics, float mouseX, float mouseY, float deltaSeconds) {
+    protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        float mouseX = frame.pointerX();
+        float mouseY = frame.pointerY();
+        boolean hovered = frame.isHitTarget(this);
         int tintArgb = hovered ? hoverTintArgb : normalTintArgb;
         float iconSize = Math.min(w(), h()) - 4f;
         float iconX = x() + (w() - iconSize) / 2f;

@@ -12,7 +12,8 @@ public enum ModUiTextures {
     TRASH("ui/mod_settings/trash"), CHECK("ui/mod_settings/check"), SETTINGS("ui/mod_settings/settings"),
     CHEVRON_DOWN("ui/mod_settings/keyboard_arrow_down"), CHEVRON_RIGHT("ui/mod_settings/keyboard_arrow_right"),
     EDIT("ui/mod_settings/edit"), VISIBILITY("ui/mod_settings/visibility"),
-    VISIBILITY_OFF("ui/mod_settings/visibility_off");
+    VISIBILITY_OFF("ui/mod_settings/visibility_off"),
+    SEARCH("ui/mod_settings/search");
 
     private final Identifier id;
 
