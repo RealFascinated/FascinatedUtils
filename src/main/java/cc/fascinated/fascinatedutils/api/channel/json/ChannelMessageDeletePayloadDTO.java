@@ -1,3 +1,3 @@
 package cc.fascinated.fascinatedutils.api.channel.json;
 
-public record ChannelMessageDeletePayloadDTO(int channelId, int messageId) {}
+public record ChannelMessageDeletePayloadDTO(String channelId, String messageId) {}

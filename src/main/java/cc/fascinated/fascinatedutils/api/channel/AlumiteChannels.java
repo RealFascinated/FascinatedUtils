@@ -23,9 +23,9 @@ public class AlumiteChannels {
     private final Alumite alumite;
     private final AlumiteHttpClient http;
     private final AlumiteUsers users;
-    private final Map<Integer, Channel> channelsById = new ConcurrentHashMap<>();
-    private final Map<Integer, List<ChannelMessage>> messagesByChannel = new ConcurrentHashMap<>();
-    private final Map<Integer, Boolean> hasMoreByChannel = new ConcurrentHashMap<>();
+    private final Map<String, Channel> channelsById = new ConcurrentHashMap<>();
+    private final Map<String, List<ChannelMessage>> messagesByChannel = new ConcurrentHashMap<>();
+    private final Map<String, Boolean> hasMoreByChannel = new ConcurrentHashMap<>();
     private volatile List<Channel> channels = List.of();
 
     public AlumiteChannels(Alumite alumite, AlumiteHttpClient http, AlumiteUsers users) {
@@ -56,20 +56,20 @@ public class AlumiteChannels {
         return channels;
     }
 
-    public Channel get(int channelId) {
+    public Channel get(String channelId) {
         return channelsById.get(channelId);
     }
 
-    public List<ChannelMessage> messagesOrNull(int channelId) {
+    public List<ChannelMessage> messagesOrNull(String channelId) {
         return messagesByChannel.get(channelId);
     }
 
-    public List<ChannelMessage> messages(int channelId) {
+    public List<ChannelMessage> messages(String channelId) {
         List<ChannelMessage> list = messagesByChannel.get(channelId);
         return list == null ? List.of() : list;
     }
 
-    public boolean hasMoreMessages(int channelId) {
+    public boolean hasMoreMessages(String channelId) {
         return Boolean.TRUE.equals(hasMoreByChannel.get(channelId));
     }
 
@@ -77,7 +77,7 @@ public class AlumiteChannels {
         if (dtoList == null) {
             dtoList = List.of();
         }
-        Set<Integer> activeIds = new HashSet<>();
+        Set<String> activeIds = new HashSet<>();
         List<Channel> orderedChannels = new ArrayList<>(dtoList.size());
         for (ChannelDetailDTO dto : dtoList) {
             cacheChannelDetail(dto);
@@ -93,23 +93,23 @@ public class AlumiteChannels {
         channels = List.copyOf(orderedChannels);
     }
 
-    public DmChannel openDmAndCache(int recipientUserId) throws AlumiteApiException {
+    public DmChannel openDmAndCache(String recipientUserId) throws AlumiteApiException {
         ChannelDetailDTO dto = http.postObject(ROUTE_CHANNELS + "/dm", new OpenDmBodyDTO(recipientUserId), ChannelDetailDTO.class, "open dm", "Failed to open direct message.");
         return afterOpenDm(dto);
     }
 
-    void cacheReadState(int channelId, int lastReadMessageId) {
+    void cacheReadState(String channelId, String lastReadMessageId) {
         Channel channel = get(channelId);
         if (channel != null) {
             channel.applyLastReadMessageId(lastReadMessageId);
         }
     }
 
-    void storeMessages(int channelId, List<ChannelMessage> messages) {
+    void storeMessages(String channelId, List<ChannelMessage> messages) {
         messagesByChannel.put(channelId, List.copyOf(messages));
     }
 
-    void storeHasMore(int channelId, boolean hasMore) {
+    void storeHasMore(String channelId, boolean hasMore) {
         hasMoreByChannel.put(channelId, hasMore);
     }
 
@@ -129,12 +129,11 @@ public class AlumiteChannels {
                     .map(AlumiteModelMapper::toGroupMember)
                     .map(member -> new GroupMember(users.upsertUser(member.user()), member.owner()))
                     .toList();
-            int ownerUserId = groupDto.ownerUserId() == null ? 0 : groupDto.ownerUserId();
-            getOrCreateGroupChannel(groupDto.id()).applyDetail(groupDto.lastReadMessageId(), groupDto.name(), ownerUserId, members, groupDto.lastMessageAt(), preview);
+            getOrCreateGroupChannel(groupDto.id()).applyDetail(groupDto.lastReadMessageId(), groupDto.name(), groupDto.ownerUserId(), members, groupDto.lastMessageAt(), preview);
         }
     }
 
-    void cacheSentMessage(int channelId, ChannelMessage message) {
+    void cacheSentMessage(String channelId, ChannelMessage message) {
         upsertChannelMessageFromSend(channelId, message);
     }
 
@@ -148,20 +147,20 @@ public class AlumiteChannels {
         }
         Channel channel = channelsById.get(dto.id());
         List<Channel> updated = new ArrayList<>(channels);
-        if (updated.stream().noneMatch(existing -> existing.id() == dto.id())) {
+        if (updated.stream().noneMatch(existing -> existing.id().equals(dto.id()))) {
             updated.add(channel);
         }
         channels = List.copyOf(resortChannels(updated));
         FascinatedEventBus.INSTANCE.post(new ChannelCreateEvent(channel));
     }
 
-    public void onChannelRemove(int channelId) {
+    public void onChannelRemove(String channelId) {
         removeChannel(channelId);
         messagesByChannel.remove(channelId);
         FascinatedEventBus.INSTANCE.post(new ChannelRemoveEvent(channelId));
     }
 
-    public void onMessageCreate(int channelId, ChannelMessageDTO messageDto) {
+    public void onMessageCreate(String channelId, ChannelMessageDTO messageDto) {
         ChannelMessage message = AlumiteModelMapper.toChannelMessage(messageDto);
         upsertChannelMessage(channelId, message);
         FascinatedEventBus.INSTANCE.post(new ChannelMessageCreateEvent(channelId, message));
@@ -172,7 +171,7 @@ public class AlumiteChannels {
         }
     }
 
-    public void onMessageUpdate(int channelId, ChannelMessageDTO messageDto) {
+    public void onMessageUpdate(String channelId, ChannelMessageDTO messageDto) {
         ChannelMessage message = AlumiteModelMapper.toChannelMessage(messageDto);
         upsertChannelMessage(channelId, message);
         FascinatedEventBus.INSTANCE.post(new ChannelMessageUpdateEvent(channelId, message));
@@ -181,15 +180,15 @@ public class AlumiteChannels {
             return;
         }
         LastMessagePreview existingPreview = channel.lastMessagePreview();
-        if (existingPreview != null && existingPreview.messageId() == message.id()) {
+        if (existingPreview != null && existingPreview.messageId().equals(message.id())) {
             applyChannelLastMessage(channel, channel.lastMessageAt(), new LastMessagePreview(existingPreview.messageId(), message.content(), existingPreview.authorName()));
         }
     }
 
-    public void onMessageDelete(int channelId, int messageId) {
+    public void onMessageDelete(String channelId, String messageId) {
         List<ChannelMessage> existingMessages = messagesByChannel.get(channelId);
         if (existingMessages != null) {
-            messagesByChannel.put(channelId, existingMessages.stream().filter(message -> message.id() != messageId).toList());
+            messagesByChannel.put(channelId, existingMessages.stream().filter(message -> !message.id().equals(messageId)).toList());
         }
         FascinatedEventBus.INSTANCE.post(new ChannelMessageDeleteEvent(channelId, messageId));
         Channel channel = get(channelId);
@@ -197,7 +196,7 @@ public class AlumiteChannels {
             return;
         }
         LastMessagePreview preview = channel.lastMessagePreview();
-        if (preview == null || preview.messageId() != messageId) {
+        if (preview == null || !preview.messageId().equals(messageId)) {
             return;
         }
         List<ChannelMessage> remaining = messagesByChannel.getOrDefault(channelId, List.of());
@@ -209,7 +208,7 @@ public class AlumiteChannels {
         }
     }
 
-    void hideChannelLocal(int channelId) {
+    void hideChannelLocal(String channelId) {
         removeChannel(channelId);
         messagesByChannel.remove(channelId);
     }
@@ -237,7 +236,7 @@ public class AlumiteChannels {
         channels = List.copyOf(resortChannels(new ArrayList<>(channels)));
     }
 
-    private void upsertChannelMessageFromSend(int channelId, ChannelMessage message) {
+    private void upsertChannelMessageFromSend(String channelId, ChannelMessage message) {
         upsertChannelMessage(channelId, message);
         Channel channel = get(channelId);
         if (channel != null) {
@@ -246,12 +245,12 @@ public class AlumiteChannels {
         }
     }
 
-    private void upsertChannelMessage(int channelId, ChannelMessage message) {
+    private void upsertChannelMessage(String channelId, ChannelMessage message) {
         List<ChannelMessage> existingMessages = messagesByChannel.getOrDefault(channelId, List.of());
         List<ChannelMessage> updatedMessages = new ArrayList<>();
         boolean replaced = false;
         for (ChannelMessage existingMessage : existingMessages) {
-            if (existingMessage.id() == message.id()) {
+            if (existingMessage.id().equals(message.id())) {
                 updatedMessages.add(message);
                 replaced = true;
             } else {
@@ -261,7 +260,7 @@ public class AlumiteChannels {
         if (!replaced) {
             updatedMessages.add(message);
         }
-        updatedMessages.sort(Comparator.comparingInt(ChannelMessage::id));
+        updatedMessages.sort(Comparator.comparing(ChannelMessage::id));
         messagesByChannel.put(channelId, List.copyOf(updatedMessages));
     }
 
@@ -270,7 +269,7 @@ public class AlumiteChannels {
             Instant leftAt = parseInstantOrNull(left.lastMessageAt());
             Instant rightAt = parseInstantOrNull(right.lastMessageAt());
             if (leftAt == null && rightAt == null) {
-                return Integer.compare(left.id(), right.id());
+                return left.id().compareTo(right.id());
             }
             if (leftAt == null) {
                 return 1;
@@ -282,15 +281,15 @@ public class AlumiteChannels {
         }).toList();
     }
 
-    private DmChannel getOrCreateDmChannel(int channelId) {
+    private DmChannel getOrCreateDmChannel(String channelId) {
         return (DmChannel) getOrCreateChannel(channelId, ChannelKind.DM);
     }
 
-    private GroupChannel getOrCreateGroupChannel(int channelId) {
+    private GroupChannel getOrCreateGroupChannel(String channelId) {
         return (GroupChannel) getOrCreateChannel(channelId, ChannelKind.GROUP);
     }
 
-    private Channel getOrCreateChannel(int channelId, ChannelKind kind) {
+    private Channel getOrCreateChannel(String channelId, ChannelKind kind) {
         return channelsById.compute(channelId, (_, existingChannel) -> {
             if (existingChannel != null && existingChannel.kind() == kind) {
                 return existingChannel;
@@ -302,8 +301,8 @@ public class AlumiteChannels {
         });
     }
 
-    private void removeChannel(int channelId) {
+    private void removeChannel(String channelId) {
         channelsById.remove(channelId);
-        channels = List.copyOf(channels.stream().filter(channel -> channel.id() != channelId).toList());
+        channels = List.copyOf(channels.stream().filter(channel -> !channel.id().equals(channelId)).toList());
     }
 }

@@ -9,7 +9,7 @@ import java.util.Date;
 @Accessors(fluent = true)
 public class User {
 
-    private final int id;
+    private final String id;
     private volatile String minecraftUuid;
     private volatile String minecraftName;
     private volatile String role;
@@ -18,11 +18,11 @@ public class User {
     private volatile Date lastSeen;
     private volatile boolean resolved;
 
-    public User(int id) {
+    public User(String id) {
         this.id = id;
     }
 
-    public User(int id, String minecraftUuid, String minecraftName, String role, String status, Presence presence, Date lastSeen) {
+    public User(String id, String minecraftUuid, String minecraftName, String role, String status, Presence presence, Date lastSeen) {
         this.id = id;
         this.minecraftUuid = minecraftUuid;
         this.minecraftName = minecraftName;
@@ -44,7 +44,7 @@ public class User {
         if (incomingUser == null) {
             return;
         }
-        if (incomingUser.id() != id) {
+        if (!incomingUser.id().equals(id)) {
             throw new IllegalArgumentException("Cannot merge user data with a different id.");
         }
         minecraftUuid = mergeString(minecraftUuid, incomingUser.minecraftUuid());

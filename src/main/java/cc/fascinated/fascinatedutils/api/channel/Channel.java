@@ -20,15 +20,15 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
 
     private final Alumite alumite;
     @Getter(AccessLevel.NONE)
-    private final int channelId;
+    private final String channelId;
     private final ChannelKind kind;
 
     private volatile String name;
     private volatile String lastMessageAt;
     private volatile LastMessagePreview lastMessagePreview;
-    private volatile Integer lastReadMessageId;
+    private volatile String lastReadMessageId;
 
-    public final int id() {
+    public final String id() {
         return channelId;
     }
 
@@ -55,18 +55,18 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         return message;
     }
 
-    public ChannelMessage editMessage(int messageId, String content) throws AlumiteApiException {
+    public ChannelMessage editMessage(String messageId, String content) throws AlumiteApiException {
         ChannelMessageDTO dto = alumite.http().patchObject(route() + "/messages/" + messageId, new EditChannelMessageBodyDTO(content), ChannelMessageDTO.class, "edit message", "Failed to edit message.");
         alumite.channels().onMessageUpdate(channelId, dto);
         return AlumiteModelMapper.toChannelMessage(dto);
     }
 
-    public void deleteMessage(int messageId) throws AlumiteApiException {
+    public void deleteMessage(String messageId) throws AlumiteApiException {
         alumite.http().sendAuthorizedExpectNoContent("DELETE", route() + "/messages/" + messageId, null, "delete message", "Failed to delete message.");
         alumite.channels().onMessageDelete(channelId, messageId);
     }
 
-    public void markRead(int lastReadMessageId) throws AlumiteApiException {
+    public void markRead(String lastReadMessageId) throws AlumiteApiException {
         alumite.http().sendAuthorizedChecked("PATCH", route() + "/read", alumite.getGsonForDTO().toJson(new UpdateReadStateBodyDTO(lastReadMessageId)), "update read state", "Failed to update channel read state.");
         alumite.channels().cacheReadState(channelId, lastReadMessageId);
     }
@@ -77,7 +77,7 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         }
         ChannelMessagePageDTO page = alumite.http().getObject(UrlUtils.buildUrl(route() + "/messages", Map.of("limit", limit)), ChannelMessagePageDTO.class, "get messages", "Failed to load messages.");
         List<ChannelMessageDTO> dtoMessages = page.messages() == null ? List.of() : page.messages();
-        List<ChannelMessage> loaded = dtoMessages.stream().map(AlumiteModelMapper::toChannelMessage).sorted(Comparator.comparingInt(ChannelMessage::id)).toList();
+        List<ChannelMessage> loaded = dtoMessages.stream().map(AlumiteModelMapper::toChannelMessage).sorted(Comparator.comparing(ChannelMessage::id)).toList();
         alumite.channels().storeMessages(channelId, loaded);
         alumite.channels().storeHasMore(channelId, page.hasMore());
     }
@@ -94,7 +94,7 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         return alumite.channels().hasMoreMessages(channelId);
     }
 
-    public ChannelMessagePageDTO fetchMessagesPage(int limit, Integer beforeMessageId, Integer afterMessageId) throws AlumiteApiException {
+    public ChannelMessagePageDTO fetchMessagesPage(int limit, String beforeMessageId, String afterMessageId) throws AlumiteApiException {
         Map<String, Object> queryParameters = new LinkedHashMap<>();
         if (limit > 0) {
             queryParameters.put("limit", limit);
@@ -122,12 +122,12 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         List<ChannelMessage> existingMessages = messagesOrNull();
         List<ChannelMessage> merged = new ArrayList<>(existingMessages == null ? List.of() : existingMessages);
         for (ChannelMessage olderMessage : olderMessages) {
-            boolean alreadyPresent = merged.stream().anyMatch(existingMessage -> existingMessage.id() == olderMessage.id());
+            boolean alreadyPresent = merged.stream().anyMatch(existingMessage -> existingMessage.id().equals(olderMessage.id()));
             if (!alreadyPresent) {
                 merged.addFirst(olderMessage);
             }
         }
-        merged.sort(Comparator.comparingInt(ChannelMessage::id));
+        merged.sort(Comparator.comparing(ChannelMessage::id));
         alumite.channels().storeMessages(channelId, merged);
     }
 

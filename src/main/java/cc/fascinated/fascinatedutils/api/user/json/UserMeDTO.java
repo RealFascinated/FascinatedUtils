@@ -4,5 +4,5 @@ import cc.fascinated.fascinatedutils.api.user.Presence;
 
 import java.util.Date;
 
-public record UserMeDTO(int id, String minecraftUuid, String minecraftName, String role, String status,
+public record UserMeDTO(String id, String minecraftUuid, String minecraftName, String role, String status,
                          Presence presence, Presence preferredPresence, Date lastSeen) {}

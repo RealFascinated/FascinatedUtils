@@ -7,6 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 
 @Accessors(fluent = true)
-public record PendingFriendRequest(int requestId, User user, String createdAt) {
+public record PendingFriendRequest(String requestId, User user, String createdAt) {
 
 }

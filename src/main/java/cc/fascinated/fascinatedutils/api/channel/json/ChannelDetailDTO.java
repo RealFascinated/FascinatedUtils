@@ -6,9 +6,9 @@ import java.util.List;
 
 public sealed interface ChannelDetailDTO permits ChannelDetailDTO.DmChannelDetailDTO, ChannelDetailDTO.GroupChannelDetailDTO {
 
-    int id();
+    String id();
 
-    Integer lastReadMessageId();
+    String lastReadMessageId();
 
     String lastMessageAt();
 
@@ -16,7 +16,7 @@ public sealed interface ChannelDetailDTO permits ChannelDetailDTO.DmChannelDetai
 
     ChannelKindDTO type();
 
-    record DmChannelDetailDTO(int id, Integer lastReadMessageId, String lastMessageAt,
+    record DmChannelDetailDTO(String id, String lastReadMessageId, String lastMessageAt,
                               LastMessagePreviewDTO lastMessagePreview,
                               PublicUserDTO recipient) implements ChannelDetailDTO {
 
@@ -26,9 +26,9 @@ public sealed interface ChannelDetailDTO permits ChannelDetailDTO.DmChannelDetai
         }
     }
 
-    record GroupChannelDetailDTO(int id, Integer lastReadMessageId, String lastMessageAt,
+    record GroupChannelDetailDTO(String id, String lastReadMessageId, String lastMessageAt,
                                  LastMessagePreviewDTO lastMessagePreview,
-                                 String name, Integer ownerUserId,
+                                 String name, String ownerUserId,
                                  List<ChannelMemberDTO> members) implements ChannelDetailDTO {
 
         @Override

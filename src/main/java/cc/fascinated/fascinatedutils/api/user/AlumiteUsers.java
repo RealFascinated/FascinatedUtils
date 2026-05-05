@@ -32,7 +32,7 @@ public class AlumiteUsers {
     private final Alumite alumite;
     private final AlumiteHttpClient http;
 
-    private final Map<Integer, User> usersById = new ConcurrentHashMap<>();
+    private final Map<String, User> usersById = new ConcurrentHashMap<>();
 
     @Getter
     private volatile List<Friend> friends = List.of();
@@ -58,15 +58,15 @@ public class AlumiteUsers {
         selfUser = dto == null ? null : upsertUser(dto);
     }
 
-    public User cachedUser(int userId) {
+    public User cachedUser(String userId) {
         return usersById.get(userId);
     }
 
-    public User user(int userId) {
+    public User user(String userId) {
         return usersById.computeIfAbsent(userId, User::new);
     }
 
-    public User resolveUser(int userId) throws AlumiteApiException {
+    public User resolveUser(String userId) throws AlumiteApiException {
         User cached = cachedUser(userId);
         if (cached != null && cached.resolved()) {
             return cached;
@@ -74,7 +74,7 @@ public class AlumiteUsers {
         return fetchUser(userId);
     }
 
-    private User fetchUser(int userId) throws AlumiteApiException {
+    private User fetchUser(String userId) throws AlumiteApiException {
         PublicUserDTO dto = http.getObject(ROUTE_USERS + "/" + userId, PublicUserDTO.class, "get user", "Failed to load user.");
         return upsertUser(dto);
     }
@@ -111,7 +111,7 @@ public class AlumiteUsers {
         });
     }
 
-    public void mergePresenceUpdate(int userId, Presence status) {
+    public void mergePresenceUpdate(String userId, Presence status) {
         usersById.computeIfPresent(userId, (_, existingUser) -> {
             existingUser.setPresence(status);
             return existingUser;
@@ -120,17 +120,17 @@ public class AlumiteUsers {
 
     public void onFriendAdd(FriendEntryDTO entry) {
         User user = upsertUser(entry.user());
-        boolean wasOutgoing = outgoingFriendRequests.stream().anyMatch(request -> request.user().id() == user.id());
+        boolean wasOutgoing = outgoingFriendRequests.stream().anyMatch(request -> request.user().id().equals(user.id()));
         List<Friend> updatedFriends = new ArrayList<>(friends);
         updatedFriends.add(new Friend(user, entry.since()));
         friends = List.copyOf(updatedFriends);
-        outgoingFriendRequests = outgoingFriendRequests.stream().filter(request -> request.user().id() != user.id()).toList();
-        incomingFriendRequests = incomingFriendRequests.stream().filter(request -> request.user().id() != user.id()).toList();
+        outgoingFriendRequests = outgoingFriendRequests.stream().filter(request -> !request.user().id().equals(user.id())).toList();
+        incomingFriendRequests = incomingFriendRequests.stream().filter(request -> !request.user().id().equals(user.id())).toList();
         FascinatedEventBus.INSTANCE.post(new FriendAddEvent(user, entry.since(), wasOutgoing));
     }
 
-    public void onFriendRemove(int userId) {
-        friends = friends.stream().filter(entry -> entry.user().id() != userId).toList();
+    public void onFriendRemove(String userId) {
+        friends = friends.stream().filter(entry -> !entry.user().id().equals(userId)).toList();
         FascinatedEventBus.INSTANCE.post(new FriendRemoveEvent(userId));
     }
 
@@ -142,9 +142,9 @@ public class AlumiteUsers {
         FascinatedEventBus.INSTANCE.post(new FriendRequestIncomingEvent(request.requestId(), pendingRequest.user(), request.createdAt()));
     }
 
-    public void onFriendRequestRemoved(int requestId, String reason) {
-        incomingFriendRequests = incomingFriendRequests.stream().filter(request -> request.requestId() != requestId).toList();
-        outgoingFriendRequests = outgoingFriendRequests.stream().filter(request -> request.requestId() != requestId).toList();
+    public void onFriendRequestRemoved(String requestId, String reason) {
+        incomingFriendRequests = incomingFriendRequests.stream().filter(request -> !request.requestId().equals(requestId)).toList();
+        outgoingFriendRequests = outgoingFriendRequests.stream().filter(request -> !request.requestId().equals(requestId)).toList();
         FascinatedEventBus.INSTANCE.post(new FriendRequestRemovedEvent(requestId, reason));
     }
 
@@ -156,7 +156,7 @@ public class AlumiteUsers {
         return pending;
     }
 
-    public String previewAuthorName(int authorId) {
+    public String previewAuthorName(String authorId) {
         User user = cachedUser(authorId);
         if (user != null && user.minecraftName() != null && !user.minecraftName().isBlank()) {
             return user.minecraftName();
