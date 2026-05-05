@@ -14,6 +14,8 @@ import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import net.minecraft.resources.Identifier;
 
+import java.util.function.BiConsumer;
+
 public class SocialFriendRowWidget {
     public static FWidget build(Props props, float width, float rowHeight) {
         return new FWidget() {
@@ -82,6 +84,12 @@ public class SocialFriendRowWidget {
 
             @Override
             public boolean mouseDown(float pointerX, float pointerY, int button) {
+                if (button == 1) {
+                    if (props.onContextMenu() != null) {
+                        props.onContextMenu().accept(pointerX, pointerY);
+                    }
+                    return true;
+                }
                 if (button != 0) {
                     return false;
                 }
@@ -110,5 +118,5 @@ public class SocialFriendRowWidget {
         };
     }
 
-    public record Props(User user, String statusText, boolean selected, Runnable onSelect, Runnable onRemove) {}
+    public record Props(User user, String statusText, boolean selected, Runnable onSelect, Runnable onRemove, BiConsumer<Float, Float> onContextMenu) {}
 }

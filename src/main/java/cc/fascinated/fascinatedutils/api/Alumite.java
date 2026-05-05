@@ -61,7 +61,7 @@ public class Alumite {
     private volatile String activeAccessToken;
     private volatile String activeRefreshToken;
     @Getter
-    private volatile Integer activeUserId;
+    private volatile String activeUserId;
     private volatile Presence activePreferredPresence = Presence.ONLINE;
     private volatile ScheduledFuture<?> tokenRefreshTask;
 
@@ -274,20 +274,20 @@ public class Alumite {
         return users.addOutgoingFriendRequest(dto);
     }
 
-    public boolean acceptFriendRequest(int requestId) throws AlumiteApiException {
+    public boolean acceptFriendRequest(String requestId) throws AlumiteApiException {
         http.sendAuthorizedChecked("POST", ROUTE_FRIENDS_REQUESTS + "/" + requestId + "/accept", "{}", "accept friend request", "Failed to accept request.");
         return true;
     }
 
-    public void declineFriendRequest(int requestId) throws AlumiteApiException {
+    public void declineFriendRequest(String requestId) throws AlumiteApiException {
         http.sendAuthorizedChecked("POST", ROUTE_FRIENDS_REQUESTS + "/" + requestId + "/decline", "{}", "decline friend request", "Failed to decline request.");
     }
 
-    public void cancelFriendRequest(int requestId) throws AlumiteApiException {
+    public void cancelFriendRequest(String requestId) throws AlumiteApiException {
         http.sendAuthorizedChecked("DELETE", ROUTE_FRIENDS_REQUESTS + "/" + requestId, null, "cancel friend request", "Failed to cancel request.");
     }
 
-    public void removeFriend(int userId) throws AlumiteApiException {
+    public void removeFriend(String userId) throws AlumiteApiException {
         http.sendAuthorizedChecked("DELETE", ROUTE_FRIENDS + "/" + userId, null, "remove friend", "Failed to remove friend.");
     }
 }

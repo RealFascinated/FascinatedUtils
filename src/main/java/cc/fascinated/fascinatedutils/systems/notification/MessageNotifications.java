@@ -17,7 +17,7 @@ public class MessageNotifications {
         if (Alumite.INSTANCE.currentPreferredPresence() == Presence.DO_NOT_DISTURB) {
             return;
         }
-        int authorId = event.message().authorId();
+        String authorId = event.message().authorId();
         if (Objects.equals(Alumite.INSTANCE.activeUserId(), authorId)) {
             return;
         }

@@ -1,3 +1,3 @@
 package cc.fascinated.fascinatedutils.event.impl.social;
 
-public record ChannelRemoveEvent(int channelId) {}
+public record ChannelRemoveEvent(String channelId) {}

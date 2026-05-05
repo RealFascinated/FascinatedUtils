@@ -5,4 +5,4 @@ import cc.fascinated.fascinatedutils.api.user.Presence;
 /**
  * Fired when a friend's presence status changes.
  */
-public record PresenceUpdateEvent(int userId, Presence status) {}
+public record PresenceUpdateEvent(String userId, Presence status) {}

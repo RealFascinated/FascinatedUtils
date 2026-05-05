@@ -44,8 +44,8 @@ class SocialChatMessagesHandler {
     static final float MESSAGE_SCROLL_ANCHOR_BOTTOM = Float.MAX_VALUE;
     private static final float PAD = 10f;
 
-    private Integer loadingMessagesChannelId;
-    private Integer loadingOlderMessagesChannelId;
+    private String loadingMessagesChannelId;
+    private String loadingOlderMessagesChannelId;
     private ChannelMessage contextMenuMessage;
     private float contextMenuX;
     private float contextMenuY;
@@ -66,7 +66,7 @@ class SocialChatMessagesHandler {
      * Returns any active overlay widgets (context menu, delete confirmation).
      * Called from the parent layout pass to stack overlays on top of the chat body.
      */
-    List<FWidget> collectOverlayWidgets(Integer selectedChannelId) {
+    List<FWidget> collectOverlayWidgets(String selectedChannelId) {
         List<FWidget> result = new ArrayList<>();
         if (contextMenuMessage != null) {
             result.add(buildContextMenuOverlay());
@@ -94,7 +94,7 @@ class SocialChatMessagesHandler {
      * @param panelWidth        available width for the messages area
      * @param messageScrollY    scroll position state; {@link Float#MAX_VALUE} pins to bottom
      */
-    FWidget buildMessagesBody(Integer selectedChannelId, float panelWidth, FState<Float> messageScrollY) {
+    FWidget buildMessagesBody(String selectedChannelId, float panelWidth, FState<Float> messageScrollY) {
         if (selectedChannelId == null) {
             return buildEmpty(Component.translatable("fascinatedutils.social.loading").getString());
         }
@@ -136,9 +136,9 @@ class SocialChatMessagesHandler {
         return maxOffset <= MESSAGE_SCROLL_EDGE_EPSILON || offset >= maxOffset - MESSAGE_SCROLL_EDGE_EPSILON;
     }
 
-    private FWidget buildMessageRow(ChannelMessage message, float width, Integer selectedChannelId) {
+    private FWidget buildMessageRow(ChannelMessage message, float width, String selectedChannelId) {
         boolean own = Objects.equals(Alumite.INSTANCE.activeUserId(), message.authorId());
-        boolean isEditing = editingMessage != null && editingMessage.id() == message.id();
+        boolean isEditing = editingMessage != null && editingMessage.id().equals(message.id());
         BiConsumer<Float, Float> onContextMenu = own && !isEditing ? (mx, my) -> {
             contextMenuMessage = message;
             contextMenuX = mx;
@@ -210,7 +210,7 @@ class SocialChatMessagesHandler {
         };
     }
 
-    private void submitEdit(Integer selectedChannelId) {
+    private void submitEdit(String selectedChannelId) {
         ChannelMessage target = editingMessage;
         if (target == null || editMessagePending) {
             return;
@@ -241,7 +241,7 @@ class SocialChatMessagesHandler {
         });
     }
 
-    private void submitDelete(ChannelMessage message, Integer selectedChannelId) {
+    private void submitDelete(ChannelMessage message, String selectedChannelId) {
         Channel channel = selectedChannelId != null ? Alumite.INSTANCE.channels().get(selectedChannelId) : null;
         if (channel == null) {
             return;
@@ -257,8 +257,8 @@ class SocialChatMessagesHandler {
         });
     }
 
-    private void triggerLoadMessages(int channelId) {
-        if (loadingMessagesChannelId != null && loadingMessagesChannelId == channelId) {
+    private void triggerLoadMessages(String channelId) {
+        if (loadingMessagesChannelId != null && loadingMessagesChannelId.equals(channelId)) {
             return;
         }
         Channel channel = Alumite.INSTANCE.channels().get(channelId);
@@ -276,8 +276,8 @@ class SocialChatMessagesHandler {
         });
     }
 
-    private void triggerLoadOlderMessages(int channelId) {
-        if (loadingOlderMessagesChannelId != null && loadingOlderMessagesChannelId == channelId) {
+    private void triggerLoadOlderMessages(String channelId) {
+        if (loadingOlderMessagesChannelId != null && loadingOlderMessagesChannelId.equals(channelId)) {
             return;
         }
         Channel channel = Alumite.INSTANCE.channels().get(channelId);
@@ -291,7 +291,7 @@ class SocialChatMessagesHandler {
         if (existingMessages == null || existingMessages.isEmpty()) {
             return;
         }
-        int oldestMessageId = existingMessages.get(0).id();
+        String oldestMessageId = existingMessages.get(0).id();
         loadingOlderMessagesChannelId = channelId;
         FascinatedUtils.SCHEDULED_POOL.execute(() -> {
             try {
@@ -303,7 +303,7 @@ class SocialChatMessagesHandler {
         });
     }
 
-    private void markChannelRead(int channelId) {
+    private void markChannelRead(String channelId) {
         Channel channel = Alumite.INSTANCE.channels().get(channelId);
         if (channel == null) {
             return;
@@ -312,9 +312,9 @@ class SocialChatMessagesHandler {
         if (messages == null || messages.isEmpty()) {
             return;
         }
-        int lastMessageId = messages.get(messages.size() - 1).id();
-        Integer lastReadMessageId = channel.lastReadMessageId();
-        if (lastReadMessageId != null && lastReadMessageId >= lastMessageId) {
+        String lastMessageId = messages.get(messages.size() - 1).id();
+        String lastReadMessageId = channel.lastReadMessageId();
+        if (lastReadMessageId != null && lastReadMessageId.compareTo(lastMessageId) >= 0) {
             return;
         }
         FascinatedUtils.SCHEDULED_POOL.execute(() -> {

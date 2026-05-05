@@ -11,7 +11,7 @@ public class FriendRemoveHandler implements GatewayHandler {
 
     @Override
     public void handle(Consumer<OutboundMessage> send, JsonElement data) {
-        int userId = data.getAsJsonObject().get("userId").getAsInt();
+        String userId = data.getAsJsonObject().get("userId").getAsString();
         Alumite.INSTANCE.users().onFriendRemove(userId);
     }
 }

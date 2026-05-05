@@ -23,6 +23,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 
 public class SocialMainWorkspaceComponent extends FWidget {
     private static final float LEFT_PANEL_WIDTH = 250f;
@@ -42,7 +43,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
     private static final float CHAT_HEADER_AVATAR = 28f;
 
     private static final Presence[] SELECTABLE_PREFERRED_PRESENCES = {Presence.ONLINE, Presence.AWAY, Presence.DO_NOT_DISTURB, Presence.INVISIBLE};
-    private static Integer lastOpenedChannelId;
+    private static String lastOpenedChannelId;
     // Node registry — preserves FState across re-renders
     private final FNodeRegistry nodes = new FNodeRegistry();
     private final FNodeWidget root;
@@ -56,8 +57,8 @@ public class SocialMainWorkspaceComponent extends FWidget {
 
     // FState fields — null until first render, then stable for lifetime of this component
     private FState<Tab> activeTab;
-    private FState<Integer> selectedChannelId;
-    private FState<Integer> selectedFriendUserId;
+    private FState<String> selectedChannelId;
+    private FState<String> selectedFriendUserId;
     private FState<Boolean> searchOpen;
     private FState<Boolean> sendMessagePending;
     private FState<Friend> pendingRemoveFriend;
@@ -76,6 +77,9 @@ public class SocialMainWorkspaceComponent extends FWidget {
     private float preferredPresenceButtonY;
     private float preferredPresenceButtonW;
     private float preferredPresenceButtonH;
+    private FState<User> userContextMenuUser;
+    private FState<Float> userContextMenuX;
+    private FState<Float> userContextMenuY;
 
     public SocialMainWorkspaceComponent(FOutlinedTextInputWidget addFriendInput, FOutlinedTextInputWidget dmMessageInput, Runnable onCloseScreen) {
         this.addFriendInput = addFriendInput;
@@ -136,6 +140,9 @@ public class SocialMainWorkspaceComponent extends FWidget {
         preferredPresenceUpdatePending = ctx.useState(false);
         scrollYRef = ctx.useState(0f);
         messageScrollYRef = ctx.useState(SocialChatMessagesHandler.MESSAGE_SCROLL_ANCHOR_BOTTOM);
+        userContextMenuUser = ctx.useState(null);
+        userContextMenuX = ctx.useState(0f);
+        userContextMenuY = ctx.useState(0f);
 
         if (selectedChannelId.get() == null && lastOpenedChannelId != null) {
             selectedChannelId.setQuiet(lastOpenedChannelId);
@@ -159,6 +166,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 if (pendingRemoveFriend.get() != null || pendingCancelRequest.get() != null || chatMessages.hasActiveOverlay()) {
                     preferredPresenceMenuOpen.setQuiet(false);
                     chatMessages.suppressContextualOverlays();
+                    userContextMenuUser.setQuiet(null);
                 }
 
                 clearChildren();
@@ -227,6 +235,12 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 }
 
                 for (FWidget overlay : chatMessages.collectOverlayWidgets(selectedChannelId.get())) {
+                    addChild(overlay);
+                    overlay.layout(measure, lx, ly, lw, lh);
+                }
+
+                if (userContextMenuUser.get() != null) {
+                    FWidget overlay = buildUserContextMenuOverlay();
                     addChild(overlay);
                     overlay.layout(measure, lx, ly, lw, lh);
                 }
@@ -552,7 +566,14 @@ public class SocialMainWorkspaceComponent extends FWidget {
         String snippet = channelListSnippet(channel);
         String channelLabel = channelTitle(channel);
         String channelAvatarMinecraftUuid = channelListAvatarMinecraftUuid(channel);
-        return SocialChatRowWidget.build(new SocialChatRowWidget.Props(channelLabel, channelAvatarMinecraftUuid, snippet, channelListPresenceColor(channel), selectedChannelId.get() != null && selectedChannelId.get() == channel.id(), channelHasUnread(channel), () -> selectChannel(channel.id(), false), channel.asDmChannel() != null ? () -> closeDmChannel(channel.id()) : null), innerW, ROW_H);
+        DmChannel dmChannel = channel.asDmChannel();
+        User dmRecipient = dmChannel != null ? displayUser(dmChannel.recipient()) : null;
+        BiConsumer<Float, Float> onContextMenu = dmRecipient != null ? (mx, my) -> {
+            userContextMenuUser.set(dmRecipient);
+            userContextMenuX.set(mx);
+            userContextMenuY.set(my);
+        } : null;
+        return SocialChatRowWidget.build(new SocialChatRowWidget.Props(channelLabel, channelAvatarMinecraftUuid, snippet, channelListPresenceColor(channel), Objects.equals(selectedChannelId.get(), channel.id()), channelHasUnread(channel), () -> selectChannel(channel.id(), false), dmChannel != null ? () -> closeDmChannel(channel.id()) : null, onContextMenu), innerW, ROW_H);
     }
 
     private String channelListSnippet(Channel channel) {
@@ -571,11 +592,11 @@ public class SocialMainWorkspaceComponent extends FWidget {
         if (preview == null) {
             return false;
         }
-        Integer lastReadMessageId = channel.lastReadMessageId();
+        String lastReadMessageId = channel.lastReadMessageId();
         if (lastReadMessageId == null) {
             return true;
         }
-        return preview.messageId() > lastReadMessageId;
+        return preview.messageId().compareTo(lastReadMessageId) > 0;
     }
 
     private String channelTitle(Channel channel) {
@@ -639,7 +660,55 @@ public class SocialMainWorkspaceComponent extends FWidget {
 
     private FWidget buildFriendRow(Friend friend, float innerW) {
         User friendUser = displayUser(friend.user());
-        return SocialFriendRowWidget.build(new SocialFriendRowWidget.Props(friendUser, presenceStatusLine(friendUser), Objects.equals(selectedFriendUserId.get(), friend.user().id()), () -> selectedFriendUserId.set(friend.user().id()), () -> pendingRemoveFriend.set(friend)), innerW, ROW_H);
+        return SocialFriendRowWidget.build(new SocialFriendRowWidget.Props(friendUser, presenceStatusLine(friendUser), Objects.equals(selectedFriendUserId.get(), friend.user().id()), () -> selectedFriendUserId.set(friend.user().id()), () -> pendingRemoveFriend.set(friend), friendUser != null ? (mx, my) -> {
+            userContextMenuUser.set(friendUser);
+            userContextMenuX.set(mx);
+            userContextMenuY.set(my);
+        } : null), innerW, ROW_H);
+    }
+
+    private FWidget buildUserContextMenuOverlay() {
+        User user = userContextMenuUser.get();
+        float menuX = userContextMenuX.get();
+        float menuY = userContextMenuY.get();
+        Friend friend = Alumite.INSTANCE.users().friends().stream()
+                .filter(f -> Objects.equals(f.user().id(), user.id())).findFirst().orElse(null);
+        Runnable onRemove = friend != null ? () -> pendingRemoveFriend.set(friend) : null;
+        FWidget menu = UserContextMenuWidget.build(menuX, menuY, user, () -> userContextMenuUser.set(null), onRemove);
+        return new FWidget() {
+            {
+                addChild(menu);
+            }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+                menu.layout(measure, lx, ly, lw, lh);
+            }
+
+            @Override
+            public PointerHitKind pointerHitKind() {
+                return PointerHitKind.BLOCK;
+            }
+
+            @Override
+            public void render(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+                if (!visible()) {
+                    return;
+                }
+                graphics.absolutePost(() -> menu.render(graphics, frame, deltaSeconds));
+            }
+
+            @Override
+            public boolean mouseDown(float pointerX, float pointerY, int button) {
+                return menu.mouseDown(pointerX, pointerY, button);
+            }
+
+            @Override
+            public boolean click(float pointerX, float pointerY, int button) {
+                return menu.click(pointerX, pointerY, button);
+            }
+        };
     }
 
     private FWidget buildSectionLabel(String text) {
@@ -788,7 +857,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
         if (selectedFriendUserId.get() == null) {
             return null;
         }
-        return Alumite.INSTANCE.users().friends().stream().filter(friend -> friend.user().id() == selectedFriendUserId.get()).findFirst().orElse(null);
+        return Alumite.INSTANCE.users().friends().stream().filter(friend -> Objects.equals(friend.user().id(), selectedFriendUserId.get())).findFirst().orElse(null);
     }
 
     private FWidget buildChatFooter() {
@@ -805,7 +874,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
         messageScrollYRef.set(SocialChatMessagesHandler.MESSAGE_SCROLL_ANCHOR_BOTTOM);
     }
 
-    private void selectChannel(int channelId, boolean switchToChat) {
+    private void selectChannel(String channelId, boolean switchToChat) {
         selectedChannelId.set(channelId);
         lastOpenedChannelId = channelId;
         anchorMessageScrollToBottom();
@@ -879,7 +948,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
         });
     }
 
-    private void closeDmChannel(int channelId) {
+    private void closeDmChannel(String channelId) {
         FascinatedUtils.SCHEDULED_POOL.execute(() -> {
             try {
                 DmChannel channel = Alumite.INSTANCE.channels().get(channelId) instanceof DmChannel dmChannel ? dmChannel : null;

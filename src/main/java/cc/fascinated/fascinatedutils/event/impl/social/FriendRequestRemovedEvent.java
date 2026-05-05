@@ -5,4 +5,4 @@ package cc.fascinated.fascinatedutils.event.impl.social;
  *
  * <p>{@code reason} is one of {@code "cancelled"} or {@code "declined"}.
  */
-public record FriendRequestRemovedEvent(int requestId, String reason) {}
+public record FriendRequestRemovedEvent(String requestId, String reason) {}

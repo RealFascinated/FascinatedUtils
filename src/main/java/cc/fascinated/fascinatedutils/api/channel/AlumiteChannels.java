@@ -220,7 +220,7 @@ public class AlumiteChannels {
         }
         Channel channel = channelsById.get(detailDto.id());
         if (channel instanceof DmChannel dmChannel) {
-            if (channels.stream().noneMatch(existing -> existing.id() == detailDto.id())) {
+            if (channels.stream().noneMatch(existing -> existing.id().equals(detailDto.id()))) {
                 List<Channel> updated = new ArrayList<>(channels);
                 updated.add(dmChannel);
                 channels = List.copyOf(resortChannels(updated));

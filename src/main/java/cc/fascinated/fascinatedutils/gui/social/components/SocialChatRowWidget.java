@@ -13,6 +13,8 @@ import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import net.minecraft.resources.Identifier;
 
+import java.util.function.BiConsumer;
+
 public class SocialChatRowWidget {
     private static final float AVATAR_SIZE = 32f;
     private static final float CLOSE_BTN_SIZE = 20f;
@@ -109,6 +111,12 @@ public class SocialChatRowWidget {
 
             @Override
             public boolean mouseDown(float pointerX, float pointerY, int button) {
+                if (button == 1) {
+                    if (props.onContextMenu() != null) {
+                        props.onContextMenu().accept(pointerX, pointerY);
+                    }
+                    return true;
+                }
                 if (button != 0) {
                     return false;
                 }
@@ -130,5 +138,6 @@ public class SocialChatRowWidget {
     }
 
     public record Props(String displayName, String avatarMinecraftUuid, String snippet, int presenceColor,
-                        boolean selected, boolean showUnreadBadge, Runnable onSelect, Runnable onCloseChannel) {}
+                        boolean selected, boolean showUnreadBadge, Runnable onSelect, Runnable onCloseChannel,
+                        BiConsumer<Float, Float> onContextMenu) {}
 }

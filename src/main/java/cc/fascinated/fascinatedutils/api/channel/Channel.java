@@ -139,7 +139,7 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         this.lastMessagePreview = preview;
     }
 
-    void applyLastReadMessageId(Integer lastReadMessageId) {
+    void applyLastReadMessageId(String lastReadMessageId) {
         this.lastReadMessageId = lastReadMessageId;
     }
 

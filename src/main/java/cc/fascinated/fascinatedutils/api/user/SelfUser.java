@@ -10,9 +10,8 @@ public class SelfUser {
 
     private final Alumite alumite;
 
-    public int id() {
-        Integer userId = alumite.activeUserId();
-        return userId == null ? 0 : userId;
+    public String id() {
+        return alumite.activeUserId();
     }
 
     public User user() {
