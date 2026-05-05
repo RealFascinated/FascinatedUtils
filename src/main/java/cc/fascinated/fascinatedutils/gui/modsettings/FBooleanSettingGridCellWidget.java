@@ -18,9 +18,6 @@ import cc.fascinated.fascinatedutils.gui.widgets.settings.SettingRowResetLayout;
 import cc.fascinated.fascinatedutils.gui.widgets.settings.WSettingTooltip;
 import net.minecraft.util.Mth;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
-
 /**
  * Compact boolean row used inside a two-column settings grid.
  *
@@ -28,8 +25,6 @@ import java.util.Map;
  * layouts. A trailing reset control keeps parity with full-width boolean rows.
  */
 public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatable {
-    private static final Map<BooleanSetting, AnimHandle> TOGGLE_ANIM_CACHE = new IdentityHashMap<>();
-
     private final Runnable onPersist;
     private final BooleanSetting booleanSetting;
     private final float outerWidth;
@@ -41,7 +36,7 @@ public class FBooleanSettingGridCellWidget extends FWidget implements FAnimatabl
         this.onPersist = onPersist;
         this.outerWidth = outerWidth;
         this.outerHeight = outerHeight;
-        this.toggleProgressAnim = TOGGLE_ANIM_CACHE.computeIfAbsent(booleanSetting, setting -> new AnimHandle(setting.getValue() ? 1f : 0f).speed(26f));
+        this.toggleProgressAnim = new AnimHandle(booleanSetting.getValue() ? 1f : 0f).speed(26f);
     }
 
     @Override

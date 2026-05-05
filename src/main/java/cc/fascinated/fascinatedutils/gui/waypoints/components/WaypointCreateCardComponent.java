@@ -3,85 +3,100 @@ package cc.fascinated.fascinatedutils.gui.waypoints.components;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
-import cc.fascinated.fascinatedutils.gui.declare.Ui;
-import cc.fascinated.fascinatedutils.gui.declare.UiComponent;
-import cc.fascinated.fascinatedutils.gui.declare.UiSlot;
-import cc.fascinated.fascinatedutils.gui.declare.UiView;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FCellConstraints;
+import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FRectWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FRowWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import net.minecraft.network.chat.Component;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * Declarative create-waypoint form card. Input widgets are owned by the screen (so focus/IME
- * state persists across reconciles) and passed in as props.
+ * Builds the create-waypoint form card. Input widgets are passed in by the caller so focus/IME
+ * state persists across rebuilds.
  */
-public class WaypointCreateCardComponent extends UiComponent<WaypointCreateCardComponent.Props> {
-    private final ColorSwatchButton colorSwatchButton = new ColorSwatchButton();
+public class WaypointCreateCardComponent {
 
-    public static UiView view(Props props) {
-        return Ui.component(WaypointCreateCardComponent.class, WaypointCreateCardComponent::new, props);
-    }
-
-    private static UiView sectionLabel(String text, boolean bold, int colorArgb) {
-        return Ui.label(text, colorArgb, bold, TextOverflow.VISIBLE, Align.START);
-    }
-
-    private static UiView axisColumn(String axis, UiView inputView) {
-        return Ui.column(UITheme.GAP_SM, Align.START, List.of(UiSlot.of(sectionLabel(axis, false, FascinatedGuiTheme.INSTANCE.textMuted())), UiSlot.of(inputView)));
-    }
-
-    private static FCellConstraints coordConstraints() {
-        return new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f);
-    }
-
-    @Override
-    public UiView render() {
-        Props currentProps = props();
+    public static FWidget build(String dimension, SettingColor color, FOutlinedTextInputWidget nameInput,
+                                FOutlinedTextInputWidget xInput, FOutlinedTextInputWidget yInput,
+                                FOutlinedTextInputWidget zInput, Runnable onOpenColorPicker,
+                                Runnable onCancel, Runnable onSubmit) {
         float gap = UITheme.GAP_SM;
         float sectionGap = 8f;
         float pad = UITheme.PADDING_MD;
 
-        colorSwatchButton.configure(currentProps.color(), currentProps.onOpenColorPicker());
+        ColorSwatchButton colorSwatchButton = new ColorSwatchButton();
+        colorSwatchButton.configure(color, onOpenColorPicker);
 
-        UiView nameInputView = Ui.outlinedPinned(currentProps.nameInput(), null, value -> {});
-        UiView xInputView = Ui.outlinedPinned(currentProps.xInput(), null, value -> {});
-        UiView yInputView = Ui.outlinedPinned(currentProps.yInput(), null, value -> {});
-        UiView zInputView = Ui.outlinedPinned(currentProps.zInput(), null, value -> {});
+        FRowWidget coordsRow = new FRowWidget(gap, Align.START);
+        coordsRow.addChild(axisColumn("X", xInput), new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f));
+        coordsRow.addChild(axisColumn("Y", yInput), new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f));
+        coordsRow.addChild(axisColumn("Z", zInput), new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f));
 
-        UiView coordsRow = Ui.row(gap, Align.START, List.of(Ui.slot(coordConstraints(), axisColumn("X", xInputView)), Ui.slot(coordConstraints(), axisColumn("Y", yInputView)), Ui.slot(coordConstraints(), axisColumn("Z", zInputView))));
+        FCellConstraints expandH = new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f);
+        FButtonWidget cancelButton = new FButtonWidget(onCancel,
+                () -> Component.translatable("fascinatedutils.waypoints.popup.cancel").getString(), 100f, 1, 1f, 8f, 1f, 8f, -1f);
+        FButtonWidget confirmButton = new FButtonWidget(onSubmit,
+                () -> Component.translatable("fascinatedutils.waypoints.create.confirm").getString(), 100f, 1, 1f, 8f, 1f, 8f, -1f);
+        FRowWidget actionsRow = new FRowWidget(gap, Align.CENTER);
+        actionsRow.addChild(cancelButton, expandH);
+        actionsRow.addChild(confirmButton, new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f));
 
-        UiView actionsRow = Ui.row(gap, Align.CENTER, List.of(Ui.slot(new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f), Ui.buttonStandard(currentProps.onCancel(), () -> Component.translatable("fascinatedutils.waypoints.popup.cancel").getString(), 100f)), Ui.slot(new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f), Ui.buttonStandard(currentProps.onSubmit(), () -> Component.translatable("fascinatedutils.waypoints.create.confirm").getString(), 100f))));
+        FColumnWidget body = new FColumnWidget(0f, Align.START);
+        body.addChild(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.title").getString(), true, FascinatedGuiTheme.INSTANCE.textPrimary()));
+        body.addChild(new FSpacerWidget(0f, gap));
+        body.addChild(sectionLabel(dimension, false, FascinatedGuiTheme.INSTANCE.textMuted()));
+        body.addChild(new FSpacerWidget(0f, sectionGap));
+        body.addChild(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.name").getString(), false, FascinatedGuiTheme.INSTANCE.textMuted()));
+        body.addChild(new FSpacerWidget(0f, gap));
+        body.addChild(nameInput);
+        body.addChild(new FSpacerWidget(0f, sectionGap));
+        body.addChild(coordsRow);
+        body.addChild(new FSpacerWidget(0f, sectionGap));
+        body.addChild(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.color").getString(), false, FascinatedGuiTheme.INSTANCE.textMuted()));
+        body.addChild(new FSpacerWidget(0f, gap));
+        body.addChild(colorSwatchButton);
+        body.addChild(new FSpacerWidget(0f, sectionGap));
+        body.addChild(actionsRow);
 
-        UiView body = Ui.column(0f, Align.START, List.of(UiSlot.of(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.title").getString(), true, FascinatedGuiTheme.INSTANCE.textPrimary())), UiSlot.of(Ui.spacer(0f, gap)), UiSlot.of(sectionLabel(currentProps.dimension(), false, FascinatedGuiTheme.INSTANCE.textMuted())), UiSlot.of(Ui.spacer(0f, sectionGap)), UiSlot.of(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.name").getString(), false, FascinatedGuiTheme.INSTANCE.textMuted())), UiSlot.of(Ui.spacer(0f, gap)), UiSlot.of(nameInputView), UiSlot.of(Ui.spacer(0f, sectionGap)), UiSlot.of(coordsRow), UiSlot.of(Ui.spacer(0f, sectionGap)), UiSlot.of(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.color").getString(), false, FascinatedGuiTheme.INSTANCE.textMuted())), UiSlot.of(Ui.spacer(0f, gap)), UiSlot.of(Ui.widgetSlot("waypoint-create.color-swatch", colorSwatchButton)), UiSlot.of(Ui.spacer(0f, sectionGap)), UiSlot.of(actionsRow)));
+        FColumnWidget paddedBody = new FColumnWidget(0f, Align.START);
+        paddedBody.addChild(body, new FCellConstraints().setMargins(pad, pad));
 
-        UiView paddedBody = Ui.column(0f, Align.START, List.of(Ui.slot(new FCellConstraints().setMargins(pad, pad), body)));
+        FRectWidget cardBg = new FRectWidget();
+        cardBg.setFillColorArgb(UITheme.COLOR_SURFACE);
+        cardBg.setCornerRadius(6f);
+        cardBg.setBorder(UITheme.COLOR_BORDER, 1f);
 
-        return Ui.stackLayers(UiSlot.of(Ui.rectDecorated(UITheme.COLOR_SURFACE, 6f, UITheme.COLOR_BORDER, 1f)), UiSlot.of(paddedBody));
+        FAbsoluteStackWidget card = new FAbsoluteStackWidget();
+        card.addChild(cardBg);
+        card.addChild(paddedBody);
+        return card;
     }
 
-    /**
-     * Props for {@link WaypointCreateCardComponent}.
-     *
-     * @param dimension         dimension id string displayed under the title
-     * @param color             swatch source; read every render so the picker's changes show up
-     * @param nameInput         retained name text field owned by the screen
-     * @param xInput            retained X coordinate text field
-     * @param yInput            retained Y coordinate text field
-     * @param zInput            retained Z coordinate text field
-     * @param onOpenColorPicker opens the color picker overlay
-     * @param onCancel          invoked from the cancel button
-     * @param onSubmit          invoked from the submit button
-     */
-    public record Props(String dimension, SettingColor color, FOutlinedTextInputWidget nameInput,
-                        FOutlinedTextInputWidget xInput, FOutlinedTextInputWidget yInput,
-                        FOutlinedTextInputWidget zInput, Runnable onOpenColorPicker, Runnable onCancel,
-                        Runnable onSubmit) {}
+    private static FLabelWidget sectionLabel(String text, boolean bold, int colorArgb) {
+        FLabelWidget label = new FLabelWidget();
+        label.setText(text);
+        label.setColorArgb(colorArgb);
+        label.setTextBold(bold);
+        label.setOverflow(TextOverflow.VISIBLE);
+        label.setAlignX(Align.START);
+        return label;
+    }
+
+    private static FWidget axisColumn(String axis, FOutlinedTextInputWidget input) {
+        FColumnWidget col = new FColumnWidget(UITheme.GAP_SM, Align.START);
+        col.addChild(sectionLabel(axis, false, FascinatedGuiTheme.INSTANCE.textMuted()));
+        col.addChild(input);
+        return col;
+    }
 
     private static final class ColorSwatchButton extends FButtonWidget {
         private SettingColor boundColor;

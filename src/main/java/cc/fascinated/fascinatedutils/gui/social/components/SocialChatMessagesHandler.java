@@ -7,11 +7,10 @@ import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.ChannelMessage;
 import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessagePageDTO;
 import cc.fascinated.fascinatedutils.gui.core.Align;
+import cc.fascinated.fascinatedutils.gui.core.FState;
 import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
-import cc.fascinated.fascinatedutils.gui.core.Ref;
 import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
-import cc.fascinated.fascinatedutils.gui.declare.UiSlot;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
@@ -25,6 +24,7 @@ import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -34,15 +34,14 @@ import java.util.function.BiConsumer;
  * menus, edit-message flow, delete confirmation, and scroll-position tracking.
  *
  * <p>Instantiated once as a field of {@link SocialMainWorkspaceComponent} so
- * its state survives across reconcile passes. Call
- * {@link #buildMessagesBody(Integer, float, Ref)} to obtain the scroll widget
- * for the chat body, and {@link #collectOverlayLayers(List, Integer)} to push
- * any active overlay slots into the viewport layer list.</p>
+ * its state survives across re-renders. Call
+ * {@link #buildMessagesBody(Integer, float, FState)} to obtain the scroll widget
+ * for the chat body, and {@link #collectOverlayWidgets(Integer)} to obtain any
+ * active overlay widgets to stack above the chat body.</p>
  */
 class SocialChatMessagesHandler {
     private static final float MESSAGE_SCROLL_EDGE_EPSILON = 0.01f;
     static final float MESSAGE_SCROLL_ANCHOR_BOTTOM = Float.MAX_VALUE;
-    private static final int FOCUS_EDIT_MESSAGE = 7113;
     private static final float PAD = 10f;
 
     private Integer loadingMessagesChannelId;
@@ -52,7 +51,7 @@ class SocialChatMessagesHandler {
     private float contextMenuY;
     private ChannelMessage pendingDeleteMessage;
     private ChannelMessage editingMessage;
-    private final FOutlinedTextInputWidget editMessageInput = new FOutlinedTextInputWidget(FOCUS_EDIT_MESSAGE, 4000, 20f, () -> "");
+    private final FOutlinedTextInputWidget editMessageInput = new FOutlinedTextInputWidget(4000, 20f, () -> "");
     private boolean editMessagePending;
 
     boolean hasActiveOverlay() {
@@ -64,29 +63,28 @@ class SocialChatMessagesHandler {
     }
 
     /**
-     * Appends any active overlay {@link UiSlot}s (context menu, edit dialog,
-     * delete confirmation) to {@code layers}. Must be called every reconcile
-     * pass before {@link cc.fascinated.fascinatedutils.gui.declare.Ui#stackLayers}.
+     * Returns any active overlay widgets (context menu, delete confirmation).
+     * Called from the parent layout pass to stack overlays on top of the chat body.
      */
-    void collectOverlayLayers(List<UiSlot> layers, Integer selectedChannelId) {
+    List<FWidget> collectOverlayWidgets(Integer selectedChannelId) {
+        List<FWidget> result = new ArrayList<>();
         if (contextMenuMessage != null) {
-            layers.add(UiSlot.keyed("social.overlay.msg_context",
-                    cc.fascinated.fascinatedutils.gui.declare.Ui.widgetSlot("social.msg_context.overlay", buildContextMenuOverlay())));
+            result.add(buildContextMenuOverlay());
         }
         if (pendingDeleteMessage != null) {
             ChannelMessage toDelete = pendingDeleteMessage;
-            layers.add(UiSlot.keyed("social.popup.delete_msg." + toDelete.id(),
-                    SocialDestructiveFullscreenConfirmOverlay.view(new SocialDestructiveFullscreenConfirmOverlay.Props(
-                            Component.translatable("fascinatedutils.social.delete_message.title").getString(),
-                            Component.translatable("fascinatedutils.social.delete_message.message").getString(),
-                            Component.translatable("fascinatedutils.social.delete_message.confirm").getString(),
-                            Component.translatable("fascinatedutils.social.delete_message.deny").getString(),
-                            () -> pendingDeleteMessage = null,
-                            () -> {
-                                pendingDeleteMessage = null;
-                                submitDelete(toDelete, selectedChannelId);
-                            }))));
+            result.add(SocialDestructiveFullscreenConfirmOverlay.create(new SocialDestructiveFullscreenConfirmOverlay.Props(
+                    Component.translatable("fascinatedutils.social.delete_message.title").getString(),
+                    Component.translatable("fascinatedutils.social.delete_message.message").getString(),
+                    Component.translatable("fascinatedutils.social.delete_message.confirm").getString(),
+                    Component.translatable("fascinatedutils.social.delete_message.deny").getString(),
+                    () -> pendingDeleteMessage = null,
+                    () -> {
+                        pendingDeleteMessage = null;
+                        submitDelete(toDelete, selectedChannelId);
+                    })));
         }
+        return result;
     }
 
     /**
@@ -94,9 +92,9 @@ class SocialChatMessagesHandler {
      *
      * @param selectedChannelId channel to display; a loading placeholder is shown when null
      * @param panelWidth        available width for the messages area
-     * @param messageScrollYRef shared scroll ref; {@link Float#MAX_VALUE} pins to bottom
+     * @param messageScrollY    scroll position state; {@link Float#MAX_VALUE} pins to bottom
      */
-    FWidget buildMessagesBody(Integer selectedChannelId, float panelWidth, Ref<Float> messageScrollYRef) {
+    FWidget buildMessagesBody(Integer selectedChannelId, float panelWidth, FState<Float> messageScrollY) {
         if (selectedChannelId == null) {
             return buildEmpty(Component.translatable("fascinatedutils.social.loading").getString());
         }
@@ -114,17 +112,17 @@ class SocialChatMessagesHandler {
             }
 
         FScrollColumnWidget scroll = FTheme.components().createScrollColumn(body, 3f);
-        Float savedScroll = messageScrollYRef.getValue();
+        Float savedScroll = messageScrollY.get();
         boolean anchorToBottom = savedScroll == null || savedScroll == MESSAGE_SCROLL_ANCHOR_BOTTOM;
         scroll.setPinBodyToBottomWhenContentFits(true);
         scroll.setScrollOffsetY(anchorToBottom ? MESSAGE_SCROLL_ANCHOR_BOTTOM : (savedScroll == null ? 0f : savedScroll));
         scroll.setScrollOffsetChangeListener(offset -> {
             boolean atBottom = isAtBottom(scroll, offset);
             if (atBottom) {
-                messageScrollYRef.setValue(MESSAGE_SCROLL_ANCHOR_BOTTOM);
+                messageScrollY.setQuiet(MESSAGE_SCROLL_ANCHOR_BOTTOM);
                 markChannelRead(selectedChannelId);
             } else {
-                messageScrollYRef.setValue(offset);
+                messageScrollY.setQuiet(offset);
             }
             if (offset <= MESSAGE_SCROLL_EDGE_EPSILON) {
                 triggerLoadOlderMessages(selectedChannelId);

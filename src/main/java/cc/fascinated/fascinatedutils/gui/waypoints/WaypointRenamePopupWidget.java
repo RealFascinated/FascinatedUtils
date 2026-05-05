@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.waypoints;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
@@ -12,7 +11,6 @@ import cc.fascinated.fascinatedutils.gui.widgets.FPopupWidget;
 import net.minecraft.network.chat.Component;
 
 public class WaypointRenamePopupWidget extends FPopupWidget {
-    private static final int INPUT_FOCUS_ID = 6201;
 
     private final RenameCallback onSubmit;
     private final FLabelWidget titleLabel;
@@ -31,10 +29,9 @@ public class WaypointRenamePopupWidget extends FPopupWidget {
         titleLabel.setAlignX(Align.START);
         titleLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textPrimary());
 
-        nameInput = new FOutlinedTextInputWidget(INPUT_FOCUS_ID, 64, 24f, () -> "");
+        nameInput = new FOutlinedTextInputWidget(64, 24f, () -> "");
         nameInput.setValue(currentName);
         nameInput.setOnChange(value -> newName = value);
-        nameInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
         cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.waypoints.popup.cancel").getString(), 100f, 1, 2f, 8f, 1f, 8f);
         renameButton = new FButtonWidget(this::submit, () -> Component.translatable("fascinatedutils.waypoints.rename_popup.confirm").getString(), 100f, 1, 2f, 8f, 1f, 8f);

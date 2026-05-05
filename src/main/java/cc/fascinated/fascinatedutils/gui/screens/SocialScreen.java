@@ -1,14 +1,11 @@
 package cc.fascinated.fascinatedutils.gui.screens;
 
 import cc.fascinated.fascinatedutils.gui.UIScale;
-import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
-import cc.fascinated.fascinatedutils.gui.declare.DeclarativeMountHost;
 import cc.fascinated.fascinatedutils.gui.input.UiCursorController;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.social.components.SocialMainWorkspaceComponent;
-import cc.fascinated.fascinatedutils.gui.social.components.SocialRootComponent;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;
@@ -21,30 +18,22 @@ import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.function.Consumer;
-
 public class SocialScreen extends WidgetScreen {
-    private static final int FOCUS_ADD_FRIEND = 7110;
-    private static final int FOCUS_DM_MESSAGE = 7111;
 
     private final FWidgetHost host = new FWidgetHost();
-    private final DeclarativeMountHost declarativeMountHost;
+    private final SocialMainWorkspaceComponent socialMainWorkspace;
     private final FOutlinedTextInputWidget addFriendInput;
     private final FOutlinedTextInputWidget dmMessageInput;
 
     private float scrollAccum;
-    private boolean preferredPresenceMenuOpen;
 
     public SocialScreen() {
         super(Component.translatable("fascinatedutils.social.title"));
-        addFriendInput = new FOutlinedTextInputWidget(FOCUS_ADD_FRIEND, 32, 22f, () -> Component.translatable("fascinatedutils.social.add_friend_placeholder").getString());
-        addFriendInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
-        dmMessageInput = new FOutlinedTextInputWidget(FOCUS_DM_MESSAGE, 512, 22f, () -> Component.translatable("fascinatedutils.social.dm.input_placeholder").getString());
-        dmMessageInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
+        addFriendInput = new FOutlinedTextInputWidget(32, 22f, () -> Component.translatable("fascinatedutils.social.add_friend_placeholder").getString());
+        dmMessageInput = new FOutlinedTextInputWidget(512, 22f, () -> Component.translatable("fascinatedutils.social.dm.input_placeholder").getString());
 
-        Consumer<Boolean> presenceMenuOpenSink = menuOpen -> preferredPresenceMenuOpen = menuOpen;
-        declarativeMountHost = new DeclarativeMountHost((viewportWidth, viewportHeight) -> SocialRootComponent.view(new SocialMainWorkspaceComponent.Props(viewportWidth, viewportHeight, addFriendInput, dmMessageInput, () -> Minecraft.getInstance().setScreen(null), presenceMenuOpenSink)));
-        host.setRoot(declarativeMountHost);
+        socialMainWorkspace = new SocialMainWorkspaceComponent(addFriendInput, dmMessageInput, () -> Minecraft.getInstance().setScreen(null));
+        host.setRoot(socialMainWorkspace);
     }
 
     @Override
@@ -105,8 +94,8 @@ public class SocialScreen extends WidgetScreen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (preferredPresenceMenuOpen && event.key() == GLFW.GLFW_KEY_ESCAPE) {
-            preferredPresenceMenuOpen = false;
+        if (socialMainWorkspace.isPresenceMenuOpen() && event.key() == GLFW.GLFW_KEY_ESCAPE) {
+            socialMainWorkspace.closePresenceMenu();
             return true;
         }
         boolean handled = host.dispatchInput(new InputEvent.KeyPress(event.key(), event.scancode(), event.modifiers()));
@@ -132,7 +121,7 @@ public class SocialScreen extends WidgetScreen {
     @Override
     public void removed() {
         UiCursorController.apply(Minecraft.getInstance().getWindow().handle(), UiPointerCursor.DEFAULT);
-        declarativeMountHost.dispose();
+        socialMainWorkspace.dispose();
         host.dispose();
         super.removed();
     }

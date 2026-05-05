@@ -22,7 +22,6 @@ import java.util.function.Consumer;
  * Follows the same FPopupWidget pattern as ProfileCreatePopupWidget.
  */
 public class FColorPickerPopupWidget extends FPopupWidget {
-    private static final int HEX_INPUT_FOCUS_ID = 5300;
     private static final float SV_SIZE_DESIGN = 98f;
     private static final float HUE_BAR_HEIGHT_DESIGN = 9f;
     private static final float PREVIEW_SIZE_DESIGN = 12f;
@@ -69,8 +68,7 @@ public class FColorPickerPopupWidget extends FPopupWidget {
             rainbow = checked;
             syncEditingColor();
         }, () -> "Rainbow", 84f);
-        hexInput = new FOutlinedTextInputWidget(HEX_INPUT_FOCUS_ID, 6, 13f, () -> "RRGGBB");
-        hexInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
+        hexInput = new FOutlinedTextInputWidget(6, 13f, () -> "RRGGBB");
         hexInput.setValue(toHexString());
         hexInput.setOnChange(this::onHexChanged);
         addChild(svPickerArea);
@@ -158,7 +156,7 @@ public class FColorPickerPopupWidget extends FPopupWidget {
         editingColor.setGreen(fromHsv.getGreen());
         editingColor.setBlue(fromHsv.getBlue());
         editingColor.setRainbow(rainbow);
-        if (GuiFocusState.getFocusedId() != HEX_INPUT_FOCUS_ID) {
+        if (GuiFocusState.getFocusedId() != hexInput.focusId()) {
             hexInput.setValue(toHexString());
         }
     }

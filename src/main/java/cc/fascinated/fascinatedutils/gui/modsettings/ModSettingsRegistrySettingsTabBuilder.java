@@ -8,7 +8,7 @@ import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.Ref;
+import cc.fascinated.fascinatedutils.gui.core.FState;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
@@ -30,7 +30,7 @@ public class ModSettingsRegistrySettingsTabBuilder {
 
     private static final String PERFORMANCE_CATEGORY_DISPLAY_KEY = "Performance";
 
-    public static FWidget buildSettingsTab(float paneWidth, float paneHeight, Ref<Float> scrollYRef, RegistrySettingsSubTab subTab) {
+    public static FWidget buildSettingsTab(float paneWidth, float paneHeight, FState<Float> scrollYRef, RegistrySettingsSubTab subTab) {
         float settingsContentWidth = Math.max(28f, paneWidth);
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
         float gap = 3f;
@@ -103,13 +103,13 @@ public class ModSettingsRegistrySettingsTabBuilder {
         return null;
     }
 
-    private static FWidget wrapScrollClip(FColumnWidget body, float gap, Ref<Float> scrollYRef) {
+    private static FWidget wrapScrollClip(FColumnWidget body, float gap, FState<Float> scrollYRef) {
         FScrollColumnWidget clip = new FScrollColumnWidget(body, gap);
         clip.setFillVerticalInColumn(true);
         if (scrollYRef != null) {
-            Float scrollOffsetY = scrollYRef.getValue();
+            Float scrollOffsetY = scrollYRef.get();
             clip.setScrollOffsetY(scrollOffsetY == null ? 0f : scrollOffsetY);
-            clip.setScrollOffsetChangeListener(scrollYRef::setValue);
+            clip.setScrollOffsetChangeListener(scrollYRef::setQuiet);
         }
         return clip;
     }

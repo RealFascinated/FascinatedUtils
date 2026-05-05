@@ -4,14 +4,13 @@ import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.UiSounds;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
-import cc.fascinated.fascinatedutils.gui.declare.DeclarativeMountHost;
-import cc.fascinated.fascinatedutils.gui.declare.Ui;
-import cc.fascinated.fascinatedutils.gui.declare.UiView;
 import cc.fascinated.fascinatedutils.gui.input.UiCursorController;
 import cc.fascinated.fascinatedutils.gui.modsettings.*;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FShellTabStripWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
@@ -63,14 +62,35 @@ public class ModSettingsScreen extends WidgetScreen {
         topBarTabsHost.setRoot(topBarTabStrip);
         modulesTabElement = new FModulesTabElement(this::onProfilesChanged, this::openHudLayoutEditor);
         settingsTabElement = new FSettingsTabElement();
-        root.setRoot(new DeclarativeMountHost(this::modSettingsBodyDeclarativeUi));
+        root.setRoot(buildBodyRouter());
     }
 
-    private UiView modSettingsBodyDeclarativeUi(float bodyLogicalWidth, float bodyLogicalHeight) {
-        if (bodyLogicalWidth <= 0f || bodyLogicalHeight <= 0f) {
-            throw new IllegalStateException("Declarative shell body viewport must be positive");
-        }
-        return Ui.widgetSlot("modsettings.shell." + shellContentTab.name(), shellContentTab == ShellContentTab.MODULES ? modulesTabElement : settingsTabElement);
+    private FWidget buildBodyRouter() {
+        return new FWidget() {
+            private FWidget last;
+
+            @Override
+            public boolean fillsHorizontalInRow() {
+                return true;
+            }
+
+            @Override
+            public boolean fillsVerticalInColumn() {
+                return true;
+            }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+                FWidget active = shellContentTab == ShellContentTab.MODULES ? modulesTabElement : settingsTabElement;
+                if (active != last) {
+                    clearChildren();
+                    addChild(active);
+                    last = active;
+                }
+                active.layout(measure, lx, ly, lw, lh);
+            }
+        };
     }
 
     @Override

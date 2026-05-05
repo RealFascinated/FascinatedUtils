@@ -2,22 +2,21 @@ package cc.fascinated.fascinatedutils.gui.screens;
 
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.gui.UIScale;
-import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
-import cc.fascinated.fascinatedutils.gui.declare.DeclarativeMountHost;
-import cc.fascinated.fascinatedutils.gui.declare.Ui;
-import cc.fascinated.fascinatedutils.gui.declare.UiSlot;
-import cc.fascinated.fascinatedutils.gui.declare.UiView;
+import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import cc.fascinated.fascinatedutils.gui.waypoints.components.WaypointCreateCardComponent;
+import cc.fascinated.fascinatedutils.gui.widgets.FMaxCenterInsetsWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FRectWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;
 import cc.fascinated.fascinatedutils.gui.input.UiCursorController;
 import cc.fascinated.fascinatedutils.gui.modsettings.FColorPickerPopupWidget;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.waypoints.components.WaypointCreateCardComponent;
-import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.WaypointType;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
@@ -27,17 +26,10 @@ import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class WaypointCreateScreen extends WidgetScreen {
-    private static final int FOCUS_NAME = 6202;
-    private static final int FOCUS_X = 6203;
-    private static final int FOCUS_Y = 6204;
-    private static final int FOCUS_Z = 6205;
 
     private final FWidgetHost host = new FWidgetHost();
-    private final DeclarativeMountHost declarativeMountHost;
+    private final FWidget root;
     private final double origX;
     private final double origY;
     private final double origZ;
@@ -60,36 +52,62 @@ public class WaypointCreateScreen extends WidgetScreen {
         this.dimension = dimensionId;
         this.worldKey = worldKeyValue;
 
-        nameInput = new FOutlinedTextInputWidget(FOCUS_NAME, 64, 24f, () -> "");
+        nameInput = new FOutlinedTextInputWidget(64, 24f, () -> "");
         nameInput.setValue("Waypoint");
-        nameInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
-        xInput = new FOutlinedTextInputWidget(FOCUS_X, 16, 24f, () -> "");
+        xInput = new FOutlinedTextInputWidget(16, 24f, () -> "");
         xInput.setValue(String.valueOf((int) Math.floor(xPosition)));
-        xInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
-        yInput = new FOutlinedTextInputWidget(FOCUS_Y, 16, 24f, () -> "");
+        yInput = new FOutlinedTextInputWidget(16, 24f, () -> "");
         yInput.setValue(String.valueOf((int) Math.floor(yPosition)));
-        yInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
-        zInput = new FOutlinedTextInputWidget(FOCUS_Z, 16, 24f, () -> "");
+        zInput = new FOutlinedTextInputWidget(16, 24f, () -> "");
         zInput.setValue(String.valueOf((int) Math.floor(zPosition)));
-        zInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
-        declarativeMountHost = new DeclarativeMountHost(this::buildViewport);
-        host.setRoot(declarativeMountHost);
+        this.root = buildBody();
+        host.setRoot(root);
     }
 
-    private UiView buildViewport(float viewportWidth, float viewportHeight) {
-        float cardWidth = Math.min(viewportWidth - 80f, 460f);
-        float innerMaxHeight = Math.min(viewportHeight - 80f, 640f);
-        List<UiSlot> layers = new ArrayList<>();
-        layers.add(UiSlot.of(Ui.rectPlain(0xB0000000)));
-        layers.add(UiSlot.of(Ui.centerMax(40f, 40f, cardWidth, innerMaxHeight, WaypointCreateCardComponent.view(new WaypointCreateCardComponent.Props(dimension, color, nameInput, xInput, yInput, zInput, this::openColorPicker, () -> Minecraft.getInstance().setScreen(null), this::create)))));
-        if (colorPickerWidget != null) {
-            layers.add(UiSlot.keyed("waypoint-create-color-picker", Ui.widgetSlot("picker", colorPickerWidget)));
-        }
-        return Ui.stackLayers(layers);
+    private FWidget buildBody() {
+        return new FWidget() {
+            float lastWidth = Float.NaN;
+            float lastHeight = Float.NaN;
+            FColorPickerPopupWidget lastColorPicker = null;
+
+            @Override
+            public boolean fillsHorizontalInRow() { return true; }
+
+            @Override
+            public boolean fillsVerticalInColumn() { return true; }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+                if (Math.abs(lw - lastWidth) > 0.5f || Math.abs(lh - lastHeight) > 0.5f
+                        || lastColorPicker != colorPickerWidget || childrenView().isEmpty()) {
+                    lastWidth = lw;
+                    lastHeight = lh;
+                    lastColorPicker = colorPickerWidget;
+                    clearChildren();
+                    float cardWidth = Math.min(lw - 80f, 460f);
+                    float innerMaxHeight = Math.min(lh - 80f, 640f);
+                    FRectWidget backdrop = new FRectWidget();
+                    backdrop.setFillColorArgb(0xB0000000);
+                    addChild(backdrop);
+                    addChild(new FMaxCenterInsetsWidget(40f, 40f, cardWidth, innerMaxHeight,
+                            WaypointCreateCardComponent.build(dimension, color, nameInput, xInput, yInput, zInput,
+                                    WaypointCreateScreen.this::openColorPicker,
+                                    () -> Minecraft.getInstance().setScreen(null),
+                                    WaypointCreateScreen.this::create)));
+                    if (colorPickerWidget != null) {
+                        addChild(colorPickerWidget);
+                    }
+                }
+                for (FWidget child : childrenView()) {
+                        child.layout(measure, lx, ly, lw, lh);
+                    }
+            }
+        };
     }
 
     private void openColorPicker() {
@@ -209,7 +227,6 @@ public class WaypointCreateScreen extends WidgetScreen {
     public void removed() {
         Minecraft minecraftClient = Minecraft.getInstance();
         UiCursorController.apply(minecraftClient.getWindow().handle(), UiPointerCursor.DEFAULT);
-        declarativeMountHost.dispose();
         host.dispose();
         super.removed();
     }

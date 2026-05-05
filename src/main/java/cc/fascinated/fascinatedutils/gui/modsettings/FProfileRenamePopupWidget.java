@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
@@ -14,7 +13,6 @@ import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import net.minecraft.network.chat.Component;
 
 public class FProfileRenamePopupWidget extends FPopupWidget {
-    private static final int PROFILE_NAME_INPUT_FOCUS_ID = 5202;
     private final String currentProfileName;
     private final Runnable onCancel;
     private final SubmitRenameCallback onSubmit;
@@ -46,13 +44,12 @@ public class FProfileRenamePopupWidget extends FPopupWidget {
         descriptionLabel.setOverflow(TextOverflow.WRAP);
         descriptionLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
 
-        profileNameInput = new FOutlinedTextInputWidget(PROFILE_NAME_INPUT_FOCUS_ID, 64, 24f, () -> "");
+        profileNameInput = new FOutlinedTextInputWidget(64, 24f, () -> "");
         profileNameInput.setValue(currentName);
         profileNameInput.setOnChange(value -> {
             newName = value;
             refreshValidationState();
         });
-        profileNameInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
         validationLabel = new FLabelWidget();
         validationLabel.setAlignX(Align.START);

@@ -2,13 +2,13 @@ package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
-import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
-import cc.fascinated.fascinatedutils.gui.core.Ref;
-import cc.fascinated.fascinatedutils.gui.declare.DeclarativeMountHost;
-import cc.fascinated.fascinatedutils.gui.declare.UiView;
-import cc.fascinated.fascinatedutils.gui.modsettings.components.ModSettingsModulesPresentationComponent;
+import cc.fascinated.fascinatedutils.gui.core.FNodeRegistry;
+import cc.fascinated.fascinatedutils.gui.core.FNodeWidget;
+import cc.fascinated.fascinatedutils.gui.core.FState;
+import cc.fascinated.fascinatedutils.gui.core.FWidgetNode;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FRectWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FSplitRowWithDividerWidget;
@@ -22,35 +22,44 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
-public class FModulesTabElement extends FWidget implements ModSettingsModulesPresentationComponent.HostSurface {
+public class FModulesTabElement extends FWidget {
     private static final float PROFILES_PANEL_WIDTH_DESIGN = 118f;
     private static final float SPLIT_DIVIDER_WIDTH_DESIGN = 1f;
 
     private final Runnable onProfilesChanged;
     private final Runnable onOpenHudLayoutEditor;
     private final ProfilePopupController profilePopupController;
-    private final Ref<Float> modulesGridScrollRef = Ref.of(0f);
-    private final Ref<Float> moduleSettingsScrollRef = Ref.of(0f);
-    private final Ref<String> moduleSearchRef = Ref.of("");
-    private final Ref<String> moduleSettingsSearchRef = Ref.of("");
-    private final Ref<ModuleCategory> moduleCategoryFilterRef = Ref.of(null);
-    private final Ref<Float> profilesScrollRef = Ref.of(0f);
-    private final Ref<String> newProfileNameRef = Ref.of("");
-    private final Ref<Boolean> copyDefaultProfileSettingsRef = Ref.of(false);
-    private final DeclarativeMountHost declarativeMountHost;
-    private int compositePresentationStamp;
-    private Module moduleDetailModule;
+    private final FNodeRegistry nodes = new FNodeRegistry();
+    private final FNodeWidget root;
+
+    // FState fields – null until buildRootWidget initialises them
+    private FState<Float> modulesGridScrollRef;
+    private FState<Float> moduleSettingsScrollRef;
+    private FState<String> moduleSearchRef;
+    private FState<String> moduleSettingsSearchRef;
+    private FState<ModuleCategory> moduleCategoryFilterRef;
+    private FState<Float> profilesScrollRef;
+    private FState<String> newProfileNameRef;
+    private FState<Boolean> copyDefaultProfileSettingsRef;
+    private FState<Module> moduleDetailModule;
+    private FState<Boolean> showCreateProfilePopup;
+    private FState<FColorPickerPopupWidget> colorPickerWidget;
+
+    // Plain mutable fields
     private Module settingsScrollAnchorModule;
-    private boolean showCreateProfilePopup;
-    private FColorPickerPopupWidget colorPickerWidget;
     private @Nullable FOutlinedTextInputWidget moduleDetailSearchField;
+    private @Nullable Module pendingModuleDetail;
+    private Runnable rerenderCallback = () -> {};
 
     public FModulesTabElement(Runnable onProfilesChanged, Runnable onOpenHudLayoutEditor) {
         this.onProfilesChanged = onProfilesChanged;
         this.onOpenHudLayoutEditor = onOpenHudLayoutEditor;
-        this.profilePopupController = new ProfilePopupController(this::bumpCompositeStamp, this::handleProfilesChanged, () -> profilesScrollRef.setValue(0f));
-        declarativeMountHost = new DeclarativeMountHost(this::modulesViewportDeclarative);
-        addChild(declarativeMountHost);
+        this.profilePopupController = new ProfilePopupController(
+                () -> rerenderCallback.run(),
+                this::handleProfilesChanged,
+                () -> { if (profilesScrollRef != null) profilesScrollRef.set(0f); });
+        this.root = new FNodeWidget(nodes.get("modules", this::buildRootWidget));
+        addChild(root);
     }
 
     @Override
@@ -66,62 +75,105 @@ public class FModulesTabElement extends FWidget implements ModSettingsModulesPre
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-        List<Module> modules = ModuleRegistry.INSTANCE.getModules();
-        if (moduleDetailModule != null && !modules.contains(moduleDetailModule)) {
-            moduleDetailModule = null;
-            moduleSettingsScrollRef.setValue(0f);
-            settingsScrollAnchorModule = null;
-            bumpCompositeStamp();
+        if (moduleDetailModule != null) {
+            Module detail = moduleDetailModule.get();
+            if (detail != null && !ModuleRegistry.INSTANCE.getModules().contains(detail)) {
+                moduleDetailModule.set(null);
+                if (moduleSettingsScrollRef != null) moduleSettingsScrollRef.setQuiet(0f);
+                settingsScrollAnchorModule = null;
+            }
         }
         syncScrollAnchors();
-        declarativeMountHost.layout(measure, layoutX, layoutY, layoutWidth, layoutHeight);
+        root.layout(measure, layoutX, layoutY, layoutWidth, layoutHeight);
+        nodes.gc();
     }
 
     public void reset() {
-        declarativeMountHost.dispose();
-        modulesGridScrollRef.setValue(0f);
-        moduleSettingsScrollRef.setValue(0f);
-        moduleSearchRef.setValue("");
-        moduleSettingsSearchRef.setValue("");
-        moduleCategoryFilterRef.setValue(null);
-        profilesScrollRef.setValue(0f);
-        newProfileNameRef.setValue("");
-        copyDefaultProfileSettingsRef.setValue(false);
-        moduleDetailModule = null;
+        if (modulesGridScrollRef != null) modulesGridScrollRef.set(0f);
+        if (moduleSettingsScrollRef != null) moduleSettingsScrollRef.set(0f);
+        if (moduleSearchRef != null) moduleSearchRef.set("");
+        if (moduleSettingsSearchRef != null) moduleSettingsSearchRef.set("");
+        if (moduleCategoryFilterRef != null) moduleCategoryFilterRef.set(null);
+        if (profilesScrollRef != null) profilesScrollRef.set(0f);
+        if (newProfileNameRef != null) newProfileNameRef.set("");
+        if (copyDefaultProfileSettingsRef != null) copyDefaultProfileSettingsRef.set(false);
+        if (moduleDetailModule != null) moduleDetailModule.set(null);
+        if (showCreateProfilePopup != null) showCreateProfilePopup.set(false);
+        if (colorPickerWidget != null) colorPickerWidget.set(null);
         settingsScrollAnchorModule = null;
-        showCreateProfilePopup = false;
-        colorPickerWidget = null;
         moduleDetailSearchField = null;
+        pendingModuleDetail = null;
+        rerenderCallback = () -> {};
         profilePopupController.reset();
-        bumpCompositeStamp();
     }
 
     public void disposeDeclarativeSubtree() {
-        declarativeMountHost.dispose();
+        nodes.dispose();
     }
 
     /**
-     * Opens the modules tab detail view for the given module (used when entering settings from elsewhere, e.g. HUD editor).
+     * Opens the modules tab detail view for the given module.
      *
      * @param module module whose settings page should be shown
      */
     public void navigateToModuleSettingsPage(Module module) {
-        openModuleDetail(module);
+        if (moduleDetailModule != null) {
+            openModuleDetail(module);
+        } else {
+            pendingModuleDetail = module;
+        }
     }
 
-    private void bumpCompositeStamp() {
-        compositePresentationStamp++;
+    private FWidget buildRootWidget(FWidgetNode.RenderContext ctx) {
+        FState<Integer> rerenderToken = ctx.useState(0);
+        rerenderCallback = () -> rerenderToken.update(count -> count + 1);
+        Module initialDetail = pendingModuleDetail;
+        pendingModuleDetail = null;
+        modulesGridScrollRef = ctx.useState(0f);
+        moduleSettingsScrollRef = ctx.useState(0f);
+        moduleSearchRef = ctx.useState("");
+        moduleSettingsSearchRef = ctx.useState("");
+        moduleCategoryFilterRef = ctx.useState(null);
+        profilesScrollRef = ctx.useState(0f);
+        newProfileNameRef = ctx.useState("");
+        copyDefaultProfileSettingsRef = ctx.useState(false);
+        moduleDetailModule = ctx.useState(initialDetail);
+        showCreateProfilePopup = ctx.useState(false);
+        colorPickerWidget = ctx.useState(null);
+        settingsScrollAnchorModule = initialDetail;
+        return new FWidget() {
+            private float lastWidth = Float.NaN;
+            private float lastHeight = Float.NaN;
+
+            @Override
+            public boolean fillsHorizontalInRow() {
+                return true;
+            }
+
+            @Override
+            public boolean fillsVerticalInColumn() {
+                return true;
+            }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+                boolean dimChanged = Math.abs(lw - lastWidth) > 0.5f || Math.abs(lh - lastHeight) > 0.5f;
+                if (dimChanged || childrenView().isEmpty()) {
+                    lastWidth = lw;
+                    lastHeight = lh;
+                    clearChildren();
+                    addChild(buildSurface(lw, lh));
+                }
+                for (FWidget child : childrenView()) {
+                    child.layout(measure, lx, ly, lw, lh);
+                }
+            }
+        };
     }
 
-    private UiView modulesViewportDeclarative(float viewportWidth, float viewportHeight) {
-        syncScrollAnchors();
-        return ModSettingsModulesPresentationComponent.view(new ModSettingsModulesPresentationComponent.Props(this, viewportWidth, viewportHeight, compositePresentationStamp));
-    }
-
-    @Override
-    public FWidget composeModulesPresentationSurface(float width, float height) {
+    private FWidget buildSurface(float width, float height) {
         Callback<Module> openModuleSettings = this::openModuleDetail;
-
         float splitDividerWidth = Math.max(1f, (float) Math.floor(SPLIT_DIVIDER_WIDTH_DESIGN));
         float profilesPanelWidth = Math.max(112f, Math.min(PROFILES_PANEL_WIDTH_DESIGN, width * 0.4f));
         float modulesPanelWidth = Math.max(0f, width - profilesPanelWidth - splitDividerWidth);
@@ -133,50 +185,44 @@ public class FModulesTabElement extends FWidget implements ModSettingsModulesPre
         splitDivider.setFillColorArgb(FascinatedGuiTheme.INSTANCE.borderMuted());
         splitLayout.addChild(splitDivider);
 
-        FWidget modulesPane = ModSettingsModulesTabBuilder.buildModulesTab(modulesPanelWidth, height, List.copyOf(ModuleRegistry.INSTANCE.getModules()), modulesGridScrollRef, moduleDetailModule, this::closeModuleDetail, openModuleSettings, moduleSettingsScrollRef, moduleSearchRef, moduleCategoryFilterRef, this::onModuleFiltersChanged, moduleSettingsSearchRef, this::onModuleSettingsSearchChanged, this::openColorPicker, this::lazyModuleDetailSearchField);
+        FWidget modulesPane = ModSettingsModulesTabBuilder.buildModulesTab(modulesPanelWidth, height, List.copyOf(ModuleRegistry.INSTANCE.getModules()), modulesGridScrollRef, moduleDetailModule.get(), this::closeModuleDetail, openModuleSettings, moduleSettingsScrollRef, moduleSearchRef, moduleCategoryFilterRef, this::onModuleFiltersChanged, moduleSettingsSearchRef, this::onModuleSettingsSearchChanged, this::openColorPicker, this::lazyModuleDetailSearchField);
         splitLayout.addChild(modulesPane);
 
-        ModSettingsModulesPresentationComponent.PresentationSurface rootSurface = ModSettingsModulesPresentationComponent.presentationSurfaceShell();
-        rootSurface.addChild(splitLayout);
-        if (showCreateProfilePopup) {
-            rootSurface.addChild(new FProfileCreatePopupWidget(newProfileNameRef, copyDefaultProfileSettingsRef, this::closeCreateProfilePopup, this::submitCreateProfilePopup));
+        FAbsoluteStackWidget rootStack = new FAbsoluteStackWidget();
+        rootStack.addChild(splitLayout);
+        if (showCreateProfilePopup.get()) {
+            rootStack.addChild(new FProfileCreatePopupWidget(newProfileNameRef, copyDefaultProfileSettingsRef, this::closeCreateProfilePopup, this::submitCreateProfilePopup));
         }
-        if (colorPickerWidget != null) {
-            rootSurface.addChild(colorPickerWidget);
+        FColorPickerPopupWidget picker = colorPickerWidget.get();
+        if (picker != null) {
+            rootStack.addChild(picker);
         }
-        profilePopupController.appendOverlaysTo(rootSurface);
-        return rootSurface;
+        profilePopupController.appendOverlaysTo(rootStack);
+        return rootStack;
     }
 
     private void openColorPicker(ColorSetting setting) {
-        colorPickerWidget = new FColorPickerPopupWidget(setting.getValue(), newColor -> {
+        colorPickerWidget.set(new FColorPickerPopupWidget(setting.getValue(), newColor -> {
             setting.setValue(newColor);
             ModConfig.profiles().saveActiveProfile();
-            colorPickerWidget = null;
-            bumpCompositeStamp();
-        }, () -> {
-            colorPickerWidget = null;
-            bumpCompositeStamp();
-        });
-        bumpCompositeStamp();
+            colorPickerWidget.set(null);
+        }, () -> colorPickerWidget.set(null)));
     }
 
     private void openCreateProfilePopup() {
-        if (showCreateProfilePopup) {
+        if (showCreateProfilePopup.get()) {
             return;
         }
-        showCreateProfilePopup = true;
-        newProfileNameRef.setValue("");
-        copyDefaultProfileSettingsRef.setValue(false);
-        bumpCompositeStamp();
+        showCreateProfilePopup.set(true);
+        newProfileNameRef.setQuiet("");
+        copyDefaultProfileSettingsRef.setQuiet(false);
     }
 
     private void closeCreateProfilePopup() {
-        if (!showCreateProfilePopup) {
+        if (!showCreateProfilePopup.get()) {
             return;
         }
-        showCreateProfilePopup = false;
-        bumpCompositeStamp();
+        showCreateProfilePopup.set(false);
     }
 
     private void submitCreateProfilePopup(String requestedProfileName, boolean copyDefaultProfileSettings) {
@@ -188,52 +234,46 @@ public class FModulesTabElement extends FWidget implements ModSettingsModulesPre
             return;
         }
         ModConfig.profiles().createProfile(normalizedName, copyDefaultProfileSettings);
-        showCreateProfilePopup = false;
-        profilesScrollRef.setValue(0f);
-        bumpCompositeStamp();
+        showCreateProfilePopup.set(false);
+        profilesScrollRef.setQuiet(0f);
         handleProfilesChanged();
     }
 
     private void handleProfilesChanged() {
-        bumpCompositeStamp();
+        rerenderCallback.run();
         onProfilesChanged.run();
     }
 
     private void onModuleFiltersChanged() {
-        modulesGridScrollRef.setValue(0f);
-        bumpCompositeStamp();
+        modulesGridScrollRef.set(0f);
     }
 
     private void onModuleSettingsSearchChanged() {
-        moduleSettingsScrollRef.setValue(0f);
-        bumpCompositeStamp();
+        moduleSettingsScrollRef.set(0f);
     }
 
     private void openModuleDetail(Module module) {
-        if (moduleDetailModule == module) {
+        if (moduleDetailModule.get() == module) {
             return;
         }
-        moduleDetailModule = module;
-        moduleSettingsScrollRef.setValue(0f);
-        moduleSettingsSearchRef.setValue("");
+        moduleDetailModule.set(module);
+        moduleSettingsScrollRef.setQuiet(0f);
+        moduleSettingsSearchRef.setQuiet("");
         settingsScrollAnchorModule = module;
-        bumpCompositeStamp();
     }
 
     private void closeModuleDetail() {
-        if (moduleDetailModule == null) {
+        if (moduleDetailModule.get() == null) {
             return;
         }
-        moduleDetailModule = null;
+        moduleDetailModule.set(null);
         moduleDetailSearchField = null;
-        moduleSettingsSearchRef.setValue("");
-        bumpCompositeStamp();
+        moduleSettingsSearchRef.setQuiet("");
     }
 
     private FOutlinedTextInputWidget lazyModuleDetailSearchField() {
         if (moduleDetailSearchField == null) {
             moduleDetailSearchField = ModSettingsModuleDetailBuilder.createSharedModuleDetailSearchField();
-            moduleDetailSearchField.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
         }
         return moduleDetailSearchField;
     }
@@ -242,9 +282,13 @@ public class FModulesTabElement extends FWidget implements ModSettingsModulesPre
         if (moduleDetailModule == null) {
             return;
         }
-        if (settingsScrollAnchorModule != moduleDetailModule) {
-            moduleSettingsScrollRef.setValue(0f);
-            settingsScrollAnchorModule = moduleDetailModule;
+        Module detail = moduleDetailModule.get();
+        if (detail == null) {
+            return;
+        }
+        if (settingsScrollAnchorModule != detail) {
+            if (moduleSettingsScrollRef != null) moduleSettingsScrollRef.setQuiet(0f);
+            settingsScrollAnchorModule = detail;
         }
     }
 }

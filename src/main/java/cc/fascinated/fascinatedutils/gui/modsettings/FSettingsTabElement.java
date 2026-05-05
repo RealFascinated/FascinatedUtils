@@ -1,27 +1,28 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.Ref;
-import cc.fascinated.fascinatedutils.gui.declare.DeclarativeMountHost;
-import cc.fascinated.fascinatedutils.gui.declare.UiView;
-import cc.fascinated.fascinatedutils.gui.modsettings.components.ModSettingsSettingsPresentationComponent;
+import cc.fascinated.fascinatedutils.gui.core.FNodeRegistry;
+import cc.fascinated.fascinatedutils.gui.core.FNodeWidget;
+import cc.fascinated.fascinatedutils.gui.core.FState;
+import cc.fascinated.fascinatedutils.gui.core.FWidgetNode;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import net.minecraft.client.resources.language.I18n;
-import org.jspecify.annotations.NonNull;
 
-public class FSettingsTabElement extends FWidget implements ModSettingsSettingsPresentationComponent.HostSurface {
+public class FSettingsTabElement extends FWidget {
 
-    private final Ref<Float> generalRegistryScrollRef = Ref.of(0f);
-    private final Ref<Float> performanceRegistryScrollRef = Ref.of(0f);
-    private final Ref<ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab> registrySubTabRef = Ref.of(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
-    private final DeclarativeMountHost declarativeMountHost;
-    private int compositePresentationStamp;
+    private final FNodeRegistry nodes = new FNodeRegistry();
+    private final FNodeWidget root;
+
+    // FState fields – null until buildRootWidget initialises them
+    private FState<Float> generalRegistryScrollRef;
+    private FState<Float> performanceRegistryScrollRef;
+    private FState<ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab> registrySubTabRef;
 
     public FSettingsTabElement() {
-        declarativeMountHost = new DeclarativeMountHost(this::settingsViewportDeclarative);
-        addChild(declarativeMountHost);
+        root = new FNodeWidget(nodes.get("settings", this::buildRootWidget));
+        addChild(root);
     }
 
     @Override
@@ -37,31 +38,56 @@ public class FSettingsTabElement extends FWidget implements ModSettingsSettingsP
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
         setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-        declarativeMountHost.layout(measure, layoutX, layoutY, layoutWidth, layoutHeight);
+        root.layout(measure, layoutX, layoutY, layoutWidth, layoutHeight);
+        nodes.gc();
     }
 
     public void reset() {
-        declarativeMountHost.dispose();
-        generalRegistryScrollRef.setValue(0f);
-        performanceRegistryScrollRef.setValue(0f);
-        registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
-        bumpCompositeStamp();
+        if (generalRegistryScrollRef != null) generalRegistryScrollRef.set(0f);
+        if (performanceRegistryScrollRef != null) performanceRegistryScrollRef.set(0f);
+        if (registrySubTabRef != null) registrySubTabRef.set(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
     }
 
     public void disposeDeclarativeSubtree() {
-        declarativeMountHost.dispose();
+        nodes.dispose();
     }
 
-    private void bumpCompositeStamp() {
-        compositePresentationStamp++;
+    private FWidget buildRootWidget(FWidgetNode.RenderContext ctx) {
+        generalRegistryScrollRef = ctx.useState(0f);
+        performanceRegistryScrollRef = ctx.useState(0f);
+        registrySubTabRef = ctx.useState(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
+        return new FWidget() {
+            private float lastWidth = Float.NaN;
+            private float lastHeight = Float.NaN;
+
+            @Override
+            public boolean fillsHorizontalInRow() {
+                return true;
+            }
+
+            @Override
+            public boolean fillsVerticalInColumn() {
+                return true;
+            }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+                boolean dimChanged = Math.abs(lw - lastWidth) > 0.5f || Math.abs(lh - lastHeight) > 0.5f;
+                if (dimChanged || childrenView().isEmpty()) {
+                    lastWidth = lw;
+                    lastHeight = lh;
+                    clearChildren();
+                    addChild(buildSurface(lw, lh));
+                }
+                for (FWidget child : childrenView()) {
+                    child.layout(measure, lx, ly, lw, lh);
+                }
+            }
+        };
     }
 
-    private UiView settingsViewportDeclarative(float viewportWidth, float viewportHeight) {
-        return ModSettingsSettingsPresentationComponent.view(new ModSettingsSettingsPresentationComponent.Props(this, viewportWidth, viewportHeight, compositePresentationStamp));
-    }
-
-    @Override
-    public FWidget composeSettingsPresentationSurface(float width, float height) {
+    private FWidget buildSurface(float width, float height) {
         float controlsHeight = SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN;
         float columnGap = 4f;
         float tabStripTopInset = 4f;
@@ -81,7 +107,7 @@ public class FSettingsTabElement extends FWidget implements ModSettingsSettingsP
             }
         };
 
-        FRowWidget tabRow = getFRowWidget(controlsHeight);
+        FRowWidget tabRow = buildTabRow(controlsHeight);
 
         FRowWidget paddedTabStrip = new FRowWidget(0f, Align.START) {
             @Override
@@ -103,18 +129,17 @@ public class FSettingsTabElement extends FWidget implements ModSettingsSettingsP
         mainColumn.addChild(new FSpacerWidget(width, tabStripTopInset));
         mainColumn.addChild(paddedTabStrip);
 
-        Ref<Float> activeScroll = registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL ? generalRegistryScrollRef : performanceRegistryScrollRef;
+        ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab activeSubTab = registrySubTabRef.get();
+        FState<Float> activeScroll = activeSubTab == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL ? generalRegistryScrollRef : performanceRegistryScrollRef;
         float settingsPaneHeight = Math.max(1f, height - tabStripHeight);
-        FWidget settingsContent = ModSettingsRegistrySettingsTabBuilder.buildSettingsTab(width, settingsPaneHeight, activeScroll, registrySubTabRef.getValue());
+        FWidget settingsContent = ModSettingsRegistrySettingsTabBuilder.buildSettingsTab(width, settingsPaneHeight, activeScroll, activeSubTab);
         settingsContent.setCellConstraints(new FCellConstraints().setExpandVertical(true));
         mainColumn.addChild(settingsContent);
 
-        ModSettingsSettingsPresentationComponent.PresentationSurface rootSurface = ModSettingsSettingsPresentationComponent.presentationSurfaceShell();
-        rootSurface.addChild(mainColumn);
-        return rootSurface;
+        return mainColumn;
     }
 
-    private @NonNull FRowWidget getFRowWidget(float controlsHeight) {
+    private FRowWidget buildTabRow(float controlsHeight) {
         FRowWidget tabRow = new FRowWidget(3f, Align.CENTER) {
             @Override
             public boolean fillsHorizontalInRow() {
@@ -128,11 +153,10 @@ public class FSettingsTabElement extends FWidget implements ModSettingsSettingsP
         };
 
         FButtonWidget generalTabButton = new SelectableButtonWidget(() -> {
-            if (registrySubTabRef.getValue() != ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL) {
-                registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
-                bumpCompositeStamp();
+            if (registrySubTabRef.get() != ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL) {
+                registrySubTabRef.set(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
             }
-        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_general"), 56f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL) {
+        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_general"), 56f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> registrySubTabRef.get() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
@@ -140,11 +164,10 @@ public class FSettingsTabElement extends FWidget implements ModSettingsSettingsP
         };
 
         FButtonWidget performanceTabButton = new SelectableButtonWidget(() -> {
-            if (registrySubTabRef.getValue() != ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE) {
-                registrySubTabRef.setValue(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE);
-                bumpCompositeStamp();
+            if (registrySubTabRef.get() != ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE) {
+                registrySubTabRef.set(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE);
             }
-        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_performance"), 92f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> registrySubTabRef.getValue() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE) {
+        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_performance"), 92f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> registrySubTabRef.get() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
@@ -155,5 +178,4 @@ public class FSettingsTabElement extends FWidget implements ModSettingsSettingsP
         tabRow.addChild(performanceTabButton);
         return tabRow;
     }
-
 }

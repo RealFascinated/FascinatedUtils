@@ -3,9 +3,7 @@ package cc.fascinated.fascinatedutils.gui.modsettings;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
-import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
-import cc.fascinated.fascinatedutils.gui.core.Ref;
-import cc.fascinated.fascinatedutils.gui.declare.DeclarativeMountHost;
+import cc.fascinated.fascinatedutils.gui.core.FState;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
@@ -27,16 +25,15 @@ public class ModSettingsModulesTabBuilder {
     private static final float GRID_MIN_CELL_WIDTH_DESIGN = 90f;
     private static final float GRID_MARGIN_X_DESIGN = 8f;
     private static final int MODULE_CARD_GRID_MAX_COLUMNS = 3;
-    private static final int MODULES_SEARCH_FOCUS_ID = 5001;
 
-    public static FWidget buildModulesTab(float paneWidth, float paneHeight, List<Module> modules, Ref<Float> modulesGridScrollYRef, Module settingsModule, Runnable onBackFromModuleSettings, Callback<Module> onOpenModuleSettings, Ref<Float> moduleSettingsScrollYRef, Ref<String> moduleSearchRef, Ref<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged, Ref<String> settingsSearchRef, Runnable onSettingsSearchChanged, Consumer<ColorSetting> openColorPicker, Supplier<FOutlinedTextInputWidget> moduleDetailSearchFieldSupplier) {
+    public static FWidget buildModulesTab(float paneWidth, float paneHeight, List<Module> modules, FState<Float> modulesGridScrollYRef, Module settingsModule, Runnable onBackFromModuleSettings, Callback<Module> onOpenModuleSettings, FState<Float> moduleSettingsScrollYRef, FState<String> moduleSearchRef, FState<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged, FState<String> settingsSearchRef, Runnable onSettingsSearchChanged, Consumer<ColorSetting> openColorPicker, Supplier<FOutlinedTextInputWidget> moduleDetailSearchFieldSupplier) {
         if (settingsModule != null) {
-            return new DeclarativeMountHost((paneLogicalWidth, paneLogicalHeight) -> ModSettingsModuleDetailBuilder.moduleDetailViewportUi(paneLogicalWidth, paneLogicalHeight, settingsModule, onBackFromModuleSettings, moduleSettingsScrollYRef, settingsSearchRef, onSettingsSearchChanged, openColorPicker, moduleDetailSearchFieldSupplier.get()));
+            return ModSettingsModuleDetailBuilder.moduleDetailViewportUi(paneWidth, paneHeight, settingsModule, onBackFromModuleSettings, moduleSettingsScrollYRef, settingsSearchRef, onSettingsSearchChanged, openColorPicker, moduleDetailSearchFieldSupplier.get());
         }
         return buildModuleCardGrid(paneWidth, paneHeight, modules, modulesGridScrollYRef, onOpenModuleSettings, moduleSearchRef, moduleCategoryFilterRef, onFiltersChanged);
     }
 
-    private static FWidget buildModuleCardGrid(float paneWidth, float paneHeight, List<Module> modules, Ref<Float> modulesGridScrollYRef, Callback<Module> onOpenModuleSettings, Ref<String> moduleSearchRef, Ref<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged) {
+    private static FWidget buildModuleCardGrid(float paneWidth, float paneHeight, List<Module> modules, FState<Float> modulesGridScrollYRef, Callback<Module> onOpenModuleSettings, FState<String> moduleSearchRef, FState<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged) {
         float paddedInnerWidth = Math.max(0f, paneWidth - 2f * GRID_MARGIN_X_DESIGN);
         float settingsContentWidth = Math.max(28f, paddedInnerWidth);
         float gapY = 6f;
@@ -46,14 +43,13 @@ public class ModSettingsModulesTabBuilder {
         float cellWidth = (settingsContentWidth - gapX * Math.max(0, columnCount - 1)) / Math.max(1, columnCount);
         float cellHeight = FModuleVisibilityCardWidget.stackedCellOuterHeightPx();
 
-        FOutlinedTextInputWidget searchInput = new FOutlinedTextInputWidget(MODULES_SEARCH_FOCUS_ID, 180, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN, () -> "Search modules...");
-        String currentSearch = moduleSearchRef.getValue();
+        FOutlinedTextInputWidget searchInput = new FOutlinedTextInputWidget(180, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN, () -> "Search modules...");
+        String currentSearch = moduleSearchRef.get();
         searchInput.setValue(currentSearch == null ? "" : currentSearch);
         searchInput.setOnChange(text -> {
-            moduleSearchRef.setValue(text);
+            moduleSearchRef.set(text);
             onFiltersChanged.run();
         });
-        searchInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
         FRowWidget controlsRow = new FRowWidget(3f, Align.CENTER) {
             @Override
@@ -69,9 +65,9 @@ public class ModSettingsModulesTabBuilder {
         };
         categoryButtonsRow.setCellConstraints(new FCellConstraints().setExpandVertical(true));
         FButtonWidget allCategoriesButton = new SelectableButtonWidget(() -> {
-            moduleCategoryFilterRef.setValue(null);
+            moduleCategoryFilterRef.set(null);
             onFiltersChanged.run();
-        }, () -> "All", 62f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> moduleCategoryFilterRef.getValue() == null) {
+        }, () -> "All", 62f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> moduleCategoryFilterRef.get() == null) {
             @Override
             public float intrinsicWidthForRow(UIRenderer measure, float heightBudget) {
                 return measure.measureTextWidth("All", false) + 2f * 7f;
@@ -86,9 +82,9 @@ public class ModSettingsModulesTabBuilder {
         categoryButtonsRow.addChild(allCategoriesButton);
         for (ModuleCategory moduleCategory : ModuleCategory.values()) {
             FButtonWidget categoryButton = new SelectableButtonWidget(() -> {
-                moduleCategoryFilterRef.setValue(moduleCategory);
+                moduleCategoryFilterRef.set(moduleCategory);
                 onFiltersChanged.run();
-            }, moduleCategory::getDisplayName, 62f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> moduleCategory == moduleCategoryFilterRef.getValue()) {
+            }, moduleCategory::getDisplayName, 62f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> moduleCategory == moduleCategoryFilterRef.get()) {
                 @Override
                 public float intrinsicWidthForRow(UIRenderer measure, float heightBudget) {
                     return measure.measureTextWidth(moduleCategory.getDisplayName(), false) + 2f * 7f;
@@ -123,8 +119,8 @@ public class ModSettingsModulesTabBuilder {
         paddedControlsRow.addChild(new FSpacerWidget(horizontalInset, 0f));
         FWidget controlsRowHost = new FMinWidthHostWidget(settingsContentWidth, paddedControlsRow);
 
-        String searchLower = (moduleSearchRef.getValue() == null ? "" : moduleSearchRef.getValue()).toLowerCase(Locale.ROOT);
-        ModuleCategory selectedCategory = moduleCategoryFilterRef.getValue();
+        String searchLower = (moduleSearchRef.get() == null ? "" : moduleSearchRef.get()).toLowerCase(Locale.ROOT);
+        ModuleCategory selectedCategory = moduleCategoryFilterRef.get();
         List<Module> filteredModules = modules == null ? new ArrayList<>() : modules.stream().filter(module -> selectedCategory == null || module.getCategory() == selectedCategory).filter(module -> module.getDisplayName().toLowerCase(Locale.ROOT).contains(searchLower)).toList();
 
         FColumnWidget scrollBody = new FColumnWidget(gapY, Align.CENTER);
@@ -164,13 +160,13 @@ public class ModSettingsModulesTabBuilder {
         return new FModulesPaneLayoutWidget(controlsRowHost, modulesScrollClip);
     }
 
-    private static FScrollColumnWidget createModulesGridScrollClip(FColumnWidget scrollBody, float gapY, Ref<Float> modulesGridScrollYRef) {
+    private static FScrollColumnWidget createModulesGridScrollClip(FColumnWidget scrollBody, float gapY, FState<Float> modulesGridScrollYRef) {
         FScrollColumnWidget clip = FTheme.components().createScrollColumn(scrollBody, gapY);
         clip.setFillVerticalInColumn(true);
         if (modulesGridScrollYRef != null) {
-            Float scrollOffsetY = modulesGridScrollYRef.getValue();
+            Float scrollOffsetY = modulesGridScrollYRef.get();
             clip.setScrollOffsetY(scrollOffsetY == null ? 0f : scrollOffsetY);
-            clip.setScrollOffsetChangeListener(modulesGridScrollYRef::setValue);
+            clip.setScrollOffsetChangeListener(modulesGridScrollYRef::setQuiet);
         }
         return clip;
     }

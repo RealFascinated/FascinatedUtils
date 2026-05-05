@@ -12,8 +12,6 @@ import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
 public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
@@ -22,7 +20,6 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     private static final float ACTION_STRIP_HEIGHT_DESIGN = 20f;
     private static final int TITLE_MAX_LINES = 2;
     private static final int ACTION_STRIP_COUNT = 2;
-    private static final Map<Object, AnimHandle> TOGGLE_ANIM_CACHE = new IdentityHashMap<>();
     private final float cardWidthLogical;
     private final float cardHeightLogical;
     private final Supplier<String> titleSupplier;
@@ -31,7 +28,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     private final Supplier<Boolean> enabledSupplier;
     private final Callback<Boolean> onEnabledChange;
     private final AnimHandle toggleStripProgressAnim;
-    public FVisibilityCardWidget(Object animKey, float layoutWidth, float layoutHeight, Supplier<String> titleSupplier, Supplier<Boolean> settingsAvailableSupplier, Runnable onOpenSettings, Supplier<Boolean> enabledSupplier, Callback<Boolean> onEnabledChange) {
+    public FVisibilityCardWidget(float layoutWidth, float layoutHeight, Supplier<String> titleSupplier, Supplier<Boolean> settingsAvailableSupplier, Runnable onOpenSettings, Supplier<Boolean> enabledSupplier, Callback<Boolean> onEnabledChange) {
         this.cardWidthLogical = Math.max(0f, layoutWidth);
         this.cardHeightLogical = Math.max(0f, layoutHeight);
         this.titleSupplier = titleSupplier;
@@ -39,10 +36,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
         this.onOpenSettings = onOpenSettings;
         this.enabledSupplier = enabledSupplier;
         this.onEnabledChange = onEnabledChange;
-        this.toggleStripProgressAnim = TOGGLE_ANIM_CACHE.computeIfAbsent(animKey, k -> {
-            AnimHandle handle = new AnimHandle(enabledSupplier.get() ? 1f : 0f).speed(26f);
-            return handle;
-        });
+        this.toggleStripProgressAnim = new AnimHandle(enabledSupplier.get() ? 1f : 0f).speed(26f);
     }
 
     public static float stackedCellOuterHeightPx() {

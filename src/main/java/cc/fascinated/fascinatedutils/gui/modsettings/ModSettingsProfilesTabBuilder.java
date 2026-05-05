@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.Ref;
+import cc.fascinated.fascinatedutils.gui.core.FState;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
@@ -16,13 +16,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class ModSettingsProfilesTabBuilder {
-    public static FWidget buildProfilesTab(float paneWidth, float paneHeight, Ref<Float> scrollYRef, Ref<String> newProfileNameRef, ProfileActionCallback onProfileAction, Runnable onProfilesChanged) {
+    public static FWidget buildProfilesTab(float paneWidth, float paneHeight, FState<Float> scrollYRef, FState<String> newProfileNameRef, ProfileActionCallback onProfileAction, Runnable onProfilesChanged) {
         return buildProfilesTab(paneWidth, paneHeight, scrollYRef, newProfileNameRef, onProfileAction, onProfilesChanged, null);
     }
 
-    public static FWidget buildProfilesTab(float paneWidth, float paneHeight, Ref<Float> scrollYRef, Ref<String> newProfileNameRef, ProfileActionCallback onProfileAction, Runnable onProfilesChanged, Runnable onOpenHudLayoutEditor) {
+    public static FWidget buildProfilesTab(float paneWidth, float paneHeight, FState<Float> scrollYRef, FState<String> newProfileNameRef, ProfileActionCallback onProfileAction, Runnable onProfilesChanged, Runnable onOpenHudLayoutEditor) {
         return buildProfilesPane(paneWidth, paneHeight, scrollYRef, () -> {
-            String requestedName = newProfileNameRef.getValue();
+            String requestedName = newProfileNameRef.get();
             if (requestedName == null || requestedName.isBlank()) {
                 return;
             }
@@ -30,16 +30,16 @@ public class ModSettingsProfilesTabBuilder {
                 return;
             }
             ModConfig.profiles().createProfile(requestedName, false);
-            newProfileNameRef.setValue("");
+            newProfileNameRef.set("");
             onProfilesChanged.run();
         }, onProfileAction, onProfilesChanged, onOpenHudLayoutEditor);
     }
 
-    public static FWidget buildProfilesPane(float paneWidth, float paneHeight, Ref<Float> scrollYRef, Runnable onOpenCreateProfilePopup, ProfileActionCallback onProfileAction, Runnable onProfilesChanged) {
+    public static FWidget buildProfilesPane(float paneWidth, float paneHeight, FState<Float> scrollYRef, Runnable onOpenCreateProfilePopup, ProfileActionCallback onProfileAction, Runnable onProfilesChanged) {
         return buildProfilesPane(paneWidth, paneHeight, scrollYRef, onOpenCreateProfilePopup, onProfileAction, onProfilesChanged, null);
     }
 
-    public static FWidget buildProfilesPane(float paneWidth, float paneHeight, Ref<Float> scrollYRef, Runnable onOpenCreateProfilePopup, ProfileActionCallback onProfileAction, Runnable onProfilesChanged, Runnable onOpenHudLayoutEditor) {
+    public static FWidget buildProfilesPane(float paneWidth, float paneHeight, FState<Float> scrollYRef, Runnable onOpenCreateProfilePopup, ProfileActionCallback onProfileAction, Runnable onProfilesChanged, Runnable onOpenHudLayoutEditor) {
         float settingsContentWidth = Math.max(28f, paneWidth);
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
         float controlsHeight = SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN;
@@ -123,13 +123,13 @@ public class ModSettingsProfilesTabBuilder {
         return new FMinWidthHostWidget(contentWidth, row);
     }
 
-    private static FWidget wrapScrollClip(FColumnWidget body, float gap, Ref<Float> scrollYRef) {
+    private static FWidget wrapScrollClip(FColumnWidget body, float gap, FState<Float> scrollYRef) {
         FScrollColumnWidget clip = FTheme.components().createScrollColumn(body, gap);
         clip.setFillVerticalInColumn(true);
         if (scrollYRef != null) {
-            Float scrollOffsetY = scrollYRef.getValue();
+            Float scrollOffsetY = scrollYRef.get();
             clip.setScrollOffsetY(scrollOffsetY == null ? 0f : scrollOffsetY);
-            clip.setScrollOffsetChangeListener(scrollYRef::setValue);
+            clip.setScrollOffsetChangeListener(scrollYRef::setQuiet);
         }
         return clip;
     }

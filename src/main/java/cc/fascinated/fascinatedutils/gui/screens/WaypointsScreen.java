@@ -3,9 +3,7 @@ package cc.fascinated.fascinatedutils.gui.screens;
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
-import cc.fascinated.fascinatedutils.gui.declare.DeclarativeMountHost;
-import cc.fascinated.fascinatedutils.gui.declare.Ui;
-import cc.fascinated.fascinatedutils.gui.declare.UiView;
+
 import cc.fascinated.fascinatedutils.gui.input.UiCursorController;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
@@ -24,7 +22,7 @@ import org.jspecify.annotations.NonNull;
 
 public class WaypointsScreen extends WidgetScreen {
     private final FWidgetHost host = new FWidgetHost();
-    private final DeclarativeMountHost declarativeMountHost;
+    private final WaypointsRootComponent rootWidget;
     private final String worldKey;
     private float scrollAccum;
 
@@ -38,16 +36,14 @@ public class WaypointsScreen extends WidgetScreen {
             ServerData serverData = minecraftClient.getCurrentServer();
             this.worldKey = "mp:" + (serverData != null ? serverData.ip : "unknown");
         }
-        WaypointsListComponent.DimensionLabelFormatter dimensionLabelFormatter = this::formatDimension;
-        this.declarativeMountHost = new DeclarativeMountHost((viewportWidth, viewportHeight) -> viewportView(viewportWidth, viewportHeight, dimensionLabelFormatter));
-        host.setRoot(declarativeMountHost);
-    }
-
-    private UiView viewportView(float viewportWidth, float viewportHeight, WaypointsListComponent.DimensionLabelFormatter dimensionLabelFormatter) {
-        return Ui.component(WaypointsRootComponent.class, WaypointsRootComponent::new, new WaypointsRootComponent.Props(viewportWidth, viewportHeight, ModConfig.waypoints().getForWorld(worldKey), this::openCreateScreen, () -> Minecraft.getInstance().setScreen(null), waypoint -> Minecraft.getInstance().setScreen(new WaypointEditScreen(waypoint)), waypoint -> {
-            waypoint.setVisible(!waypoint.isVisible());
-            ModConfig.waypoints().save();
-        }, dimensionLabelFormatter));
+        this.rootWidget = new WaypointsRootComponent(
+                worldKey,
+                this::openCreateScreen,
+                () -> Minecraft.getInstance().setScreen(null),
+                waypoint -> Minecraft.getInstance().setScreen(new WaypointEditScreen(waypoint)),
+                waypoint -> { waypoint.setVisible(!waypoint.isVisible()); ModConfig.waypoints().save(); },
+                this::formatDimension);
+        host.setRoot(rootWidget);
     }
 
     private String formatDimension(String dimensionId) {
@@ -150,7 +146,7 @@ public class WaypointsScreen extends WidgetScreen {
     public void removed() {
         Minecraft minecraftClient = Minecraft.getInstance();
         UiCursorController.apply(minecraftClient.getWindow().handle(), UiPointerCursor.DEFAULT);
-        declarativeMountHost.dispose();
+        rootWidget.dispose();
         host.dispose();
         super.removed();
     }

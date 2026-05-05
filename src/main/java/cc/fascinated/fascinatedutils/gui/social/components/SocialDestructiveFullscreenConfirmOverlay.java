@@ -1,9 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.social.components;
 
 import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
-import cc.fascinated.fascinatedutils.gui.declare.Ui;
-import cc.fascinated.fascinatedutils.gui.declare.UiComponent;
-import cc.fascinated.fascinatedutils.gui.declare.UiView;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.widgets.FConfirmPopupWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
@@ -11,22 +8,16 @@ import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 /**
  * Confirmation overlay that covers the full viewport and centers the confirm dialog.
  */
-public final class SocialDestructiveFullscreenConfirmOverlay extends UiComponent<SocialDestructiveFullscreenConfirmOverlay.Props> {
+public final class SocialDestructiveFullscreenConfirmOverlay {
 
     /**
-     * Mounts this overlay subtree (props are rebound every reconcile pass).
+     * Creates a fullscreen confirm overlay widget with the given props.
      *
-     * @param props declarative overlay configuration
-     * @return view node consumed by {@link cc.fascinated.fascinatedutils.gui.declare.DeclarativeMountHost}
+     * @param props overlay configuration
+     * @return widget ready for inclusion in the layout tree
      */
-    public static UiView view(Props props) {
-        return Ui.component(SocialDestructiveFullscreenConfirmOverlay.class, SocialDestructiveFullscreenConfirmOverlay::new, props);
-    }
-
-    @Override
-    public UiView render() {
-        Props overlayProps = props();
-        return Ui.custom(previousWidget -> previousWidget instanceof PopupHost existing ? existing.refresh(overlayProps) : new PopupHost(overlayProps));
+    public static FWidget create(Props props) {
+        return new PopupHost(props);
     }
 
     /**
@@ -40,49 +31,14 @@ public final class SocialDestructiveFullscreenConfirmOverlay extends UiComponent
      * @param onConfirm    confirm hook
      */
     public record Props(String title, String message, String confirmLabel, String denyLabel, Runnable onDeny,
-                        Runnable onConfirm) {
-        private Props textualCopy() {
-            return new Props(title, message, confirmLabel, denyLabel, () -> {}, () -> {});
-        }
-    }
+                        Runnable onConfirm) {}
 
     private static final class PopupHost extends FWidget {
-        private Props textualPropsSnapshot;
-        private Runnable latestDeclaredDeny;
-        private Runnable latestDeclaredConfirm;
-        private FConfirmPopupWidget popupWidget;
 
-        PopupHost(Props overlayProps) {
-            this.textualPropsSnapshot = overlayProps.textualCopy();
-            this.latestDeclaredDeny = overlayProps.onDeny();
-            this.latestDeclaredConfirm = overlayProps.onConfirm();
-            this.popupWidget = new FConfirmPopupWidget(textualPropsSnapshot.title(), textualPropsSnapshot.message(), textualPropsSnapshot.confirmLabel(), textualPropsSnapshot.denyLabel(), FConfirmPopupWidget.ConfirmStyle.DESTRUCTIVE, this::bridgeDeny, this::bridgeConfirm);
-            addChild(popupWidget);
-        }
-
-        PopupHost refresh(Props nextDeclaredProps) {
-            Props nextTextual = nextDeclaredProps.textualCopy();
-            latestDeclaredDeny = nextDeclaredProps.onDeny();
-            latestDeclaredConfirm = nextDeclaredProps.onConfirm();
-            if (!nextTextual.equals(textualPropsSnapshot)) {
-                textualPropsSnapshot = nextTextual;
-                popupWidget = new FConfirmPopupWidget(textualPropsSnapshot.title(), textualPropsSnapshot.message(), textualPropsSnapshot.confirmLabel(), textualPropsSnapshot.denyLabel(), FConfirmPopupWidget.ConfirmStyle.DESTRUCTIVE, this::bridgeDeny, this::bridgeConfirm);
-                clearChildren();
-                addChild(popupWidget);
-            }
-            return this;
-        }
-
-        private void bridgeDeny() {
-            if (latestDeclaredDeny != null) {
-                latestDeclaredDeny.run();
-            }
-        }
-
-        private void bridgeConfirm() {
-            if (latestDeclaredConfirm != null) {
-                latestDeclaredConfirm.run();
-            }
+        PopupHost(Props props) {
+            addChild(new FConfirmPopupWidget(
+                    props.title(), props.message(), props.confirmLabel(), props.denyLabel(),
+                    FConfirmPopupWidget.ConfirmStyle.DESTRUCTIVE, props.onDeny(), props.onConfirm()));
         }
 
         @Override

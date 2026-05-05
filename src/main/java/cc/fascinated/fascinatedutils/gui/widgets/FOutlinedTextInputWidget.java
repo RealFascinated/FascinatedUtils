@@ -10,13 +10,11 @@ import lombok.experimental.Accessors;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 @Accessors(fluent = true)
 public class FOutlinedTextInputWidget extends FWidget {
-    @Getter
-    private final int focusId;
+    private final int focusId = UiFocusIds.allocate();
     private final int maxLength;
     private final float intrinsicHeightDesign;
 
@@ -27,11 +25,9 @@ public class FOutlinedTextInputWidget extends FWidget {
     private float scrollOffsetX = 0f;
 
     private Callback<String> onChange = ignored -> {};
-    private IntSupplier externalFocusIdSupplier = () -> UiFocusIds.NO_FOCUS_ID;
     private Supplier<String> placeholderSupplier = () -> "";
 
-    public FOutlinedTextInputWidget(int focusId, int maxLength, float intrinsicHeightDesign, Supplier<String> placeholderSupplier) {
-        this.focusId = focusId;
+    public FOutlinedTextInputWidget(int maxLength, float intrinsicHeightDesign, Supplier<String> placeholderSupplier) {
         this.maxLength = Math.max(0, maxLength);
         this.intrinsicHeightDesign = Math.max(0f, intrinsicHeightDesign);
         this.placeholderSupplier = placeholderSupplier == null ? () -> "" : placeholderSupplier;
@@ -65,12 +61,13 @@ public class FOutlinedTextInputWidget extends FWidget {
         this.onChange = onChange == null ? ignored -> {} : onChange;
     }
 
-    public void setExternalFocusIdSupplier(IntSupplier externalFocusIdSupplier) {
-        this.externalFocusIdSupplier = externalFocusIdSupplier == null ? () -> UiFocusIds.NO_FOCUS_ID : externalFocusIdSupplier;
-    }
-
     public void setPlaceholderSupplier(Supplier<String> placeholderSupplier) {
         this.placeholderSupplier = placeholderSupplier == null ? () -> "" : placeholderSupplier;
+    }
+
+    @Override
+    public int focusId() {
+        return focusId;
     }
 
     @Override
@@ -351,9 +348,6 @@ public class FOutlinedTextInputWidget extends FWidget {
     }
 
     private boolean fieldFocused() {
-        if (externalFocusIdSupplier != null && externalFocusIdSupplier.getAsInt() != UiFocusIds.NO_FOCUS_ID) {
-            return externalFocusIdSupplier.getAsInt() == focusId;
-        }
         return GuiFocusState.getFocusedId() == focusId;
     }
 

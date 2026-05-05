@@ -1,8 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
-import cc.fascinated.fascinatedutils.gui.core.Ref;
+import cc.fascinated.fascinatedutils.gui.core.FState;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
@@ -11,9 +10,8 @@ import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import net.minecraft.network.chat.Component;
 
 public class FProfileCreatePopupWidget extends FPopupWidget {
-    private static final int PROFILE_NAME_INPUT_FOCUS_ID = 5201;
-    private final Ref<String> profileNameRef;
-    private final Ref<Boolean> copyDefaultProfileSettingsRef;
+    private final FState<String> profileNameRef;
+    private final FState<Boolean> copyDefaultProfileSettingsRef;
     private final Runnable onCancel;
     private final SubmitProfileCallback onSubmit;
     private final FLabelWidget titleLabel;
@@ -25,7 +23,7 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
     private final FButtonWidget createButton;
     private String validationMessage = "";
 
-    public FProfileCreatePopupWidget(Ref<String> profileNameRef, Ref<Boolean> copyDefaultProfileSettingsRef, Runnable onCancel, SubmitProfileCallback onSubmit) {
+    public FProfileCreatePopupWidget(FState<String> profileNameRef, FState<Boolean> copyDefaultProfileSettingsRef, Runnable onCancel, SubmitProfileCallback onSubmit) {
         super(onCancel);
         this.profileNameRef = profileNameRef;
         this.copyDefaultProfileSettingsRef = copyDefaultProfileSettingsRef;
@@ -43,20 +41,19 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
         descriptionLabel.setOverflow(TextOverflow.WRAP);
         descriptionLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
 
-        profileNameInput = new FOutlinedTextInputWidget(PROFILE_NAME_INPUT_FOCUS_ID, 45, 17f, () -> Component.translatable("fascinatedutils.setting.shell.profile_name_placeholder").getString());
-        profileNameInput.setValue(profileNameRef.getValue() == null ? "" : profileNameRef.getValue());
+        profileNameInput = new FOutlinedTextInputWidget(45, 17f, () -> Component.translatable("fascinatedutils.setting.shell.profile_name_placeholder").getString());
+        profileNameInput.setValue(profileNameRef.get() == null ? "" : profileNameRef.get());
         profileNameInput.setOnChange(value -> {
-            profileNameRef.setValue(value);
+            profileNameRef.setQuiet(value);
             refreshValidationState();
         });
-        profileNameInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
 
         validationLabel = new FLabelWidget();
         validationLabel.setAlignX(Align.START);
         validationLabel.setOverflow(TextOverflow.WRAP);
         validationLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textAccent());
 
-        copyDefaultToggleCheckbox = new FIconCheckboxWidget(Boolean.TRUE.equals(copyDefaultProfileSettingsRef.getValue()), checked -> copyDefaultProfileSettingsRef.setValue(checked), () -> Boolean.TRUE.equals(copyDefaultProfileSettingsRef.getValue()) ? Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_on").getString() : Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_off").getString(), 154f);
+        copyDefaultToggleCheckbox = new FIconCheckboxWidget(Boolean.TRUE.equals(copyDefaultProfileSettingsRef.get()), checked -> copyDefaultProfileSettingsRef.setQuiet(checked), () -> Boolean.TRUE.equals(copyDefaultProfileSettingsRef.get()) ? Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_on").getString() : Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_off").getString(), 154f);
 
         cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_cancel").getString(), 70f, 1, 1f, 6f, 1f, 6f);
         createButton = new FButtonWidget(this::submit, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_create").getString(), 70f, 1, 1f, 6f, 1f, 6f) {
@@ -131,7 +128,7 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
 
         cursorY += rowGap;
 
-        copyDefaultToggleCheckbox.setChecked(Boolean.TRUE.equals(copyDefaultProfileSettingsRef.getValue()));
+        copyDefaultToggleCheckbox.setChecked(Boolean.TRUE.equals(copyDefaultProfileSettingsRef.get()));
         copyDefaultToggleCheckbox.setOuterWidth(bodyWidth);
         copyDefaultToggleCheckbox.layout(measure, dialogX() + horizontalPadding, cursorY, bodyWidth, toggleHeight);
 
@@ -146,8 +143,8 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
         if (!isInputValid()) {
             return;
         }
-        String requestedName = profileNameRef.getValue();
-        onSubmit.createProfile(requestedName.trim(), Boolean.TRUE.equals(copyDefaultProfileSettingsRef.getValue()));
+        String requestedName = profileNameRef.get();
+        onSubmit.createProfile(requestedName.trim(), Boolean.TRUE.equals(copyDefaultProfileSettingsRef.get()));
     }
 
     private boolean isInputValid() {
@@ -155,7 +152,7 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
     }
 
     private void refreshValidationState() {
-        validationMessage = resolveValidationMessage(profileNameRef.getValue());
+        validationMessage = resolveValidationMessage(profileNameRef.get());
         validationLabel.setText(validationMessage);
     }
 

@@ -11,10 +11,6 @@ import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.common.TimeUtils;
 import cc.fascinated.fascinatedutils.gui.AvatarTextureCache;
 import cc.fascinated.fascinatedutils.gui.core.*;
-import cc.fascinated.fascinatedutils.gui.declare.Ui;
-import cc.fascinated.fascinatedutils.gui.declare.UiComponent;
-import cc.fascinated.fascinatedutils.gui.declare.UiSlot;
-import cc.fascinated.fascinatedutils.gui.declare.UiView;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -27,9 +23,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 import java.util.*;
-import java.util.function.Consumer;
 
-public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspaceComponent.Props> {
+public class SocialMainWorkspaceComponent extends FWidget {
     private static final float LEFT_PANEL_WIDTH = 250f;
     private static final float SPLIT_GAP = 10f;
     private static final float PAD = 10f;
@@ -45,23 +40,34 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
     private static final float PRESENCE_MENU_ROW_H = 30f;
     private static final float PRESENCE_MENU_ROW_GAP = 4f;
     private static final float CHAT_HEADER_AVATAR = 28f;
-    private static final int FOCUS_CHAT_SEARCH = 7112;
 
     private static final Presence[] SELECTABLE_PREFERRED_PRESENCES = {Presence.ONLINE, Presence.AWAY, Presence.DO_NOT_DISTURB, Presence.INVISIBLE};
     private static Integer lastOpenedChannelId;
-    private final Ref<Float> scrollYRef = Ref.of(0f);
-    private final Ref<Float> messageScrollYRef = Ref.of(SocialChatMessagesHandler.MESSAGE_SCROLL_ANCHOR_BOTTOM);
-    private final FOutlinedTextInputWidget chatSearchInput = new FOutlinedTextInputWidget(FOCUS_CHAT_SEARCH, 40, 20f, () -> Component.translatable("fascinatedutils.social.search_placeholder").getString());
+    // Node registry — preserves FState across re-renders
+    private final FNodeRegistry nodes = new FNodeRegistry();
+    private final FNodeWidget root;
+
+    // Retained widgets (created once, identity preserved across re-renders)
+    private final FOutlinedTextInputWidget addFriendInput;
+    private final FOutlinedTextInputWidget dmMessageInput;
+    private final Runnable onCloseScreen;
+    private final FOutlinedTextInputWidget chatSearchInput = new FOutlinedTextInputWidget(40, 20f, () -> Component.translatable("fascinatedutils.social.search_placeholder").getString());
     private final SocialChatMessagesHandler chatMessages = new SocialChatMessagesHandler();
-    private Tab activeTab = Tab.CHAT;
-    private Integer selectedChannelId;
-    private Integer selectedFriendUserId;
-    private boolean searchOpen;
-    private boolean sendMessagePending;
-    private Friend pendingRemoveFriend;
-    private PendingFriendRequest pendingCancelRequest;
-    private boolean preferredPresenceMenuOpen;
-    private boolean preferredPresenceUpdatePending;
+
+    // FState fields — null until first render, then stable for lifetime of this component
+    private FState<Tab> activeTab;
+    private FState<Integer> selectedChannelId;
+    private FState<Integer> selectedFriendUserId;
+    private FState<Boolean> searchOpen;
+    private FState<Boolean> sendMessagePending;
+    private FState<Friend> pendingRemoveFriend;
+    private FState<PendingFriendRequest> pendingCancelRequest;
+    private FState<Boolean> preferredPresenceMenuOpen;
+    private FState<Boolean> preferredPresenceUpdatePending;
+    private FState<Float> scrollYRef;
+    private FState<Float> messageScrollYRef;
+
+    // Layout position cache — set during layout(), read by overlay positioning
     private float panelX;
     private float panelY;
     private float panelW;
@@ -71,11 +77,161 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
     private float preferredPresenceButtonW;
     private float preferredPresenceButtonH;
 
-    /**
-     * Mounts the social workspace: channels, friends, messages, and confirm overlays.
-     */
-    public static UiView view(SocialMainWorkspaceComponent.Props props) {
-        return Ui.component(SocialMainWorkspaceComponent.class, SocialMainWorkspaceComponent::new, props);
+    public SocialMainWorkspaceComponent(FOutlinedTextInputWidget addFriendInput, FOutlinedTextInputWidget dmMessageInput, Runnable onCloseScreen) {
+        this.addFriendInput = addFriendInput;
+        this.dmMessageInput = dmMessageInput;
+        this.onCloseScreen = onCloseScreen;
+        this.root = new FNodeWidget(nodes.get("social-main", this::buildRootWidget));
+        addChild(root);
+    }
+
+    @Override
+    public boolean fillsHorizontalInRow() {
+        return true;
+    }
+
+    @Override
+    public boolean fillsVerticalInColumn() {
+        return true;
+    }
+
+    @Override
+    public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
+        setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
+        root.layout(measure, layoutX, layoutY, layoutWidth, layoutHeight);
+        nodes.gc();
+    }
+
+    @Override
+    public void render(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+        root.render(graphics, frame, deltaSeconds);
+    }
+
+    /** Returns whether the preferred presence dropdown is currently open. */
+    public boolean isPresenceMenuOpen() {
+        return preferredPresenceMenuOpen != null && preferredPresenceMenuOpen.get();
+    }
+
+    /** Closes the preferred presence dropdown. */
+    public void closePresenceMenu() {
+        if (preferredPresenceMenuOpen != null) {
+            preferredPresenceMenuOpen.set(false);
+        }
+    }
+
+    /** Disposes all node state. Call when the owning screen closes. */
+    public void dispose() {
+        nodes.dispose();
+    }
+
+    private FWidget buildRootWidget(FWidgetNode.RenderContext ctx) {
+        activeTab = ctx.useState(Tab.CHAT);
+        selectedChannelId = ctx.useState(null);
+        selectedFriendUserId = ctx.useState(null);
+        searchOpen = ctx.useState(false);
+        sendMessagePending = ctx.useState(false);
+        pendingRemoveFriend = ctx.useState(null);
+        pendingCancelRequest = ctx.useState(null);
+        preferredPresenceMenuOpen = ctx.useState(false);
+        preferredPresenceUpdatePending = ctx.useState(false);
+        scrollYRef = ctx.useState(0f);
+        messageScrollYRef = ctx.useState(SocialChatMessagesHandler.MESSAGE_SCROLL_ANCHOR_BOTTOM);
+
+        if (selectedChannelId.get() == null && lastOpenedChannelId != null) {
+            selectedChannelId.setQuiet(lastOpenedChannelId);
+        }
+
+        return new FWidget() {
+            @Override
+            public boolean fillsHorizontalInRow() {
+                return true;
+            }
+
+            @Override
+            public boolean fillsVerticalInColumn() {
+                return true;
+            }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+
+                if (pendingRemoveFriend.get() != null || pendingCancelRequest.get() != null || chatMessages.hasActiveOverlay()) {
+                    preferredPresenceMenuOpen.setQuiet(false);
+                    chatMessages.suppressContextualOverlays();
+                }
+
+                clearChildren();
+
+                float leftWidth = Math.min(LEFT_PANEL_WIDTH, lw);
+                float rightWidth = Math.max(0f, lw - leftWidth - SPLIT_GAP);
+                FWidget leftDock = buildPanelContent(leftWidth);
+                FWidget rightDock = buildChatContent(rightWidth);
+                addChild(leftDock);
+                addChild(rightDock);
+                leftDock.layout(measure, lx, ly, leftWidth, lh);
+                rightDock.layout(measure, lx + leftWidth + SPLIT_GAP, ly, rightWidth, lh);
+
+                if (pendingRemoveFriend.get() != null) {
+                    Friend friend = pendingRemoveFriend.get();
+                    FWidget overlay = SocialDestructiveFullscreenConfirmOverlay.create(new SocialDestructiveFullscreenConfirmOverlay.Props(
+                            Component.translatable("fascinatedutils.social.confirm_remove_friend.title").getString(),
+                            Component.translatable("fascinatedutils.social.confirm_remove_friend.message", friend.user().minecraftName()).getString(),
+                            Component.translatable("fascinatedutils.social.confirm_remove_friend.confirm").getString(),
+                            Component.translatable("fascinatedutils.social.confirm_remove_friend.deny").getString(),
+                            () -> pendingRemoveFriend.set(null),
+                            () -> {
+                                pendingRemoveFriend.set(null);
+                                FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+                                    try {
+                                        Alumite.INSTANCE.removeFriend(friend.user().id());
+                                    } catch (AlumiteApiException exception) {
+                                        Toast.show().message(SocialErrors.message(exception)).error();
+                                    } catch (Exception exception) {
+                                        Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
+                                    }
+                                });
+                            }));
+                    addChild(overlay);
+                    overlay.layout(measure, lx, ly, lw, lh);
+                }
+
+                if (pendingCancelRequest.get() != null) {
+                    PendingFriendRequest cancellableRequest = pendingCancelRequest.get();
+                    FWidget overlay = SocialDestructiveFullscreenConfirmOverlay.create(new SocialDestructiveFullscreenConfirmOverlay.Props(
+                            Component.translatable("fascinatedutils.social.confirm_cancel_request.title").getString(),
+                            Component.translatable("fascinatedutils.social.confirm_cancel_request.message", cancellableRequest.user().minecraftName()).getString(),
+                            Component.translatable("fascinatedutils.social.confirm_cancel_request.confirm").getString(),
+                            Component.translatable("fascinatedutils.social.confirm_cancel_request.deny").getString(),
+                            () -> pendingCancelRequest.set(null),
+                            () -> {
+                                pendingCancelRequest.set(null);
+                                FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+                                    try {
+                                        Alumite.INSTANCE.cancelFriendRequest(cancellableRequest.requestId());
+                                    } catch (AlumiteApiException exception) {
+                                        Toast.show().message(SocialErrors.message(exception)).error();
+                                    } catch (Exception exception) {
+                                        Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
+                                    }
+                                });
+                            }));
+                    addChild(overlay);
+                    overlay.layout(measure, lx, ly, lw, lh);
+                }
+
+                if (preferredPresenceMenuOpen.get()) {
+                    FWidget overlay = buildPreferredPresenceMenuOverlay();
+                    addChild(overlay);
+                    overlay.layout(measure, lx, ly, lw, lh);
+                }
+
+                for (FWidget overlay : chatMessages.collectOverlayWidgets(selectedChannelId.get())) {
+                    addChild(overlay);
+                    overlay.layout(measure, lx, ly, lw, lh);
+                }
+            }
+        };
     }
 
     private static String presenceStatusLine(User user) {
@@ -100,104 +256,11 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         };
     }
 
-    @Override
-    public UiView render() {
-        Props currentProps = props();
-        currentProps.presenceMenuOpenSink().accept(preferredPresenceMenuOpen);
-        float viewportWidth = currentProps.viewportWidth();
-        float viewportHeight = currentProps.viewportHeight();
-        if (viewportWidth <= 0f || viewportHeight <= 0f) {
-            throw new IllegalStateException("Declarative mount host delivered non-positive viewport");
-        }
-        if (selectedChannelId == null && lastOpenedChannelId != null) {
-            selectedChannelId = lastOpenedChannelId;
-        }
-        List<UiSlot> viewportLayers = new ArrayList<>();
-        viewportLayers.add(UiSlot.keyed("social.main", Ui.custom(previous -> buildSocialMainDock())));
-        if (pendingRemoveFriend != null) {
-            Friend friend = pendingRemoveFriend;
-            viewportLayers.add(UiSlot.keyed("social.popup.remove." + friend.user().id(), SocialDestructiveFullscreenConfirmOverlay.view(new SocialDestructiveFullscreenConfirmOverlay.Props(Component.translatable("fascinatedutils.social.confirm_remove_friend.title").getString(), Component.translatable("fascinatedutils.social.confirm_remove_friend.message", friend.user().minecraftName()).getString(), Component.translatable("fascinatedutils.social.confirm_remove_friend.confirm").getString(), Component.translatable("fascinatedutils.social.confirm_remove_friend.deny").getString(), () -> {
-                pendingRemoveFriend = null;
-            }, () -> {
-                pendingRemoveFriend = null;
-                FascinatedUtils.SCHEDULED_POOL.execute(() -> {
-                    try {
-                        Alumite.INSTANCE.removeFriend(friend.user().id());
-                    } catch (AlumiteApiException exception) {
-                        Toast.show().message(SocialErrors.message(exception)).error();
-                    } catch (Exception exception) {
-                        Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
-                    }
-                });
-            }))));
-        }
-        if (pendingCancelRequest != null) {
-            PendingFriendRequest cancellableRequest = pendingCancelRequest;
-            viewportLayers.add(UiSlot.keyed("social.popup.cancel." + cancellableRequest.requestId(), SocialDestructiveFullscreenConfirmOverlay.view(new SocialDestructiveFullscreenConfirmOverlay.Props(Component.translatable("fascinatedutils.social.confirm_cancel_request.title").getString(), Component.translatable("fascinatedutils.social.confirm_cancel_request.message", cancellableRequest.user().minecraftName()).getString(), Component.translatable("fascinatedutils.social.confirm_cancel_request.confirm").getString(), Component.translatable("fascinatedutils.social.confirm_cancel_request.deny").getString(), () -> {
-                pendingCancelRequest = null;
-            }, () -> {
-                pendingCancelRequest = null;
-                FascinatedUtils.SCHEDULED_POOL.execute(() -> {
-                    try {
-                        Alumite.INSTANCE.cancelFriendRequest(cancellableRequest.requestId());
-                    } catch (AlumiteApiException exception) {
-                        Toast.show().message(SocialErrors.message(exception)).error();
-                    } catch (Exception exception) {
-                        Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
-                    }
-                });
-            }))));
-        }
-        if (preferredPresenceMenuOpen) {
-            viewportLayers.add(UiSlot.keyed("social.overlay.presence", Ui.widgetSlot("social.presence.overlay", buildPreferredPresenceMenuOverlay())));
-        }
-        chatMessages.collectOverlayLayers(viewportLayers, selectedChannelId);
-        return Ui.stackLayers(viewportLayers);
-    }
-
-    private FWidget buildSocialMainDock() {
-        if (pendingRemoveFriend != null || pendingCancelRequest != null || chatMessages.hasActiveOverlay()) {
-            preferredPresenceMenuOpen = false;
-            chatMessages.suppressContextualOverlays();
-        }
-
-        FAbsoluteStackWidget stack = new FAbsoluteStackWidget();
-        stack.addChild(new FWidget() {
-            private FWidget leftDock;
-            private FWidget rightDock;
-
-            @Override
-            public boolean fillsHorizontalInRow() {
-                return true;
-            }
-
-            @Override
-            public boolean fillsVerticalInColumn() {
-                return true;
-            }
-
-            @Override
-            public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-                setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-                float leftWidth = Math.min(LEFT_PANEL_WIDTH, layoutWidth);
-                float rightWidth = Math.max(0f, layoutWidth - leftWidth - SPLIT_GAP);
-                leftDock = buildPanelContent(leftWidth);
-                rightDock = buildChatContent(rightWidth);
-                clearChildren();
-                addChild(leftDock);
-                addChild(rightDock);
-                leftDock.layout(measure, layoutX, layoutY, leftWidth, layoutHeight);
-                rightDock.layout(measure, layoutX + leftWidth + SPLIT_GAP, layoutY, rightWidth, layoutHeight);
-            }
-        });
-        return stack;
-    }
-
     private FWidget buildPanelContent(float panelW) {
         FRectWidget panelBg = new FRectWidget();
         panelBg.setFillColorArgb(0xEE1A1E24);
         panelBg.setBorder(UITheme.COLOR_BORDER, 1f);
-        FWidget pane = SocialLeftPaneWidget.build(new SocialLeftPaneWidget.Props(PAD, TAB_H, panelBg, buildHeader(), buildTabs(), buildLeftList(panelW), buildFooter(), () -> activeTab == Tab.FRIENDS));
+        FWidget pane = SocialLeftPaneWidget.build(new SocialLeftPaneWidget.Props(PAD, TAB_H, panelBg, buildHeader(), buildTabs(), buildLeftList(panelW), buildFooter(), () -> activeTab.get() == Tab.FRIENDS));
         return new FWidget() {
             {
                 addChild(pane);
@@ -219,9 +282,9 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         FRectWidget panelBg = new FRectWidget();
         panelBg.setFillColorArgb(0xEE0F1318);
         panelBg.setBorder(UITheme.COLOR_BORDER, 1f);
-        boolean showNoChannelSelected = activeTab == Tab.CHAT && selectedChannelId == null;
-        FWidget body = activeTab == Tab.CHAT ? showNoChannelSelected ? SocialNoChannelSelectedWidget.build() : chatMessages.buildMessagesBody(selectedChannelId, panelW, messageScrollYRef) : buildFriendsProfilePane();
-        FWidget footer = activeTab == Tab.CHAT && !showNoChannelSelected ? buildChatFooter() : buildSpacer();
+        boolean showNoChannelSelected = activeTab.get() == Tab.CHAT && selectedChannelId.get() == null;
+        FWidget body = activeTab.get() == Tab.CHAT ? showNoChannelSelected ? SocialNoChannelSelectedWidget.build() : chatMessages.buildMessagesBody(selectedChannelId.get(), panelW, messageScrollYRef) : buildFriendsProfilePane();
+        FWidget footer = activeTab.get() == Tab.CHAT && !showNoChannelSelected ? buildChatFooter() : buildSpacer();
         return SocialRightPaneWidget.build(new SocialRightPaneWidget.Props(PAD, panelBg, buildChatHeader(), body, footer));
     }
 
@@ -235,7 +298,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
     }
 
     private FWidget buildHeader() {
-        FWidget compactHeader = SocialHeaderWidget.build(new SocialHeaderWidget.Props(this::handleAddFriendFromHeader, this::handleNewChatAction, () -> searchOpen = !searchOpen, () -> searchOpen));
+        FWidget compactHeader = SocialHeaderWidget.build(new SocialHeaderWidget.Props(this::handleAddFriendFromHeader, this::handleNewChatAction, () -> searchOpen.set(!searchOpen.get()), searchOpen::get));
         FWidget preferredPresencePicker = buildPreferredPresencePicker();
         FOutlinedTextInputWidget searchInput = chatSearchInput;
 
@@ -248,7 +311,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
 
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-                float searchH = searchOpen ? searchInput.intrinsicHeightForColumn(measure, widthBudget) + 6f : 0f;
+                float searchH = searchOpen.get() ? searchInput.intrinsicHeightForColumn(measure, widthBudget) + 6f : 0f;
                 return 24f + 6f + searchH + PRESENCE_PICKER_H;
             }
 
@@ -257,7 +320,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
                 setBounds(lx, ly, lw, lh);
                 compactHeader.layout(measure, lx, ly, lw, 24f);
                 float cursorY = ly + 24f + 6f;
-                if (searchOpen) {
+                if (searchOpen.get()) {
                     float inputH = searchInput.intrinsicHeightForColumn(measure, lw);
                     searchInput.layout(measure, lx, cursorY, lw, inputH);
                     searchInput.setVisible(true);
@@ -287,9 +350,9 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
             protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
                 float mouseX = frame.pointerX();
                 float mouseY = frame.pointerY();
-                boolean interactive = !preferredPresenceUpdatePending;
-                int fillColor = preferredPresenceMenuOpen ? 0xFF2B3142 : containsPoint(mouseX, mouseY) && interactive ? 0xFF242A38 : 0xFF202531;
-                int borderColor = preferredPresenceMenuOpen ? 0xFF6E7897 : containsPoint(mouseX, mouseY) && interactive ? 0xFF59617A : 0xFF454A60;
+                boolean interactive = !preferredPresenceUpdatePending.get();
+                int fillColor = preferredPresenceMenuOpen.get() ? 0xFF2B3142 : containsPoint(mouseX, mouseY) && interactive ? 0xFF242A38 : 0xFF202531;
+                int borderColor = preferredPresenceMenuOpen.get() ? 0xFF6E7897 : containsPoint(mouseX, mouseY) && interactive ? 0xFF59617A : 0xFF454A60;
                 graphics.fillRoundedRectFrame(x(), y(), w(), h(), 6f, borderColor, fillColor, 1f, 1f, RectCornerRoundMask.ALL);
 
                 Presence presence = displayedPreferredPresence();
@@ -297,12 +360,12 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
                 float dotY = y() + (h() - PRESENCE_PICKER_DOT) / 2f;
                 graphics.fillRoundedRect(dotX, dotY, PRESENCE_PICKER_DOT, PRESENCE_PICKER_DOT, PRESENCE_PICKER_DOT / 2f, presence.color(), RectCornerRoundMask.ALL);
 
-                String label = preferredPresenceUpdatePending ? Component.translatable("fascinatedutils.social.presence.updating").getString() : preferredPresenceLabel(presence);
+                String label = preferredPresenceUpdatePending.get() ? Component.translatable("fascinatedutils.social.presence.updating").getString() : preferredPresenceLabel(presence);
                 float textY = y() + (h() - graphics.getFontCapHeight()) / 2f;
-                graphics.drawText(label, dotX + PRESENCE_PICKER_DOT + 6f, textY, preferredPresenceUpdatePending ? FascinatedGuiTheme.INSTANCE.textMuted() : FascinatedGuiTheme.INSTANCE.textPrimary(), false, false);
+                graphics.drawText(label, dotX + PRESENCE_PICKER_DOT + 6f, textY, preferredPresenceUpdatePending.get() ? FascinatedGuiTheme.INSTANCE.textMuted() : FascinatedGuiTheme.INSTANCE.textPrimary(), false, false);
 
-                if (!preferredPresenceUpdatePending) {
-                    graphics.drawText(preferredPresenceMenuOpen ? "\u25B4" : "\u25BE", x() + w() - 12f, textY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                if (!preferredPresenceUpdatePending.get()) {
+                    graphics.drawText(preferredPresenceMenuOpen.get() ? "\u25B4" : "\u25BE", x() + w() - 12f, textY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
                 }
             }
 
@@ -313,7 +376,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
 
             @Override
             public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
-                return preferredPresenceUpdatePending ? UiPointerCursor.DEFAULT : UiPointerCursor.HAND;
+                return preferredPresenceUpdatePending.get() ? UiPointerCursor.DEFAULT : UiPointerCursor.HAND;
             }
 
             @Override
@@ -321,10 +384,10 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
                 if (button != 0) {
                     return false;
                 }
-                if (preferredPresenceUpdatePending) {
+                if (preferredPresenceUpdatePending.get()) {
                     return true;
                 }
-                preferredPresenceMenuOpen = !preferredPresenceMenuOpen;
+                preferredPresenceMenuOpen.set(!preferredPresenceMenuOpen.get());
                 return true;
             }
         };
@@ -379,7 +442,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
                     return false;
                 }
                 if (!menu.containsPoint(pointerX, pointerY)) {
-                    preferredPresenceMenuOpen = false;
+                    preferredPresenceMenuOpen.set(false);
                     return true;
                 }
                 return false;
@@ -460,36 +523,36 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         final int friendCount = Alumite.INSTANCE.users().friends().size();
         final String chatLabel = Component.translatable("fascinatedutils.social.tab_chat").getString();
         final String friendsLabel = Component.translatable("fascinatedutils.social.tab_friends", friendCount).getString();
-        return SocialModeTabsWidget.build(new SocialModeTabsWidget.Props(chatLabel, friendsLabel, Alumite.INSTANCE.users().incomingFriendRequests().size(), () -> activeTab == Tab.CHAT, () -> {
-            if (activeTab != Tab.CHAT) {
-                activeTab = Tab.CHAT;
-                scrollYRef.setValue(0f);
+        return SocialModeTabsWidget.build(new SocialModeTabsWidget.Props(chatLabel, friendsLabel, Alumite.INSTANCE.users().incomingFriendRequests().size(), () -> activeTab.get() == Tab.CHAT, () -> {
+            if (activeTab.get() != Tab.CHAT) {
+                activeTab.set(Tab.CHAT);
+                scrollYRef.set(0f);
             }
         }, () -> {
-            if (activeTab != Tab.FRIENDS) {
-                activeTab = Tab.FRIENDS;
-                scrollYRef.setValue(0f);
+            if (activeTab.get() != Tab.FRIENDS) {
+                activeTab.set(Tab.FRIENDS);
+                scrollYRef.set(0f);
             }
         }));
     }
 
     private FScrollColumnWidget buildLeftList(float panelW) {
         float innerW = panelW - 2f * PAD;
-        Float savedY = scrollYRef.getValue();
+        Float savedY = scrollYRef.get();
         float scrollY = savedY == null ? 0f : savedY;
-        if (activeTab == Tab.CHAT) {
+        if (activeTab.get() == Tab.CHAT) {
             String searchQuery = chatSearchInput.value().trim().toLowerCase();
             List<Channel> channels = Alumite.INSTANCE.channels().all().stream().filter(channel -> searchQuery.isEmpty() || channelTitle(channel).toLowerCase().contains(searchQuery)).toList();
-            return SocialChatListWidget.build(new SocialChatListWidget.Props(channels, scrollY, scrollYRef::setValue, channel -> buildChatChannelRow(channel, innerW), () -> buildEmptyState(Component.translatable("fascinatedutils.social.dm.no_chats").getString())));
+            return SocialChatListWidget.build(new SocialChatListWidget.Props(channels, scrollY, scrollYRef::set, channel -> buildChatChannelRow(channel, innerW), () -> buildEmptyState(Component.translatable("fascinatedutils.social.dm.no_chats").getString())));
         }
-        return SocialFriendsListWidget.build(new SocialFriendsListWidget.Props(Alumite.INSTANCE.users().friends(), Alumite.INSTANCE.users().incomingFriendRequests(), Alumite.INSTANCE.users().outgoingFriendRequests(), scrollY, scrollYRef::setValue, friend -> buildFriendRow(friend, innerW), request -> SocialFriendRequestRowWidget.build(request, innerW, ROW_H), request -> SocialOutgoingRequestRowWidget.build(request, innerW, ROW_H, () -> pendingCancelRequest = request), this::buildSectionLabel, Component.translatable("fascinatedutils.social.requests_incoming").getString(), Component.translatable("fascinatedutils.social.requests_outgoing").getString(), () -> buildEmptyState(Component.translatable("fascinatedutils.social.no_friends").getString()), () -> buildEmptyState(Component.translatable("fascinatedutils.social.no_friends").getString())));
+        return SocialFriendsListWidget.build(new SocialFriendsListWidget.Props(Alumite.INSTANCE.users().friends(), Alumite.INSTANCE.users().incomingFriendRequests(), Alumite.INSTANCE.users().outgoingFriendRequests(), scrollY, scrollYRef::set, friend -> buildFriendRow(friend, innerW), request -> SocialFriendRequestRowWidget.build(request, innerW, ROW_H), request -> SocialOutgoingRequestRowWidget.build(request, innerW, ROW_H, () -> pendingCancelRequest.set(request)), this::buildSectionLabel, Component.translatable("fascinatedutils.social.requests_incoming").getString(), Component.translatable("fascinatedutils.social.requests_outgoing").getString(), () -> buildEmptyState(Component.translatable("fascinatedutils.social.no_friends").getString()), () -> buildEmptyState(Component.translatable("fascinatedutils.social.no_friends").getString())));
     }
 
     private FWidget buildChatChannelRow(Channel channel, float innerW) {
         String snippet = channelListSnippet(channel);
         String channelLabel = channelTitle(channel);
         String channelAvatarMinecraftUuid = channelListAvatarMinecraftUuid(channel);
-        return SocialChatRowWidget.build(new SocialChatRowWidget.Props(channelLabel, channelAvatarMinecraftUuid, snippet, channelListPresenceColor(channel), selectedChannelId != null && selectedChannelId == channel.id(), channelHasUnread(channel), () -> selectChannel(channel.id(), false), channel.asDmChannel() != null ? () -> closeDmChannel(channel.id()) : null), innerW, ROW_H);
+        return SocialChatRowWidget.build(new SocialChatRowWidget.Props(channelLabel, channelAvatarMinecraftUuid, snippet, channelListPresenceColor(channel), selectedChannelId.get() != null && selectedChannelId.get() == channel.id(), channelHasUnread(channel), () -> selectChannel(channel.id(), false), channel.asDmChannel() != null ? () -> closeDmChannel(channel.id()) : null), innerW, ROW_H);
     }
 
     private String channelListSnippet(Channel channel) {
@@ -576,7 +639,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
 
     private FWidget buildFriendRow(Friend friend, float innerW) {
         User friendUser = displayUser(friend.user());
-        return SocialFriendRowWidget.build(new SocialFriendRowWidget.Props(friendUser, presenceStatusLine(friendUser), Objects.equals(selectedFriendUserId, friend.user().id()), () -> selectedFriendUserId = friend.user().id(), () -> pendingRemoveFriend = friend), innerW, ROW_H);
+        return SocialFriendRowWidget.build(new SocialFriendRowWidget.Props(friendUser, presenceStatusLine(friendUser), Objects.equals(selectedFriendUserId.get(), friend.user().id()), () -> selectedFriendUserId.set(friend.user().id()), () -> pendingRemoveFriend.set(friend)), innerW, ROW_H);
     }
 
     private FWidget buildSectionLabel(String text) {
@@ -608,12 +671,12 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
 
     private void updatePreferredPresence(Presence presence) {
         Presence currentPresence = displayedPreferredPresence();
-        preferredPresenceMenuOpen = false;
+        preferredPresenceMenuOpen.set(false);
         if (currentPresence == presence) {
             return;
         }
 
-        preferredPresenceUpdatePending = true;
+        preferredPresenceUpdatePending.set(true);
 
         FascinatedUtils.SCHEDULED_POOL.execute(() -> {
             try {
@@ -624,7 +687,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
                 Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
             }
 
-            Minecraft.getInstance().execute(() -> preferredPresenceUpdatePending = false);
+            Minecraft.getInstance().execute(() -> preferredPresenceUpdatePending.set(false));
         });
     }
 
@@ -674,7 +737,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
             @Override
             protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
                 float titleY = y() + (h() - graphics.getFontCapHeight()) / 2f;
-                if (activeTab == Tab.FRIENDS) {
+                if (activeTab.get() == Tab.FRIENDS) {
                     Friend selectedFriend = selectedFriend();
                     String friendTitle = selectedFriend == null
                             ? Component.translatable("fascinatedutils.social.tab_friends").getString()
@@ -682,7 +745,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
                     graphics.drawText(friendTitle, x(), titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
                     return;
                 }
-                Channel channel = selectedChannelId == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId);
+                Channel channel = selectedChannelId.get() == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId.get());
                 String title = channel == null ? Component.translatable("fascinatedutils.social.dm.title").getString() : channelTitle(channel);
                 float textLeft = x();
                 DmChannel dmChannel = channel == null ? null : channel.asDmChannel();
@@ -718,20 +781,20 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         if (selectedFriendUser == null) {
             return buildEmptyState(Component.translatable("fascinatedutils.social.error.generic").getString());
         }
-        return SocialFriendProfilePaneWidget.build(new SocialFriendProfilePaneWidget.Props(selectedFriendUser, () -> openDmForFriend(selectedFriend), () -> pendingRemoveFriend = selectedFriend));
+        return SocialFriendProfilePaneWidget.build(new SocialFriendProfilePaneWidget.Props(selectedFriendUser, () -> openDmForFriend(selectedFriend), () -> pendingRemoveFriend.set(selectedFriend)));
     }
 
     private Friend selectedFriend() {
-        if (selectedFriendUserId == null) {
+        if (selectedFriendUserId.get() == null) {
             return null;
         }
-        return Alumite.INSTANCE.users().friends().stream().filter(friend -> friend.user().id() == selectedFriendUserId).findFirst().orElse(null);
+        return Alumite.INSTANCE.users().friends().stream().filter(friend -> friend.user().id() == selectedFriendUserId.get()).findFirst().orElse(null);
     }
 
     private FWidget buildChatFooter() {
-        FOutlinedTextInputWidget dmInput = props().dmMessageInput();
+        FOutlinedTextInputWidget dmInput = dmMessageInput;
         dmInput.setPlaceholderSupplier(() -> {
-            Channel footerChannel = selectedChannelId == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId);
+            Channel footerChannel = selectedChannelId.get() == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId.get());
             String label = footerChannel == null ? Component.translatable("fascinatedutils.social.dm.title").getString() : channelTitle(footerChannel);
             return "Message " + label;
         });
@@ -739,32 +802,32 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
     }
 
     private void anchorMessageScrollToBottom() {
-        messageScrollYRef.setValue(SocialChatMessagesHandler.MESSAGE_SCROLL_ANCHOR_BOTTOM);
+        messageScrollYRef.set(SocialChatMessagesHandler.MESSAGE_SCROLL_ANCHOR_BOTTOM);
     }
 
     private void selectChannel(int channelId, boolean switchToChat) {
-        selectedChannelId = channelId;
+        selectedChannelId.set(channelId);
         lastOpenedChannelId = channelId;
         anchorMessageScrollToBottom();
-        if (switchToChat && activeTab != Tab.CHAT) {
-            activeTab = Tab.CHAT;
-            scrollYRef.setValue(0f);
+        if (switchToChat && activeTab.get() != Tab.CHAT) {
+            activeTab.set(Tab.CHAT);
+            scrollYRef.set(0f);
         }
     }
 
     private void sendSelectedMessage() {
-        if (selectedChannelId == null || sendMessagePending) {
+        if (selectedChannelId.get() == null || sendMessagePending.get()) {
             return;
         }
-        String content = props().dmMessageInput().value().trim();
+        String content = dmMessageInput.value().trim();
         if (content.isEmpty()) {
             return;
         }
-        sendMessagePending = true;
-        props().dmMessageInput().setValue("");
-        Channel channel = Alumite.INSTANCE.channels().get(selectedChannelId);
+        sendMessagePending.set(true);
+        dmMessageInput.setValue("");
+        Channel channel = Alumite.INSTANCE.channels().get(selectedChannelId.get());
         if (channel == null) {
-            sendMessagePending = false;
+            sendMessagePending.set(false);
             return;
         }
         FascinatedUtils.SCHEDULED_POOL.execute(() -> {
@@ -779,7 +842,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
             final boolean didSend = sent;
             Minecraft minecraftClient = Minecraft.getInstance();
             minecraftClient.execute(() -> {
-                sendMessagePending = false;
+                sendMessagePending.set(false);
                 if (didSend) {
                     anchorMessageScrollToBottom();
                     minecraftClient.execute(this::anchorMessageScrollToBottom);
@@ -789,14 +852,14 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
     }
 
     private void handleNewChatAction() {
-        activeTab = Tab.FRIENDS;
-        scrollYRef.setValue(0f);
+        activeTab.set(Tab.FRIENDS);
+        scrollYRef.set(0f);
     }
 
     private void handleAddFriendFromHeader() {
-        activeTab = Tab.FRIENDS;
-        scrollYRef.setValue(0f);
-        GuiFocusState.setFocusedId(props().addFriendInput().focusId());
+        activeTab.set(Tab.FRIENDS);
+        scrollYRef.set(0f);
+        GuiFocusState.setFocusedId(addFriendInput.focusId());
     }
 
     private void openDmForFriend(Friend friend) {
@@ -825,8 +888,8 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
                 }
                 channel.hide();
                 Minecraft.getInstance().execute(() -> {
-                    if (Objects.equals(selectedChannelId, channelId)) {
-                        selectedChannelId = null;
+                    if (Objects.equals(selectedChannelId.get(), channelId)) {
+                        selectedChannelId.set(null);
                     }
                     if (Objects.equals(lastOpenedChannelId, channelId)) {
                         lastOpenedChannelId = null;
@@ -855,7 +918,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
     }
 
     private FWidget buildFooter() {
-        FOutlinedTextInputWidget friendInput = props().addFriendInput();
+        FOutlinedTextInputWidget friendInput = addFriendInput;
         FButtonWidget addBtn = new FButtonWidget(() -> {
             String username = friendInput.value().trim();
             if (username.isEmpty()) {
@@ -903,17 +966,5 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
     }
 
     private enum Tab {CHAT, FRIENDS}
-
-    /**
-     * Stable props rebuilt every reconcile pass — carries retained fields owned by {@link cc.fascinated.fascinatedutils.gui.screens.SocialScreen}.
-     *
-     * @param viewportWidth  measured host width
-     * @param viewportHeight measured host height
-     * @param addFriendInput persisted add-friend text field widget
-     * @param onCloseScreen  closes the owning screen when the header exit control is clicked
-     */
-    public record Props(float viewportWidth, float viewportHeight, FOutlinedTextInputWidget addFriendInput,
-                        FOutlinedTextInputWidget dmMessageInput, Runnable onCloseScreen,
-                        Consumer<Boolean> presenceMenuOpenSink) {}
 
 }

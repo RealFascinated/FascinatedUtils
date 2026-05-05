@@ -1,20 +1,20 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.core.Ref;
+import cc.fascinated.fascinatedutils.gui.core.FState;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 
 public class FProfilesTabElement extends FWidget {
-    private final Ref<Float> profilesScrollRef = Ref.of(0f);
-    private final Ref<String> profileNameInputRef = Ref.of("");
+    private final FState<Float> profilesScrollRef = FState.standalone(0f);
+    private final FState<String> profileNameInputRef = FState.standalone("");
     private final Runnable onProfilesChanged;
     private final ProfilePopupController profilePopupController;
     private FWidget inner;
 
     public FProfilesTabElement(Runnable onProfilesChanged) {
         this.onProfilesChanged = onProfilesChanged;
-        this.profilePopupController = new ProfilePopupController(() -> {}, this::handleProfilesChanged, () -> profilesScrollRef.setValue(0f));
+        this.profilePopupController = new ProfilePopupController(() -> {}, this::handleProfilesChanged, () -> profilesScrollRef.set(0f));
     }
 
     @Override
@@ -43,8 +43,8 @@ public class FProfilesTabElement extends FWidget {
     }
 
     public void reset() {
-        profilesScrollRef.setValue(0f);
-        profileNameInputRef.setValue("");
+        profilesScrollRef.set(0f);
+        profileNameInputRef.set("");
         inner = null;
         profilePopupController.reset();
         clearChildren();

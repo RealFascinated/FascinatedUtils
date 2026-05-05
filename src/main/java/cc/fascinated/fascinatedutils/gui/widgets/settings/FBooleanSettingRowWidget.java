@@ -17,12 +17,9 @@ import cc.fascinated.fascinatedutils.systems.modules.Module;
 import net.minecraft.util.Mth;
 import org.jspecify.annotations.Nullable;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.function.BooleanSupplier;
 
 public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnimatable {
-    private static final Map<BooleanSetting, AnimHandle> TOGGLE_ANIM_CACHE = new IdentityHashMap<>();
     private static final float SUB_SETTINGS_CHEVRON_EXTRA_PX = 8f;
 
     private final BooleanSetting booleanSetting;
@@ -37,7 +34,7 @@ public class FBooleanSettingRowWidget extends FSettingRowWidget implements FAnim
     public FBooleanSettingRowWidget(BooleanSetting booleanSetting, float outerWidth, float outerHeight, Runnable onPersist, float valueColumnStartX) {
         super(outerWidth, outerHeight, onPersist, valueColumnStartX);
         this.booleanSetting = booleanSetting;
-        this.toggleProgressAnim = TOGGLE_ANIM_CACHE.computeIfAbsent(booleanSetting, setting -> new AnimHandle(setting.getValue() ? 1f : 0f).speed(26f));
+        this.toggleProgressAnim = new AnimHandle(booleanSetting.getValue() ? 1f : 0f).speed(26f);
     }
 
     public FBooleanSettingRowWidget(Module module, BooleanSetting booleanSetting, float outerWidth, float outerHeight) {

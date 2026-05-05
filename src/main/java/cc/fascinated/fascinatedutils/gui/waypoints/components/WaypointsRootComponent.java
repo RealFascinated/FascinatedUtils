@@ -1,90 +1,175 @@
 package cc.fascinated.fascinatedutils.gui.waypoints.components;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
-import cc.fascinated.fascinatedutils.gui.core.Ref;
-import cc.fascinated.fascinatedutils.gui.declare.Ui;
-import cc.fascinated.fascinatedutils.gui.declare.UiComponent;
-import cc.fascinated.fascinatedutils.gui.declare.UiSlot;
-import cc.fascinated.fascinatedutils.gui.declare.UiView;
+import cc.fascinated.fascinatedutils.gui.core.FNodeRegistry;
+import cc.fascinated.fascinatedutils.gui.core.FNodeWidget;
+import cc.fascinated.fascinatedutils.gui.core.FState;
+import cc.fascinated.fascinatedutils.gui.core.FWidgetNode;
+import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
+import cc.fascinated.fascinatedutils.gui.waypoints.WaypointDeletePopupWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FCellConstraints;
+import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FMaxCenterInsetsWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FRectWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.Waypoint;
 import net.minecraft.network.chat.Component;
-
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
- * Root component for the waypoints screen: owns the persisted search input, the scroll offset,
- * and the pending-delete state. Renders the overlay/card stack and (optionally) the delete popup.
+ * Root widget for the waypoints overlay: owns the persistent search input, scroll offset, and
+ * pending-delete state. Renders the backdrop, card stack, and (optionally) the delete popup.
  */
-public class WaypointsRootComponent extends UiComponent<WaypointsRootComponent.Props> {
-    private static final int FOCUS_SEARCH = 6220;
+public class WaypointsRootComponent extends FWidget {
     private static final float CARD_PAD = 12f;
 
-    private final Ref<Float> scrollOffsetRef = Ref.of(0f);
+    private final FNodeRegistry nodes = new FNodeRegistry();
+    private final FNodeWidget root;
     private final FOutlinedTextInputWidget searchInput;
-    private @Nullable UUID pendingDeleteId;
 
-    public WaypointsRootComponent() {
-        this.searchInput = new FOutlinedTextInputWidget(FOCUS_SEARCH, 64, 24f, () -> Component.translatable("fascinatedutils.waypoints.search").getString());
-        this.searchInput.setExternalFocusIdSupplier(GuiFocusState::getFocusedId);
-        this.searchInput.setOnChange(value -> scrollOffsetRef.setValue(0f));
+    private final String worldKey;
+    private final Runnable onRequestAdd;
+    private final Runnable onClose;
+    private final Consumer<Waypoint> onEditWaypoint;
+    private final Consumer<Waypoint> onToggleVisibility;
+    private final WaypointsListComponent.DimensionLabelFormatter dimensionLabelFormatter;
+
+    private FState<Float> scrollOffsetRef;
+    private FState<@Nullable UUID> pendingDeleteId;
+
+    public WaypointsRootComponent(String worldKey, Runnable onRequestAdd, Runnable onClose,
+                                  Consumer<Waypoint> onEditWaypoint, Consumer<Waypoint> onToggleVisibility,
+                                  WaypointsListComponent.DimensionLabelFormatter dimensionLabelFormatter) {
+        this.worldKey = worldKey;
+        this.onRequestAdd = onRequestAdd;
+        this.onClose = onClose;
+        this.onEditWaypoint = onEditWaypoint;
+        this.onToggleVisibility = onToggleVisibility;
+        this.dimensionLabelFormatter = dimensionLabelFormatter;
+
+        this.searchInput = new FOutlinedTextInputWidget(64, 24f,
+                () -> Component.translatable("fascinatedutils.waypoints.search").getString());
+        this.searchInput.setOnChange(value -> {
+            if (scrollOffsetRef != null) scrollOffsetRef.set(0f);
+        });
+
+        this.root = new FNodeWidget(nodes.get("waypoints-root", this::buildRootWidget));
+        addChild(root);
     }
 
     @Override
-    public UiView render() {
-        Props currentProps = props();
-        float viewportWidth = currentProps.viewportWidth();
-        float viewportHeight = currentProps.viewportHeight();
+    public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+        root.layout(measure, lx, ly, lw, lh);
+        nodes.gc();
+    }
 
-        float cardWidth = Math.min(viewportWidth - 60f, 540f);
-        float cardHeight = Math.min(viewportHeight - 60f, 520f);
+    public void dispose() {
+        nodes.dispose();
+    }
+
+    private FWidget buildRootWidget(FWidgetNode.RenderContext ctx) {
+        scrollOffsetRef = ctx.useState(0f);
+        pendingDeleteId = ctx.useState(null);
+
+        return new FWidget() {
+            float lastWidth = Float.NaN;
+            float lastHeight = Float.NaN;
+
+            @Override
+            public boolean fillsHorizontalInRow() {
+                return true;
+            }
+
+            @Override
+            public boolean fillsVerticalInColumn() {
+                return true;
+            }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+                if (Math.abs(lw - lastWidth) > 0.5f || Math.abs(lh - lastHeight) > 0.5f || childrenView().isEmpty()) {
+                    lastWidth = lw;
+                    lastHeight = lh;
+                    clearChildren();
+                    addChild(buildSurface(lw, lh));
+                }
+                for (FWidget child : childrenView()) {
+                    child.layout(measure, lx, ly, lw, lh);
+                }
+            }
+        };
+    }
+
+    private FWidget buildSurface(float width, float height) {
+        float cardWidth = Math.min(width - 60f, 540f);
+        float cardHeight = Math.min(height - 60f, 520f);
         FCellConstraints horizontalCardPad = new FCellConstraints().setMarginStart(CARD_PAD).setMarginEnd(CARD_PAD);
 
-        List<UiSlot> deckLayers = new ArrayList<>();
-        deckLayers.add(UiSlot.of(Ui.rectPlain(0xB0000000)));
-        deckLayers.add(UiSlot.of(Ui.centerMax(30f, 30f, cardWidth, cardHeight, cardStack(cardWidth, horizontalCardPad, currentProps))));
+        List<Waypoint> worldWaypoints = ModConfig.waypoints().getForWorld(worldKey);
 
-        if (pendingDeleteId != null) {
-            UUID idForDelete = pendingDeleteId;
-            Optional<Waypoint> waypointOptional = ModConfig.waypoints().findById(idForDelete);
-            if (waypointOptional.isPresent()) {
-                deckLayers.add(UiSlot.keyed("waypoints.delete_popup", WaypointDeletePopupComponent.view(new WaypointDeletePopupComponent.Props(waypointOptional.get().getName(), () -> pendingDeleteId = null, () -> {
-                    ModConfig.waypoints().delete(idForDelete);
-                    pendingDeleteId = null;
-                }))));
-            }
-            else {
-                pendingDeleteId = null;
+        FAbsoluteStackWidget deckStack = new FAbsoluteStackWidget();
+
+        FRectWidget backdrop = new FRectWidget();
+        backdrop.setFillColorArgb(0xB0000000);
+        deckStack.addChild(backdrop);
+
+        FWidget card = buildCard(cardWidth, horizontalCardPad, worldWaypoints);
+        deckStack.addChild(new FMaxCenterInsetsWidget(30f, 30f, cardWidth, cardHeight, card));
+
+        UUID deletingId = pendingDeleteId.get();
+        if (deletingId != null) {
+            if (ModConfig.waypoints().findById(deletingId).isPresent()) {
+                Waypoint waypointToDelete = ModConfig.waypoints().findById(deletingId).get();
+                deckStack.addChild(new WaypointDeletePopupWidget(
+                        waypointToDelete.getName(),
+                        () -> pendingDeleteId.set(null),
+                        () -> {
+                            ModConfig.waypoints().delete(deletingId);
+                            pendingDeleteId.set(null);
+                        }));
+            } else {
+                pendingDeleteId.setQuiet(null);
             }
         }
 
-        return Ui.stackLayers(deckLayers);
+        return deckStack;
     }
 
-    private UiView cardStack(float cardWidth, FCellConstraints horizontalCardPad, Props currentProps) {
-        UiView columnBody = Ui.column(0f, Align.START, List.of(Ui.slot(new FCellConstraints().setMargins(0f, CARD_PAD), Ui.spacer(cardWidth, 0f)), Ui.slot(horizontalCardPad, WaypointsHeaderComponent.view(new WaypointsHeaderComponent.Props(currentProps.onRequestAdd(), currentProps.onClose()))), Ui.slot(horizontalCardPad, Ui.spacer(cardWidth, 6f)), Ui.slot(horizontalCardPad, Ui.outlinedPinned(searchInput, null, value -> scrollOffsetRef.setValue(0f))), Ui.slot(horizontalCardPad, Ui.spacer(cardWidth, 8f)), Ui.slot(new FCellConstraints().setExpandVertical(true), WaypointsListComponent.view(new WaypointsListComponent.Props(currentProps.worldWaypoints(), searchInput.value(), scrollOffsetRef, currentProps.onEditWaypoint(), currentProps.onToggleVisibility(), waypointId -> pendingDeleteId = waypointId, currentProps.dimensionLabelFormatter())))));
-        return Ui.stackLayers(UiSlot.of(Ui.rectDecorated(UITheme.COLOR_SURFACE, 8f, UITheme.COLOR_BORDER, 1f)), UiSlot.of(columnBody));
-    }
+    private FWidget buildCard(float cardWidth, FCellConstraints horizontalCardPad, List<Waypoint> worldWaypoints) {
+        FWidget list = WaypointsListComponent.build(worldWaypoints, searchInput.value(), scrollOffsetRef,
+                onEditWaypoint, onToggleVisibility, waypointId -> pendingDeleteId.set(waypointId),
+                dimensionLabelFormatter);
 
-    @Override
-    protected void onUnmount() {
-        pendingDeleteId = null;
-    }
+        FColumnWidget columnBody = new FColumnWidget(0f, Align.START);
+        columnBody.addChild(new FSpacerWidget(cardWidth, 0f), new FCellConstraints().setMargins(0f, CARD_PAD));
+        columnBody.addChild(WaypointsHeaderComponent.build(onRequestAdd, onClose),
+                new FCellConstraints().setMarginStart(CARD_PAD).setMarginEnd(CARD_PAD));
+        columnBody.addChild(new FSpacerWidget(cardWidth, 6f),
+                new FCellConstraints().setMarginStart(CARD_PAD).setMarginEnd(CARD_PAD));
+        columnBody.addChild(searchInput,
+                new FCellConstraints().setMarginStart(CARD_PAD).setMarginEnd(CARD_PAD));
+        columnBody.addChild(new FSpacerWidget(cardWidth, 8f),
+                new FCellConstraints().setMarginStart(CARD_PAD).setMarginEnd(CARD_PAD));
+        columnBody.addChild(list, new FCellConstraints().setExpandVertical(true));
 
-    /**
-     * Props for {@link WaypointsRootComponent}.
-     */
-    public record Props(float viewportWidth, float viewportHeight, List<Waypoint> worldWaypoints, Runnable onRequestAdd,
-                        Runnable onClose, java.util.function.Consumer<Waypoint> onEditWaypoint,
-                        java.util.function.Consumer<Waypoint> onToggleVisibility,
-                        WaypointsListComponent.DimensionLabelFormatter dimensionLabelFormatter) {}
+        FRectWidget cardBg = new FRectWidget();
+        cardBg.setFillColorArgb(UITheme.COLOR_SURFACE);
+        cardBg.setCornerRadius(8f);
+        cardBg.setBorder(UITheme.COLOR_BORDER, 1f);
+
+        FAbsoluteStackWidget cardStack = new FAbsoluteStackWidget();
+        cardStack.addChild(cardBg);
+        cardStack.addChild(columnBody);
+        return cardStack;
+    }
 }

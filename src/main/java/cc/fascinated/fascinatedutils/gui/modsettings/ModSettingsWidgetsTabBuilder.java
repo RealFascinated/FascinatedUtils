@@ -5,7 +5,7 @@ import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.impl.*;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.Callback;
-import cc.fascinated.fascinatedutils.gui.core.Ref;
+import cc.fascinated.fascinatedutils.gui.core.FState;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
@@ -26,7 +26,7 @@ public class ModSettingsWidgetsTabBuilder {
     private static final float GRID_MIN_CELL_WIDTH_DESIGN = 90f;
     private static final float GRID_MARGIN_X_DESIGN = 8f;
 
-    public static FWidget buildWidgetsTab(float paneWidth, float paneHeight, List<HudPanel> hudPanels, Ref<Float> widgetsPaneScrollYRef, HudPanel settingsPanel, Runnable onBackFromSettings, Callback<HudPanel> onOpenPanelSettings, Ref<Float> widgetSettingsPaneScrollYRef, Consumer<ColorSetting> openColorPicker) {
+    public static FWidget buildWidgetsTab(float paneWidth, float paneHeight, List<HudPanel> hudPanels, FState<Float> widgetsPaneScrollYRef, HudPanel settingsPanel, Runnable onBackFromSettings, Callback<HudPanel> onOpenPanelSettings, FState<Float> widgetSettingsPaneScrollYRef, Consumer<ColorSetting> openColorPicker) {
         if (settingsPanel != null) {
             return buildWidgetSettingsDetail(paneWidth, settingsPanel, onBackFromSettings, widgetSettingsPaneScrollYRef, openColorPicker);
         }
@@ -62,7 +62,7 @@ public class ModSettingsWidgetsTabBuilder {
         return null;
     }
 
-    private static FWidget buildWidgetCardGrid(float paneWidth, List<HudPanel> hudPanels, Ref<Float> widgetsPaneScrollYRef, Callback<HudPanel> onOpenPanelSettings, Consumer<ColorSetting> openColorPicker) {
+    private static FWidget buildWidgetCardGrid(float paneWidth, List<HudPanel> hudPanels, FState<Float> widgetsPaneScrollYRef, Callback<HudPanel> onOpenPanelSettings, Consumer<ColorSetting> openColorPicker) {
         float paddedInnerWidth = Math.max(0f, paneWidth - 2f * GRID_MARGIN_X_DESIGN);
         float settingsContentWidth = Math.max(28f, paddedInnerWidth);
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
@@ -86,9 +86,9 @@ public class ModSettingsWidgetsTabBuilder {
             FScrollColumnWidget emptyClip = FTheme.components().createScrollColumn(scrollBody, gapY);
             emptyClip.setFillVerticalInColumn(true);
             if (widgetsPaneScrollYRef != null) {
-                Float scrollOffsetY = widgetsPaneScrollYRef.getValue();
+                Float scrollOffsetY = widgetsPaneScrollYRef.get();
                 emptyClip.setScrollOffsetY(scrollOffsetY == null ? 0f : scrollOffsetY);
-                emptyClip.setScrollOffsetChangeListener(widgetsPaneScrollYRef::setValue);
+                emptyClip.setScrollOffsetChangeListener(widgetsPaneScrollYRef::setQuiet);
             }
             return emptyClip;
         }
@@ -110,14 +110,14 @@ public class ModSettingsWidgetsTabBuilder {
         FScrollColumnWidget clip = FTheme.components().createScrollColumn(scrollBody, gapY);
         clip.setFillVerticalInColumn(true);
         if (widgetsPaneScrollYRef != null) {
-            Float scrollOffsetY = widgetsPaneScrollYRef.getValue();
+            Float scrollOffsetY = widgetsPaneScrollYRef.get();
             clip.setScrollOffsetY(scrollOffsetY == null ? 0f : scrollOffsetY);
-            clip.setScrollOffsetChangeListener(widgetsPaneScrollYRef::setValue);
+            clip.setScrollOffsetChangeListener(widgetsPaneScrollYRef::setQuiet);
         }
         return clip;
     }
 
-    private static FWidget buildWidgetSettingsDetail(float paneWidth, HudPanel settingsPanel, Runnable onBackFromSettings, Ref<Float> widgetSettingsPaneScrollYRef, Consumer<ColorSetting> openColorPicker) {
+    private static FWidget buildWidgetSettingsDetail(float paneWidth, HudPanel settingsPanel, Runnable onBackFromSettings, FState<Float> widgetSettingsPaneScrollYRef, Consumer<ColorSetting> openColorPicker) {
         float settingsContentWidth = Math.max(28f, paneWidth);
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
         float gap = 3f;
@@ -149,13 +149,13 @@ public class ModSettingsWidgetsTabBuilder {
         scrollBody.addChild(new FSpacerWidget(settingsContentWidth, ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET));
     }
 
-    private static FScrollColumnWidget wrapScrollClip(FColumnWidget body, float gap, Ref<Float> scrollYRef) {
+    private static FScrollColumnWidget wrapScrollClip(FColumnWidget body, float gap, FState<Float> scrollYRef) {
         FScrollColumnWidget clip = FTheme.components().createScrollColumn(body, gap);
         clip.setFillVerticalInColumn(true);
         if (scrollYRef != null) {
-            Float scrollOffsetY = scrollYRef.getValue();
+            Float scrollOffsetY = scrollYRef.get();
             clip.setScrollOffsetY(scrollOffsetY == null ? 0f : scrollOffsetY);
-            clip.setScrollOffsetChangeListener(scrollYRef::setValue);
+            clip.setScrollOffsetChangeListener(scrollYRef::setQuiet);
         }
         return clip;
     }
