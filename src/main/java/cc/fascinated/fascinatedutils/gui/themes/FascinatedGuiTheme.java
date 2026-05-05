@@ -14,6 +14,7 @@ public class FascinatedGuiTheme extends GuiTheme {
     private static final int BACKGROUND = UiColor.argb("#A61a1625");
     private static final int SURFACE = UiColor.argb("#BF211d2e");
     private static final int SURFACE_ELEVATED = UiColor.argb("#CC271e38");
+    private static final int CONTEXT_MENU_SURFACE = UiColor.argb("#F0211d2e");
     private static final int BORDER = UiColor.argb("#12ffffff");
     private static final int BORDER_MUTED = UiColor.argb("#0Dffffff");
     private static final int BORDER_HOVER = UiColor.argb("#557c5cbf");
@@ -67,6 +68,11 @@ public class FascinatedGuiTheme extends GuiTheme {
     @Override
     public int surfaceElevated() {
         return SURFACE_ELEVATED;
+    }
+
+    @Override
+    public int contextMenuSurface() {
+        return CONTEXT_MENU_SURFACE;
     }
 
     @Override

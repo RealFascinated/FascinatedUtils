@@ -13,7 +13,7 @@ public class PresenceUpdateHandler implements GatewayHandler {
 
     @Override
     public void handle(Consumer<OutboundMessage> send, JsonElement data) {
-        PresenceUpdateEvent event = Alumite.INSTANCE.getGsonForWire().fromJson(data, PresenceUpdateEvent.class);
+        PresenceUpdateEvent event = Alumite.INSTANCE.getGsonForDTO().fromJson(data, PresenceUpdateEvent.class);
         Alumite.INSTANCE.users().mergePresenceUpdate(event.userId(), event.status());
         FascinatedEventBus.INSTANCE.post(event);
     }

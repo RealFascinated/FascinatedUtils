@@ -1,8 +1,11 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FContextMenuWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
+import net.minecraft.network.chat.Component;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -61,7 +64,14 @@ public class ProfilePopupController {
             stack.addChild(new FProfileRenamePopupWidget(renameProfileName, this::closeRenameProfilePopup, this::submitRenameProfile));
         }
         if (showContextMenu && contextMenuProfileId != null) {
-            stack.addChild(new FProfileContextMenuWidget(contextMenuX, contextMenuY, this::closeContextMenu, this::handleContextMenuAction));
+            stack.addChild(new FContextMenuWidget(contextMenuX, contextMenuY, this::closeContextMenu, List.of(
+                    new FContextMenuWidget.Item(
+                            () -> Component.translatable("fascinatedutils.setting.shell.profile_context_rename").getString(),
+                            () -> { handleRenameAction(); }),
+                    new FContextMenuWidget.Item(
+                            () -> Component.translatable("fascinatedutils.setting.shell.profile_context_delete").getString(),
+                            () -> { handleDeleteAction(); })
+            )));
         }
     }
 
@@ -99,25 +109,38 @@ public class ProfilePopupController {
         markDirty.run();
     }
 
-    private void handleContextMenuAction(ProfileContextMenuAction action) {
+    private void handleRenameAction() {
         UUID selectedProfileId = contextMenuProfileId;
         closeContextMenu();
-        if (action == ProfileContextMenuAction.RENAME && selectedProfileId != null) {
-            ModConfig.profiles().listProfiles().stream().filter(profile -> profile.getProfileId().equals(selectedProfileId)).findFirst().ifPresent(profile -> {
-                renameProfileId = profile.getProfileId();
-                renameProfileName = profile.getProfileName();
-                showRenameProfilePopup = true;
-                markDirty.run();
-            });
+        if (selectedProfileId == null) {
+            return;
         }
-        else if (action == ProfileContextMenuAction.DELETE && selectedProfileId != null) {
-            ModConfig.profiles().listProfiles().stream().filter(profile -> profile.getProfileId().equals(selectedProfileId)).findFirst().ifPresent(profile -> {
-                deleteConfirmProfileId = profile.getProfileId();
-                deleteConfirmProfileName = profile.getProfileName();
-                showDeleteProfilePopup = true;
-                markDirty.run();
-            });
+        ModConfig.profiles().listProfiles().stream()
+                .filter(profile -> profile.getProfileId().equals(selectedProfileId))
+                .findFirst()
+                .ifPresent(profile -> {
+                    renameProfileId = profile.getProfileId();
+                    renameProfileName = profile.getProfileName();
+                    showRenameProfilePopup = true;
+                    markDirty.run();
+                });
+    }
+
+    private void handleDeleteAction() {
+        UUID selectedProfileId = contextMenuProfileId;
+        closeContextMenu();
+        if (selectedProfileId == null) {
+            return;
         }
+        ModConfig.profiles().listProfiles().stream()
+                .filter(profile -> profile.getProfileId().equals(selectedProfileId))
+                .findFirst()
+                .ifPresent(profile -> {
+                    deleteConfirmProfileId = profile.getProfileId();
+                    deleteConfirmProfileName = profile.getProfileName();
+                    showDeleteProfilePopup = true;
+                    markDirty.run();
+                });
     }
 
     private void closeDeleteProfilePopup() {

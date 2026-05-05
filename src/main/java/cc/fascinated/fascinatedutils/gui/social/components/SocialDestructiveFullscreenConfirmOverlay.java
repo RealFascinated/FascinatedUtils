@@ -9,11 +9,9 @@ import cc.fascinated.fascinatedutils.gui.widgets.FConfirmPopupWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 
 /**
- * Confirmation overlay anchored to the right-side social dock panel, matching legacy layout where
- * the popup is constrained to panel width rather than the full viewport.
+ * Confirmation overlay that covers the full viewport and centers the confirm dialog.
  */
 public final class SocialDestructiveFullscreenConfirmOverlay extends UiComponent<SocialDestructiveFullscreenConfirmOverlay.Props> {
-    private static final float PANEL_WIDTH = 250f;
 
     /**
      * Mounts this overlay subtree (props are rebound every reconcile pass).
@@ -95,10 +93,8 @@ public final class SocialDestructiveFullscreenConfirmOverlay extends UiComponent
         @Override
         public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
             setBounds(layoutX, layoutY, layoutWidth, layoutHeight);
-            float dockPanelLogicalWidth = Math.min(PANEL_WIDTH, layoutWidth);
-            float dockPanelLogicalX = layoutX + layoutWidth - dockPanelLogicalWidth;
             FConfirmPopupWidget popup = (FConfirmPopupWidget) childrenView().get(0);
-            popup.layout(measure, dockPanelLogicalX, layoutY, dockPanelLogicalWidth, layoutHeight);
+            popup.layout(measure, layoutX, layoutY, layoutWidth, layoutHeight);
         }
 
         @Override

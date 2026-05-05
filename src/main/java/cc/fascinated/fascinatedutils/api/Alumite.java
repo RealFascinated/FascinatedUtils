@@ -4,17 +4,17 @@ import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.FascinatedUtils;
 import cc.fascinated.fascinatedutils.api.auth.json.*;
 import cc.fascinated.fascinatedutils.api.channel.AlumiteChannels;
-import cc.fascinated.fascinatedutils.api.channel.json.ChannelSummaryWire;
+import cc.fascinated.fascinatedutils.api.channel.json.ChannelDetailDTO;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
-import cc.fascinated.fascinatedutils.api.friend.json.FriendEntryWire;
-import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestWire;
-import cc.fascinated.fascinatedutils.api.friend.json.SendFriendRequestBodyWire;
+import cc.fascinated.fascinatedutils.api.friend.json.FriendEntryDTO;
+import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestDTO;
+import cc.fascinated.fascinatedutils.api.friend.json.SendFriendRequestBodyDTO;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteHttpClient;
 import cc.fascinated.fascinatedutils.api.user.AlumiteUsers;
 import cc.fascinated.fascinatedutils.api.user.Presence;
-import cc.fascinated.fascinatedutils.api.user.json.PublicUserWire;
-import cc.fascinated.fascinatedutils.api.user.json.UpdatePresenceBodyWire;
-import cc.fascinated.fascinatedutils.api.user.json.UserMeWire;
+import cc.fascinated.fascinatedutils.api.user.json.PublicUserDTO;
+import cc.fascinated.fascinatedutils.api.user.json.UpdatePresenceBodyDTO;
+import cc.fascinated.fascinatedutils.api.user.json.UserMeDTO;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.AlumiteAuthenticatedEvent;
@@ -79,11 +79,11 @@ public class Alumite {
         return presence;
     }
 
-    private static PublicUserWire toPublicWire(UserMeWire user) {
-        return new PublicUserWire(user.id(), user.minecraftUuid(), user.minecraftName(), user.role(), user.status(), user.presence(), user.lastSeen());
+    private static PublicUserDTO toPublicDTO(UserMeDTO user) {
+        return new PublicUserDTO(user.id(), user.minecraftUuid(), user.minecraftName(), user.role(), user.status(), user.presence(), user.lastSeen());
     }
 
-    public Gson getGsonForWire() {
+    public Gson getGsonForDTO() {
         return Constants.GSON;
     }
 
@@ -121,11 +121,11 @@ public class Alumite {
 
     private boolean tryRefresh(String accountKey, String storedRefreshToken) {
         try {
-            var response = http.sendRaw("POST", "/auth/refresh", Constants.GSON.toJson(new RefreshRequestWire(storedRefreshToken)), null);
+            var response = http.sendRaw("POST", "/auth/refresh", Constants.GSON.toJson(new RefreshRequestDTO(storedRefreshToken)), null);
             if (response.statusCode() != 200) {
                 return false;
             }
-            RefreshResponseWire refreshResponse = Constants.GSON.fromJson(response.body(), RefreshResponseWire.class);
+            RefreshResponseDTO refreshResponse = Constants.GSON.fromJson(response.body(), RefreshResponseDTO.class);
             activeAccessToken = refreshResponse.accessToken();
             activeRefreshToken = refreshResponse.refreshToken();
             restoreActiveUserContext();
@@ -144,10 +144,10 @@ public class Alumite {
     }
 
     private void restoreActiveUserContext() {
-        UserMeWire currentUser = http.getObject(ROUTE_USERS + "/@me", UserMeWire.class, "get current user", "Failed to load current user.");
+        UserMeDTO currentUser = http.getObject(ROUTE_USERS + "/@me", UserMeDTO.class, "get current user", "Failed to load current user.");
         activeUserId = currentUser.id();
         activePreferredPresence = normalizePreferredPresence(currentUser.preferredPresence());
-        users.setSelfUser(toPublicWire(currentUser));
+        users.setSelfUser(toPublicDTO(currentUser));
     }
 
     private void performFullLogin(Minecraft minecraftClient) {
@@ -162,19 +162,19 @@ public class Alumite {
                 Client.LOG.warn("[Alumite] Challenge request failed with status {}", challengeResponse.statusCode());
                 return;
             }
-            ChallengeResponseWire challenge = Constants.GSON.fromJson(challengeResponse.body(), ChallengeResponseWire.class);
-            VerifyRequestWire verifyRequest = new VerifyRequestWire(challenge.challengeId(), challenge.nonce(), minecraftAccessToken);
+            ChallengeResponseDTO challenge = Constants.GSON.fromJson(challengeResponse.body(), ChallengeResponseDTO.class);
+            VerifyRequestDTO verifyRequest = new VerifyRequestDTO(challenge.challengeId(), challenge.nonce(), minecraftAccessToken);
             var verifyResponse = http.sendRaw("POST", "/auth/minecraft/verify", Constants.GSON.toJson(verifyRequest), null);
             if (verifyResponse.statusCode() != 200) {
                 Client.LOG.warn("[Alumite] Verify failed with status {}: {}", verifyResponse.statusCode(), verifyResponse.body());
                 return;
             }
-            VerifyResponseWire result = Constants.GSON.fromJson(verifyResponse.body(), VerifyResponseWire.class);
+            VerifyResponseDTO result = Constants.GSON.fromJson(verifyResponse.body(), VerifyResponseDTO.class);
             activeAccessToken = result.accessToken();
             activeRefreshToken = result.refreshToken();
             activeUserId = result.user().id();
             activePreferredPresence = normalizePreferredPresence(result.user().preferredPresence());
-            users.setSelfUser(toPublicWire(result.user()));
+            users.setSelfUser(toPublicDTO(result.user()));
             storeSession(activeAccountKey, result.refreshToken());
             scheduleTokenRefresh(result.accessExpiresAt());
             Client.LOG.info("[Alumite] Authenticated as {}", result.user().minecraftName());
@@ -241,10 +241,9 @@ public class Alumite {
     private void refreshSocialCaches() {
         Client.LOG.info("[Alumite] Fetching channels and social data...");
         try {
-            List<ChannelSummaryWire> channelWire = http.getList(ROUTE_CHANNELS, ChannelSummaryWire.class, "get channels", "Failed to load channels.");
-            channels.replaceSummariesFromNetwork(channelWire);
-            users.replaceSocialFromNetwork(http.getList(ROUTE_FRIENDS, FriendEntryWire.class, "get friends", "Failed to load friends."), http.getList(ROUTE_FRIENDS_REQUESTS_INCOMING, PendingFriendRequestWire.class, "get incoming friend requests", "Failed to load incoming requests."), http.getList(ROUTE_FRIENDS_REQUESTS_OUTGOING, PendingFriendRequestWire.class, "get outgoing friend requests", "Failed to load outgoing requests."));
-            channels.preloadDetails();
+            List<ChannelDetailDTO> channelDto = http.getList(ROUTE_CHANNELS, ChannelDetailDTO.class, "get channels", "Failed to load channels.");
+            channels.replaceChannelsFromNetwork(channelDto);
+            users.replaceSocialFromNetwork(http.getList(ROUTE_FRIENDS, FriendEntryDTO.class, "get friends", "Failed to load friends."), http.getList(ROUTE_FRIENDS_REQUESTS_INCOMING, PendingFriendRequestDTO.class, "get incoming friend requests", "Failed to load incoming requests."), http.getList(ROUTE_FRIENDS_REQUESTS_OUTGOING, PendingFriendRequestDTO.class, "get outgoing friend requests", "Failed to load outgoing requests."));
             Client.LOG.info("[Alumite] Loaded {} channels", channels.all().size());
         } catch (AlumiteApiException exception) {
             users.clearSessionCaches();
@@ -265,14 +264,14 @@ public class Alumite {
         if (presence == Presence.OFFLINE) {
             throw new IllegalArgumentException("Preferred presence cannot be offline.");
         }
-        http.sendAuthorizedChecked("PATCH", ROUTE_PRESENCE, Constants.GSON.toJson(new UpdatePresenceBodyWire(resolvedPresence)), "update preferred presence", "Failed to update preferred presence.");
+        http.sendAuthorizedChecked("PATCH", ROUTE_PRESENCE, Constants.GSON.toJson(new UpdatePresenceBodyDTO(resolvedPresence)), "update preferred presence", "Failed to update preferred presence.");
         activePreferredPresence = resolvedPresence;
     }
 
     public PendingFriendRequest sendFriendRequest(String targetUsername) throws AlumiteApiException {
-        var response = http.sendAuthorizedChecked("POST", ROUTE_FRIENDS_REQUESTS, Constants.GSON.toJson(new SendFriendRequestBodyWire(targetUsername)), "send friend request", "Failed to send request.");
-        PendingFriendRequestWire wire = Constants.GSON.fromJson(response.body(), PendingFriendRequestWire.class);
-        return users.addOutgoingFriendRequest(wire);
+        var response = http.sendAuthorizedChecked("POST", ROUTE_FRIENDS_REQUESTS, Constants.GSON.toJson(new SendFriendRequestBodyDTO(targetUsername)), "send friend request", "Failed to send request.");
+        PendingFriendRequestDTO dto = Constants.GSON.fromJson(response.body(), PendingFriendRequestDTO.class);
+        return users.addOutgoingFriendRequest(dto);
     }
 
     public boolean acceptFriendRequest(int requestId) throws AlumiteApiException {

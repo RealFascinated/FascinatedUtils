@@ -4,11 +4,11 @@ import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.friend.Friend;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
-import cc.fascinated.fascinatedutils.api.friend.json.FriendEntryWire;
-import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestWire;
+import cc.fascinated.fascinatedutils.api.friend.json.FriendEntryDTO;
+import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestDTO;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteHttpClient;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteModelMapper;
-import cc.fascinated.fascinatedutils.api.user.json.PublicUserWire;
+import cc.fascinated.fascinatedutils.api.user.json.PublicUserDTO;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendAddEvent;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendRemoveEvent;
@@ -54,8 +54,8 @@ public class AlumiteUsers {
         selfUser = null;
     }
 
-    public void setSelfUser(PublicUserWire wire) {
-        selfUser = wire == null ? null : upsertUser(wire);
+    public void setSelfUser(PublicUserDTO dto) {
+        selfUser = dto == null ? null : upsertUser(dto);
     }
 
     public User cachedUser(int userId) {
@@ -75,27 +75,27 @@ public class AlumiteUsers {
     }
 
     private User fetchUser(int userId) throws AlumiteApiException {
-        PublicUserWire wire = http.getObject(ROUTE_USERS + "/" + userId, PublicUserWire.class, "get user", "Failed to load user.");
-        return upsertUser(wire);
+        PublicUserDTO dto = http.getObject(ROUTE_USERS + "/" + userId, PublicUserDTO.class, "get user", "Failed to load user.");
+        return upsertUser(dto);
     }
 
     public SelfUser self() {
         return new SelfUser(alumite);
     }
 
-    public void replaceSocialFromNetwork(List<FriendEntryWire> friendsWire, List<PendingFriendRequestWire> incomingWire, List<PendingFriendRequestWire> outgoingWire) {
+    public void replaceSocialFromNetwork(List<FriendEntryDTO> friendsDto, List<PendingFriendRequestDTO> incomingDto, List<PendingFriendRequestDTO> outgoingDto) {
         User activeSelfUser = selfUser;
         usersById.clear();
         if (activeSelfUser != null) {
             usersById.put(activeSelfUser.id(), activeSelfUser);
         }
-        friends = friendsWire == null ? List.of() : friendsWire.stream().map(this::toFriend).toList();
-        incomingFriendRequests = incomingWire == null ? List.of() : incomingWire.stream().map(this::toPendingFriendRequest).toList();
-        outgoingFriendRequests = outgoingWire == null ? List.of() : outgoingWire.stream().map(this::toPendingFriendRequest).toList();
+        friends = friendsDto == null ? List.of() : friendsDto.stream().map(this::toFriend).toList();
+        incomingFriendRequests = incomingDto == null ? List.of() : incomingDto.stream().map(this::toPendingFriendRequest).toList();
+        outgoingFriendRequests = outgoingDto == null ? List.of() : outgoingDto.stream().map(this::toPendingFriendRequest).toList();
     }
 
-    public User upsertUser(PublicUserWire wire) {
-        return upsertUser(AlumiteModelMapper.toUser(wire));
+    public User upsertUser(PublicUserDTO dto) {
+        return upsertUser(AlumiteModelMapper.toUser(dto));
     }
 
     public User upsertUser(User incomingUser) {
@@ -118,7 +118,7 @@ public class AlumiteUsers {
         });
     }
 
-    public void onFriendAdd(FriendEntryWire entry) {
+    public void onFriendAdd(FriendEntryDTO entry) {
         User user = upsertUser(entry.user());
         boolean wasOutgoing = outgoingFriendRequests.stream().anyMatch(request -> request.user().id() == user.id());
         List<Friend> updatedFriends = new ArrayList<>(friends);
@@ -134,7 +134,7 @@ public class AlumiteUsers {
         FascinatedEventBus.INSTANCE.post(new FriendRemoveEvent(userId));
     }
 
-    public void onFriendRequestIncoming(PendingFriendRequestWire request) {
+    public void onFriendRequestIncoming(PendingFriendRequestDTO request) {
         PendingFriendRequest pendingRequest = toPendingFriendRequest(request);
         List<PendingFriendRequest> updatedRequests = new ArrayList<>(incomingFriendRequests);
         updatedRequests.add(pendingRequest);
@@ -148,8 +148,8 @@ public class AlumiteUsers {
         FascinatedEventBus.INSTANCE.post(new FriendRequestRemovedEvent(requestId, reason));
     }
 
-    public PendingFriendRequest addOutgoingFriendRequest(PendingFriendRequestWire wire) {
-        PendingFriendRequest pending = toPendingFriendRequest(wire);
+    public PendingFriendRequest addOutgoingFriendRequest(PendingFriendRequestDTO dto) {
+        PendingFriendRequest pending = toPendingFriendRequest(dto);
         List<PendingFriendRequest> updated = new ArrayList<>(outgoingFriendRequests);
         updated.add(pending);
         outgoingFriendRequests = List.copyOf(updated);
@@ -164,11 +164,11 @@ public class AlumiteUsers {
         return "";
     }
 
-    private Friend toFriend(FriendEntryWire entry) {
+    private Friend toFriend(FriendEntryDTO entry) {
         return new Friend(upsertUser(entry.user()), entry.since());
     }
 
-    private PendingFriendRequest toPendingFriendRequest(PendingFriendRequestWire request) {
+    private PendingFriendRequest toPendingFriendRequest(PendingFriendRequestDTO request) {
         return new PendingFriendRequest(request.requestId(), upsertUser(request.user()), request.createdAt());
     }
 }

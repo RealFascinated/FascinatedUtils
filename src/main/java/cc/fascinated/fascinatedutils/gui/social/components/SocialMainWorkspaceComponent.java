@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.Errors;
 import cc.fascinated.fascinatedutils.api.channel.*;
+import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessagePageDTO;
 import cc.fascinated.fascinatedutils.api.friend.Friend;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
 import cc.fascinated.fascinatedutils.api.user.Presence;
@@ -27,14 +28,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import org.lwjgl.glfw.GLFW;
 
 public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspaceComponent.Props> {
     private static final float LEFT_PANEL_WIDTH = 250f;
@@ -55,10 +52,10 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
     private static final float AVATAR_SIZE = 32f;
     private static final float CHAT_HEADER_AVATAR = 28f;
     private static final int FOCUS_CHAT_SEARCH = 7112;
+    private static final int FOCUS_EDIT_MESSAGE = 7113;
+
     private static final Presence[] SELECTABLE_PREFERRED_PRESENCES = {Presence.ONLINE, Presence.AWAY, Presence.DO_NOT_DISTURB, Presence.INVISIBLE};
     private static final int[] BADGE_COLORS = {0xFF6B5B95, 0xFF88B04B, 0xFF955251, 0xFF009B77, 0xFF45B8AC, 0xFF5B5EA6, 0xFFB565A7, 0xFFDD4132};
-    private static final DateTimeFormatter CHAT_MESSAGE_DATE_FORMATTER = DateTimeFormatter.ofPattern("M/d/yyyy");
-    private static final DateTimeFormatter CHAT_MESSAGE_TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm a");
     private static final float MESSAGE_SCROLL_EDGE_EPSILON = 0.01f;
     /**
      * Stored in {@link #messageScrollYRef}; {@link FScrollColumnWidget} clamps to the real max scroll so the
@@ -73,8 +70,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
     private Integer selectedChannelId;
     private Integer selectedFriendUserId;
     private Integer loadingMessagesChannelId;
-    private Integer loadingDetailChannelId;
-    private String selectedChannelDisplayName;
+    private Integer loadingOlderMessagesChannelId;
     private boolean searchOpen;
     private boolean sendMessagePending;
     private Friend pendingRemoveFriend;
@@ -89,6 +85,13 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
     private float preferredPresenceButtonY;
     private float preferredPresenceButtonW;
     private float preferredPresenceButtonH;
+    private ChannelMessage contextMenuMessage;
+    private float contextMenuX;
+    private float contextMenuY;
+    private ChannelMessage pendingDeleteMessage;
+    private ChannelMessage editingMessage;
+    private final FOutlinedTextInputWidget editMessageInput = new FOutlinedTextInputWidget(FOCUS_EDIT_MESSAGE, 4000, 20f, () -> "");
+    private boolean editMessagePending;
 
     /**
      * Mounts the social workspace: channels, friends, messages, and confirm overlays.
@@ -158,29 +161,6 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         return Component.translatable("fascinatedutils.social.error.generic").getString();
     }
 
-    private static String messageTimestamp(String time) {
-        if (time == null || time.isBlank()) {
-            return "";
-        }
-        try {
-            ZoneId zoneId = ZoneId.systemDefault();
-            ZonedDateTime messageTime = Instant.parse(time).atZone(zoneId);
-            LocalDate messageDate = messageTime.toLocalDate();
-            LocalDate today = LocalDate.now(zoneId);
-            String formattedTime = CHAT_MESSAGE_TIME_FORMATTER.format(messageTime);
-            if (messageDate.equals(today)) {
-                return Component.translatable("fascinatedutils.social.message_time.today_at", formattedTime).getString();
-            }
-            if (messageDate.equals(today.minusDays(1))) {
-                return Component.translatable("fascinatedutils.social.message_time.yesterday_at", formattedTime).getString();
-            }
-            String formattedDate = CHAT_MESSAGE_DATE_FORMATTER.format(messageTime);
-            return Component.translatable("fascinatedutils.social.message_time.full", formattedDate, formattedTime).getString();
-        } catch (DateTimeParseException ignored) {
-            return "";
-        }
-    }
-
     @Override
     public UiView render() {
         Props currentProps = props();
@@ -232,12 +212,28 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         if (preferredPresenceMenuOpen) {
             viewportLayers.add(UiSlot.keyed("social.overlay.presence", Ui.widgetSlot("social.presence.overlay", buildPreferredPresenceMenuOverlay())));
         }
+        if (contextMenuMessage != null) {
+            viewportLayers.add(UiSlot.keyed("social.overlay.msg_context", Ui.widgetSlot("social.msg_context.overlay", buildMessageContextMenuOverlay())));
+        }
+        if (pendingDeleteMessage != null) {
+            ChannelMessage messageToDelete = pendingDeleteMessage;
+            viewportLayers.add(UiSlot.keyed("social.popup.delete_msg." + messageToDelete.id(), SocialDestructiveFullscreenConfirmOverlay.view(new SocialDestructiveFullscreenConfirmOverlay.Props(Component.translatable("fascinatedutils.social.delete_message.title").getString(), Component.translatable("fascinatedutils.social.delete_message.message").getString(), Component.translatable("fascinatedutils.social.delete_message.confirm").getString(), Component.translatable("fascinatedutils.social.delete_message.deny").getString(), () -> {
+                pendingDeleteMessage = null;
+            }, () -> {
+                pendingDeleteMessage = null;
+                submitDeleteMessage(messageToDelete);
+            }))));
+        }
+        if (editingMessage != null) {
+            viewportLayers.add(UiSlot.keyed("social.overlay.edit_msg", Ui.widgetSlot("social.edit_msg.overlay", buildEditMessageOverlay())));
+        }
         return Ui.stackLayers(viewportLayers);
     }
 
     private FWidget buildSocialMainDock() {
-        if (pendingRemoveFriend != null || pendingCancelRequest != null) {
+        if (pendingRemoveFriend != null || pendingCancelRequest != null || pendingDeleteMessage != null || editingMessage != null) {
             preferredPresenceMenuOpen = false;
+            contextMenuMessage = null;
         }
 
         FAbsoluteStackWidget stack = new FAbsoluteStackWidget();
@@ -558,7 +554,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         float scrollY = savedY == null ? 0f : savedY;
         if (activeTab == Tab.CHAT) {
             String searchQuery = chatSearchInput.value().trim().toLowerCase();
-            List<Channel> channels = Alumite.INSTANCE.channels().all().stream().filter(channel -> searchQuery.isEmpty() || channelListTitle(channel).toLowerCase().contains(searchQuery)).toList();
+            List<Channel> channels = Alumite.INSTANCE.channels().all().stream().filter(channel -> searchQuery.isEmpty() || channelTitle(channel).toLowerCase().contains(searchQuery)).toList();
             return SocialChatListWidget.build(new SocialChatListWidget.Props(channels, scrollY, scrollYRef::setValue, channel -> buildChatChannelRow(channel, innerW), () -> buildEmptyState(Component.translatable("fascinatedutils.social.dm.no_chats").getString())));
         }
         return SocialFriendsListWidget.build(new SocialFriendsListWidget.Props(Alumite.INSTANCE.users().friends(), Alumite.INSTANCE.users().incomingFriendRequests(), Alumite.INSTANCE.users().outgoingFriendRequests(), scrollY, scrollYRef::setValue, friend -> buildFriendRow(friend, innerW), request -> buildRequestRow(request, innerW), request -> buildOutgoingRequestRow(request, innerW), this::buildSectionLabel, Component.translatable("fascinatedutils.social.requests_incoming").getString(), Component.translatable("fascinatedutils.social.requests_outgoing").getString(), () -> buildEmptyState(Component.translatable("fascinatedutils.social.no_friends").getString()), () -> buildEmptyState(Component.translatable("fascinatedutils.social.no_friends").getString())));
@@ -566,62 +562,53 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
 
     private FWidget buildChatChannelRow(Channel channel, float innerW) {
         String snippet = channelListSnippet(channel);
-        String channelLabel = channelListTitle(channel);
+        String channelLabel = channelTitle(channel);
         String channelAvatarMinecraftUuid = channelListAvatarMinecraftUuid(channel);
-        return SocialChatRowWidget.build(new SocialChatRowWidget.Props(channelLabel, channelAvatarMinecraftUuid, snippet, channelListPresenceColor(channel), selectedChannelId != null && selectedChannelId == channel.id(), channelHasUnread(channel), () -> selectChannel(channel.id(), false, channelLabel), channel.asDmChannel() != null ? () -> closeDmChannel(channel.id()) : null), innerW, ROW_H);
+        return SocialChatRowWidget.build(new SocialChatRowWidget.Props(channelLabel, channelAvatarMinecraftUuid, snippet, channelListPresenceColor(channel), selectedChannelId != null && selectedChannelId == channel.id(), channelHasUnread(channel), () -> selectChannel(channel.id(), false), channel.asDmChannel() != null ? () -> closeDmChannel(channel.id()) : null), innerW, ROW_H);
     }
 
     private String channelListSnippet(Channel channel) {
         LastMessagePreview preview = channel.lastMessagePreview();
-        if (preview != null && preview.content() != null && !preview.content().isBlank()) {
-            if (preview.authorName() != null && !preview.authorName().isBlank()) {
-                return preview.authorName() + ": " + preview.content();
-            }
-            return preview.content();
-        }
-        List<ChannelMessage> channelMessages = channel.messagesOrNull();
-        if (channelMessages == null || channelMessages.isEmpty()) {
+        if (preview == null || preview.content() == null || preview.content().isBlank()) {
             return "";
         }
-        return channelMessages.get(channelMessages.size() - 1).content();
+        if (preview.authorName() != null && !preview.authorName().isBlank()) {
+            return preview.authorName() + ": " + preview.content();
+        }
+        return preview.content();
     }
 
     private boolean channelHasUnread(Channel channel) {
-        int lastMessageId;
         LastMessagePreview preview = channel.lastMessagePreview();
-        if (preview != null) {
-            lastMessageId = preview.messageId();
-        }
-        else {
-            List<ChannelMessage> channelMessages = channel.messagesOrNull();
-            if (channelMessages == null || channelMessages.isEmpty()) {
-                return false;
-            }
-            lastMessageId = channelMessages.get(channelMessages.size() - 1).id();
+        if (preview == null) {
+            return false;
         }
         Integer lastReadMessageId = channel.lastReadMessageId();
         if (lastReadMessageId == null) {
             return true;
         }
-        return lastMessageId > lastReadMessageId;
+        return preview.messageId() > lastReadMessageId;
     }
 
-    private String channelListTitle(Channel channel) {
+    private String channelTitle(Channel channel) {
         if (channel == null) {
             return Component.translatable("fascinatedutils.social.dm.title").getString();
         }
-        if (channel.name() != null && !channel.name().isBlank()) {
-            return channel.name();
+        GroupChannel groupChannel = channel.asGroupChannel();
+        if (groupChannel != null) {
+            if (groupChannel.name() != null && !groupChannel.name().isBlank()) {
+                return groupChannel.name();
+            }
+            return "Channel #" + groupChannel.id();
         }
         DmChannel dmChannel = channel.asDmChannel();
-        if (dmChannel == null) {
-            return "Channel #" + channel.id();
+        if (dmChannel != null && dmChannel.recipient() != null) {
+            User recipient = displayUser(dmChannel.recipient());
+            if (recipient != null && recipient.minecraftName() != null && !recipient.minecraftName().isBlank()) {
+                return recipient.minecraftName();
+            }
         }
-        if (!dmChannel.detailLoaded()) {
-            loadDetail(channel.id());
-            return Component.translatable("fascinatedutils.social.dm.title").getString();
-        }
-        return channelTitle(dmChannel);
+        return Component.translatable("fascinatedutils.social.dm.title").getString();
     }
 
     private String channelListAvatarMinecraftUuid(Channel channel) {
@@ -658,15 +645,8 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         if (recipient == null) {
             return Presence.OFFLINE.color();
         }
-        User displayRecipient = displayUser(recipient);
-        if (displayRecipient == null) {
-            return Presence.OFFLINE.color();
-        }
-        Presence status = displayRecipient.presence();
-        if (status == null) {
-            status = Presence.OFFLINE;
-        }
-        return status.color();
+        Presence status = recipient.presence();
+        return (status != null ? status : Presence.OFFLINE).color();
     }
 
     private FWidget buildFriendRow(Friend friend, float innerW) {
@@ -957,30 +937,17 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
 
             @Override
             protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-                float mouseX = frame.pointerX();
-                float mouseY = frame.pointerY();
-                float titleY = y() + 5f;
-                float subtitleY = y() + 20f;
+                float titleY = y() + (h() - graphics.getFontCapHeight()) / 2f;
                 if (activeTab == Tab.FRIENDS) {
                     Friend selectedFriend = selectedFriend();
-                    if (selectedFriend == null) {
-                        graphics.drawText(Component.translatable("fascinatedutils.social.tab_friends").getString(), x(), titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
-                        graphics.drawText(Component.translatable("fascinatedutils.social.dm.pick_friend").getString(), x(), subtitleY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
-                        return;
-                    }
-                    graphics.drawText("Friend Profile", x(), titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
-                    graphics.drawText(selectedFriend.user().minecraftName(), x(), subtitleY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                    String friendTitle = selectedFriend == null
+                            ? Component.translatable("fascinatedutils.social.tab_friends").getString()
+                            : "Friend Profile";
+                    graphics.drawText(friendTitle, x(), titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
                     return;
                 }
                 Channel channel = selectedChannelId == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId);
-                if (selectedChannelId != null && channel != null && !channel.detailLoaded()) {
-                    loadDetail(selectedChannelId);
-                }
                 String title = channel == null ? Component.translatable("fascinatedutils.social.dm.title").getString() : channelTitle(channel);
-                if ((title == null || title.isBlank() || title.equals(Component.translatable("fascinatedutils.social.dm.title").getString())) && selectedChannelDisplayName != null && !selectedChannelDisplayName.isBlank()) {
-                    title = selectedChannelDisplayName;
-                }
-                String subTitle = channel == null ? Component.translatable("fascinatedutils.social.dm.not_selected").getString() : channelSubtitle(channel);
                 float textLeft = x();
                 DmChannel dmChannel = channel == null ? null : channel.asDmChannel();
                 if (dmChannel != null && dmChannel.recipient() != null) {
@@ -1002,7 +969,6 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
                     }
                 }
                 graphics.drawText(title, textLeft, titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
-                graphics.drawText(subTitle, textLeft, subtitleY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
             }
         };
     }
@@ -1037,13 +1003,9 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
             loadMessages(channelId);
             return buildEmptyState(Component.translatable("fascinatedutils.social.loading").getString());
         }
-        if (channel != null && !channel.detailLoaded()) {
-            loadDetail(channelId);
-        }
-        Map<Integer, String> namesById = channel == null ? new HashMap<>() : buildParticipantNames(channel);
         FColumnWidget body = new FColumnWidget(5f, Align.START);
         for (ChannelMessage message : messages) {
-            body.addChild(buildMessageRow(message, namesById, panelW - 2f * PAD));
+            body.addChild(buildMessageRow(message, panelW - 2f * PAD));
         }
         FScrollColumnWidget scroll = FTheme.components().createScrollColumn(body, 3f);
         Float savedY = messageScrollYRef.getValue();
@@ -1071,18 +1033,236 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         return maxScrollOffset <= MESSAGE_SCROLL_EDGE_EPSILON || offset >= maxScrollOffset - MESSAGE_SCROLL_EDGE_EPSILON;
     }
 
-    private FWidget buildMessageRow(ChannelMessage message, Map<Integer, String> namesById, float width) {
+    private FWidget buildMessageRow(ChannelMessage message, float width) {
         boolean own = Objects.equals(Alumite.INSTANCE.activeUserId(), message.authorId());
-        String authorName = own ? namesById.getOrDefault(message.authorId(), "You") : namesById.getOrDefault(message.authorId(), "#" + message.authorId());
-        String timestamp = messageTimestamp(message.createdAt());
-        String topLine = timestamp.isBlank() ? authorName : authorName + " · " + timestamp;
-        return SocialMessageBubbleWidget.build(new SocialMessageBubbleWidget.Props(topLine, message.content(), own), width);
+        BiConsumer<Float, Float> onContextMenu = own ? (mx, my) -> {
+            contextMenuMessage = message;
+            contextMenuX = mx;
+            contextMenuY = my;
+        } : null;
+        return SocialMessageBubbleWidget.build(new SocialMessageBubbleWidget.Props(message, own, onContextMenu), width);
+    }
+
+    private FWidget buildMessageContextMenuOverlay() {
+        FContextMenuWidget menu = new FContextMenuWidget(contextMenuX, contextMenuY, () -> contextMenuMessage = null, List.of(
+                new FContextMenuWidget.Item(
+                        () -> Component.translatable("fascinatedutils.social.edit_message.action").getString(),
+                        () -> {
+                            ChannelMessage target = contextMenuMessage;
+                            contextMenuMessage = null;
+                            if (target != null) {
+                                editingMessage = target;
+                                editMessageInput.setValue(target.content());
+                                GuiFocusState.setFocusedId(editMessageInput.focusId());
+                            }
+                        }),
+                new FContextMenuWidget.Item(
+                        () -> Component.translatable("fascinatedutils.social.delete_message.action").getString(),
+                        0xFFFF5555,
+                        () -> {
+                            ChannelMessage target = contextMenuMessage;
+                            contextMenuMessage = null;
+                            pendingDeleteMessage = target;
+                        })
+        ));
+        return new FWidget() {
+            {
+                addChild(menu);
+            }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+                menu.layout(measure, lx, ly, lw, lh);
+            }
+
+            @Override
+            public PointerHitKind pointerHitKind() {
+                return PointerHitKind.BLOCK;
+            }
+
+            @Override
+            public void render(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+                if (!visible()) {
+                    return;
+                }
+                graphics.absolutePost(() -> menu.render(graphics, frame, deltaSeconds));
+            }
+
+            @Override
+            public boolean mouseDown(float pointerX, float pointerY, int button) {
+                return menu.mouseDown(pointerX, pointerY, button);
+            }
+
+            @Override
+            public boolean click(float pointerX, float pointerY, int button) {
+                return menu.click(pointerX, pointerY, button);
+            }
+        };
+    }
+
+    private FWidget buildEditMessageOverlay() {
+        FButtonWidget saveButton = new FButtonWidget(this::submitEditMessage,
+                () -> Component.translatable("fascinatedutils.social.edit_message.save").getString(), 80f, 1, 1f, 4f, 1f, 4f, 3f) {
+            @Override
+            protected int resolveButtonFillColorArgb(boolean hovered) {
+                return editMessagePending ? 0xFF303640 : hovered ? UITheme.COLOR_ACCENT_HOVER : UITheme.COLOR_ACCENT;
+            }
+            @Override
+            protected int resolveButtonBorderColorArgb(boolean hovered) {
+                return editMessagePending ? 0xFF454A60 : hovered ? UITheme.COLOR_ACCENT_HOVER : UITheme.COLOR_ACCENT;
+            }
+        };
+        FButtonWidget cancelButton = new FButtonWidget(() -> editingMessage = null,
+                () -> Component.translatable("fascinatedutils.social.edit_message.cancel").getString(), 80f, 1, 1f, 4f, 1f, 4f, 3f);
+        FWidget card = new FWidget() {
+            {
+                addChild(editMessageInput);
+                addChild(saveButton);
+                addChild(cancelButton);
+            }
+
+            @Override
+            public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
+                float inputH = editMessageInput.intrinsicHeightForColumn(measure, widthBudget - 2f * UITheme.PADDING_MD);
+                float btnH = saveButton.intrinsicHeightForColumn(measure, 80f);
+                return UITheme.PADDING_MD + measure.getFontCapHeight() + UITheme.GAP_SM + inputH + UITheme.GAP_SM + btnH + UITheme.PADDING_MD;
+            }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+                float innerX = lx + UITheme.PADDING_MD;
+                float innerW = lw - 2f * UITheme.PADDING_MD;
+                float cursorY = ly + UITheme.PADDING_MD + measure.getFontCapHeight() + UITheme.GAP_SM;
+                float inputH = editMessageInput.intrinsicHeightForColumn(measure, innerW);
+                editMessageInput.layout(measure, innerX, cursorY, innerW, inputH);
+                cursorY += inputH + UITheme.GAP_SM;
+                float btnH = saveButton.intrinsicHeightForColumn(measure, 80f);
+                saveButton.layout(measure, innerX, cursorY, 80f, btnH);
+                cancelButton.layout(measure, innerX + 84f, cursorY, 80f, btnH);
+            }
+
+            @Override
+            protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+                graphics.fillRoundedRectFrame(x(), y(), w(), h(), UITheme.CORNER_RADIUS_MD, 0xFF454A60, 0xFF1A1E24, 1f, 1f, RectCornerRoundMask.ALL);
+                float titleY = y() + UITheme.PADDING_MD;
+                graphics.drawText(Component.translatable("fascinatedutils.social.edit_message.title").getString(), x() + UITheme.PADDING_MD, titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
+            }
+
+            @Override
+            public boolean keyDownCapture(int keyCode, int modifiers) {
+                if ((keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) && (modifiers & GLFW.GLFW_MOD_SHIFT) == 0) {
+                    submitEditMessage();
+                    return true;
+                }
+                return false;
+            }
+        };
+        return new FWidget() {
+            {
+                addChild(card);
+            }
+
+            @Override
+            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
+                setBounds(lx, ly, lw, lh);
+                float cardW = Math.min(400f, Math.max(240f, lw * 0.5f));
+                float cardH = card.intrinsicHeightForColumn(measure, cardW);
+                card.layout(measure, lx + (lw - cardW) / 2f, ly + (lh - cardH) / 2f, cardW, cardH);
+            }
+
+            @Override
+            public PointerHitKind pointerHitKind() {
+                return PointerHitKind.BLOCK;
+            }
+
+            @Override
+            public void render(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
+                if (!visible()) {
+                    return;
+                }
+                graphics.drawRect(x(), y(), w(), h(), 0x99050510);
+                graphics.absolutePost(() -> card.render(graphics, frame, deltaSeconds));
+            }
+
+            @Override
+            public boolean mouseDown(float pointerX, float pointerY, int button) {
+                if (button != 0) {
+                    return false;
+                }
+                if (!card.containsPoint(pointerX, pointerY)) {
+                    editingMessage = null;
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            public boolean keyDownCapture(int keyCode, int modifiers) {
+                if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                    editingMessage = null;
+                    return true;
+                }
+                return false;
+            }
+        };
+    }
+
+    private void submitEditMessage() {
+        ChannelMessage target = editingMessage;
+        if (target == null || editMessagePending) {
+            return;
+        }
+        String newContent = editMessageInput.value().trim();
+        if (newContent.isEmpty() || newContent.equals(target.content())) {
+            editingMessage = null;
+            return;
+        }
+        editMessagePending = true;
+        Integer channelId = selectedChannelId;
+        Channel channel = channelId != null ? Alumite.INSTANCE.channels().get(channelId) : null;
+        if (channel == null) {
+            editMessagePending = false;
+            return;
+        }
+        FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+            try {
+                channel.editMessage(target.id(), newContent);
+            } catch (AlumiteApiException exception) {
+                Toast.show().message(socialErrorMessage(exception)).error();
+            } catch (Exception exception) {
+                Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
+            }
+            Minecraft.getInstance().execute(() -> {
+                editMessagePending = false;
+                editingMessage = null;
+            });
+        });
+    }
+
+    private void submitDeleteMessage(ChannelMessage message) {
+        Integer channelId = selectedChannelId;
+        Channel channel = channelId != null ? Alumite.INSTANCE.channels().get(channelId) : null;
+        if (channel == null) {
+            return;
+        }
+        FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+            try {
+                channel.deleteMessage(message.id());
+            } catch (AlumiteApiException exception) {
+                Toast.show().message(socialErrorMessage(exception)).error();
+            } catch (Exception exception) {
+                Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
+            }
+        });
     }
 
     private FWidget buildChatFooter() {
         FOutlinedTextInputWidget dmInput = props().dmMessageInput();
         dmInput.setPlaceholderSupplier(() -> {
-            String label = selectedChannelDisplayName == null || selectedChannelDisplayName.isBlank() ? Component.translatable("fascinatedutils.social.dm.title").getString() : selectedChannelDisplayName;
+            Channel footerChannel = selectedChannelId == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId);
+            String label = footerChannel == null ? Component.translatable("fascinatedutils.social.dm.title").getString() : channelTitle(footerChannel);
             return "Message " + label;
         });
         return SocialChatComposerWidget.build(new SocialChatComposerWidget.Props(dmInput, this::sendSelectedMessage));
@@ -1108,8 +1288,14 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
     }
 
     private void loadOlderMessages(int channelId) {
+        if (loadingOlderMessagesChannelId != null && loadingOlderMessagesChannelId == channelId) {
+            return;
+        }
         Channel channel = Alumite.INSTANCE.channels().get(channelId);
         if (channel == null) {
+            return;
+        }
+        if (!channel.hasMoreMessages()) {
             return;
         }
         List<ChannelMessage> existingMessages = channel.messagesOrNull();
@@ -1117,37 +1303,14 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
             return;
         }
         int oldestMessageId = existingMessages.get(0).id();
+        loadingOlderMessagesChannelId = channelId;
         FascinatedUtils.SCHEDULED_POOL.execute(() -> {
             try {
-                List<ChannelMessage> olderMessages = channel.fetchMessagesPage(50, oldestMessageId, null);
-                if (olderMessages == null || olderMessages.isEmpty()) {
-                    return;
-                }
-                channel.mergeOlderMessagesPage(olderMessages);
+                ChannelMessagePageDTO page = channel.fetchMessagesPage(50, oldestMessageId, null);
+                channel.mergeOlderMessagesPage(page);
             } catch (Exception ignored) {
             }
-        });
-    }
-
-    private void loadDetail(int channelId) {
-        if (loadingDetailChannelId != null && loadingDetailChannelId == channelId) {
-            return;
-        }
-        Channel channel = Alumite.INSTANCE.channels().get(channelId);
-        if (channel == null) {
-            return;
-        }
-        if (channel.detailLoaded()) {
-            return;
-        }
-        loadingDetailChannelId = channelId;
-        FascinatedUtils.SCHEDULED_POOL.execute(() -> {
-            try {
-                channel.fetchDetail();
-            } catch (Exception exception) {
-                Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
-            }
-            Minecraft.getInstance().execute(() -> loadingDetailChannelId = null);
+            Minecraft.getInstance().execute(() -> loadingOlderMessagesChannelId = null);
         });
     }
 
@@ -1155,18 +1318,14 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         messageScrollYRef.setValue(MESSAGE_SCROLL_ANCHOR_BOTTOM);
     }
 
-    private void selectChannel(int channelId, boolean switchToChat, String displayNameHint) {
+    private void selectChannel(int channelId, boolean switchToChat) {
         selectedChannelId = channelId;
         lastOpenedChannelId = channelId;
-        if (displayNameHint != null && !displayNameHint.isBlank()) {
-            selectedChannelDisplayName = displayNameHint;
-        }
         anchorMessageScrollToBottom();
         if (switchToChat && activeTab != Tab.CHAT) {
             activeTab = Tab.CHAT;
             scrollYRef.setValue(0f);
         }
-        loadDetail(channelId);
         loadMessages(channelId);
         markSelectedChannelRead();
     }
@@ -1228,7 +1387,7 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
                 if (channel == null) {
                     return;
                 }
-                Minecraft.getInstance().execute(() -> selectChannel(channel.id(), true, friend.user().minecraftName()));
+                Minecraft.getInstance().execute(() -> selectChannel(channel.id(), true));
             } catch (Exception exception) {
                 Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
             }
@@ -1246,7 +1405,6 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
                 Minecraft.getInstance().execute(() -> {
                     if (Objects.equals(selectedChannelId, channelId)) {
                         selectedChannelId = null;
-                        selectedChannelDisplayName = null;
                     }
                     if (Objects.equals(lastOpenedChannelId, channelId)) {
                         lastOpenedChannelId = null;
@@ -1284,63 +1442,6 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
             } catch (Exception ignored) {
             }
         });
-    }
-
-    private String channelTitle(Channel channel) {
-        if (channel == null) {
-            return Component.translatable("fascinatedutils.social.dm.title").getString();
-        }
-        GroupChannel groupChannel = channel.asGroupChannel();
-        if (groupChannel != null) {
-            if (groupChannel.name() != null && !groupChannel.name().isBlank()) {
-                return groupChannel.name();
-            }
-            return "Channel #" + groupChannel.id();
-        }
-        DmChannel dmChannel = channel.asDmChannel();
-        if (dmChannel != null) {
-            if (dmChannel.recipient() == null) {
-                return Component.translatable("fascinatedutils.social.dm.title").getString();
-            }
-            User recipient = displayUser(dmChannel.recipient());
-            if (recipient != null && recipient.minecraftName() != null && !recipient.minecraftName().isBlank()) {
-                return recipient.minecraftName();
-            }
-        }
-        return Component.translatable("fascinatedutils.social.dm.title").getString();
-    }
-
-    private String channelSubtitle(Channel channel) {
-        GroupChannel groupChannel = channel == null ? null : channel.asGroupChannel();
-        if (groupChannel != null) {
-            return Component.translatable("fascinatedutils.social.dm.member_count", groupChannel.members().size()).getString();
-        }
-        return Component.translatable("fascinatedutils.social.dm.title").getString();
-    }
-
-    private Map<Integer, String> buildParticipantNames(Channel channel) {
-        Map<Integer, String> namesById = new HashMap<>();
-        if (channel == null) {
-            return namesById;
-        }
-        DmChannel dmChannel = channel.asDmChannel();
-        if (dmChannel != null) {
-            User recipient = displayUser(dmChannel.recipient());
-            if (recipient != null) {
-                namesById.put(recipient.id(), recipient.minecraftName());
-            }
-            return namesById;
-        }
-        GroupChannel groupChannel = channel.asGroupChannel();
-        if (groupChannel != null) {
-            for (GroupMember member : groupChannel.members()) {
-                User user = displayUser(member.user());
-                if (user != null) {
-                    namesById.put(user.id(), user.minecraftName());
-                }
-            }
-        }
-        return namesById;
     }
 
     private User displayUser(User user) {

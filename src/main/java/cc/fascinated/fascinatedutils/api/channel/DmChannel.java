@@ -11,7 +11,6 @@ import lombok.experimental.Accessors;
 public non-sealed class DmChannel extends Channel {
 
     private volatile User recipient;
-    private volatile boolean detailLoaded;
 
     public DmChannel(Alumite alumite, int channelId) {
         super(alumite, channelId, ChannelKind.DM);
@@ -22,10 +21,11 @@ public non-sealed class DmChannel extends Channel {
         return this;
     }
 
-    void applyDetail(Integer lastReadMessageId, User recipient) {
+    void applyDetail(Integer lastReadMessageId, User recipient, String lastMessageAt, LastMessagePreview lastMessagePreview) {
         applyLastReadMessageId(lastReadMessageId);
+        applyLastMessageAt(lastMessageAt);
+        applyLastMessagePreview(lastMessagePreview);
         this.recipient = recipient;
-        detailLoaded = true;
     }
 
     public void hide() throws AlumiteApiException {

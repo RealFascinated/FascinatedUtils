@@ -31,6 +31,9 @@ public class FWidgetHost {
         if (node == null || !node.visible()) {
             return;
         }
+        if (!frame.isHitWithinSubtree(node)) {
+            return;
+        }
         for (FWidget child : node.childrenView()) {
             renderOverlaysRecursive(child, renderer, frame, deltaSeconds);
         }

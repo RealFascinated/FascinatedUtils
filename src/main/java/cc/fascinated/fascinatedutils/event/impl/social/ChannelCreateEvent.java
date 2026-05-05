@@ -1,5 +1,5 @@
 package cc.fascinated.fascinatedutils.event.impl.social;
 
-import cc.fascinated.fascinatedutils.api.channel.ChannelListItem;
+import cc.fascinated.fascinatedutils.api.channel.Channel;
 
-public record ChannelCreateEvent(ChannelListItem summary) {}
+public record ChannelCreateEvent(Channel channel) {}

@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.api.ws.handlers;
 
 import cc.fascinated.fascinatedutils.api.Alumite;
-import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestWire;
+import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestDTO;
 import cc.fascinated.fascinatedutils.api.ws.GatewayHandler;
 import cc.fascinated.fascinatedutils.api.ws.OutboundMessage;
 import com.google.gson.JsonElement;
@@ -12,7 +12,7 @@ public class FriendRequestIncomingHandler implements GatewayHandler {
 
     @Override
     public void handle(Consumer<OutboundMessage> send, JsonElement data) {
-        PendingFriendRequestWire request = Alumite.INSTANCE.getGsonForWire().fromJson(data, PendingFriendRequestWire.class);
+        PendingFriendRequestDTO request = Alumite.INSTANCE.getGsonForDTO().fromJson(data, PendingFriendRequestDTO.class);
         Alumite.INSTANCE.users().onFriendRequestIncoming(request);
     }
 }

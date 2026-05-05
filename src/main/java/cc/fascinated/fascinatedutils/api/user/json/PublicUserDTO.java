@@ -4,5 +4,5 @@ import cc.fascinated.fascinatedutils.api.user.Presence;
 
 import java.util.Date;
 
-public record PublicUserWire(int id, String minecraftUuid, String minecraftName, String role, String status,
+public record PublicUserDTO(int id, String minecraftUuid, String minecraftName, String role, String status,
                              Presence presence, Date lastSeen) {}

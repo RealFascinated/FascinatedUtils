@@ -19,7 +19,7 @@ public class SocialRightPaneWidget {
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, lw, lh);
                 props.background().layout(measure, lx, ly, lw, lh);
-                float headerHeight = 40f;
+                float headerHeight = 30f;
                 float footerHeight = 32f;
                 props.header().layout(measure, lx + props.padding(), ly + props.padding(), lw - 2f * props.padding(), headerHeight);
                 props.footer().layout(measure, lx + props.padding(), ly + lh - props.padding() - footerHeight, lw - 2f * props.padding(), footerHeight);

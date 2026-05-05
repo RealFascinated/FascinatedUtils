@@ -113,9 +113,10 @@ public abstract class FWidget {
         if (!visible) {
             return;
         }
-        renderSelf(graphics, frame, deltaSeconds);
+        UiFrameContext localFrame = frame.isHitWithinSubtree(this) ? frame : frame.occluded();
+        renderSelf(graphics, localFrame, deltaSeconds);
         for (FWidget child : children) {
-            child.render(graphics, frame, deltaSeconds);
+            child.render(graphics, localFrame, deltaSeconds);
         }
     }
 

@@ -12,7 +12,7 @@ public class FriendRequestRemovedHandler implements GatewayHandler {
 
     @Override
     public void handle(Consumer<OutboundMessage> send, JsonElement data) {
-        FriendRequestRemovedEvent event = Alumite.INSTANCE.getGsonForWire().fromJson(data, FriendRequestRemovedEvent.class);
+        FriendRequestRemovedEvent event = Alumite.INSTANCE.getGsonForDTO().fromJson(data, FriendRequestRemovedEvent.class);
         Alumite.INSTANCE.users().onFriendRequestRemoved(event.requestId(), event.reason());
     }
 }

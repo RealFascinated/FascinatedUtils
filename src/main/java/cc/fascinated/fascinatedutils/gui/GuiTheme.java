@@ -18,6 +18,8 @@ public abstract class GuiTheme {
 
     public abstract int surfaceElevated();
 
+    public abstract int contextMenuSurface();
+
     public abstract int border();
 
     public abstract int borderMuted();

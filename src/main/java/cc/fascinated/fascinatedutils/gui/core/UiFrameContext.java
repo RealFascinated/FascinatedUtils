@@ -107,4 +107,14 @@ public final class UiFrameContext {
     public UiFrameContext withFocus(int newFocusedId) {
         return new UiFrameContext(pointerX, pointerY, hitPathRootToLeaf, newFocusedId);
     }
+
+    /**
+     * Returns a context with NaN pointer coordinates and an empty hit path.
+     *
+     * <p>Any {@code containsPoint(frame.pointerX(), frame.pointerY())} call on a widget rendered
+     * with this context returns {@code false}, so occluded widgets naturally show no hover state.</p>
+     */
+    public UiFrameContext occluded() {
+        return new UiFrameContext(Float.NaN, Float.NaN, List.of(), focusedId);
+    }
 }

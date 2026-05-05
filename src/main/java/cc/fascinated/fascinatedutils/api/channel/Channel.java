@@ -32,8 +32,6 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         return channelId;
     }
 
-    public abstract boolean detailLoaded();
-
     public List<ChannelMessage> messagesOrNull() {
         return alumite.channels().messagesOrNull(channelId);
     }
@@ -51,14 +49,25 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
     }
 
     public ChannelMessage sendMessage(String content) throws AlumiteApiException {
-        ChannelMessageWire wire = alumite.http().postObject(route() + "/messages", new SendChannelMessageBodyWire(content), ChannelMessageWire.class, "send message", "Failed to send message.");
-        ChannelMessage message = AlumiteModelMapper.toChannelMessage(wire);
+        ChannelMessageDTO dto = alumite.http().postObject(route() + "/messages", new SendChannelMessageBodyDTO(content), ChannelMessageDTO.class, "send message", "Failed to send message.");
+        ChannelMessage message = AlumiteModelMapper.toChannelMessage(dto);
         alumite.channels().cacheSentMessage(channelId, message);
         return message;
     }
 
+    public ChannelMessage editMessage(int messageId, String content) throws AlumiteApiException {
+        ChannelMessageDTO dto = alumite.http().patchObject(route() + "/messages/" + messageId, new EditChannelMessageBodyDTO(content), ChannelMessageDTO.class, "edit message", "Failed to edit message.");
+        alumite.channels().onMessageUpdate(channelId, dto);
+        return AlumiteModelMapper.toChannelMessage(dto);
+    }
+
+    public void deleteMessage(int messageId) throws AlumiteApiException {
+        alumite.http().sendAuthorizedExpectNoContent("DELETE", route() + "/messages/" + messageId, null, "delete message", "Failed to delete message.");
+        alumite.channels().onMessageDelete(channelId, messageId);
+    }
+
     public void markRead(int lastReadMessageId) throws AlumiteApiException {
-        alumite.http().sendAuthorizedChecked("PATCH", route() + "/read", alumite.getGsonForWire().toJson(new UpdateReadStateBodyWire(lastReadMessageId)), "update read state", "Failed to update channel read state.");
+        alumite.http().sendAuthorizedChecked("PATCH", route() + "/read", alumite.getGsonForDTO().toJson(new UpdateReadStateBodyDTO(lastReadMessageId)), "update read state", "Failed to update channel read state.");
         alumite.channels().cacheReadState(channelId, lastReadMessageId);
     }
 
@@ -66,10 +75,11 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         if (messagesOrNull() != null) {
             return;
         }
-        ChannelMessagePageWire page = alumite.http().getObject(UrlUtils.buildUrl(route() + "/messages", Map.of("limit", limit)), ChannelMessagePageWire.class, "get messages", "Failed to load messages.");
-        List<ChannelMessageWire> wireMessages = page.messages() == null ? List.of() : page.messages();
-        List<ChannelMessage> loaded = wireMessages.stream().map(AlumiteModelMapper::toChannelMessage).sorted(Comparator.comparingInt(ChannelMessage::id)).toList();
+        ChannelMessagePageDTO page = alumite.http().getObject(UrlUtils.buildUrl(route() + "/messages", Map.of("limit", limit)), ChannelMessagePageDTO.class, "get messages", "Failed to load messages.");
+        List<ChannelMessageDTO> dtoMessages = page.messages() == null ? List.of() : page.messages();
+        List<ChannelMessage> loaded = dtoMessages.stream().map(AlumiteModelMapper::toChannelMessage).sorted(Comparator.comparingInt(ChannelMessage::id)).toList();
         alumite.channels().storeMessages(channelId, loaded);
+        alumite.channels().storeHasMore(channelId, page.hasMore());
     }
 
     public void fetchMessages(int limit) {
@@ -80,7 +90,11 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         }
     }
 
-    public List<ChannelMessage> fetchMessagesPage(int limit, Integer beforeMessageId, Integer afterMessageId) throws AlumiteApiException {
+    public boolean hasMoreMessages() {
+        return alumite.channels().hasMoreMessages(channelId);
+    }
+
+    public ChannelMessagePageDTO fetchMessagesPage(int limit, Integer beforeMessageId, Integer afterMessageId) throws AlumiteApiException {
         Map<String, Object> queryParameters = new LinkedHashMap<>();
         if (limit > 0) {
             queryParameters.put("limit", limit);
@@ -91,31 +105,18 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         if (afterMessageId != null) {
             queryParameters.put("after", afterMessageId);
         }
-        ChannelMessagePageWire page = alumite.http().getObject(UrlUtils.buildUrl(route() + "/messages", queryParameters), ChannelMessagePageWire.class, "get messages", "Failed to load messages.");
+        ChannelMessagePageDTO page = alumite.http().getObject(UrlUtils.buildUrl(route() + "/messages", queryParameters), ChannelMessagePageDTO.class, "get messages", "Failed to load messages.");
         if (page.messages() == null) {
-            return List.of();
+            return new ChannelMessagePageDTO(List.of(), false);
         }
-        return page.messages().stream().map(AlumiteModelMapper::toChannelMessage).toList();
+        return page;
     }
 
-    public void resolveDetail() throws AlumiteApiException {
-        if (detailLoaded()) {
-            return;
-        }
-        ChannelDetailWire wire = alumite.http().getObject(route(), ChannelDetailWire.class, "get channel", "Failed to load channel.");
-        alumite.channels().cacheChannelDetail(wire);
-    }
-
-    public void fetchDetail() {
-        try {
-            resolveDetail();
-        } catch (AlumiteApiException exception) {
-            Client.LOG.warn("[{}] fetch detail: {}", getClass().getSimpleName(), exception.getMessage());
-        }
-    }
-
-    public void mergeOlderMessagesPage(List<ChannelMessage> olderMessages) {
-        if (olderMessages == null || olderMessages.isEmpty()) {
+    public void mergeOlderMessagesPage(ChannelMessagePageDTO page) {
+        List<ChannelMessage> olderMessages = page.messages() == null ? List.of()
+                : page.messages().stream().map(AlumiteModelMapper::toChannelMessage).toList();
+        alumite.channels().storeHasMore(channelId, page.hasMore());
+        if (olderMessages.isEmpty()) {
             return;
         }
         List<ChannelMessage> existingMessages = messagesOrNull();
@@ -130,16 +131,12 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         alumite.channels().storeMessages(channelId, merged);
     }
 
-    void applySummary(ChannelListItem summary) {
-        if (summary == null || summary.kind() != kind) {
-            return;
-        }
-        if (summary.name() != null || name == null) {
-            name = summary.name();
-        }
-        lastMessageAt = summary.lastMessageAt();
-        lastMessagePreview = summary.lastMessagePreview();
-        lastReadMessageId = summary.lastReadMessageId();
+    void applyLastMessageAt(String lastMessageAt) {
+        this.lastMessageAt = lastMessageAt;
+    }
+
+    void applyLastMessagePreview(LastMessagePreview preview) {
+        this.lastMessagePreview = preview;
     }
 
     void applyLastReadMessageId(Integer lastReadMessageId) {
