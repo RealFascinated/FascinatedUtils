@@ -1,6 +1,6 @@
 #version 330
 
-#moj_import < minecraft: globals.glsl >
+#moj_import <minecraft:globals.glsl>
 
 uniform sampler2D InSampler;
 
