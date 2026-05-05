@@ -28,6 +28,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -52,6 +57,9 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
     private static final int FOCUS_CHAT_SEARCH = 7112;
     private static final Presence[] SELECTABLE_PREFERRED_PRESENCES = {Presence.ONLINE, Presence.AWAY, Presence.DO_NOT_DISTURB, Presence.INVISIBLE};
     private static final int[] BADGE_COLORS = {0xFF6B5B95, 0xFF88B04B, 0xFF955251, 0xFF009B77, 0xFF45B8AC, 0xFF5B5EA6, 0xFFB565A7, 0xFFDD4132};
+    private static final DateTimeFormatter CHAT_MESSAGE_DATE_FORMATTER = DateTimeFormatter.ofPattern("M/d/yyyy");
+    private static final DateTimeFormatter CHAT_MESSAGE_TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm a");
+    private static final float MESSAGE_SCROLL_EDGE_EPSILON = 0.01f;
     /**
      * Stored in {@link #messageScrollYRef}; {@link FScrollColumnWidget} clamps to the real max scroll so the
      * transcript opens pinned to the newest messages.
@@ -150,13 +158,25 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         return Component.translatable("fascinatedutils.social.error.generic").getString();
     }
 
-    private static String messageTimeAgo(String time) {
+    private static String messageTimestamp(String time) {
         if (time == null || time.isBlank()) {
             return "";
         }
         try {
-            return TimeUtils.timeAgo(Instant.parse(time).toEpochMilli(), 1);
-        } catch (Exception ignored) {
+            ZoneId zoneId = ZoneId.systemDefault();
+            ZonedDateTime messageTime = Instant.parse(time).atZone(zoneId);
+            LocalDate messageDate = messageTime.toLocalDate();
+            LocalDate today = LocalDate.now(zoneId);
+            String formattedTime = CHAT_MESSAGE_TIME_FORMATTER.format(messageTime);
+            if (messageDate.equals(today)) {
+                return Component.translatable("fascinatedutils.social.message_time.today_at", formattedTime).getString();
+            }
+            if (messageDate.equals(today.minusDays(1))) {
+                return Component.translatable("fascinatedutils.social.message_time.yesterday_at", formattedTime).getString();
+            }
+            String formattedDate = CHAT_MESSAGE_DATE_FORMATTER.format(messageTime);
+            return Component.translatable("fascinatedutils.social.message_time.full", formattedDate, formattedTime).getString();
+        } catch (DateTimeParseException ignored) {
             return "";
         }
     }
@@ -1027,21 +1047,35 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         }
         FScrollColumnWidget scroll = FTheme.components().createScrollColumn(body, 3f);
         Float savedY = messageScrollYRef.getValue();
-        scroll.setScrollOffsetY(savedY == null ? MESSAGE_SCROLL_ANCHOR_BOTTOM : savedY);
+        boolean anchorToBottom = savedY == null || savedY == MESSAGE_SCROLL_ANCHOR_BOTTOM;
+        scroll.setPinBodyToBottomWhenContentFits(true);
+        scroll.setScrollOffsetY(anchorToBottom ? MESSAGE_SCROLL_ANCHOR_BOTTOM : savedY);
         scroll.setScrollOffsetChangeListener(offset -> {
-            messageScrollYRef.setValue(offset);
-            if (offset <= 0.01f) {
-                loadOlderMessages(channelId);
+            boolean atBottom = isMessageScrollAtBottom(scroll, offset);
+            if (atBottom) {
+                messageScrollYRef.setValue(MESSAGE_SCROLL_ANCHOR_BOTTOM);
                 markSelectedChannelRead();
+            }
+            else {
+                messageScrollYRef.setValue(offset);
+            }
+            if (offset <= MESSAGE_SCROLL_EDGE_EPSILON) {
+                loadOlderMessages(channelId);
             }
         });
         return scroll;
     }
 
+    private boolean isMessageScrollAtBottom(FScrollColumnWidget scroll, float offset) {
+        float maxScrollOffset = Math.max(0f, scroll.contentHeight() - scroll.h());
+        return maxScrollOffset <= MESSAGE_SCROLL_EDGE_EPSILON || offset >= maxScrollOffset - MESSAGE_SCROLL_EDGE_EPSILON;
+    }
+
     private FWidget buildMessageRow(ChannelMessage message, Map<Integer, String> namesById, float width) {
         boolean own = Objects.equals(Alumite.INSTANCE.activeUserId(), message.authorId());
         String authorName = own ? namesById.getOrDefault(message.authorId(), "You") : namesById.getOrDefault(message.authorId(), "#" + message.authorId());
-        String topLine = authorName + " · " + messageTimeAgo(message.createdAt());
+        String timestamp = messageTimestamp(message.createdAt());
+        String topLine = timestamp.isBlank() ? authorName : authorName + " · " + timestamp;
         return SocialMessageBubbleWidget.build(new SocialMessageBubbleWidget.Props(topLine, message.content(), own), width);
     }
 
@@ -1190,8 +1224,11 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
         }
         FascinatedUtils.SCHEDULED_POOL.execute(() -> {
             try {
-                ChannelDetail channelDetail = Alumite.INSTANCE.channels().openDmAndCache(friend.user().id());
-                Minecraft.getInstance().execute(() -> selectChannel(channelDetail.id(), true, friend.user().minecraftName()));
+                DmChannel channel = Alumite.INSTANCE.channels().openDmAndCache(friend.user().id());
+                if (channel == null) {
+                    return;
+                }
+                Minecraft.getInstance().execute(() -> selectChannel(channel.id(), true, friend.user().minecraftName()));
             } catch (Exception exception) {
                 Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
             }
@@ -1237,6 +1274,10 @@ public class SocialMainWorkspaceComponent extends UiComponent<SocialMainWorkspac
             return;
         }
         int lastMessageId = messages.get(messages.size() - 1).id();
+        Integer lastReadMessageId = channel.lastReadMessageId();
+        if (lastReadMessageId != null && lastReadMessageId >= lastMessageId) {
+            return;
+        }
         FascinatedUtils.SCHEDULED_POOL.execute(() -> {
             try {
                 channel.markRead(lastMessageId);

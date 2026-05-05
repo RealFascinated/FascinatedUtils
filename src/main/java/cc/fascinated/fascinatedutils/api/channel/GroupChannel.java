@@ -19,26 +19,15 @@ public non-sealed class GroupChannel extends Channel {
     }
 
     @Override
-    public ChannelDetail.GroupChannelDetail detail() {
-        if (!detailLoaded) {
-            return null;
-        }
-        return new ChannelDetail.GroupChannelDetail(id(), lastReadMessageId(), name(), ownerUserId, members);
-    }
-
-    @Override
     public GroupChannel asGroupChannel() {
         return this;
     }
 
-    void applyDetail(ChannelDetail.GroupChannelDetail detail) {
-        if (detail == null) {
-            return;
-        }
-        applyLastReadMessageId(detail.lastReadMessageId());
-        applyName(detail.name());
-        ownerUserId = detail.ownerUserId();
-        members = detail.members() == null ? List.of() : List.copyOf(detail.members());
+    void applyDetail(Integer lastReadMessageId, String name, int ownerUserId, List<GroupMember> members) {
+        applyLastReadMessageId(lastReadMessageId);
+        applyName(name);
+        this.ownerUserId = ownerUserId;
+        this.members = members == null ? List.of() : List.copyOf(members);
         detailLoaded = true;
     }
 }

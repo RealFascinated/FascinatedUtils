@@ -32,12 +32,6 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         return channelId;
     }
 
-    public ChannelSummary summary() {
-        return new ChannelSummary(channelId, kind, name, lastMessageAt, lastMessagePreview, lastReadMessageId);
-    }
-
-    public abstract ChannelDetail detail();
-
     public abstract boolean detailLoaded();
 
     public List<ChannelMessage> messagesOrNull() {
@@ -104,14 +98,12 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         return page.messages().stream().map(AlumiteModelMapper::toChannelMessage).toList();
     }
 
-    public ChannelDetail resolveDetail() throws AlumiteApiException {
-        ChannelDetail detail = detail();
-        if (detail != null) {
-            return detail;
+    public void resolveDetail() throws AlumiteApiException {
+        if (detailLoaded()) {
+            return;
         }
         ChannelDetailWire wire = alumite.http().getObject(route(), ChannelDetailWire.class, "get channel", "Failed to load channel.");
         alumite.channels().cacheChannelDetail(wire);
-        return detail();
     }
 
     public void fetchDetail() {
@@ -138,7 +130,7 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         alumite.channels().storeMessages(channelId, merged);
     }
 
-    void applySummary(ChannelSummary summary) {
+    void applySummary(ChannelListItem summary) {
         if (summary == null || summary.kind() != kind) {
             return;
         }

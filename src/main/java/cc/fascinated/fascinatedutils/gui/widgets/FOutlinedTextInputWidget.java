@@ -105,7 +105,7 @@ public class FOutlinedTextInputWidget extends FWidget {
             int newIndex = 0;
             float bestDist = Float.MAX_VALUE;
             for (int i = 0; i <= value.length(); i++) {
-                float charX = value.length() == 0 ? 0f : i * (innerX / value.length());
+                float charX = value.isEmpty() ? 0f : i * (innerX / value.length());
                 float dist = Math.abs(charX - innerX);
                 if (dist < bestDist) {
                     bestDist = dist;

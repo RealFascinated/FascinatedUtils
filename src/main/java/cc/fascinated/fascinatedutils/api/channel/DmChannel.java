@@ -18,24 +18,13 @@ public non-sealed class DmChannel extends Channel {
     }
 
     @Override
-    public ChannelDetail.DmChannelDetail detail() {
-        if (!detailLoaded) {
-            return null;
-        }
-        return new ChannelDetail.DmChannelDetail(id(), lastReadMessageId(), recipient);
-    }
-
-    @Override
     public DmChannel asDmChannel() {
         return this;
     }
 
-    void applyDetail(ChannelDetail.DmChannelDetail detail) {
-        if (detail == null) {
-            return;
-        }
-        applyLastReadMessageId(detail.lastReadMessageId());
-        recipient = detail.recipient();
+    void applyDetail(Integer lastReadMessageId, User recipient) {
+        applyLastReadMessageId(lastReadMessageId);
+        this.recipient = recipient;
         detailLoaded = true;
     }
 

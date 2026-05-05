@@ -36,11 +36,11 @@ public class AlumiteModelMapper {
         return new LastMessagePreview(wire.messageId(), wire.content(), wire.authorName());
     }
 
-    public static ChannelSummary toChannelSummary(ChannelSummaryWire wire) {
+    public static ChannelListItem toChannelSummary(ChannelSummaryWire wire) {
         if (wire == null) {
             return null;
         }
-        return new ChannelSummary(wire.id(), toChannelKind(wire.type()), wire.name(), wire.lastMessageAt(), toLastMessagePreview(wire.lastMessagePreview()), wire.lastReadMessageId());
+        return new ChannelListItem(wire.id(), toChannelKind(wire.type()), wire.name(), wire.lastMessageAt(), toLastMessagePreview(wire.lastMessagePreview()), wire.lastReadMessageId());
     }
 
     public static ChannelMessage toChannelMessage(ChannelMessageWire wire) {
@@ -55,27 +55,5 @@ public class AlumiteModelMapper {
             return null;
         }
         return new GroupMember(toUser(wire.user()), wire.isOwner());
-    }
-
-    public static ChannelDetail toChannelDetail(ChannelDetailWire wire) {
-        if (wire == null) {
-            return null;
-        }
-        if (wire instanceof ChannelDetailWire.DmChannelDetailWire(
-                int id1, Integer readMessageId, PublicUserWire recipient
-        )) {
-            return new ChannelDetail.DmChannelDetail(id1, readMessageId, toUser(recipient));
-        }
-        if (wire instanceof ChannelDetailWire.GroupChannelDetailWire(
-                int id, Integer lastReadMessageId, String name, Integer ownerUserId, List<ChannelMemberWire> members1
-        )) {
-            int ownerId = 0;
-            if (ownerUserId != null) {
-                ownerId = ownerUserId.intValue();
-            }
-            List<GroupMember> members = members1 == null ? List.of() : members1.stream().map(AlumiteModelMapper::toGroupMember).toList();
-            return new ChannelDetail.GroupChannelDetail(id, lastReadMessageId, name, ownerId, members);
-        }
-        return null;
     }
 }

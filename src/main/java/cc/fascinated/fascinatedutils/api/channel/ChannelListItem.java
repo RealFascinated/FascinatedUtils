@@ -1,4 +1,4 @@
 package cc.fascinated.fascinatedutils.api.channel;
 
-public record ChannelSummary(int id, ChannelKind kind, String name, String lastMessageAt,
+public record ChannelListItem(int id, ChannelKind kind, String name, String lastMessageAt,
                              LastMessagePreview lastMessagePreview, Integer lastReadMessageId) {}

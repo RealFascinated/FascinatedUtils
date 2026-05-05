@@ -36,6 +36,7 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
     private Consumer<Float> scrollOffsetChangeListener = offset -> {};
     private boolean thumbHovered = false;
     private boolean thumbDragging = false;
+    private boolean pinBodyToBottomWhenContentFits;
     private float dragStartMouseY;
     private float dragStartScrollOffset;
     private float cachedThumbX;
@@ -89,6 +90,10 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
 
     public void setScrollOffsetChangeListener(Consumer<Float> scrollOffsetChangeListener) {
         this.scrollOffsetChangeListener = scrollOffsetChangeListener == null ? offset -> {} : scrollOffsetChangeListener;
+    }
+
+    public void setPinBodyToBottomWhenContentFits(boolean pinBodyToBottomWhenContentFits) {
+        this.pinBodyToBottomWhenContentFits = pinBodyToBottomWhenContentFits;
     }
 
     @Override
@@ -197,7 +202,11 @@ public class FScrollColumnWidget extends FWidget implements FScrollable {
         if (Math.abs(scrollBeforeClamp - scrollOffsetY) > 1e-3f) {
             scrollOffsetChangeListener.accept(scrollOffsetY);
         }
-        body.layout(measure, layoutX, layoutY - scrollOffsetY, layoutWidth, contentHeight);
+        float bodyLayoutY = layoutY - scrollOffsetY;
+        if (pinBodyToBottomWhenContentFits && contentHeight < layoutHeight) {
+            bodyLayoutY += layoutHeight - contentHeight;
+        }
+        body.layout(measure, layoutX, bodyLayoutY, layoutWidth, contentHeight);
     }
 
     @Override

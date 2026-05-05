@@ -55,22 +55,8 @@ public class AlumiteChannels {
         return channels;
     }
 
-    public List<ChannelSummary> summaries() {
-        return channels.stream().map(Channel::summary).toList();
-    }
-
     public Channel get(int channelId) {
         return channelsById.get(channelId);
-    }
-
-    public ChannelSummary summary(int channelId) {
-        Channel channel = get(channelId);
-        return channel == null ? null : channel.summary();
-    }
-
-    public ChannelDetail detail(int channelId) {
-        Channel channel = get(channelId);
-        return channel == null ? null : channel.detail();
     }
 
     public List<ChannelMessage> messagesOrNull(int channelId) {
@@ -87,7 +73,7 @@ public class AlumiteChannels {
             replaceSummaries(List.of());
             return;
         }
-        List<ChannelSummary> mapped = wireList.stream().map(AlumiteModelMapper::toChannelSummary).toList();
+        List<ChannelListItem> mapped = wireList.stream().map(AlumiteModelMapper::toChannelSummary).toList();
         replaceSummaries(sortChannels(mapped));
     }
 
@@ -98,11 +84,9 @@ public class AlumiteChannels {
         }
     }
 
-    public ChannelDetail openDmAndCache(int recipientUserId) throws AlumiteApiException {
+    public DmChannel openDmAndCache(int recipientUserId) throws AlumiteApiException {
         ChannelDetailWire wire = http.postObject(ROUTE_CHANNELS + "/dm", new OpenDmBodyWire(recipientUserId), ChannelDetailWire.class, "open dm", "Failed to open direct message.");
-        ChannelDetail detail = AlumiteModelMapper.toChannelDetail(wire);
-        afterOpenDm(wire);
-        return detail == null ? null : detail(detail.id());
+        return afterOpenDm(wire);
     }
 
     void cacheReadState(int channelId, int lastReadMessageId) {
@@ -117,20 +101,18 @@ public class AlumiteChannels {
     }
 
     void cacheChannelDetail(ChannelDetailWire wire) {
-        ChannelDetail detail = AlumiteModelMapper.toChannelDetail(wire);
-        if (detail == null) {
+        if (wire == null) {
             return;
         }
-        if (detail instanceof ChannelDetail.DmChannelDetail(int id1, Integer readMessageId, User recipient1)) {
-            User recipient = users.upsertUser(recipient1);
-            getOrCreateDmChannel(id1).applyDetail(new ChannelDetail.DmChannelDetail(id1, readMessageId, recipient));
+        if (wire instanceof ChannelDetailWire.DmChannelDetailWire dmDetailWire) {
+            User recipient = users.upsertUser(AlumiteModelMapper.toUser(dmDetailWire.recipient()));
+            getOrCreateDmChannel(dmDetailWire.id()).applyDetail(dmDetailWire.lastReadMessageId(), recipient);
             return;
         }
-        if (detail instanceof ChannelDetail.GroupChannelDetail(
-                int id, Integer lastReadMessageId, String name, int ownerUserId, List<GroupMember> members1
-        )) {
-            List<GroupMember> members = members1 == null ? List.of() : members1.stream().map(member -> new GroupMember(users.upsertUser(member.user()), member.owner())).toList();
-            getOrCreateGroupChannel(id).applyDetail(new ChannelDetail.GroupChannelDetail(id, lastReadMessageId, name, ownerUserId, members));
+        if (wire instanceof ChannelDetailWire.GroupChannelDetailWire groupDetailWire) {
+            List<GroupMember> members = groupDetailWire.members() == null ? List.of() : groupDetailWire.members().stream().map(AlumiteModelMapper::toGroupMember).map(member -> new GroupMember(users.upsertUser(member.user()), member.owner())).toList();
+            int ownerUserId = groupDetailWire.ownerUserId() == null ? 0 : groupDetailWire.ownerUserId();
+            getOrCreateGroupChannel(groupDetailWire.id()).applyDetail(groupDetailWire.lastReadMessageId(), groupDetailWire.name(), ownerUserId, members);
         }
     }
 
@@ -139,13 +121,13 @@ public class AlumiteChannels {
     }
 
     public void onChannelCreate(ChannelSummaryWire summaryWire) {
-        ChannelSummary summary = AlumiteModelMapper.toChannelSummary(summaryWire);
+        ChannelListItem summary = AlumiteModelMapper.toChannelSummary(summaryWire);
         if (summary == null) {
             return;
         }
         upsertChannelSummary(summary);
         Channel channel = get(summary.id());
-        FascinatedEventBus.INSTANCE.post(new ChannelCreateEvent(channel == null ? summary : channel.summary()));
+        FascinatedEventBus.INSTANCE.post(new ChannelCreateEvent(channel == null ? summary : toChannelListItem(channel)));
     }
 
     public void onChannelRemove(int channelId) {
@@ -161,7 +143,7 @@ public class AlumiteChannels {
         Channel channel = get(channelId);
         if (channel != null) {
             String authorName = users.previewAuthorName(message.authorId());
-            upsertChannelSummary(new ChannelSummary(channel.id(), channel.kind(), channel.name(), message.createdAt(), new LastMessagePreview(message.id(), message.content(), authorName), channel.lastReadMessageId()));
+            upsertChannelSummary(new ChannelListItem(channel.id(), channel.kind(), channel.name(), message.createdAt(), new LastMessagePreview(message.id(), message.content(), authorName), channel.lastReadMessageId()));
         }
     }
 
@@ -175,7 +157,7 @@ public class AlumiteChannels {
         }
         LastMessagePreview preview = channel.lastMessagePreview();
         if (preview != null && preview.messageId() == message.id()) {
-            upsertChannelSummary(new ChannelSummary(channel.id(), channel.kind(), channel.name(), channel.lastMessageAt(), new LastMessagePreview(preview.messageId(), message.content(), preview.authorName()), channel.lastReadMessageId()));
+            upsertChannelSummary(new ChannelListItem(channel.id(), channel.kind(), channel.name(), channel.lastMessageAt(), new LastMessagePreview(preview.messageId(), message.content(), preview.authorName()), channel.lastReadMessageId()));
         }
     }
 
@@ -195,11 +177,11 @@ public class AlumiteChannels {
         }
         List<ChannelMessage> remaining = messagesByChannel.getOrDefault(channelId, List.of());
         if (remaining.isEmpty()) {
-            upsertChannelSummary(new ChannelSummary(channel.id(), channel.kind(), channel.name(), null, null, channel.lastReadMessageId()));
+            upsertChannelSummary(new ChannelListItem(channel.id(), channel.kind(), channel.name(), null, null, channel.lastReadMessageId()));
         }
         else {
             ChannelMessage last = remaining.get(remaining.size() - 1);
-            upsertChannelSummary(new ChannelSummary(channel.id(), channel.kind(), channel.name(), last.createdAt(), new LastMessagePreview(last.id(), last.content(), users.previewAuthorName(last.authorId())), channel.lastReadMessageId()));
+            upsertChannelSummary(new ChannelListItem(channel.id(), channel.kind(), channel.name(), last.createdAt(), new LastMessagePreview(last.id(), last.content(), users.previewAuthorName(last.authorId())), channel.lastReadMessageId()));
         }
     }
 
@@ -208,27 +190,28 @@ public class AlumiteChannels {
         messagesByChannel.remove(channelId);
     }
 
-    private void afterOpenDm(ChannelDetailWire detailWire) {
+    private DmChannel afterOpenDm(ChannelDetailWire detailWire) {
         cacheChannelDetail(detailWire);
-        ChannelDetail detail = AlumiteModelMapper.toChannelDetail(detailWire);
-        if (detail != null) {
-            upsertChannelSummary(findOrCreateSummary(detail));
+        DmChannel channel = detailWire == null ? null : get(detailWire.id()) instanceof DmChannel dmChannel ? dmChannel : null;
+        if (channel != null) {
+            upsertChannelSummary(toChannelListItem(channel));
         }
+        return channel;
     }
 
     private void upsertChannelMessageFromSend(int channelId, ChannelMessage message) {
         upsertChannelMessage(channelId, message);
         Channel channel = get(channelId);
         if (channel != null) {
-            upsertChannelSummary(new ChannelSummary(channel.id(), channel.kind(), channel.name(), message.createdAt(), new LastMessagePreview(message.id(), message.content(), users.previewAuthorName(message.authorId())), channel.lastReadMessageId()));
+            upsertChannelSummary(new ChannelListItem(channel.id(), channel.kind(), channel.name(), message.createdAt(), new LastMessagePreview(message.id(), message.content(), users.previewAuthorName(message.authorId())), channel.lastReadMessageId()));
         }
     }
 
-    private void upsertChannelSummary(ChannelSummary summary) {
-        List<ChannelSummary> updatedChannels = new ArrayList<>();
+    private void upsertChannelSummary(ChannelListItem summary) {
+        List<ChannelListItem> updatedChannels = new ArrayList<>();
         boolean replacedExistingSummary = false;
         for (Channel existingChannel : channels) {
-            ChannelSummary existingSummary = existingChannel.summary();
+            ChannelListItem existingSummary = toChannelListItem(existingChannel);
             if (existingChannel.id() == summary.id()) {
                 updatedChannels.add(summary);
                 replacedExistingSummary = true;
@@ -241,15 +224,6 @@ public class AlumiteChannels {
             updatedChannels.add(summary);
         }
         replaceSummaries(sortChannels(updatedChannels));
-    }
-
-    private ChannelSummary findOrCreateSummary(ChannelDetail detail) {
-        Channel existingChannel = get(detail.id());
-        if (existingChannel != null) {
-            return existingChannel.summary();
-        }
-        String channelName = detail instanceof ChannelDetail.GroupChannelDetail groupDetail ? groupDetail.name() : null;
-        return new ChannelSummary(detail.id(), detail.kind(), channelName, null, null, detail.lastReadMessageId());
     }
 
     private void upsertChannelMessage(int channelId, ChannelMessage message) {
@@ -272,7 +246,7 @@ public class AlumiteChannels {
         messagesByChannel.put(channelId, List.copyOf(updatedMessages));
     }
 
-    private List<ChannelSummary> sortChannels(List<ChannelSummary> sourceChannels) {
+    private List<ChannelListItem> sortChannels(List<ChannelListItem> sourceChannels) {
         return sourceChannels.stream().sorted((leftChannel, rightChannel) -> {
             Instant leftLastAt = parseInstantOrNull(leftChannel.lastMessageAt());
             Instant rightLastAt = parseInstantOrNull(rightChannel.lastMessageAt());
@@ -309,11 +283,11 @@ public class AlumiteChannels {
         });
     }
 
-    private void replaceSummaries(List<ChannelSummary> updatedSummaries) {
-        List<ChannelSummary> sortedSummaries = List.copyOf(updatedSummaries);
+    private void replaceSummaries(List<ChannelListItem> updatedSummaries) {
+        List<ChannelListItem> sortedSummaries = List.copyOf(updatedSummaries);
         Set<Integer> activeChannelIds = new HashSet<>();
         List<Channel> orderedChannels = new ArrayList<>(sortedSummaries.size());
-        for (ChannelSummary summary : sortedSummaries) {
+        for (ChannelListItem summary : sortedSummaries) {
             Channel channel = getOrCreateChannel(summary.id(), summary.kind());
             channel.applySummary(summary);
             activeChannelIds.add(summary.id());
@@ -324,8 +298,12 @@ public class AlumiteChannels {
         channels = List.copyOf(orderedChannels);
     }
 
+    private ChannelListItem toChannelListItem(Channel channel) {
+        return new ChannelListItem(channel.id(), channel.kind(), channel.name(), channel.lastMessageAt(), channel.lastMessagePreview(), channel.lastReadMessageId());
+    }
+
     private void removeChannel(int channelId) {
-        List<ChannelSummary> remainingSummaries = channels.stream().filter(channel -> channel.id() != channelId).map(Channel::summary).toList();
+        List<ChannelListItem> remainingSummaries = channels.stream().filter(channel -> channel.id() != channelId).map(this::toChannelListItem).toList();
         replaceSummaries(remainingSummaries);
     }
 }
