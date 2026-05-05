@@ -11,9 +11,11 @@ import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import org.lwjgl.glfw.GLFW;
 
 import java.time.Instant;
 import java.util.function.BiConsumer;
@@ -37,16 +39,35 @@ public class SocialMessageBubbleWidget {
 
     public static FWidget build(Props props, float width) {
         return new FWidget() {
+            {
+                if (props.editInput() != null) {
+                    addChild(props.editInput());
+                }
+            }
+
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
+                int capH = measure.getFontCapHeight();
+                if (props.editInput() != null) {
+                    float inputH = props.editInput().intrinsicHeightForColumn(measure, widthBudget - AVATAR_SIZE - AVATAR_GAP);
+                    float textBlockH = capH + NAME_CONTENT_GAP + inputH + 4f + capH;
+                    return Math.max(AVATAR_SIZE, textBlockH) + VERT_PAD * 2f;
+                }
                 int lines = Math.max(1, countLines(props.message().content()));
-                float textBlockH = measure.getFontCapHeight() + NAME_CONTENT_GAP + lines * (measure.getFontCapHeight() + LINE_GAP);
+                float textBlockH = capH + NAME_CONTENT_GAP + lines * (capH + LINE_GAP);
                 return Math.max(AVATAR_SIZE, textBlockH) + VERT_PAD * 2f;
             }
 
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, width, lh);
+                if (props.editInput() != null) {
+                    float contentX = lx + AVATAR_SIZE + AVATAR_GAP;
+                    float inputW = width - AVATAR_SIZE - AVATAR_GAP;
+                    float inputY = ly + VERT_PAD + measure.getFontCapHeight() + NAME_CONTENT_GAP;
+                    float inputH = props.editInput().intrinsicHeightForColumn(measure, inputW);
+                    props.editInput().layout(measure, contentX, inputY, inputW, inputH);
+                }
             }
 
             @Override
@@ -57,6 +78,22 @@ public class SocialMessageBubbleWidget {
             @Override
             public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
                 return isMenuBtnHovered(pointerX, pointerY) ? UiPointerCursor.HAND : UiPointerCursor.DEFAULT;
+            }
+
+            @Override
+            public boolean keyDownCapture(int keyCode, int modifiers) {
+                if (props.editInput() == null) {
+                    return false;
+                }
+                if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                    props.onCancelEdit().run();
+                    return true;
+                }
+                if ((keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) && (modifiers & GLFW.GLFW_MOD_SHIFT) == 0) {
+                    props.onSaveEdit().run();
+                    return true;
+                }
+                return false;
             }
 
             @Override
@@ -119,14 +156,19 @@ public class SocialMessageBubbleWidget {
                     graphics.drawText(timestamp, contentX + nameW + 6f, nameY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
                 }
 
-                float textY = nameY + graphics.getFontCapHeight() + NAME_CONTENT_GAP;
-                String displayContent = message.content();
-                if (message.editedAt() != null && !message.editedAt().isBlank()) {
-                    displayContent += " (edited)";
-                }
-                for (String line : splitLines(displayContent)) {
-                    graphics.drawText(line, contentX, textY, 0xFFFFFFFF, false, false);
-                    textY += graphics.getFontCapHeight() + LINE_GAP;
+                if (props.editInput() != null) {
+                    float hintY = props.editInput().y() + props.editInput().h() + 4f;
+                    graphics.drawText(Component.translatable("fascinatedutils.social.edit_message.hint").getString(), contentX, hintY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                } else {
+                    float textY = nameY + graphics.getFontCapHeight() + NAME_CONTENT_GAP;
+                    String displayContent = message.content();
+                    if (message.editedAt() != null && !message.editedAt().isBlank()) {
+                        displayContent += " (edited)";
+                    }
+                    for (String line : splitLines(displayContent)) {
+                        graphics.drawText(line, contentX, textY, 0xFFFFFFFF, false, false);
+                        textY += graphics.getFontCapHeight() + LINE_GAP;
+                    }
                 }
 
                 if (props.onContextMenu() != null && containsPoint(frame.pointerX(), frame.pointerY())) {
@@ -180,5 +222,10 @@ public class SocialMessageBubbleWidget {
         return value.split("\\R", -1);
     }
 
-    public record Props(ChannelMessage message, boolean ownMessage, BiConsumer<Float, Float> onContextMenu) {}
+    public record Props(ChannelMessage message, boolean ownMessage, BiConsumer<Float, Float> onContextMenu,
+                         FOutlinedTextInputWidget editInput, Runnable onSaveEdit, Runnable onCancelEdit) {
+        public Props(ChannelMessage message, boolean ownMessage, BiConsumer<Float, Float> onContextMenu) {
+            this(message, ownMessage, onContextMenu, null, null, null);
+        }
+    }
 }

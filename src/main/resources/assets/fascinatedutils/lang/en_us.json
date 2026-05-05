@@ -115,6 +115,7 @@
   "fascinatedutils.social.confirm_cancel_request.confirm": "Cancel Request",
   "fascinatedutils.social.confirm_cancel_request.deny": "Keep",
   "fascinatedutils.social.edit_message.action": "Edit",
+  "fascinatedutils.social.edit_message.hint": "escape to cancel \u2022 enter to save",
   "fascinatedutils.social.edit_message.title": "Edit Message",
   "fascinatedutils.social.edit_message.save": "Save",
   "fascinatedutils.social.edit_message.cancel": "Cancel",
