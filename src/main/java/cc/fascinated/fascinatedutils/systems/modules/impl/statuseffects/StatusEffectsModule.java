@@ -26,6 +26,8 @@ public class StatusEffectsModule extends HudHostModule {
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
+    private final BooleanSetting textShadow = HudWidgetAppearanceBuilders.textShadow().build();
 
     public StatusEffectsModule() {
         super("status_effects", "Status Effects", HudDefaults.builder().build());
@@ -40,6 +42,8 @@ public class StatusEffectsModule extends HudHostModule {
         roundedCorners.addSubSetting(roundingRadius);
         showBorder.addSubSetting(borderThickness);
         showBorder.addSubSetting(borderColor);
+        addSetting(padding);
+        addSetting(textShadow);
         addSetting(showAmplifier);
         addSetting(showDuration);
         addSetting(flashTimeWhenEnding);

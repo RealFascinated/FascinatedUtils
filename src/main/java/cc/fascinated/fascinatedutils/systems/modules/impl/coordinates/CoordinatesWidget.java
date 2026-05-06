@@ -21,6 +21,9 @@ public class CoordinatesWidget extends HudHostModule {
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
+    private final BooleanSetting textShadow = HudWidgetAppearanceBuilders.textShadow().build();
+
     public CoordinatesWidget() {
         super("coordinates", "Coordinates", HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.TOP_LEFT).defaultXOffset(5).defaultYOffset(5).build());
         addSetting(layout);
@@ -36,6 +39,8 @@ public class CoordinatesWidget extends HudHostModule {
         roundedCorners.addSubSetting(roundingRadius);
         showBorder.addSubSetting(borderThickness);
         showBorder.addSubSetting(borderColor);
+        addSetting(padding);
+        addSetting(textShadow);
         registerHudPanel(new CoordinatesHudPanel(this));
     }
 

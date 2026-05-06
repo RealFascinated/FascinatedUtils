@@ -42,6 +42,8 @@ public class WawlaWidget extends HudHostModule {
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
+    private final BooleanSetting textShadow = HudWidgetAppearanceBuilders.textShadow().build();
 
     public WawlaWidget() {
         super("wawla", "WAWLA", HudDefaults.builder().build());
@@ -56,6 +58,8 @@ public class WawlaWidget extends HudHostModule {
         roundedCorners.addSubSetting(roundingRadius);
         showBorder.addSubSetting(borderThickness);
         showBorder.addSubSetting(borderColor);
+        addSetting(padding);
+        addSetting(textShadow);
 
         registerBlockExtension(new CropGrowthExtension((CropBlock) Blocks.WHEAT));
         registerBlockExtension(new CropGrowthExtension((CropBlock) Blocks.CARROTS));

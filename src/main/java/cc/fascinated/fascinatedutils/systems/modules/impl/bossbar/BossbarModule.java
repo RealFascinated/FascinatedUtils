@@ -22,6 +22,8 @@ public class BossbarModule extends HudHostModule {
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().defaultValue(0f).build();
+    private final BooleanSetting textShadow = HudWidgetAppearanceBuilders.textShadow().build();
 
     public BossbarModule() {
         super("bossbar", "Bossbar", HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.TOP).defaultXOffset(0).defaultYOffset(5).defaultPadding(0f).build());
@@ -37,6 +39,8 @@ public class BossbarModule extends HudHostModule {
         roundedCorners.addSubSetting(roundingRadius);
         showBorder.addSubSetting(borderThickness);
         showBorder.addSubSetting(borderColor);
+        addSetting(padding);
+        addSetting(textShadow);
         registerHudPanel(new BossbarHudPanel(this));
     }
 

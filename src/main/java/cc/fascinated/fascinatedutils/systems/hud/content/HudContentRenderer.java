@@ -46,8 +46,8 @@ public class HudContentRenderer {
             maxLineWidth = Math.max(maxLineWidth, width);
         }
 
-        float horizontalPadding = host.getPadding();
-        float verticalPadding = host.getPadding();
+        float horizontalPadding = host.getPaddingValue();
+        float verticalPadding = host.getPaddingValue();
         float innerTextHeight = HUDPanelBackground.innerTextHeightForLineCount(lines.size(), lineHeight);
         float layoutWidth = Math.max(1f, Math.max(panel.getMinWidth(), maxLineWidth + 2f * horizontalPadding));
         float layoutHeight = Math.max(1f, innerTextHeight + 2f * verticalPadding);
@@ -86,8 +86,8 @@ public class HudContentRenderer {
             return null;
         }
 
-        float horizontalPadding = host.getPadding();
-        float verticalPadding = host.getPadding();
+        float horizontalPadding = host.getPaddingValue();
+        float verticalPadding = host.getPaddingValue();
         float lineHeight = glRenderer.getFontHeight();
         float itemIconSize = 16f;
         float iconTextGap = 4f;

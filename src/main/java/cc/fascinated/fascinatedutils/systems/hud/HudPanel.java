@@ -11,7 +11,7 @@ import lombok.Getter;
 import net.minecraft.util.Mth;
 import org.jspecify.annotations.Nullable;
 
-public abstract class HudPanel implements HudRenderablePanel {
+public abstract class  HudPanel implements HudRenderablePanel {
     private final HudHostModule host;
     @Getter
     private final String id;

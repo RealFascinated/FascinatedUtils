@@ -20,6 +20,8 @@ public class ScoreboardModule extends HudHostModule {
     private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
+    private final BooleanSetting textShadow = HudWidgetAppearanceBuilders.textShadow().build();
 
     public ScoreboardModule() {
         super("scoreboard", "Scoreboard", HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.RIGHT).defaultXOffset(0).defaultYOffset(0).build());
@@ -35,6 +37,8 @@ public class ScoreboardModule extends HudHostModule {
         roundedCorners.addSubSetting(roundingRadius);
         showBorder.addSubSetting(borderThickness);
         showBorder.addSubSetting(borderColor);
+        addSetting(padding);
+        addSetting(textShadow);
         registerHudPanel(new ScoreboardHudPanel(this));
     }
 

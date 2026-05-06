@@ -111,7 +111,7 @@ public class StatusEffectsHudPanel extends HudPanel {
         }
 
         float contentHeight = effectRows.size() * rowHeight + Math.max(0f, effectRows.size() - 1f) * ROW_GAP;
-        float padding = hudHostModule().getPadding();
+        float padding = hudHostModule().getPaddingValue();
         float layoutWidth = Math.max(1f, Math.max(getMinWidth(), padding * 2f + maxRowWidth));
         float layoutHeight = Math.max(1f, padding * 2f + contentHeight);
 

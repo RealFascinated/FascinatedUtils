@@ -13,6 +13,7 @@ import cc.fascinated.fascinatedutils.systems.modules.ModuleDefaults;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 
 import java.util.*;
 
@@ -31,9 +32,8 @@ public abstract class HudHostModule extends Module {
     public static final String SETTING_REMOVE_MIN_WIDTH = "remove_min_width";
     public static final String HUD_PANELS_CATEGORY_DISPLAY_KEY = "alumite.setting.category.hud_panels";
 
+    @Getter
     private final HudDefaults hudDefaults;
-    private final SliderSetting padding;
-    private final BooleanSetting textShadow;
     private final String settingsTranslationSuffix;
     private final List<HudPanel> registeredHudPanelsList = new ArrayList<>();
     private final Map<String, BooleanSetting> hudPanelVisibilitySettings = new LinkedHashMap<>();
@@ -42,10 +42,6 @@ public abstract class HudHostModule extends Module {
         super(displayName, ModuleCategory.HUD, ModuleDefaults.builder().defaultState(defaults.defaultState()).build());
         this.settingsTranslationSuffix = settingsTranslationSuffix;
         this.hudDefaults = defaults;
-        this.padding = HudWidgetAppearanceBuilders.padding().defaultValue(defaults.defaultPadding()).build();
-        this.textShadow = HudWidgetAppearanceBuilders.textShadow().build();
-        addSetting(padding);
-        addSetting(textShadow);
         setEnabled(defaults.defaultState());
     }
 
@@ -94,16 +90,12 @@ public abstract class HudHostModule extends Module {
         return toggle.isEnabled();
     }
 
-    public HudDefaults getHudDefaults() {
-        return hudDefaults;
-    }
-
-    public float getPadding() {
-        return padding.getValue().floatValue();
+    public float getPaddingValue() {
+        return getSetting(SliderSetting.class, SETTING_PADDING).map(s -> s.getValue().floatValue()).orElse(5f);
     }
 
     public boolean isTextShadowEnabled() {
-        return textShadow.isEnabled();
+        return getSetting(BooleanSetting.class, SETTING_TEXT_SHADOW).map(BooleanSetting::isEnabled).orElse(false);
     }
 
     public float getCornerRadius() {

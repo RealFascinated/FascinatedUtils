@@ -1,10 +1,12 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.speed;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
+import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
 import cc.fascinated.fascinatedutils.systems.modules.impl.speed.hud.SpeedHudPanel;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
@@ -27,9 +29,33 @@ public class SpeedWidget extends HudHostModule {
     private Vec3 lastPosition = null;
     private float currentSpeed = Float.NaN;
 
+    private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
+    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
+    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
+    private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
+    private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
+    private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
+    private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+    private final BooleanSetting removeMinimumWidth = HudWidgetAppearanceBuilders.removeMinimumWidth().build();
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
+    private final BooleanSetting textShadow = HudWidgetAppearanceBuilders.textShadow().build();
+
     public SpeedWidget() {
         super("speed", "Speed", HudDefaults.builder().build());
-        MiniMessageHudChrome.register(this);
+        addSetting(showBackground);
+        addSetting(roundedCorners);
+        addSetting(showBorder);
+        addSetting(roundingRadius);
+        addSetting(borderThickness);
+        addSetting(backgroundColor);
+        addSetting(borderColor);
+        showBackground.addSubSetting(backgroundColor);
+        roundedCorners.addSubSetting(roundingRadius);
+        showBorder.addSubSetting(borderThickness);
+        showBorder.addSubSetting(borderColor);
+        addSetting(removeMinimumWidth);
+        addSetting(padding);
+        addSetting(textShadow);
         addSetting(includeVertical);
         addSetting(showPeak);
         addSetting(showAverage);

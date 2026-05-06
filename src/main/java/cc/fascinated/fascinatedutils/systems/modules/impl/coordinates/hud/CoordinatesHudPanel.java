@@ -102,7 +102,7 @@ public class CoordinatesHudPanel extends HudPanel {
             }
             final float facingColumnBandWidth = maxFacingWidth;
             float innerWidth = xWidth + COLUMN_GAP + yWidth + COLUMN_GAP + zWidth + COLUMN_GAP + facingColumnBandWidth;
-            float padding = hudHostModule().getPadding();
+            float padding = hudHostModule().getPaddingValue();
             float layoutWidth = Math.max(1f, Math.max(getMinWidth(), innerWidth + 2f * padding));
             float layoutHeight = Math.max(1f, lineHeight + 2f * padding);
             getHudState().setLastLayoutWidth(layoutWidth);
@@ -137,7 +137,7 @@ public class CoordinatesHudPanel extends HudPanel {
         final float facingCommitWidth = facingWidth;
         float innerHeight = lineCount * lineHeight + Math.max(0, lineCount - 1) * LINE_GAP_PX;
         float innerWidth = leftColumnWidth + COLUMN_GAP + facingWidth;
-        float padding = hudHostModule().getPadding();
+        float padding = hudHostModule().getPaddingValue();
         float layoutWidth = Math.max(1f, Math.max(getMinWidth(), innerWidth + 2f * padding));
         float layoutHeight = Math.max(1f, innerHeight + 2f * padding);
         getHudState().setLastLayoutWidth(layoutWidth);

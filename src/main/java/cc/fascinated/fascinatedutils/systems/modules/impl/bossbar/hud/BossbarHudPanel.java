@@ -59,7 +59,7 @@ public class BossbarHudPanel extends HudPanel {
         }
         final float finalContentWidth = contentWidth;
         float rowContentHeight = barHidden ? fontHeight : fontHeight + NAME_BAR_GAP + BAR_HEIGHT;
-        float padding = hudHostModule().getPadding();
+        float padding = hudHostModule().getPaddingValue();
         float layoutWidth = padding * 2f + finalContentWidth;
         float layoutHeight = padding * 2f + rows.size() * rowContentHeight + Math.max(0f, rows.size() - 1f) * ROW_GAP;
 

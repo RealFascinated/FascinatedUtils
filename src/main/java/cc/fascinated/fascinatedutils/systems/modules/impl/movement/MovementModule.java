@@ -2,10 +2,11 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.movement;
 
 import cc.fascinated.fascinatedutils.common.PlayerUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudChrome;
+import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.modules.impl.movement.hud.MovementHudPanel;
 import lombok.Getter;
@@ -22,9 +23,33 @@ public class MovementModule extends HudHostModule {
 
     private final SliderSetting flightSpeedModifier = SliderSetting.builder().id("flight_speed_modifier").defaultValue(2f).minValue(2f).maxValue(10f).step(1f).categoryDisplayKey("alumite.setting.category.flight_speed").build();
 
+    private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().defaultValue(false).build();
+    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
+    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
+    private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
+    private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
+    private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
+    private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+    private final BooleanSetting removeMinimumWidth = HudWidgetAppearanceBuilders.removeMinimumWidth().build();
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().defaultValue(0f).build();
+    private final BooleanSetting textShadow = HudWidgetAppearanceBuilders.textShadow().build();
+
     public MovementModule() {
         super("movement", "Movement", HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.TOP_RIGHT).defaultXOffset(5).defaultYOffset(5).build());
-        MiniMessageHudChrome.register(this);
+        addSetting(showBackground);
+        addSetting(roundedCorners);
+        addSetting(showBorder);
+        addSetting(roundingRadius);
+        addSetting(borderThickness);
+        addSetting(backgroundColor);
+        addSetting(borderColor);
+        showBackground.addSubSetting(backgroundColor);
+        roundedCorners.addSubSetting(roundingRadius);
+        showBorder.addSubSetting(borderThickness);
+        showBorder.addSubSetting(borderColor);
+        addSetting(removeMinimumWidth);
+        addSetting(padding);
+        addSetting(textShadow);
         addSetting(enableFlightSpeedModifier);
         addSetting(flightSpeedModifier);
         registerHudPanel(new MovementHudPanel(this));

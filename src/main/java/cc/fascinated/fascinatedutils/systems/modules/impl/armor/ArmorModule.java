@@ -40,6 +40,8 @@ public class ArmorModule extends HudHostModule {
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
+    private final BooleanSetting textShadow = HudWidgetAppearanceBuilders.textShadow().build();
 
     public ArmorModule() {
         super("armor_hud", "Armor HUD", HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.BOTTOM_RIGHT).defaultXOffset(5).defaultYOffset(5).build());
@@ -66,6 +68,8 @@ public class ArmorModule extends HudHostModule {
         addSetting(colorOffHandDurability);
         addSetting(showItemStackSizeBytes);
         slotRowVisibility[offHandSlotIndex].addSubSetting(showOffHandNextToMainHand);
+        addSetting(padding);
+        addSetting(textShadow);
         registerHudPanel(new ArmorHudPanel(this));
     }
 

@@ -90,7 +90,7 @@ public class WawlaHudPanel extends HudPanel {
         float titleWidth = glRenderer.measureMiniMessageTextWidth(titleMini);
         float sourceWidth = glRenderer.measureMiniMessageTextWidth(sourceMini);
         float textBlockWidth = Math.max(Math.max(titleWidth, subtitleMaxWidth), sourceWidth);
-        float panelPadding = hudHostModule().getPadding();
+        float panelPadding = hudHostModule().getPaddingValue();
 
         if (target.showBreakBar()) {
             float targetBreakProgress = Mth.clamp(target.breakProgress(), 0f, 1f);

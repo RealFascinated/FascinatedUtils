@@ -78,8 +78,8 @@ public class ScoreboardHudPanel extends HudPanel {
             int rowWidth = font.width(row.name) + (row.scoreWidth > 0 ? spacerWidth + row.scoreWidth : 0);
             widest = Math.max(widest, rowWidth);
         }
-        float padX = hudHostModule().getPadding();
-        float padY = hudHostModule().getPadding();
+        float padX = hudHostModule().getPaddingValue();
+        float padY = hudHostModule().getPaddingValue();
         float layoutWidth = Math.max(getMinWidth(), (float) widest + 2f * padX);
         float layoutHeight = Math.max(1f, (rows.size() + 1) * lineHeight + 2f * padY);
         getHudState().setLastLayoutWidth(layoutWidth);

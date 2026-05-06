@@ -15,6 +15,8 @@ public abstract class ItemRowHudModule extends HudHostModule {
     private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
     private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
     private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
+    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
+    private final BooleanSetting textShadow = HudWidgetAppearanceBuilders.textShadow().build();
 
     protected ItemRowHudModule(String widgetId, String name, float minWidth) {
         super(widgetId, name, HudDefaults.builder().build());
@@ -29,6 +31,8 @@ public abstract class ItemRowHudModule extends HudHostModule {
         roundedCorners.addSubSetting(roundingRadius);
         showBorder.addSubSetting(borderThickness);
         showBorder.addSubSetting(borderColor);
+        addSetting(padding);
+        addSetting(textShadow);
     }
 
     protected abstract List<HudContent.ItemRow> rows(float deltaSeconds);
