@@ -95,6 +95,10 @@ public class HudEditorPointerSession {
         clearSnapGuides();
         float pointerX = UIScale.uiPointerX();
         float pointerY = UIScale.uiPointerY();
+        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && HudEditorOverlays.hitTestCloseEditorButton(pointerX, pointerY)) {
+            Minecraft.getInstance().setScreen(null);
+            return true;
+        }
         if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && HudEditorOverlays.hitTestModsButton(pointerX, pointerY)) {
             Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, null, parentScreen));
             return true;
@@ -103,17 +107,17 @@ public class HudEditorPointerSession {
             return delegateSuper.getAsBoolean();
         }
         List<HudPanel> widgetList = HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets());
-        // Check action buttons — only active when pointer is over the widget.
+        // Check action buttons — active when pointer is in the widget or the external button bar strip.
         for (int index = widgetList.size() - 1; index >= 0; index--) {
             HudPanel widget = widgetList.get(index);
-            if (!widget.containsPoint(pointerX, pointerY)) {
+            if (!HudEditorChrome.isInActionZone(widget, pointerX, pointerY, editorCanvasHeight)) {
                 continue;
             }
-            if (HudEditorChrome.settingsButtonContainsPoint(widget, pointerX, pointerY)) {
+            if (HudEditorChrome.settingsButtonContainsPoint(widget, pointerX, pointerY, editorCanvasHeight)) {
                 Minecraft.getInstance().setScreen(new ModSettingsScreen(ModBranding.modSettingsScreenTitle(), () -> modMenuFocusScratch, id -> modMenuFocusScratch = id, widget.hudSettingsNavigationTarget(), parentScreen));
                 return true;
             }
-            if (HudEditorChrome.closeButtonContainsPoint(widget, pointerX, pointerY)) {
+            if (HudEditorChrome.closeButtonContainsPoint(widget, pointerX, pointerY, editorCanvasHeight)) {
                 widget.hudHostModule().setEnabled(false);
                 HUDManager.INSTANCE.saveAll();
                 selected = null;
@@ -128,9 +132,9 @@ public class HudEditorPointerSession {
             if (widget == selected && HudEditorChrome.scaleHandleContainsPoint(widget, pointerX, pointerY)) {
                 scalingWidget = widget;
                 selected = widget;
-                float anchorX = widget.getHudState().getPositionX();
-                float anchorY = widget.getHudState().getPositionY();
-                scaleDragReferenceDistance = Math.max(HudEditorChrome.SCALE_DRAG_MIN_REFERENCE_DISTANCE, (float) Math.hypot(pointerX - anchorX, pointerY - anchorY));
+                float dragOriginX = HudEditorChrome.scaleDragOriginX(widget);
+                float dragOriginY = HudEditorChrome.scaleDragOriginY(widget);
+                scaleDragReferenceDistance = Math.max(HudEditorChrome.SCALE_DRAG_MIN_REFERENCE_DISTANCE, (float) Math.hypot(pointerX - dragOriginX, pointerY - dragOriginY));
                 scaleDragStartScale = widget.getHudState().getScale();
                 return true;
             }
@@ -160,9 +164,9 @@ public class HudEditorPointerSession {
         float pointerY = UIScale.uiPointerY();
         if (scalingWidget != null) {
             clearSnapGuides();
-            float anchorX = scalingWidget.getHudState().getPositionX();
-            float anchorY = scalingWidget.getHudState().getPositionY();
-            float pointerDistance = Math.max(HudEditorChrome.SCALE_DRAG_MIN_REFERENCE_DISTANCE, (float) Math.hypot(pointerX - anchorX, pointerY - anchorY));
+            float dragOriginX = HudEditorChrome.scaleDragOriginX(scalingWidget);
+            float dragOriginY = HudEditorChrome.scaleDragOriginY(scalingWidget);
+            float pointerDistance = Math.max(HudEditorChrome.SCALE_DRAG_MIN_REFERENCE_DISTANCE, (float) Math.hypot(pointerX - dragOriginX, pointerY - dragOriginY));
             float nextScale = scaleDragStartScale * (pointerDistance / scaleDragReferenceDistance);
             if (nextScale < HudEditorChrome.MIN_WIDGET_SCALE) {
                 nextScale = HudEditorChrome.MIN_WIDGET_SCALE;

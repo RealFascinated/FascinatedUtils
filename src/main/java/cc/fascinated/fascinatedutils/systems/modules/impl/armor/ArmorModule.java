@@ -15,7 +15,7 @@ import cc.fascinated.fascinatedutils.systems.modules.impl.armor.hud.ArmorHudPane
 public class ArmorModule extends HudHostModule {
 
     public static final int ARMOR_HUD_ROW_COUNT = 6;
-    private static final String SLOTS_CATEGORY_DISPLAY_KEY = "Slots";
+    private static final String SLOTS_CATEGORY_DISPLAY_KEY = "alumite.setting.category.slots";
 
     private final BooleanSetting[] slotRowVisibility = {BooleanSetting.builder().id("show_head").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_chest").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_legs").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_feet").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_off_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_main_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build()};
 

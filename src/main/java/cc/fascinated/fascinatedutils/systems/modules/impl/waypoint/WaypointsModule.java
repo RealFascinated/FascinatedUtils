@@ -23,11 +23,11 @@ import org.lwjgl.glfw.GLFW;
 
 @Getter
 public class WaypointsModule extends Module {
-    private final KeyMapping openWaypointsKeyBinding = KeybindsWrapper.registerKeybind("key.fascinatedutils.open_waypoints", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, KeybindsWrapper.CATEGORY);
-    private final KeybindSetting openWaypointsKeySetting = KeybindSetting.builder().id("open_waypoints_key").defaultValue("").keyBindingSupplier(() -> openWaypointsKeyBinding).categoryDisplayKey("Controls").build();
+    private final KeyMapping openWaypointsKeyBinding = KeybindsWrapper.registerKeybind("key.alumite.open_waypoints", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, KeybindsWrapper.CATEGORY);
+    private final KeybindSetting openWaypointsKeySetting = KeybindSetting.builder().id("open_waypoints_key").defaultValue("").keyBindingSupplier(() -> openWaypointsKeyBinding).categoryDisplayKey("alumite.setting.category.controls").build();
 
-    private final KeyMapping createWaypointKeyBinding = KeybindsWrapper.registerKeybind("key.fascinatedutils.create_waypoint", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_PERIOD, KeybindsWrapper.CATEGORY);
-    private final KeybindSetting createWaypointKeySetting = KeybindSetting.builder().id("create_waypoint_key").defaultValue("").keyBindingSupplier(() -> createWaypointKeyBinding).categoryDisplayKey("Controls").build();
+    private final KeyMapping createWaypointKeyBinding = KeybindsWrapper.registerKeybind("key.alumite.create_waypoint", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_PERIOD, KeybindsWrapper.CATEGORY);
+    private final KeybindSetting createWaypointKeySetting = KeybindSetting.builder().id("create_waypoint_key").defaultValue("").keyBindingSupplier(() -> createWaypointKeyBinding).categoryDisplayKey("alumite.setting.category.controls").build();
 
     private final BooleanSetting showBeam = BooleanSetting.builder().id("show_beam").defaultValue(true).build();
     private final BooleanSetting labelOnLook = BooleanSetting.builder().id("label_on_look").defaultValue(false).build();

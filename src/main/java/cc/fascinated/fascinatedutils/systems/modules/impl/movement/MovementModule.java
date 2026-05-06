@@ -18,9 +18,9 @@ import java.util.Locale;
 @Getter
 public class MovementModule extends HudHostModule {
 
-    private final BooleanSetting enableFlightSpeedModifier = BooleanSetting.builder().id("enable_flight_speed_modifier").defaultValue(false).categoryDisplayKey("Flight Speed").build();
+    private final BooleanSetting enableFlightSpeedModifier = BooleanSetting.builder().id("enable_flight_speed_modifier").defaultValue(false).categoryDisplayKey("alumite.setting.category.flight_speed").build();
 
-    private final SliderSetting flightSpeedModifier = SliderSetting.builder().id("flight_speed_modifier").defaultValue(2f).minValue(2f).maxValue(10f).step(1f).categoryDisplayKey("Flight Speed").build();
+    private final SliderSetting flightSpeedModifier = SliderSetting.builder().id("flight_speed_modifier").defaultValue(2f).minValue(2f).maxValue(10f).step(1f).categoryDisplayKey("alumite.setting.category.flight_speed").build();
 
     public MovementModule() {
         super("movement", "Movement", HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.TOP_RIGHT).defaultXOffset(5).defaultYOffset(5).build());

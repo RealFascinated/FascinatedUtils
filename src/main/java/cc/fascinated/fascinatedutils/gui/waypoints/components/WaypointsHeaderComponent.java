@@ -5,11 +5,7 @@ import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FCellConstraints;
-import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import net.minecraft.network.chat.Component;
 
 /**
@@ -22,14 +18,14 @@ public class WaypointsHeaderComponent {
 
     public static FWidget build(Runnable onRequestAdd, Runnable onClose) {
         FLabelWidget titleLabel = new FLabelWidget();
-        titleLabel.setText(Component.translatable("fascinatedutils.waypoints.title").getString());
+        titleLabel.setText(Component.translatable("alumite.waypoints.title").getString());
         titleLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textPrimary());
         titleLabel.setTextBold(true);
         titleLabel.setOverflow(TextOverflow.ELLIPSIS);
         titleLabel.setAlignX(Align.START);
 
         WaypointAccentAddChipButton addChipButton = new WaypointAccentAddChipButton(
-                onRequestAdd, () -> Component.translatable("fascinatedutils.waypoints.add").getString());
+                onRequestAdd, () -> Component.translatable("alumite.waypoints.add").getString());
 
         FButtonWidget closeButton = new FButtonWidget(onClose, () -> "\u2715", 22f, 1, 1f, 4f, 1f, 4f, -1f);
 

@@ -1,10 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.FNodeRegistry;
-import cc.fascinated.fascinatedutils.gui.core.FNodeWidget;
-import cc.fascinated.fascinatedutils.gui.core.FState;
-import cc.fascinated.fascinatedutils.gui.core.FWidgetNode;
+import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
@@ -156,7 +152,7 @@ public class FSettingsTabElement extends FWidget {
             if (registrySubTabRef.get() != ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL) {
                 registrySubTabRef.set(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL);
             }
-        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_general"), 56f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> registrySubTabRef.get() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL) {
+        }, () -> I18n.get("alumite.setting.shell.registry_tab_general"), 56f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> registrySubTabRef.get() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.GENERAL) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
@@ -167,7 +163,7 @@ public class FSettingsTabElement extends FWidget {
             if (registrySubTabRef.get() != ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE) {
                 registrySubTabRef.set(ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE);
             }
-        }, () -> I18n.get("fascinatedutils.setting.shell.registry_tab_performance"), 92f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> registrySubTabRef.get() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE) {
+        }, () -> I18n.get("alumite.setting.shell.registry_tab_performance"), 92f, 1, 1f, 6f, 1.12f, 7f, 2f, () -> registrySubTabRef.get() == ModSettingsRegistrySettingsTabBuilder.RegistrySettingsSubTab.PERFORMANCE) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;

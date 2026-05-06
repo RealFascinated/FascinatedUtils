@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.client;
 
-import cc.fascinated.fascinatedutils.FascinatedUtils;
+import cc.fascinated.fascinatedutils.AlumiteMod;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -8,12 +8,26 @@ import net.minecraft.resources.Identifier;
 
 @Getter
 public enum ModUiTextures {
-    CLOSE("ui/mod_settings/close"), BACK("ui/mod_settings/back"), RESET("ui/mod_settings/reset"), TRASH("ui/mod_settings/trash"), CHECK("ui/mod_settings/check"), SETTINGS("ui/mod_settings/settings"), CHEVRON_DOWN("ui/mod_settings/keyboard_arrow_down"), CHEVRON_RIGHT("ui/mod_settings/keyboard_arrow_right"), EDIT("ui/mod_settings/edit"), VISIBILITY("ui/mod_settings/visibility"), VISIBILITY_OFF("ui/mod_settings/visibility_off"), SEARCH("ui/mod_settings/search");
+    CLOSE("ui/close"),
+    BACK("ui/back"),
+    RESET("ui/reset"),
+    TRASH("ui/trash"),
+    CHECK("ui/check"),
+    SETTINGS("ui/settings"),
+    CHEVRON_DOWN("ui/keyboard_arrow_down"),
+    CHEVRON_RIGHT("ui/keyboard_arrow_right"),
+    EDIT("ui/edit"),
+    VISIBILITY("ui/visibility"),
+    VISIBILITY_OFF("ui/visibility_off"),
+    SEARCH("ui/search"),
+    GROUP("ui/group"),
+    SUNNY("ui/sunny"),
+    ;
 
     private final Identifier id;
 
     ModUiTextures(String spritePath) {
-        this.id = Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, spritePath);
+        this.id = Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, spritePath);
     }
 
     /**

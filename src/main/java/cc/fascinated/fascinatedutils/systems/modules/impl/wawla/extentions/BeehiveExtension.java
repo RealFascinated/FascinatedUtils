@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extentions;
 
 import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaBlockExtension;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -14,6 +15,6 @@ public class BeehiveExtension extends WawlaBlockExtension<BeehiveBlock> {
     @Override
     public List<String> getExtension(BlockState blockState) {
         int level = blockState.getValue(BeehiveBlock.HONEY_LEVEL);
-        return List.of("Honey: " + level + "/" + BeehiveBlock.MAX_HONEY_LEVELS);
+        return List.of(I18n.get("alumite.wawla.beehive.honey", level, BeehiveBlock.MAX_HONEY_LEVELS));
     }
 }

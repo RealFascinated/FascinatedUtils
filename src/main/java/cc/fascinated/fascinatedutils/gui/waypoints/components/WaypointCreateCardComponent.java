@@ -5,16 +5,7 @@ import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FCellConstraints;
-import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FRectWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FRowWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import net.minecraft.network.chat.Component;
 
 import java.util.function.Supplier;
@@ -43,25 +34,25 @@ public class WaypointCreateCardComponent {
 
         FCellConstraints expandH = new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f);
         FButtonWidget cancelButton = new FButtonWidget(onCancel,
-                () -> Component.translatable("fascinatedutils.waypoints.popup.cancel").getString(), 100f, 1, 1f, 8f, 1f, 8f, -1f);
+                () -> Component.translatable("alumite.waypoints.popup.cancel").getString(), 100f, 1, 1f, 8f, 1f, 8f, -1f);
         FButtonWidget confirmButton = new FButtonWidget(onSubmit,
-                () -> Component.translatable("fascinatedutils.waypoints.create.confirm").getString(), 100f, 1, 1f, 8f, 1f, 8f, -1f);
+                () -> Component.translatable("alumite.waypoints.create.confirm").getString(), 100f, 1, 1f, 8f, 1f, 8f, -1f);
         FRowWidget actionsRow = new FRowWidget(gap, Align.CENTER);
         actionsRow.addChild(cancelButton, expandH);
         actionsRow.addChild(confirmButton, new FCellConstraints().setExpandHorizontal(true).setGrowWeight(1f));
 
         FColumnWidget body = new FColumnWidget(0f, Align.START);
-        body.addChild(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.title").getString(), true, FascinatedGuiTheme.INSTANCE.textPrimary()));
+        body.addChild(sectionLabel(Component.translatable("alumite.waypoints.create.title").getString(), true, FascinatedGuiTheme.INSTANCE.textPrimary()));
         body.addChild(new FSpacerWidget(0f, gap));
         body.addChild(sectionLabel(dimension, false, FascinatedGuiTheme.INSTANCE.textMuted()));
         body.addChild(new FSpacerWidget(0f, sectionGap));
-        body.addChild(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.name").getString(), false, FascinatedGuiTheme.INSTANCE.textMuted()));
+        body.addChild(sectionLabel(Component.translatable("alumite.waypoints.create.name").getString(), false, FascinatedGuiTheme.INSTANCE.textMuted()));
         body.addChild(new FSpacerWidget(0f, gap));
         body.addChild(nameInput);
         body.addChild(new FSpacerWidget(0f, sectionGap));
         body.addChild(coordsRow);
         body.addChild(new FSpacerWidget(0f, sectionGap));
-        body.addChild(sectionLabel(Component.translatable("fascinatedutils.waypoints.create.color").getString(), false, FascinatedGuiTheme.INSTANCE.textMuted()));
+        body.addChild(sectionLabel(Component.translatable("alumite.waypoints.create.color").getString(), false, FascinatedGuiTheme.INSTANCE.textMuted()));
         body.addChild(new FSpacerWidget(0f, gap));
         body.addChild(colorSwatchButton);
         body.addChild(new FSpacerWidget(0f, sectionGap));
@@ -106,7 +97,7 @@ public class WaypointCreateCardComponent {
         }
 
         private static Supplier<String> changeColorLabel() {
-            return () -> Component.translatable("fascinatedutils.waypoints.create.change_color").getString();
+            return () -> Component.translatable("alumite.waypoints.create.change_color").getString();
         }
 
         void configure(SettingColor color, Runnable onClick) {

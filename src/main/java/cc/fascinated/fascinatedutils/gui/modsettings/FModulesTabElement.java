@@ -1,23 +1,14 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
-import cc.fascinated.fascinatedutils.gui.core.Callback;
-import cc.fascinated.fascinatedutils.gui.core.FNodeRegistry;
-import cc.fascinated.fascinatedutils.gui.core.FNodeWidget;
-import cc.fascinated.fascinatedutils.gui.core.FState;
-import cc.fascinated.fascinatedutils.gui.core.FWidgetNode;
+import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FRectWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FSplitRowWithDividerWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;

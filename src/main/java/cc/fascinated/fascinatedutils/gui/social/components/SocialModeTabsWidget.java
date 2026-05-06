@@ -8,6 +8,7 @@ import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.widgets.FBadgeWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 
 import java.util.function.BooleanSupplier;
@@ -15,10 +16,23 @@ import java.util.function.BooleanSupplier;
 public class SocialModeTabsWidget {
 
     public static FWidget build(Props props) {
+        int count = props.incomingRequestCount();
+        FBadgeWidget incomingBadge = new FBadgeWidget(5f, 0xFFCC2222);
+        incomingBadge.setVisible(count > 0);
+        if (count > 0) {
+            incomingBadge.setText(count > 9 ? "9+" : String.valueOf(count));
+        }
         return new FWidget() {
+            {
+                addChild(incomingBadge);
+            }
+
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, lw, lh);
+                if (count > 0) {
+                    incomingBadge.layout(measure, lx + lw - 13f, ly + 2f, 10f, 10f);
+                }
             }
 
             @Override
@@ -46,14 +60,7 @@ public class SocialModeTabsWidget {
                 graphics.drawCenteredText(props.chatLabel(), x() + halfW / 2f, textY, chatTextColor, false, false);
                 graphics.drawCenteredText(props.friendsLabel(), x() + halfW + halfW / 2f, textY, friendsTextColor, false, false);
 
-                if (props.incomingRequestCount() > 0) {
-                    String badgeText = props.incomingRequestCount() > 9 ? "9+" : String.valueOf(props.incomingRequestCount());
-                    float badgeRadius = 5f;
-                    float badgeCenterX = x() + w() - badgeRadius - 3f;
-                    float badgeCenterY = y() + badgeRadius + 2f;
-                    graphics.fillRoundedRect(badgeCenterX - badgeRadius, badgeCenterY - badgeRadius, badgeRadius * 2f, badgeRadius * 2f, badgeRadius, 0xFFCC2222, RectCornerRoundMask.ALL);
-                    graphics.drawCenteredText(badgeText, badgeCenterX, badgeCenterY - graphics.getFontCapHeight() / 2f, 0xFFFFFFFF, false, true);
-                }
+
             }
 
             @Override

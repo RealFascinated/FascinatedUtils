@@ -1,11 +1,15 @@
 package cc.fascinated.fascinatedutils.api.internal;
 
-import cc.fascinated.fascinatedutils.api.channel.*;
-import cc.fascinated.fascinatedutils.api.channel.json.*;
+import cc.fascinated.fascinatedutils.api.channel.ChannelKind;
+import cc.fascinated.fascinatedutils.api.channel.ChannelMessage;
+import cc.fascinated.fascinatedutils.api.channel.GroupMember;
+import cc.fascinated.fascinatedutils.api.channel.LastMessagePreview;
+import cc.fascinated.fascinatedutils.api.channel.json.ChannelKindDTO;
+import cc.fascinated.fascinatedutils.api.channel.json.ChannelMemberDTO;
+import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessageDTO;
+import cc.fascinated.fascinatedutils.api.channel.json.LastMessagePreviewDTO;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.json.PublicUserDTO;
-
-import java.util.List;
 
 public class AlumiteModelMapper {
 

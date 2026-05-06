@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extentions;
 
 import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaBlockExtension;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.world.level.block.FarmlandBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -14,6 +15,6 @@ public class FarmlandExtension extends WawlaBlockExtension<FarmlandBlock> {
     @Override
     public List<String> getExtension(BlockState blockState) {
         int moisture = blockState.getValue(FarmlandBlock.MOISTURE);
-        return List.of("Moisture: " + moisture + "/" + FarmlandBlock.MAX_MOISTURE);
+        return List.of(I18n.get("alumite.wawla.farmland.moisture", moisture, FarmlandBlock.MAX_MOISTURE));
     }
 }

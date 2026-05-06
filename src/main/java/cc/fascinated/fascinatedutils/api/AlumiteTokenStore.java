@@ -10,6 +10,9 @@ import java.nio.file.StandardOpenOption;
 
 class AlumiteTokenStore {
 
+    record StoredSession(String refreshToken, String accessToken, String accessExpiresAt) {}
+
+
     private Path storeDirectory() {
         return ModConfig.getDirectory().resolve("alumite_sessions");
     }
@@ -18,28 +21,35 @@ class AlumiteTokenStore {
         return storeDirectory().resolve(sanitizeAccountKey(accountKey));
     }
 
-    String load(String accountKey) {
-        return readToken(storePath(accountKey));
-    }
-
-    private String readToken(Path path) {
+    StoredSession load(String accountKey) {
+        Path path = storePath(accountKey);
         if (!Files.exists(path)) {
             return null;
         }
         try {
-            String content = Files.readString(path).strip();
-            return content.isEmpty() ? null : content;
+            String[] lines = Files.readString(path).strip().split("\n", 3);
+            if (lines.length < 3) {
+                return null;
+            }
+            String refreshToken = lines[0].strip();
+            String accessToken = lines[1].strip();
+            String accessExpiresAt = lines[2].strip();
+            if (refreshToken.isEmpty() || accessToken.isEmpty() || accessExpiresAt.isEmpty()) {
+                return null;
+            }
+            return new StoredSession(refreshToken, accessToken, accessExpiresAt);
         } catch (IOException ioException) {
             Client.LOG.warn("[Alumite] Failed to read session store: {}", ioException.getMessage());
             return null;
         }
     }
 
-    void save(String accountKey, String refreshToken) {
+    void save(String accountKey, String refreshToken, String accessToken, String accessExpiresAt) {
         try {
             Path path = storePath(accountKey);
             Files.createDirectories(path.getParent());
-            Files.writeString(path, refreshToken, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            String content = refreshToken + "\n" + (accessToken != null ? accessToken : "") + "\n" + (accessExpiresAt != null ? accessExpiresAt : "");
+            Files.writeString(path, content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException ioException) {
             Client.LOG.warn("[Alumite] Failed to save session: {}", ioException.getMessage());
         }

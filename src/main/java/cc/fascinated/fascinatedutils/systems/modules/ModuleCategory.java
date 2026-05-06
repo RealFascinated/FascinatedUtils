@@ -1,12 +1,16 @@
 package cc.fascinated.fascinatedutils.systems.modules;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import net.minecraft.client.resources.language.I18n;
 
-@Getter
 @AllArgsConstructor
 public enum ModuleCategory {
-    GENERAL("General"), HUD("HUD");
+    GENERAL("alumite.module.category.general"),
+    HUD("alumite.module.category.hud");
 
-    private final String displayName;
+    private final String translationKey;
+
+    public String getDisplayName() {
+        return I18n.get(translationKey);
+    }
 }

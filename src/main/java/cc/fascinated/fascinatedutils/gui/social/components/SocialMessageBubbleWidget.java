@@ -3,27 +3,26 @@ package cc.fascinated.fascinatedutils.gui.social.components;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.channel.ChannelMessage;
 import cc.fascinated.fascinatedutils.api.user.User;
-import cc.fascinated.fascinatedutils.gui.AvatarTextureCache;
 import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.widgets.FAvatarWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FIconButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 import java.time.Instant;
-import java.util.function.BiConsumer;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.function.BiConsumer;
 
 public class SocialMessageBubbleWidget {
     private static final float AVATAR_SIZE = 20f;
@@ -38,8 +37,53 @@ public class SocialMessageBubbleWidget {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm a");
 
     public static FWidget build(Props props, float width) {
+        FAvatarWidget avatarWidget = new FAvatarWidget(AVATAR_SIZE, 4f,
+                () -> {
+                    User author = Alumite.INSTANCE.users().cachedUser(props.message().authorId());
+                    return author != null ? author.minecraftUuid() : null;
+                },
+                () -> {
+                    User author = Alumite.INSTANCE.users().cachedUser(props.message().authorId());
+                    return author != null && author.minecraftName() != null
+                            ? author.minecraftName()
+                            : "#" + props.message().authorId();
+                });
+
+        FIconButtonWidget menuBtn = props.onContextMenu() != null ? new FIconButtonWidget(MENU_BTN_SIZE, 3f, () -> "\u22EE") {
+            @Override
+            protected int resolveButtonFillArgb(boolean hovered) {
+                return hovered ? 0x55FFFFFF : 0x33FFFFFF;
+            }
+
+            @Override
+            protected int resolveButtonBorderArgb(boolean hovered) {
+                return resolveButtonFillArgb(hovered);
+            }
+
+            @Override
+            protected int resolveContentTintArgb(boolean hovered) {
+                return 0xFFCCCCCC;
+            }
+
+            @Override
+            public boolean click(float pointerX, float pointerY, int button) {
+                if (button == 0) {
+                    props.onContextMenu().accept(pointerX, pointerY);
+                    return true;
+                }
+                return false;
+            }
+        } : null;
+        if (menuBtn != null) {
+            menuBtn.setDrawBorder(false);
+        }
+
         return new FWidget() {
             {
+                addChild(avatarWidget);
+                if (menuBtn != null) {
+                    addChild(menuBtn);
+                }
                 if (props.editInput() != null) {
                     addChild(props.editInput());
                 }
@@ -61,6 +105,10 @@ public class SocialMessageBubbleWidget {
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, width, lh);
+                avatarWidget.layout(measure, lx, ly + VERT_PAD, AVATAR_SIZE, AVATAR_SIZE);
+                if (menuBtn != null) {
+                    menuBtn.layout(measure, lx + width - MENU_BTN_SIZE - MENU_BTN_RIGHT_MARGIN, ly + VERT_PAD, MENU_BTN_SIZE, MENU_BTN_SIZE);
+                }
                 if (props.editInput() != null) {
                     float contentX = lx + AVATAR_SIZE + AVATAR_GAP;
                     float inputW = width - AVATAR_SIZE - AVATAR_GAP;
@@ -77,7 +125,7 @@ public class SocialMessageBubbleWidget {
 
             @Override
             public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
-                return isMenuBtnHovered(pointerX, pointerY) ? UiPointerCursor.HAND : UiPointerCursor.DEFAULT;
+                return UiPointerCursor.DEFAULT;
             }
 
             @Override
@@ -101,10 +149,6 @@ public class SocialMessageBubbleWidget {
                 if (props.onContextMenu() == null) {
                     return false;
                 }
-                if (button == 0 && isMenuBtnHovered(pointerX, pointerY)) {
-                    props.onContextMenu().accept(pointerX, pointerY);
-                    return true;
-                }
                 if (button == 1) {
                     props.onContextMenu().accept(pointerX, pointerY);
                     return true;
@@ -112,37 +156,18 @@ public class SocialMessageBubbleWidget {
                 return false;
             }
 
-            private boolean isMenuBtnHovered(float px, float py) {
-                float btnX = x() + w() - MENU_BTN_SIZE - MENU_BTN_RIGHT_MARGIN;
-                float btnY = y() + VERT_PAD;
-                return px >= btnX && px < btnX + MENU_BTN_SIZE && py >= btnY && py < btnY + MENU_BTN_SIZE;
-            }
-
             @Override
             protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-                if (containsPoint(frame.pointerX(), frame.pointerY())) {
+                boolean hovered = containsPoint(frame.pointerX(), frame.pointerY());
+                if (hovered) {
                     graphics.drawRect(x(), y(), w(), h(), 0x14FFFFFF);
                 }
 
                 ChannelMessage message = props.message();
                 User author = Alumite.INSTANCE.users().cachedUser(message.authorId());
-                String minecraftUuid = author != null ? author.minecraftUuid() : null;
                 String displayName = author != null && author.minecraftName() != null
                         ? author.minecraftName()
                         : "#" + message.authorId();
-
-                float avatarY = y() + VERT_PAD;
-                if (minecraftUuid != null && !minecraftUuid.isBlank()) {
-                    Identifier avatarTexture = AvatarTextureCache.INSTANCE.get(minecraftUuid, () -> {});
-                    if (avatarTexture != null) {
-                        graphics.fillRoundedRect(x(), avatarY, AVATAR_SIZE, AVATAR_SIZE, 4f, 0xFF000000, RectCornerRoundMask.ALL);
-                        graphics.drawTexture(avatarTexture, x(), avatarY, AVATAR_SIZE, AVATAR_SIZE, 0xFFFFFFFF);
-                    } else {
-                        drawInitialBadge(graphics, x(), avatarY, displayName);
-                    }
-                } else {
-                    drawInitialBadge(graphics, x(), avatarY, displayName);
-                }
 
                 float contentX = x() + AVATAR_SIZE + AVATAR_GAP;
                 float nameY = y() + VERT_PAD;
@@ -158,7 +183,7 @@ public class SocialMessageBubbleWidget {
 
                 if (props.editInput() != null) {
                     float hintY = props.editInput().y() + props.editInput().h() + 4f;
-                    graphics.drawText(Component.translatable("fascinatedutils.social.edit_message.hint").getString(), contentX, hintY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                    graphics.drawText(Component.translatable("alumite.social.edit_message.hint").getString(), contentX, hintY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
                 } else {
                     float textY = nameY + graphics.getFontCapHeight() + NAME_CONTENT_GAP;
                     String displayContent = message.content();
@@ -171,20 +196,9 @@ public class SocialMessageBubbleWidget {
                     }
                 }
 
-                if (props.onContextMenu() != null && containsPoint(frame.pointerX(), frame.pointerY())) {
-                    float btnX = x() + w() - MENU_BTN_SIZE - MENU_BTN_RIGHT_MARGIN;
-                    float btnY = y() + VERT_PAD;
-                    boolean menuBtnHovered = isMenuBtnHovered(frame.pointerX(), frame.pointerY());
-                    int btnBg = menuBtnHovered ? 0x55FFFFFF : 0x33FFFFFF;
-                    graphics.fillRoundedRect(btnX, btnY, MENU_BTN_SIZE, MENU_BTN_SIZE, 3f, btnBg, RectCornerRoundMask.ALL);
-                    graphics.drawCenteredText("\u22EE", btnX + MENU_BTN_SIZE / 2f, btnY + (MENU_BTN_SIZE - graphics.getFontCapHeight()) / 2f, 0xFFCCCCCC, false, false);
+                if (menuBtn != null) {
+                    menuBtn.setVisible(hovered);
                 }
-            }
-
-            private void drawInitialBadge(GuiRenderer graphics, float bx, float by, String name) {
-                String initial = name.isBlank() ? "?" : String.valueOf(Character.toUpperCase(name.charAt(0)));
-                graphics.fillRoundedRect(bx, by, AVATAR_SIZE, AVATAR_SIZE, 4f, 0xFF3B445A, RectCornerRoundMask.ALL);
-                graphics.drawCenteredText(initial, bx + AVATAR_SIZE / 2f, by + (AVATAR_SIZE - graphics.getFontCapHeight()) / 2f, 0xFFFFFFFF, false, true);
             }
         };
     }
@@ -200,12 +214,12 @@ public class SocialMessageBubbleWidget {
             LocalDate today = LocalDate.now(zoneId);
             String formattedTime = TIME_FORMATTER.format(messageTime);
             if (messageDate.equals(today)) {
-                return Component.translatable("fascinatedutils.social.message_time.today_at", formattedTime).getString();
+                return Component.translatable("alumite.social.message_time.today_at", formattedTime).getString();
             }
             if (messageDate.equals(today.minusDays(1))) {
-                return Component.translatable("fascinatedutils.social.message_time.yesterday_at", formattedTime).getString();
+                return Component.translatable("alumite.social.message_time.yesterday_at", formattedTime).getString();
             }
-            return Component.translatable("fascinatedutils.social.message_time.full", DATE_FORMATTER.format(messageTime), formattedTime).getString();
+            return Component.translatable("alumite.social.message_time.full", DATE_FORMATTER.format(messageTime), formattedTime).getString();
         } catch (DateTimeParseException ignored) {
             return "";
         }

@@ -19,8 +19,8 @@ import org.lwjgl.glfw.GLFW;
 public class FreelookModule extends Module {
     private static final float MAX_PITCH = 90f;
 
-    private final KeyMapping freelookKeyBinding = KeybindsWrapper.registerKeybind("key.fascinatedutils.freelook", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, KeybindsWrapper.CATEGORY);
-    private final KeybindSetting freelookKeySetting = KeybindSetting.builder().id("freelook_key").defaultValue("").keyBindingSupplier(() -> freelookKeyBinding).categoryDisplayKey("Controls").build();
+    private final KeyMapping freelookKeyBinding = KeybindsWrapper.registerKeybind("key.alumite.freelook", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, KeybindsWrapper.CATEGORY);
+    private final KeybindSetting freelookKeySetting = KeybindSetting.builder().id("freelook_key").defaultValue("").keyBindingSupplier(() -> freelookKeyBinding).categoryDisplayKey("alumite.setting.category.controls").build();
 
     private float freelookYaw = 0f;
     private float freelookPitch = 0f;

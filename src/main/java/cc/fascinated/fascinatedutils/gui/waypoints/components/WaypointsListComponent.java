@@ -3,13 +3,8 @@ package cc.fascinated.fascinatedutils.gui.waypoints.components;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.FState;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
-import cc.fascinated.fascinatedutils.gui.widgets.FTheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FCellConstraints;
-import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FScrollColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.Waypoint;
 import net.minecraft.network.chat.Component;
 
@@ -35,8 +30,8 @@ public class WaypointsListComponent {
         FColumnWidget body = new FColumnWidget(5f, Align.START);
         if (filtered.isEmpty()) {
             String emptyText = queryLower.isEmpty()
-                    ? Component.translatable("fascinatedutils.waypoints.empty").getString()
-                    : Component.translatable("fascinatedutils.waypoints.no_results").getString();
+                    ? Component.translatable("alumite.waypoints.empty").getString()
+                    : Component.translatable("alumite.waypoints.no_results").getString();
             FLabelWidget emptyLabel = new FLabelWidget();
             emptyLabel.setText(emptyText);
             emptyLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());

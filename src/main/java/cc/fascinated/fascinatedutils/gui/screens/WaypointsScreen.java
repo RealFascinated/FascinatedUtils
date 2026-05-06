@@ -3,11 +3,9 @@ package cc.fascinated.fascinatedutils.gui.screens;
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
-
 import cc.fascinated.fascinatedutils.gui.input.UiCursorController;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.waypoints.components.WaypointsListComponent;
 import cc.fascinated.fascinatedutils.gui.waypoints.components.WaypointsRootComponent;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
@@ -27,7 +25,7 @@ public class WaypointsScreen extends WidgetScreen {
     private float scrollAccum;
 
     public WaypointsScreen() {
-        super(Component.translatable("fascinatedutils.waypoints.title"));
+        super(Component.translatable("alumite.waypoints.title"));
         Minecraft minecraftClient = Minecraft.getInstance();
         if (minecraftClient.getSingleplayerServer() != null) {
             this.worldKey = "sp:" + minecraftClient.getSingleplayerServer().getWorldData().getLevelName();

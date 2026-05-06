@@ -32,7 +32,7 @@ public class HUDEditorScreen extends WidgetScreen {
     private final FadeInAnim brandingAnim = new FadeInAnim(450f);
 
     public HUDEditorScreen() {
-        super(Component.translatable("fascinatedutils.setting.hud_editor.title"));
+        super(Component.translatable("alumite.setting.hud_editor.title"));
     }
 
     @Override
@@ -84,6 +84,8 @@ public class HUDEditorScreen extends WidgetScreen {
         final float finalCanvasWidth = canvasWidth;
         final float finalCanvasHeight = canvasHeight;
         brandingAnim.render(guiRenderer, () -> HudEditorOverlays.drawBrandingCenterOverlay(guiRenderer, finalCanvasWidth, finalCanvasHeight, UIScale.uiPointerX(), UIScale.uiPointerY()));
+        HudEditorOverlays.drawCloseEditorButton(guiRenderer, canvasWidth, UIScale.uiPointerX(), UIScale.uiPointerY());
+        HudEditorOverlays.drawVersionLabel(guiRenderer, canvasWidth, canvasHeight);
         if (!idleHudSelection) {
             HudEditorOverlays.clearBrandingHitLayout();
         }

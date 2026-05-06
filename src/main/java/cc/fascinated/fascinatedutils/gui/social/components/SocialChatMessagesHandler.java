@@ -1,26 +1,17 @@
 package cc.fascinated.fascinatedutils.gui.social.components;
 
-import cc.fascinated.fascinatedutils.FascinatedUtils;
+import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.ChannelMessage;
 import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessagePageDTO;
-import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.FState;
-import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
-import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
-import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
+import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.toast.Toast;
-import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FContextMenuWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FScrollColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
@@ -74,10 +65,10 @@ class SocialChatMessagesHandler {
         if (pendingDeleteMessage != null) {
             ChannelMessage toDelete = pendingDeleteMessage;
             result.add(SocialDestructiveFullscreenConfirmOverlay.create(new SocialDestructiveFullscreenConfirmOverlay.Props(
-                    Component.translatable("fascinatedutils.social.delete_message.title").getString(),
-                    Component.translatable("fascinatedutils.social.delete_message.message").getString(),
-                    Component.translatable("fascinatedutils.social.delete_message.confirm").getString(),
-                    Component.translatable("fascinatedutils.social.delete_message.deny").getString(),
+                    Component.translatable("alumite.social.delete_message.title").getString(),
+                    Component.translatable("alumite.social.delete_message.message").getString(),
+                    Component.translatable("alumite.social.delete_message.confirm").getString(),
+                    Component.translatable("alumite.social.delete_message.deny").getString(),
                     () -> pendingDeleteMessage = null,
                     () -> {
                         pendingDeleteMessage = null;
@@ -96,13 +87,13 @@ class SocialChatMessagesHandler {
      */
     FWidget buildMessagesBody(String selectedChannelId, float panelWidth, FState<Float> messageScrollY) {
         if (selectedChannelId == null) {
-            return buildEmpty(Component.translatable("fascinatedutils.social.loading").getString());
+            return buildEmpty(Component.translatable("alumite.social.loading").getString());
         }
         Channel channel = Alumite.INSTANCE.channels().get(selectedChannelId);
         List<ChannelMessage> messages = channel == null ? null : channel.messagesOrNull();
         if (messages == null) {
             triggerLoadMessages(selectedChannelId);
-            return buildEmpty(Component.translatable("fascinatedutils.social.loading").getString());
+            return buildEmpty(Component.translatable("alumite.social.loading").getString());
         }
 
         float messageWidth = panelWidth - 2f * PAD;
@@ -153,7 +144,7 @@ class SocialChatMessagesHandler {
     private FWidget buildContextMenuOverlay() {
         FContextMenuWidget menu = new FContextMenuWidget(contextMenuX, contextMenuY, () -> contextMenuMessage = null, List.of(
                 new FContextMenuWidget.Item(
-                        () -> Component.translatable("fascinatedutils.social.edit_message.action").getString(),
+                        () -> Component.translatable("alumite.social.edit_message.action").getString(),
                         () -> {
                             ChannelMessage target = contextMenuMessage;
                             contextMenuMessage = null;
@@ -164,7 +155,7 @@ class SocialChatMessagesHandler {
                             }
                         }),
                 new FContextMenuWidget.Item(
-                        () -> Component.translatable("fascinatedutils.social.delete_message.action").getString(),
+                        () -> Component.translatable("alumite.social.delete_message.action").getString(),
                         0xFFFF5555,
                         () -> {
                             ChannelMessage target = contextMenuMessage;
@@ -226,13 +217,13 @@ class SocialChatMessagesHandler {
             editMessagePending = false;
             return;
         }
-        FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+        AlumiteMod.SCHEDULED_POOL.execute(() -> {
             try {
                 channel.editMessage(target.id(), newContent);
             } catch (AlumiteApiException exception) {
                 Toast.show().message(SocialErrors.message(exception)).error();
             } catch (Exception exception) {
-                Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
+                Toast.show().message(Component.translatable("alumite.social.error.generic").getString()).error();
             }
             Minecraft.getInstance().execute(() -> {
                 editMessagePending = false;
@@ -246,13 +237,13 @@ class SocialChatMessagesHandler {
         if (channel == null) {
             return;
         }
-        FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+        AlumiteMod.SCHEDULED_POOL.execute(() -> {
             try {
                 channel.deleteMessage(message.id());
             } catch (AlumiteApiException exception) {
                 Toast.show().message(SocialErrors.message(exception)).error();
             } catch (Exception exception) {
-                Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
+                Toast.show().message(Component.translatable("alumite.social.error.generic").getString()).error();
             }
         });
     }
@@ -266,11 +257,11 @@ class SocialChatMessagesHandler {
             return;
         }
         loadingMessagesChannelId = channelId;
-        FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+        AlumiteMod.SCHEDULED_POOL.execute(() -> {
             try {
                 channel.fetchMessages(50);
             } catch (Exception exception) {
-                Toast.show().message(Component.translatable("fascinatedutils.social.error.generic").getString()).error();
+                Toast.show().message(Component.translatable("alumite.social.error.generic").getString()).error();
             }
             Minecraft.getInstance().execute(() -> loadingMessagesChannelId = null);
         });
@@ -293,7 +284,7 @@ class SocialChatMessagesHandler {
         }
         String oldestMessageId = existingMessages.get(0).id();
         loadingOlderMessagesChannelId = channelId;
-        FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+        AlumiteMod.SCHEDULED_POOL.execute(() -> {
             try {
                 ChannelMessagePageDTO page = channel.fetchMessagesPage(50, oldestMessageId, null);
                 channel.mergeOlderMessagesPage(page);
@@ -317,7 +308,7 @@ class SocialChatMessagesHandler {
         if (lastReadMessageId != null && lastReadMessageId.compareTo(lastMessageId) >= 0) {
             return;
         }
-        FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+        AlumiteMod.SCHEDULED_POOL.execute(() -> {
             try {
                 channel.markRead(lastMessageId);
             } catch (Exception ignored) {

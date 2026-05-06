@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.Getter;
+import net.minecraft.client.resources.language.I18n;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,10 +21,16 @@ import java.util.Optional;
 
 @Getter
 public abstract class Module implements GsonSerializable<Module> {
-    public static final String APPEARANCE_CATEGORY_DISPLAY_KEY = "Appearance";
+    public static final String APPEARANCE_CATEGORY_DISPLAY_KEY = "alumite.setting.category.appearance";
 
     private final String moduleKey;
     private final String displayName;
+
+    public String getDisplayName() {
+        String key = "alumite.module." + moduleKey + ".name";
+        String translated = I18n.get(key);
+        return translated.equals(key) ? displayName : translated;
+    }
     private final List<Setting<?>> settings = new ArrayList<>();
     private final ModuleCategory category;
 
@@ -192,6 +199,6 @@ public abstract class Module implements GsonSerializable<Module> {
     }
 
     protected String settingTranslationKeyPrefix(Setting<?> setting) {
-        return "fascinatedutils.module." + moduleKey;
+        return "alumite.module." + moduleKey;
     }
 }

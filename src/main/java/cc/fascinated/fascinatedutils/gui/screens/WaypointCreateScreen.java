@@ -4,20 +4,17 @@ import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
-import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
-import cc.fascinated.fascinatedutils.gui.waypoints.components.WaypointCreateCardComponent;
-import cc.fascinated.fascinatedutils.gui.widgets.FMaxCenterInsetsWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FRectWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;
 import cc.fascinated.fascinatedutils.gui.input.UiCursorController;
 import cc.fascinated.fascinatedutils.gui.modsettings.FColorPickerPopupWidget;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.waypoints.components.WaypointCreateCardComponent;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.WaypointType;
-import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -45,7 +42,7 @@ public class WaypointCreateScreen extends WidgetScreen {
     private FColorPickerPopupWidget colorPickerWidget;
 
     public WaypointCreateScreen(double xPosition, double yPosition, double zPosition, String dimensionId, String worldKeyValue) {
-        super(Component.translatable("fascinatedutils.waypoints.create.title"));
+        super(Component.translatable("alumite.waypoints.create.title"));
         this.origX = xPosition;
         this.origY = yPosition;
         this.origZ = zPosition;
@@ -53,7 +50,7 @@ public class WaypointCreateScreen extends WidgetScreen {
         this.worldKey = worldKeyValue;
 
         nameInput = new FOutlinedTextInputWidget(64, 24f, () -> "");
-        nameInput.setValue("Waypoint");
+        nameInput.setValue(I18n.get("alumite.waypoints.default_name"));
 
         xInput = new FOutlinedTextInputWidget(16, 24f, () -> "");
         xInput.setValue(String.valueOf((int) Math.floor(xPosition)));
@@ -123,7 +120,7 @@ public class WaypointCreateScreen extends WidgetScreen {
     private void create() {
         String trimmedName = nameInput.value().trim();
         if (trimmedName.isEmpty()) {
-            trimmedName = "Waypoint";
+            trimmedName = I18n.get("alumite.waypoints.default_name");
         }
         double parsedX = parseCoord(xInput.value(), origX);
         double parsedY = parseCoord(yInput.value(), origY);

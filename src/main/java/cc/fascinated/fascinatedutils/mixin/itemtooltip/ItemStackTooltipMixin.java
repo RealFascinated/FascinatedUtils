@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.caches.ItemStackSizeCache;
 import cc.fascinated.fascinatedutils.common.ByteFormatterUtil;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.ItemTooltipModule;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,7 +19,7 @@ import java.util.List;
 public class ItemStackTooltipMixin {
 
     @Inject(method = "getTooltipLines", at = @At("RETURN"), cancellable = true)
-    private void fascinatedutils$appendItemTooltip(CallbackInfoReturnable<List<Component>> cir) {
+    private void alumite$appendItemTooltip(CallbackInfoReturnable<List<Component>> cir) {
         ItemTooltipModule module = ModuleRegistry.INSTANCE.getModule(ItemTooltipModule.class).orElse(null);
         if (module == null || !module.isEnabled()) {
             return;
@@ -33,7 +34,7 @@ public class ItemStackTooltipMixin {
                 if (module.getGapAboveInfo().isEnabled()) {
                     mutable.add(Component.literal(""));
                 }
-                mutable.add(Component.literal("Size: " + ByteFormatterUtil.formatBytes(byteSize, 2)).withStyle(style -> style.withColor(0xAAAAAA)));
+                mutable.add(Component.literal(I18n.get("alumite.module.itemtooltip.item_size", ByteFormatterUtil.formatBytes(byteSize, 2))).withStyle(style -> style.withColor(0xAAAAAA)));
                 cir.setReturnValue(mutable);
             }
         }

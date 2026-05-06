@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extentions;
 
 import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaBlockExtension;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.world.level.block.DaylightDetectorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -15,6 +16,7 @@ public class DaylightDetectorExtension extends WawlaBlockExtension<DaylightDetec
     public List<String> getExtension(BlockState blockState) {
         int power = blockState.getValue(DaylightDetectorBlock.POWER);
         boolean inverted = blockState.getValue(DaylightDetectorBlock.INVERTED);
-        return List.of((inverted ? "Night Signal: " : "Signal: ") + power + "/15");
+        String key = inverted ? "alumite.wawla.daylight_detector.night_signal" : "alumite.wawla.daylight_detector.signal";
+        return List.of(I18n.get(key, power));
     }
 }

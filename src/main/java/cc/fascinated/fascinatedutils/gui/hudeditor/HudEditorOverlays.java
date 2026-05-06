@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.hudeditor;
 
+import cc.fascinated.fascinatedutils.Constants;
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
@@ -16,8 +18,14 @@ public class HudEditorOverlays {
     private static final float CENTER_CROSSHAIR_DASH = 4f;
     private static final float CENTER_CROSSHAIR_GAP = 4f;
     private static final float BRANDING_TITLE_TO_MODS_GAP = 16f;
+    private static final float SUNNY_ICON_SIZE = 32f;
+    private static final float SUNNY_ICON_TO_TITLE_GAP = 12f;
     private static final float MODS_BUTTON_PAD_X = 32f;
     private static final float MODS_BUTTON_PAD_Y = 9f;
+
+    private static final float CLOSE_EDITOR_ICON_SIZE = 16f;
+    private static final float CLOSE_EDITOR_BUTTON_PADDING = 5f;
+    private static final float CLOSE_EDITOR_MARGIN = 5f;
 
     private static float modsLeft;
     private static float modsTop;
@@ -25,11 +33,18 @@ public class HudEditorOverlays {
     private static float modsHeight;
     private static boolean modsHitValid;
 
+    private static float closeEditorLeft;
+    private static float closeEditorTop;
+    private static float closeEditorWidth;
+    private static float closeEditorHeight;
+    private static boolean closeEditorHitValid;
+
     /**
-     * Clears the last published MODS button hit region before a new HUD editor frame is drawn.
+     * Clears the last published MODS button and close-editor button hit regions before a new HUD editor frame is drawn.
      */
     public static void clearBrandingHitLayout() {
         modsHitValid = false;
+        closeEditorHitValid = false;
     }
 
     /**
@@ -44,6 +59,17 @@ public class HudEditorOverlays {
     }
 
     /**
+     * Whether the logical pointer lies over the close-editor button from the last {@link #drawCloseEditorButton} call.
+     *
+     * @param pointerX logical pointer X
+     * @param pointerY logical pointer Y
+     * @return true when the close-editor hit region exists and contains the point
+     */
+    public static boolean hitTestCloseEditorButton(float pointerX, float pointerY) {
+        return closeEditorHitValid && pointerX >= closeEditorLeft && pointerY >= closeEditorTop && pointerX <= closeEditorLeft + closeEditorWidth && pointerY <= closeEditorTop + closeEditorHeight;
+    }
+
+    /**
      * Draws a centered title and MODS entry control (Lunar-style chrome) for the empty HUD editor state.
      *
      * @param glRenderer   renderer for this pass
@@ -53,26 +79,29 @@ public class HudEditorOverlays {
      * @param pointerY     logical pointer Y (for MODS hover styling)
      */
     public static void drawBrandingCenterOverlay(GuiRenderer glRenderer, float canvasWidth, float canvasHeight, float pointerX, float pointerY) {
-        String titleMiniMessage = Component.translatable("fascinatedutils.setting.hud_editor.branding.title").getString();
-        String modsLabel = Component.translatable("fascinatedutils.setting.hud_editor.branding.mods_button").getString();
+        String titleMiniMessage = Component.translatable("alumite.setting.hud_editor.branding.title").getString();
+        String modsLabel = Component.translatable("alumite.setting.hud_editor.branding.mods_button").getString();
         float lineHeight = glRenderer.getFontHeight();
         int titleWidth = glRenderer.measureMiniMessageTextWidth(titleMiniMessage);
         int modsTextWidth = glRenderer.measureTextWidth(modsLabel, true);
         float modsButtonWidth = modsTextWidth + MODS_BUTTON_PAD_X * 2f;
         float modsButtonHeight = lineHeight + MODS_BUTTON_PAD_Y * 2f;
-        float stackHeight = lineHeight + BRANDING_TITLE_TO_MODS_GAP + modsButtonHeight;
+        float stackHeight = SUNNY_ICON_SIZE + SUNNY_ICON_TO_TITLE_GAP + lineHeight + BRANDING_TITLE_TO_MODS_GAP + modsButtonHeight;
         float blockTop = (canvasHeight - stackHeight) * 0.5f;
         float centerX = canvasWidth * 0.5f;
         float titleLeft = centerX - titleWidth * 0.5f;
         float btnLeft = centerX - modsButtonWidth * 0.5f;
-        float btnTop = blockTop + lineHeight + BRANDING_TITLE_TO_MODS_GAP;
+        float titleTop = blockTop + SUNNY_ICON_SIZE + SUNNY_ICON_TO_TITLE_GAP;
+        float btnTop = titleTop + lineHeight + BRANDING_TITLE_TO_MODS_GAP;
         modsLeft = btnLeft;
         modsTop = btnTop;
         modsWidth = modsButtonWidth;
         modsHeight = modsButtonHeight;
         modsHitValid = true;
         boolean modsHovered = hitTestModsButton(pointerX, pointerY);
-        glRenderer.drawMiniMessageText(titleMiniMessage, titleLeft, blockTop, false);
+        float iconLeft = centerX - SUNNY_ICON_SIZE * 0.5f;
+        glRenderer.drawSprite(ModUiTextures.SUNNY.getId(), iconLeft, blockTop, SUNNY_ICON_SIZE, SUNNY_ICON_SIZE, glRenderer.theme().textPrimary());
+        glRenderer.drawMiniMessageText(titleMiniMessage, titleLeft, titleTop, false);
         float borderThicknessX = UITheme.BORDER_THICKNESS_PX;
         float borderThicknessY = UITheme.BORDER_THICKNESS_PX;
         float maxCornerRadius = Math.min(modsButtonWidth, modsButtonHeight) * 0.5f - 0.01f;
@@ -82,6 +111,48 @@ public class HudEditorOverlays {
         glRenderer.fillRoundedRectFrame(btnLeft, btnTop, modsButtonWidth, modsButtonHeight, modsCornerRadius, modsBorderColor, glRenderer.theme().surface(), borderThicknessX, borderThicknessY, RectCornerRoundMask.ALL);
         float modsTextY = btnTop + MODS_BUTTON_PAD_Y;
         glRenderer.drawCenteredText(modsLabel, centerX, modsTextY, glRenderer.theme().textPrimary(), false, false);
+    }
+
+    /**
+     * Draws a close button in the top-right corner of the HUD editor.
+     *
+     * @param glRenderer   renderer for this pass
+     * @param canvasWidth  logical canvas width
+     * @param pointerX     logical pointer X (for hover styling)
+     * @param pointerY     logical pointer Y (for hover styling)
+     */
+    public static void drawCloseEditorButton(GuiRenderer glRenderer, float canvasWidth, float pointerX, float pointerY) {
+        float buttonSize = CLOSE_EDITOR_ICON_SIZE + CLOSE_EDITOR_BUTTON_PADDING * 2f;
+        float btnLeft = canvasWidth - buttonSize - CLOSE_EDITOR_MARGIN;
+        float btnTop = CLOSE_EDITOR_MARGIN;
+        closeEditorLeft = btnLeft;
+        closeEditorTop = btnTop;
+        closeEditorWidth = buttonSize;
+        closeEditorHeight = buttonSize;
+        closeEditorHitValid = true;
+        boolean hovered = hitTestCloseEditorButton(pointerX, pointerY);
+        float borderThickness = UITheme.BORDER_THICKNESS_PX;
+        float maxCornerRadius = buttonSize * 0.5f - 0.01f;
+        float cornerRadius = Mth.clamp(glRenderer.theme().cardCornerRadius(), 0.5f, maxCornerRadius - borderThickness * 0.5f);
+        int borderColor = hovered ? glRenderer.theme().borderHover() : glRenderer.theme().border();
+        glRenderer.fillRoundedRectFrame(btnLeft, btnTop, buttonSize, buttonSize, cornerRadius, borderColor, glRenderer.theme().surface(), borderThickness, borderThickness, RectCornerRoundMask.ALL);
+        float iconLeft = btnLeft + CLOSE_EDITOR_BUTTON_PADDING;
+        float iconTop = btnTop + CLOSE_EDITOR_BUTTON_PADDING;
+        int iconColor = hovered ? 0xFFFFFFFF : 0xAAFFFFFF;
+        glRenderer.drawTexture(ModUiTextures.CLOSE.getId(), iconLeft, iconTop, CLOSE_EDITOR_ICON_SIZE, CLOSE_EDITOR_ICON_SIZE, iconColor);
+    }
+
+    /**
+     * Draws the mod version label in the bottom-right corner of the HUD editor.
+     *
+     * @param glRenderer   renderer for this pass
+     * @param canvasWidth  logical canvas width
+     * @param canvasHeight logical canvas height
+     */
+    public static void drawVersionLabel(GuiRenderer glRenderer, float canvasWidth, float canvasHeight) {
+        String label = Component.translatable("alumite.setting.hud_editor.branding.version_label", Constants.GAME_VERSION, Constants.MOD_VERSION).getString();
+        float posY = canvasHeight - glRenderer.getFontHeight() - CLOSE_EDITOR_MARGIN;
+        glRenderer.drawText(label, CLOSE_EDITOR_MARGIN, posY, 0x80FFFFFF, false, false);
     }
 
     /**

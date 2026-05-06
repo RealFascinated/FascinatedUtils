@@ -28,7 +28,7 @@ import java.util.List;
 @UtilityClass
 public class ModSettingsRegistrySettingsTabBuilder {
 
-    private static final String PERFORMANCE_CATEGORY_DISPLAY_KEY = "Performance";
+    private static final String PERFORMANCE_CATEGORY_DISPLAY_KEY = "alumite.setting.category.performance";
 
     public static FWidget buildSettingsTab(float paneWidth, float paneHeight, FState<Float> scrollYRef, RegistrySettingsSubTab subTab) {
         float settingsContentWidth = Math.max(28f, paneWidth);
@@ -39,7 +39,7 @@ public class ModSettingsRegistrySettingsTabBuilder {
         List<Setting<?>> allSettings = SettingsRegistry.INSTANCE.getSettings().getSettings();
         if (allSettings.isEmpty()) {
             FLabelWidget empty = new FLabelWidget();
-            empty.setText(Component.translatable("fascinatedutils.setting.shell.settings_empty").getString());
+            empty.setText(Component.translatable("alumite.setting.shell.settings_empty").getString());
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.CENTER);
             scrollBody.addChild(empty);
@@ -51,7 +51,7 @@ public class ModSettingsRegistrySettingsTabBuilder {
         partitionRegistrySettingsForSubTab(allSettings, subTab, topLevelSettings, categoryBlocks);
         if (topLevelSettings.isEmpty() && categoryBlocks.isEmpty()) {
             FLabelWidget empty = new FLabelWidget();
-            empty.setText(Component.translatable("fascinatedutils.setting.shell.settings_empty").getString());
+            empty.setText(Component.translatable("alumite.setting.shell.settings_empty").getString());
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.CENTER);
             scrollBody.addChild(empty);

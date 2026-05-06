@@ -1,21 +1,10 @@
 package cc.fascinated.fascinatedutils.gui.waypoints.components;
 
-import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.FNodeRegistry;
-import cc.fascinated.fascinatedutils.gui.core.FNodeWidget;
-import cc.fascinated.fascinatedutils.gui.core.FState;
-import cc.fascinated.fascinatedutils.gui.core.FWidgetNode;
+import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.waypoints.WaypointDeletePopupWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FCellConstraints;
-import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FMaxCenterInsetsWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FRectWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FSpacerWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.Waypoint;
 import net.minecraft.network.chat.Component;
@@ -57,7 +46,7 @@ public class WaypointsRootComponent extends FWidget {
         this.dimensionLabelFormatter = dimensionLabelFormatter;
 
         this.searchInput = new FOutlinedTextInputWidget(64, 24f,
-                () -> Component.translatable("fascinatedutils.waypoints.search").getString());
+                () -> Component.translatable("alumite.waypoints.search").getString());
         this.searchInput.setOnChange(value -> {
             if (scrollOffsetRef != null) scrollOffsetRef.set(0f);
         });

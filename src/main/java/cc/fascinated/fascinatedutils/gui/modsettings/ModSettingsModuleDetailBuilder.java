@@ -5,7 +5,6 @@ import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.impl.*;
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.FState;
-import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.theme.ModSettingsTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
@@ -61,7 +60,7 @@ public class ModSettingsModuleDetailBuilder {
 
         if (module.getAllSettings().isEmpty()) {
             FLabelWidget empty = new FLabelWidget();
-            empty.setText(Component.translatable("fascinatedutils.setting.shell.no_settings").getString());
+            empty.setText(Component.translatable("alumite.setting.shell.no_settings").getString());
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.START);
             scrollBody.addChild(ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(ModSettingsCategoryRows.settingsDetailPaddedInnerWidth(settingsInnerWidth), empty)));
@@ -76,7 +75,7 @@ public class ModSettingsModuleDetailBuilder {
             boolean anyVisible = !filteredTopLevel.isEmpty() || categoryBlocks.stream().anyMatch(block -> !block.settings().isEmpty());
             if (!anyVisible) {
                 FLabelWidget empty = new FLabelWidget();
-                empty.setText(Component.translatable("fascinatedutils.setting.shell.empty_modules").getString());
+                empty.setText(Component.translatable("alumite.setting.shell.empty_modules").getString());
                 empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
                 empty.setAlignX(Align.START);
                 scrollBody.addChild(ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(ModSettingsCategoryRows.settingsDetailPaddedInnerWidth(settingsInnerWidth), empty)));
@@ -128,7 +127,7 @@ public class ModSettingsModuleDetailBuilder {
      * Search field sizing for module detail pane; callers should construct one instance per mods tab session while a module is pinned.
      */
     public static FOutlinedTextInputWidget createSharedModuleDetailSearchField() {
-        return new FOutlinedTextInputWidget(180, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN, () -> Component.translatable("fascinatedutils.setting.shell.search_settings").getString());
+        return new FOutlinedTextInputWidget(180, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN, () -> Component.translatable("alumite.setting.shell.search_settings").getString());
     }
 
     private static FWidget editorForModuleSetting(Module module, Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX, Consumer<ColorSetting> openColorPicker) {

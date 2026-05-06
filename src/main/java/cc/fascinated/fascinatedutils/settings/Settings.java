@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.settings;
 import cc.fascinated.fascinatedutils.client.keybind.Keybinds;
 import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
+import net.minecraft.client.resources.language.I18n;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
@@ -22,17 +23,17 @@ public class Settings implements GsonSerializable<Settings> {
     private final KeybindSetting shellOpenKeybind = new KeybindSetting("shell_open_keybind", Keybinds::openMenuKeybind);
     private final KeybindSetting socialKeybind = new KeybindSetting("social_keybind", Keybinds::socialKeybind);
 
-    private final BooleanSetting showSelfNameplate = BooleanSetting.builder().id("show_self_nameplate").defaultValue(true).categoryDisplayKey("General").build();
+    private final BooleanSetting showSelfNameplate = BooleanSetting.builder().id("show_self_nameplate").defaultValue(true).categoryDisplayKey("alumite.setting.category.general").build();
 
-    private final BooleanSetting showServerListInPauseMenu = BooleanSetting.builder().id("show_server_list_in_pause_menu").defaultValue(true).categoryDisplayKey("General").build();
+    private final BooleanSetting showServerListInPauseMenu = BooleanSetting.builder().id("show_server_list_in_pause_menu").defaultValue(true).categoryDisplayKey("alumite.setting.category.general").build();
 
-    private final BooleanSetting confirmDisconnect = BooleanSetting.builder().id("confirm_disconnect").defaultValue(false).categoryDisplayKey("General").build();
+    private final BooleanSetting confirmDisconnect = BooleanSetting.builder().id("confirm_disconnect").defaultValue(false).categoryDisplayKey("alumite.setting.category.general").build();
 
-    private final BooleanSetting reduceMacOSResolution = BooleanSetting.builder().id("reduce_mac_os_resolution").defaultValue(false).locked(() -> !ClientUtils.isMacOS()).lockedReason(() -> "This Setting Requires MacOS").categoryDisplayKey("Performance").build();
+    private final BooleanSetting reduceMacOSResolution = BooleanSetting.builder().id("reduce_mac_os_resolution").defaultValue(false).locked(() -> !ClientUtils.isMacOS()).lockedReason(() -> I18n.get("alumite.setting.lock_reason.requires_mac_os")).categoryDisplayKey("alumite.setting.category.performance").build();
 
-    private final BooleanSetting turboEntities = BooleanSetting.builder().id("turbo_entities").defaultValue(true).categoryDisplayKey("Performance").build();
+    private final BooleanSetting turboEntities = BooleanSetting.builder().id("turbo_entities").defaultValue(true).categoryDisplayKey("alumite.setting.category.performance").build();
 
-    private final BooleanSetting turboParticles = BooleanSetting.builder().id("turbo_particles").defaultValue(true).categoryDisplayKey("Performance").build();
+    private final BooleanSetting turboParticles = BooleanSetting.builder().id("turbo_particles").defaultValue(true).categoryDisplayKey("alumite.setting.category.performance").build();
 
     public Settings() {
         addSetting(shellOpenKeybind);
@@ -51,7 +52,7 @@ public class Settings implements GsonSerializable<Settings> {
     }
 
     private void addSetting(Setting<?> setting) {
-        setting.setTranslationKeyPrefix("fascinatedutils.setting");
+        setting.setTranslationKeyPrefix("alumite.setting");
         this.settings.add(setting);
     }
 

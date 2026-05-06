@@ -11,17 +11,13 @@ import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.waypoints.components.WaypointEditCardComponent;
-import cc.fascinated.fascinatedutils.gui.widgets.FIconCheckboxWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FMaxCenterInsetsWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FRectWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FWidgetHost;
+import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.Waypoint;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
@@ -47,7 +43,7 @@ public class WaypointEditScreen extends WidgetScreen {
     private boolean showDistance;
 
     public WaypointEditScreen(Waypoint editedWaypoint) {
-        super(Component.translatable("fascinatedutils.waypoints.edit.title"));
+        super(Component.translatable("alumite.waypoints.edit.title"));
         this.waypoint = editedWaypoint;
         this.color = editedWaypoint.getColor().copy();
         this.showBeam = editedWaypoint.isShowBeam();
@@ -66,8 +62,8 @@ public class WaypointEditScreen extends WidgetScreen {
         zInput.setValue(String.valueOf((int) Math.floor(editedWaypoint.getZ())));
 
         float checkboxBodyWidth = Math.max(0f, 460f - 2f * UITheme.PADDING_MD);
-        beamCheckbox = new FIconCheckboxWidget(showBeam, value -> showBeam = value, () -> Component.translatable("fascinatedutils.waypoints.edit.show_beam").getString(), checkboxBodyWidth);
-        distanceCheckbox = new FIconCheckboxWidget(showDistance, value -> showDistance = value, () -> Component.translatable("fascinatedutils.waypoints.edit.show_distance").getString(), checkboxBodyWidth);
+        beamCheckbox = new FIconCheckboxWidget(showBeam, value -> showBeam = value, () -> Component.translatable("alumite.waypoints.edit.show_beam").getString(), checkboxBodyWidth);
+        distanceCheckbox = new FIconCheckboxWidget(showDistance, value -> showDistance = value, () -> Component.translatable("alumite.waypoints.edit.show_distance").getString(), checkboxBodyWidth);
 
         this.root = buildBody();
         host.setRoot(root);
@@ -129,7 +125,7 @@ public class WaypointEditScreen extends WidgetScreen {
     private void save() {
         String trimmedName = nameInput.value().trim();
         if (trimmedName.isEmpty()) {
-            trimmedName = "Waypoint";
+            trimmedName = I18n.get("alumite.waypoints.default_name");
         }
         waypoint.setName(trimmedName);
         waypoint.setX(parseCoord(xInput.value(), waypoint.getX()));

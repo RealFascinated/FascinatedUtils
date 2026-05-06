@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.api;
 
 import cc.fascinated.fascinatedutils.Constants;
-import cc.fascinated.fascinatedutils.FascinatedUtils;
+import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.api.auth.json.*;
 import cc.fascinated.fascinatedutils.api.channel.AlumiteChannels;
 import cc.fascinated.fascinatedutils.api.channel.json.ChannelDetailDTO;
@@ -71,17 +71,40 @@ public class Alumite {
     private void authenticate(Minecraft minecraftClient) {
         activeAccountKey = minecraftClient.getUser().getProfileId().toString();
 
-        String storedRefresh = tokenStore.load(activeAccountKey);
-        if (storedRefresh != null && tryRefresh(activeAccountKey, storedRefresh)) {
-            gateway.connect();
-            FascinatedEventBus.INSTANCE.post(new AlumiteAuthenticatedEvent());
-            return;
+        AlumiteTokenStore.StoredSession stored = tokenStore.load(activeAccountKey);
+        if (stored != null) {
+            if (isAccessTokenValid(stored.accessExpiresAt())) {
+                activeAccessToken = stored.accessToken();
+                activeRefreshToken = stored.refreshToken();
+                restoreActiveUserContext();
+                scheduleTokenRefresh(stored.accessExpiresAt());
+                Client.LOG.info("[Alumite] Resumed session from stored access token.");
+                gateway.connect();
+                FascinatedEventBus.INSTANCE.post(new AlumiteAuthenticatedEvent());
+                return;
+            }
+            if (tryRefresh(activeAccountKey, stored.refreshToken())) {
+                gateway.connect();
+                FascinatedEventBus.INSTANCE.post(new AlumiteAuthenticatedEvent());
+                return;
+            }
         }
         tokenStore.clear(activeAccountKey);
         performFullLogin(minecraftClient);
         if (activeAccessToken != null) {
             gateway.connect();
             FascinatedEventBus.INSTANCE.post(new AlumiteAuthenticatedEvent());
+        }
+    }
+
+    private boolean isAccessTokenValid(String accessExpiresAt) {
+        if (accessExpiresAt == null) {
+            return false;
+        }
+        try {
+            return Instant.parse(accessExpiresAt).toEpochMilli() - System.currentTimeMillis() > 60_000L;
+        } catch (Exception exception) {
+            return false;
         }
     }
 
@@ -95,7 +118,7 @@ public class Alumite {
             activeAccessToken = refreshResponse.accessToken();
             activeRefreshToken = refreshResponse.refreshToken();
             restoreActiveUserContext();
-            storeSession(accountKey, refreshResponse.refreshToken());
+            storeSession(accountKey, refreshResponse.refreshToken(), refreshResponse.accessToken(), refreshResponse.accessExpiresAt());
             scheduleTokenRefresh(refreshResponse.accessExpiresAt());
             Client.LOG.info("[Alumite] Session refreshed.");
             return true;
@@ -134,7 +157,7 @@ public class Alumite {
             activeAccessToken = result.accessToken();
             activeRefreshToken = result.refreshToken();
             users.setSelfUser(result.user());
-            storeSession(activeAccountKey, result.refreshToken());
+            storeSession(activeAccountKey, result.refreshToken(), result.accessToken(), result.accessExpiresAt());
             scheduleTokenRefresh(result.accessExpiresAt());
             Client.LOG.info("[Alumite] Authenticated as {}", result.user().minecraftName());
         } catch (Exception exception) {
@@ -153,7 +176,7 @@ public class Alumite {
             long delayMs = Math.max(0L, Instant.parse(accessExpiresAt).toEpochMilli() - System.currentTimeMillis() - 60_000L);
             String accountKey = activeAccountKey;
             String capturedRefresh = activeRefreshToken;
-            tokenRefreshTask = FascinatedUtils.SCHEDULED_POOL.schedule(() -> {
+            tokenRefreshTask = AlumiteMod.SCHEDULED_POOL.schedule(() -> {
                 if (capturedRefresh != null && accountKey != null) {
                     Client.LOG.info("[Alumite] Refreshing access token...");
                     tryRefresh(accountKey, capturedRefresh);
@@ -169,7 +192,7 @@ public class Alumite {
         String currentRefresh = activeRefreshToken;
         activeAccessToken = null;
         activeRefreshToken = null;
-        FascinatedUtils.SCHEDULED_POOL.execute(() -> {
+        AlumiteMod.SCHEDULED_POOL.execute(() -> {
             if (currentRefresh != null && tryRefresh(activeAccountKey, currentRefresh)) {
                 gateway.connect();
                 return;
@@ -187,8 +210,8 @@ public class Alumite {
         return refreshToken != null && tryRefresh(activeAccountKey, refreshToken);
     }
 
-    private void storeSession(String accountKey, String newRefreshToken) {
-        tokenStore.save(accountKey, newRefreshToken);
+    private void storeSession(String accountKey, String newRefreshToken, String newAccessToken, String newAccessExpiresAt) {
+        tokenStore.save(accountKey, newRefreshToken, newAccessToken, newAccessExpiresAt);
     }
 
     private void refreshSocialCaches() {
@@ -240,17 +263,17 @@ public class Alumite {
     }
 
     @EventHandler
-    private void fascinatedutils$onClientStarted(ClientStartedEvent event) {
-        FascinatedUtils.SCHEDULED_POOL.execute(() -> authenticate(event.minecraftClient()));
+    private void alumite$onClientStarted(ClientStartedEvent event) {
+        AlumiteMod.SCHEDULED_POOL.execute(() -> authenticate(event.minecraftClient()));
     }
 
     @EventHandler
-    private void fascinatedutils$onClientStopping(ClientStoppingEvent event) {
+    private void alumite$onClientStopping(ClientStoppingEvent event) {
         gateway.disconnect();
     }
 
     @EventHandler
-    private void fascinatedutils$onAuthenticated(AlumiteAuthenticatedEvent event) {
-        FascinatedUtils.SCHEDULED_POOL.execute(this::refreshSocialCaches);
+    private void alumite$onAuthenticated(AlumiteAuthenticatedEvent event) {
+        AlumiteMod.SCHEDULED_POOL.execute(this::refreshSocialCaches);
     }
 }

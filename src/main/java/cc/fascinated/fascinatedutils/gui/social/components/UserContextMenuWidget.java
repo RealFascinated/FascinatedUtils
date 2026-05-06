@@ -2,8 +2,8 @@ package cc.fascinated.fascinatedutils.gui.social.components;
 
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.user.User;
-import cc.fascinated.fascinatedutils.gui.widgets.FContextMenuWidget;
 import cc.fascinated.fascinatedutils.common.ClientUtils;
+import cc.fascinated.fascinatedutils.gui.widgets.FContextMenuWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import net.minecraft.network.chat.Component;
 
@@ -16,7 +16,7 @@ class UserContextMenuWidget {
         List<FContextMenuWidget.Item> items = new ArrayList<>();
 
         items.add(new FContextMenuWidget.Item(
-                () -> Component.translatable("fascinatedutils.social.user_context_menu.copy_name").getString(),
+                () -> Component.translatable("alumite.social.user_context_menu.copy_name").getString(),
                 () -> {
                     if (user.minecraftName() != null) {
                         ClientUtils.copyToClipboard(user.minecraftName());
@@ -25,7 +25,7 @@ class UserContextMenuWidget {
                 }));
 
         items.add(new FContextMenuWidget.Item(
-                () -> Component.translatable("fascinatedutils.social.user_context_menu.copy_uuid").getString(),
+                () -> Component.translatable("alumite.social.user_context_menu.copy_uuid").getString(),
                 () -> {
                     if (user.minecraftUuid() != null) {
                         ClientUtils.copyToClipboard(user.minecraftUuid());
@@ -37,7 +37,7 @@ class UserContextMenuWidget {
                 .anyMatch(friend -> friend.user().id().equals(user.id()));
         if (isFriend && onRemoveFriend != null) {
             items.add(new FContextMenuWidget.Item(
-                    () -> Component.translatable("fascinatedutils.social.user_context_menu.remove_friend").getString(),
+                    () -> Component.translatable("alumite.social.user_context_menu.remove_friend").getString(),
                     0xFFFF5555,
                     () -> {
                         onClose.run();

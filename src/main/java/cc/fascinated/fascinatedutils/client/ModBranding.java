@@ -1,8 +1,7 @@
 package cc.fascinated.fascinatedutils.client;
 
-import cc.fascinated.fascinatedutils.FascinatedUtils;
+import cc.fascinated.fascinatedutils.Constants;
 import lombok.experimental.UtilityClass;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
 
 @UtilityClass
@@ -13,7 +12,6 @@ public class ModBranding {
      * @return the translatable title component for the shell title bar
      */
     public Component modSettingsScreenTitle() {
-        String version = FabricLoader.getInstance().getModContainer(FascinatedUtils.MOD_ID).map(container -> container.getMetadata().getVersion().getFriendlyString()).orElse("?");
-        return Component.translatable("fascinatedutils.setting.shell.title", version);
+        return Component.translatable("alumite.setting.shell.title", Constants.MOD_VERSION);
     }
 }
