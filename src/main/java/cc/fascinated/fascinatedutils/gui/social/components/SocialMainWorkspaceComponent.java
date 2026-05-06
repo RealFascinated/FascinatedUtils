@@ -5,20 +5,14 @@ import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
-import cc.fascinated.fascinatedutils.api.channel.GroupChannel;
-import cc.fascinated.fascinatedutils.api.channel.LastMessagePreview;
 import cc.fascinated.fascinatedutils.api.friend.Friend;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
-import cc.fascinated.fascinatedutils.api.user.Activity;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.api.user.User;
-import cc.fascinated.fascinatedutils.common.TimeUtils;
 import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
-import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.toast.Toast;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import net.minecraft.client.Minecraft;
@@ -33,19 +27,9 @@ public class SocialMainWorkspaceComponent extends FWidget {
     private static final float SPLIT_GAP = 10f;
     private static final float PAD = 10f;
     private static final float ROW_H = 44f;
-    private static final float BTN_H = 20f;
-    private static final float ADD_BTN_W = 36f;
     private static final float TAB_H = 26f;
     private static final float USER_STATUS_PICKER_H = 24f;
-    private static final float USER_STATUS_PICKER_DOT = 8f;
-    private static final float USER_STATUS_MENU_MIN_W = 176f;
-    private static final float USER_STATUS_MENU_MAX_W = 220f;
-    private static final float USER_STATUS_MENU_PAD = 6f;
-    private static final float USER_STATUS_MENU_ROW_H = 30f;
-    private static final float USER_STATUS_MENU_ROW_GAP = 4f;
-    private static final float CHAT_HEADER_AVATAR = 22f;
 
-    private static final UserStatus[] SELECTABLE_PREFERRED_USER_STATUSES = {UserStatus.ONLINE, UserStatus.AWAY, UserStatus.DO_NOT_DISTURB, UserStatus.INVISIBLE};
     private static String lastOpenedChannelId;
     // Node registry — preserves FState across re-renders
     private final FNodeRegistry nodes = new FNodeRegistry();
@@ -71,15 +55,10 @@ public class SocialMainWorkspaceComponent extends FWidget {
     private FState<Float> scrollYRef;
     private FState<Float> messageScrollYRef;
 
-    // Layout position cache — set during layout(), read by overlay positioning
-    private float panelX;
-    private float panelY;
-    private float panelW;
-    private float panelH;
-    private float preferredUserStatusButtonX;
-    private float preferredUserStatusButtonY;
-    private float preferredUserStatusButtonW;
-    private float preferredUserStatusButtonH;
+    // Widget refs — set during each reactive rebuild, used by overlays in the same layout pass
+    private FWidget panelRefWidget;
+    private SocialUserStatusPickerWidget statusPickerWidget;
+
     private FState<User> userContextMenuUser;
     private FState<Float> userContextMenuX;
     private FState<Float> userContextMenuY;
@@ -232,7 +211,10 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 }
 
                 if (preferredUserStatusMenuOpen.get()) {
-                    FWidget overlay = buildPreferredUserStatusMenuOverlay();
+                    SocialUserStatusMenuOverlayWidget overlay = new SocialUserStatusMenuOverlayWidget(
+                            statusPickerWidget, panelRefWidget, PAD,
+                            new SocialUserStatusMenuWidget(status -> SocialMainWorkspaceComponent.this.updatePreferredUserStatus(status)),
+                            () -> preferredUserStatusMenuOpen.set(false));
                     addChild(overlay);
                     overlay.layout(measure, lx, ly, lw, lh);
                 }
@@ -251,25 +233,12 @@ public class SocialMainWorkspaceComponent extends FWidget {
         };
     }
 
-    private static String userStatusLine(User user) {
-        UserStatus userStatus = user == null || user.userStatus() == null ? UserStatus.OFFLINE : user.userStatus();
-        if (userStatus == UserStatus.OFFLINE && user != null && user.lastSeen() != null) {
-            long lastSeenTime = user.lastSeen().getTime();
-            return userStatus.label() + " · " + TimeUtils.timeAgo(lastSeenTime, System.currentTimeMillis() - lastSeenTime < 61_000 ? 1 : 2);
-        }
-        if (user != null && user.activity() != null && userStatus != UserStatus.OFFLINE) {
-            return userStatus.label() + " · " + user.activity().label();
-        }
-        return userStatus.label();
-    }
-
-
     private FWidget buildPanelContent(float panelW) {
         FRectWidget panelBg = new FRectWidget();
         panelBg.setFillColorArgb(0xEE1A1E24);
         panelBg.setBorder(UITheme.COLOR_BORDER, 1f);
-        FWidget pane = SocialLeftPaneWidget.build(new SocialLeftPaneWidget.Props(PAD, TAB_H, panelBg, buildHeader(), buildTabs(), buildLeftList(panelW), buildFooter(), () -> activeTab.get() == Tab.FRIENDS));
-        return new FWidget() {
+        FWidget pane = SocialLeftPaneWidget.build(new SocialLeftPaneWidget.Props(PAD, TAB_H, panelBg, buildHeader(), buildTabs(), buildLeftList(panelW), new SocialAddFriendFooterWidget(addFriendInput, this::sendFriendRequest), () -> activeTab.get() == Tab.FRIENDS, new SocialUserProfileFooterWidget(PAD)));
+        FWidget wrapper = new FWidget() {
             {
                 addChild(pane);
             }
@@ -277,13 +246,11 @@ public class SocialMainWorkspaceComponent extends FWidget {
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, lw, lh);
-                panelX = lx;
-                panelY = ly;
-                SocialMainWorkspaceComponent.this.panelW = lw;
-                panelH = lh;
                 pane.layout(measure, lx, ly, lw, lh);
             }
         };
+        panelRefWidget = wrapper;
+        return wrapper;
     }
 
     private FWidget buildChatContent(float panelW) {
@@ -292,29 +259,27 @@ public class SocialMainWorkspaceComponent extends FWidget {
         panelBg.setBorder(UITheme.COLOR_BORDER, 1f);
         boolean showNoChannelSelected = activeTab.get() == Tab.CHAT && selectedChannelId.get() == null;
         FWidget body = activeTab.get() == Tab.CHAT ? showNoChannelSelected ? SocialNoChannelSelectedWidget.build() : chatMessages.buildMessagesBody(selectedChannelId.get(), panelW, messageScrollYRef) : buildFriendsProfilePane();
-        FWidget footer = activeTab.get() == Tab.CHAT && !showNoChannelSelected ? buildChatFooter() : buildSpacer();
-        return SocialRightPaneWidget.build(new SocialRightPaneWidget.Props(PAD, panelBg, buildChatHeader(), body, footer));
-    }
-
-    private FWidget buildSpacer() {
-        return new FWidget() {
+        SocialChatHeaderWidget chatHeader = new SocialChatHeaderWidget(() -> activeTab.get() == Tab.FRIENDS, this::selectedFriend, selectedChannelId::get);
+        FWidget footer = activeTab.get() == Tab.CHAT && !showNoChannelSelected ? buildChatFooter() : new FWidget() {
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, lw, lh);
             }
         };
+        return SocialRightPaneWidget.build(new SocialRightPaneWidget.Props(PAD, panelBg, chatHeader, body, footer));
     }
 
     private FWidget buildHeader() {
         FWidget compactHeader = SocialHeaderWidget.build(new SocialHeaderWidget.Props(this::handleAddFriendFromHeader, this::handleNewChatAction, () -> searchOpen.set(!searchOpen.get()), searchOpen::get));
-        FWidget preferredUserStatusPicker = buildPreferredUserStatusPicker();
+        statusPickerWidget = new SocialUserStatusPickerWidget(preferredUserStatusMenuOpen::get, preferredUserStatusUpdatePending::get, () -> preferredUserStatusMenuOpen.set(!preferredUserStatusMenuOpen.get()));
+        SocialUserStatusPickerWidget picker = statusPickerWidget;
         FOutlinedTextInputWidget searchInput = chatSearchInput;
 
         return new FWidget() {
             {
                 addChild(compactHeader);
                 addChild(searchInput);
-                addChild(preferredUserStatusPicker);
+                addChild(picker);
             }
 
             @Override
@@ -333,196 +298,11 @@ public class SocialMainWorkspaceComponent extends FWidget {
                     searchInput.layout(measure, lx, cursorY, lw, inputH);
                     searchInput.setVisible(true);
                     cursorY += inputH + 6f;
-                }
-                else {
+                } else {
                     searchInput.setVisible(false);
                     searchInput.layout(measure, lx, cursorY, lw, 0f);
                 }
-                preferredUserStatusPicker.layout(measure, lx, cursorY, lw, USER_STATUS_PICKER_H);
-            }
-        };
-    }
-
-    private FWidget buildPreferredUserStatusPicker() {
-        return new FWidget() {
-            @Override
-            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
-                setBounds(lx, ly, lw, lh);
-                preferredUserStatusButtonX = lx;
-                preferredUserStatusButtonY = ly;
-                preferredUserStatusButtonW = lw;
-                preferredUserStatusButtonH = lh;
-            }
-
-            @Override
-            protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-                float mouseX = frame.pointerX();
-                float mouseY = frame.pointerY();
-                boolean interactive = !preferredUserStatusUpdatePending.get();
-                int fillColor = preferredUserStatusMenuOpen.get() ? 0xFF2B3142 : containsPoint(mouseX, mouseY) && interactive ? 0xFF242A38 : 0xFF202531;
-                int borderColor = preferredUserStatusMenuOpen.get() ? 0xFF6E7897 : containsPoint(mouseX, mouseY) && interactive ? 0xFF59617A : 0xFF454A60;
-                graphics.fillRoundedRectFrame(x(), y(), w(), h(), 6f, borderColor, fillColor, 1f, 1f, RectCornerRoundMask.ALL);
-
-                UserStatus userStatus = Alumite.INSTANCE.users().selfUser().preferredUserStatus();
-                float dotX = x() + 8f;
-                float dotY = y() + (h() - USER_STATUS_PICKER_DOT) / 2f;
-                graphics.fillRoundedRect(dotX, dotY, USER_STATUS_PICKER_DOT, USER_STATUS_PICKER_DOT, USER_STATUS_PICKER_DOT / 2f, userStatus.color(), RectCornerRoundMask.ALL);
-
-                String label = preferredUserStatusUpdatePending.get() ? Component.translatable("alumite.social.user_status.updating").getString() : userStatus.label();
-                float textY = y() + (h() - graphics.getFontCapHeight()) / 2f;
-                graphics.drawText(label, dotX + USER_STATUS_PICKER_DOT + 6f, textY, preferredUserStatusUpdatePending.get() ? FascinatedGuiTheme.INSTANCE.textMuted() : FascinatedGuiTheme.INSTANCE.textPrimary(), false, false);
-
-                if (!preferredUserStatusUpdatePending.get()) {
-                    graphics.drawText(preferredUserStatusMenuOpen.get() ? "\u25B4" : "\u25BE", x() + w() - 12f, textY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
-                }
-            }
-
-            @Override
-            public PointerHitKind pointerHitKind() {
-                return PointerHitKind.TARGET;
-            }
-
-            @Override
-            public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
-                return preferredUserStatusUpdatePending.get() ? UiPointerCursor.DEFAULT : UiPointerCursor.HAND;
-            }
-
-            @Override
-            public boolean mouseDown(float pointerX, float pointerY, int button) {
-                if (button != 0) {
-                    return false;
-                }
-                if (preferredUserStatusUpdatePending.get()) {
-                    return true;
-                }
-                preferredUserStatusMenuOpen.set(!preferredUserStatusMenuOpen.get());
-                return true;
-            }
-        };
-    }
-
-    private FWidget buildPreferredUserStatusMenuOverlay() {
-        FWidget menu = buildPreferredUserStatusMenu();
-        return new FWidget() {
-            {
-                addChild(menu);
-            }
-
-            @Override
-            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
-                setBounds(lx, ly, lw, lh);
-                float menuWidth = preferredUserStatusMenuWidth(measure);
-                float menuHeight = preferredUserStatusMenuHeight();
-                float menuX = preferredUserStatusButtonX + preferredUserStatusButtonW - menuWidth;
-                float minMenuX = panelX + PAD;
-                float maxMenuX = panelX + panelW - PAD - menuWidth;
-                if (maxMenuX < minMenuX) {
-                    menuX = minMenuX;
-                }
-                else {
-                    menuX = Math.max(minMenuX, Math.min(menuX, maxMenuX));
-                }
-                float menuY = preferredUserStatusButtonY + preferredUserStatusButtonH + 4f;
-                float maxMenuY = panelY + panelH - PAD - menuHeight;
-                if (menuY > maxMenuY) {
-                    menuY = Math.max(panelY + PAD, maxMenuY);
-                }
-                menu.layout(measure, menuX, menuY, menuWidth, menuHeight);
-            }
-
-            @Override
-            public PointerHitKind pointerHitKind() {
-                return PointerHitKind.BLOCK;
-            }
-
-            @Override
-            public void render(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-                if (!visible()) {
-                    return;
-                }
-                graphics.drawRect(x(), y(), w(), h(), 0x9905050F);
-                graphics.absolutePost(() -> menu.render(graphics, frame, deltaSeconds));
-            }
-
-            @Override
-            public boolean mouseDown(float pointerX, float pointerY, int button) {
-                if (button != 0) {
-                    return false;
-                }
-                if (!menu.containsPoint(pointerX, pointerY)) {
-                    preferredUserStatusMenuOpen.set(false);
-                    return true;
-                }
-                return false;
-            }
-        };
-    }
-
-    private FWidget buildPreferredUserStatusMenu() {
-        return new FWidget() {
-            @Override
-            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
-                setBounds(lx, ly, lw, lh);
-            }
-
-            @Override
-            protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-                float mouseX = frame.pointerX();
-                float mouseY = frame.pointerY();
-                graphics.fillRoundedRectFrame(x(), y(), w(), h(), UITheme.CORNER_RADIUS_MD, 0xFF454A60, 0xFF171B24, 1f, 1f, RectCornerRoundMask.ALL);
-
-                float checkmarkWidth = graphics.measureTextWidth("\u2713", false);
-                float rowY = y() + USER_STATUS_MENU_PAD;
-                UserStatus currentUserStatus = Alumite.INSTANCE.users().selfUser().preferredUserStatus();
-                for (UserStatus userStatus : SELECTABLE_PREFERRED_USER_STATUSES) {
-                    boolean rowHovered = mouseX >= x() + 4f && mouseX < x() + w() - 4f && mouseY >= rowY && mouseY < rowY + USER_STATUS_MENU_ROW_H;
-                    boolean selected = currentUserStatus == userStatus;
-                    int rowColor = selected ? 0x334960C8 : rowHovered ? 0x22FFFFFF : 0x00000000;
-                    if (rowColor != 0) {
-                        graphics.fillRoundedRect(x() + 4f, rowY, w() - 8f, USER_STATUS_MENU_ROW_H, UITheme.CORNER_RADIUS_SM, rowColor, RectCornerRoundMask.ALL);
-                    }
-
-                    float dotX = x() + 12f;
-                    float dotY = rowY + (USER_STATUS_MENU_ROW_H - USER_STATUS_PICKER_DOT) * 0.5f;
-                    graphics.fillRoundedRect(dotX, dotY, USER_STATUS_PICKER_DOT, USER_STATUS_PICKER_DOT, USER_STATUS_PICKER_DOT / 2f, userStatus.color(), RectCornerRoundMask.ALL);
-
-                    float labelX = dotX + USER_STATUS_PICKER_DOT + 8f;
-                    float textY = rowY + (USER_STATUS_MENU_ROW_H - graphics.getFontCapHeight()) * 0.5f;
-                    graphics.drawText(userStatus.label(), labelX, textY, FascinatedGuiTheme.INSTANCE.textPrimary(), false, false);
-
-                    if (selected) {
-                        graphics.drawText("\u2713", x() + w() - 12f - checkmarkWidth, rowY + (USER_STATUS_MENU_ROW_H - graphics.getFontCapHeight()) * 0.5f, 0xFF9DB4FF, false, false);
-                    }
-                    rowY += USER_STATUS_MENU_ROW_H + USER_STATUS_MENU_ROW_GAP;
-                }
-            }
-
-            @Override
-            public PointerHitKind pointerHitKind() {
-                return PointerHitKind.TARGET;
-            }
-
-            @Override
-            public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
-                return pointerX >= x() + 4f && pointerX < x() + w() - 4f && pointerY >= y() + USER_STATUS_MENU_PAD && pointerY < y() + h() - USER_STATUS_MENU_PAD ? UiPointerCursor.HAND : UiPointerCursor.DEFAULT;
-            }
-
-            @Override
-            public boolean mouseDown(float pointerX, float pointerY, int button) {
-                if (button != 0) {
-                    return false;
-                }
-
-                float rowY = y() + USER_STATUS_MENU_PAD;
-                for (UserStatus userStatus : SELECTABLE_PREFERRED_USER_STATUSES) {
-                    if (pointerX >= x() + 4f && pointerX < x() + w() - 4f && pointerY >= rowY && pointerY < rowY + USER_STATUS_MENU_ROW_H) {
-                        updatePreferredUserStatus(userStatus);
-                        return true;
-                    }
-                    rowY += USER_STATUS_MENU_ROW_H + USER_STATUS_MENU_ROW_GAP;
-                }
-
-                return false;
+                picker.layout(measure, lx, cursorY, lw, USER_STATUS_PICKER_H);
             }
         };
     }
@@ -550,16 +330,13 @@ public class SocialMainWorkspaceComponent extends FWidget {
         float scrollY = savedY == null ? 0f : savedY;
         if (activeTab.get() == Tab.CHAT) {
             String searchQuery = chatSearchInput.value().trim().toLowerCase();
-            List<Channel> channels = Alumite.INSTANCE.channels().all().stream().filter(channel -> searchQuery.isEmpty() || channelTitle(channel).toLowerCase().contains(searchQuery)).toList();
-            return SocialChatListWidget.build(new SocialChatListWidget.Props(channels, scrollY, scrollYRef::set, channel -> buildChatChannelRow(channel, innerW), () -> buildEmptyState(Component.translatable("alumite.social.dm.no_chats").getString())));
+            List<Channel> channels = Alumite.INSTANCE.channels().all().stream().filter(channel -> searchQuery.isEmpty() || ChannelUtils.title(channel).toLowerCase().contains(searchQuery)).toList();
+            return SocialChatListWidget.build(new SocialChatListWidget.Props(channels, scrollY, scrollYRef::set, channel -> buildChatChannelRow(channel, innerW), () -> new SocialEmptyStateWidget(Component.translatable("alumite.social.dm.no_chats").getString())));
         }
-        return SocialFriendsListWidget.build(new SocialFriendsListWidget.Props(Alumite.INSTANCE.users().friends(), Alumite.INSTANCE.users().incomingFriendRequests(), Alumite.INSTANCE.users().outgoingFriendRequests(), scrollY, scrollYRef::set, friend -> buildFriendRow(friend, innerW), request -> SocialFriendRequestRowWidget.build(request, innerW, ROW_H), request -> SocialOutgoingRequestRowWidget.build(request, innerW, ROW_H, () -> pendingCancelRequest.set(request)), this::buildSectionLabel, Component.translatable("alumite.social.requests_incoming").getString(), Component.translatable("alumite.social.requests_outgoing").getString(), () -> buildEmptyState(Component.translatable("alumite.social.no_friends").getString()), () -> buildEmptyState(Component.translatable("alumite.social.no_friends").getString())));
+        return SocialFriendsListWidget.build(new SocialFriendsListWidget.Props(Alumite.INSTANCE.users().friends(), Alumite.INSTANCE.users().incomingFriendRequests(), Alumite.INSTANCE.users().outgoingFriendRequests(), scrollY, scrollYRef::set, friend -> buildFriendRow(friend, innerW), request -> SocialFriendRequestRowWidget.build(request, innerW, ROW_H), request -> SocialOutgoingRequestRowWidget.build(request, innerW, ROW_H, () -> pendingCancelRequest.set(request)), SocialSectionLabelWidget::new, Component.translatable("alumite.social.requests_incoming").getString(), Component.translatable("alumite.social.requests_outgoing").getString(), () -> new SocialEmptyStateWidget(Component.translatable("alumite.social.no_friends").getString()), () -> new SocialEmptyStateWidget(Component.translatable("alumite.social.no_friends").getString())));
     }
 
     private FWidget buildChatChannelRow(Channel channel, float innerW) {
-        String snippet = channelListSnippet(channel);
-        String channelLabel = channelTitle(channel);
-        String channelAvatarMinecraftUuid = channelListAvatarMinecraftUuid(channel);
         DmChannel dmChannel = channel.asDmChannel();
         User dmRecipient = dmChannel != null ? dmChannel.recipient() : null;
         BiConsumer<Float, Float> onContextMenu = dmRecipient != null ? (mx, my) -> {
@@ -567,97 +344,12 @@ public class SocialMainWorkspaceComponent extends FWidget {
             userContextMenuX.set(mx);
             userContextMenuY.set(my);
         } : null;
-        return SocialChatRowWidget.build(new SocialChatRowWidget.Props(channelLabel, channelAvatarMinecraftUuid, snippet, channelListUserStatusColor(channel), Objects.equals(selectedChannelId.get(), channel.id()), channelHasUnread(channel), () -> selectChannel(channel.id(), false), dmChannel != null ? () -> closeDmChannel(channel.id()) : null, onContextMenu), innerW, ROW_H);
-    }
-
-    private String channelListSnippet(Channel channel) {
-        LastMessagePreview preview = channel.lastMessagePreview();
-        if (preview == null || preview.content() == null || preview.content().isBlank()) {
-            return "";
-        }
-        if (preview.authorName() != null && !preview.authorName().isBlank()) {
-            return preview.authorName() + ": " + preview.content();
-        }
-        return preview.content();
-    }
-
-    private boolean channelHasUnread(Channel channel) {
-        LastMessagePreview preview = channel.lastMessagePreview();
-        if (preview == null) {
-            return false;
-        }
-        String lastReadMessageId = channel.lastReadMessageId();
-        if (lastReadMessageId == null) {
-            return true;
-        }
-        return preview.messageId().compareTo(lastReadMessageId) > 0;
-    }
-
-    private String channelTitle(Channel channel) {
-        if (channel == null) {
-            return Component.translatable("alumite.social.dm.title").getString();
-        }
-        GroupChannel groupChannel = channel.asGroupChannel();
-        if (groupChannel != null) {
-            if (groupChannel.name() != null && !groupChannel.name().isBlank()) {
-                return groupChannel.name();
-            }
-            return "Channel #" + groupChannel.id();
-        }
-        DmChannel dmChannel = channel.asDmChannel();
-        if (dmChannel != null) {
-            if (dmChannel.recipient() != null) {
-                User recipient = dmChannel.recipient();
-                if (recipient != null && recipient.minecraftName() != null && !recipient.minecraftName().isBlank()) {
-                    return recipient.minecraftName();
-                }
-            }
-            return Component.translatable("alumite.social.dm.unknown_user").getString();
-        }
-        return Component.translatable("alumite.social.dm.title").getString();
-    }
-
-    private String channelListAvatarMinecraftUuid(Channel channel) {
-        if (channel == null) {
-            return null;
-        }
-        DmChannel dmChannel = channel.asDmChannel();
-        if (dmChannel == null) {
-            return null;
-        }
-        return dmAvatarMinecraftUuid(dmChannel.recipient());
-    }
-
-    private String dmAvatarMinecraftUuid(User recipientUser) {
-        if (recipientUser == null) {
-            return null;
-        }
-        User recipient = recipientUser;
-        if (recipient == null || recipient.minecraftUuid() == null || recipient.minecraftUuid().isBlank()) {
-            return null;
-        }
-        return recipient.minecraftUuid();
-    }
-
-    private int channelListUserStatusColor(Channel channel) {
-        if (channel == null) {
-            return UITheme.COLOR_ACCENT;
-        }
-        DmChannel dmChannel = channel.asDmChannel();
-        if (dmChannel == null) {
-            return UITheme.COLOR_ACCENT;
-        }
-        User recipient = dmChannel.recipient();
-        if (recipient == null) {
-            return UserStatus.OFFLINE.color();
-        }
-        UserStatus status = recipient.userStatus();
-        return (status != null ? status : UserStatus.OFFLINE).color();
+        return SocialChatRowWidget.build(new SocialChatRowWidget.Props(ChannelUtils.title(channel), ChannelUtils.dmAvatarMinecraftUuid(channel), ChannelUtils.previewSnippet(channel), ChannelUtils.dmUserStatusColor(channel), Objects.equals(selectedChannelId.get(), channel.id()), ChannelUtils.hasUnread(channel), () -> selectChannel(channel.id(), false), dmChannel != null ? () -> closeDmChannel(channel.id()) : null, onContextMenu), innerW, ROW_H);
     }
 
     private FWidget buildFriendRow(Friend friend, float innerW) {
         User friendUser = friend.user();
-        return SocialFriendRowWidget.build(new SocialFriendRowWidget.Props(friendUser, userStatusLine(friendUser), Objects.equals(selectedFriendUserId.get(), friend.user().id()), () -> selectedFriendUserId.set(friend.user().id()), () -> pendingRemoveFriend.set(friend), friendUser != null ? (mx, my) -> {
+        return SocialFriendRowWidget.build(new SocialFriendRowWidget.Props(friendUser, UserUtils.statusLine(friendUser), Objects.equals(selectedFriendUserId.get(), friend.user().id()), () -> selectedFriendUserId.set(friend.user().id()), () -> pendingRemoveFriend.set(friend), friendUser != null ? (mx, my) -> {
             userContextMenuUser.set(friendUser);
             userContextMenuX.set(mx);
             userContextMenuY.set(my);
@@ -708,169 +400,31 @@ public class SocialMainWorkspaceComponent extends FWidget {
         };
     }
 
-    private FWidget buildSectionLabel(String text) {
-        return new FWidget() {
-            @Override
-            public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-                return measure.getFontCapHeight() + 8f;
-            }
-
-            @Override
-            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
-                setBounds(lx, ly, lw, lh);
-            }
-
-            @Override
-            protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-                float mouseX = frame.pointerX();
-                float mouseY = frame.pointerY();
-                float textY = y() + (h() - graphics.getFontCapHeight()) / 2f;
-                graphics.drawText(text, x(), textY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
-                graphics.drawRect(x(), y() + h() - 1f, w(), 1f, 0x22FFFFFF);
-            }
-        };
-    }
-
     private void updatePreferredUserStatus(UserStatus userStatus) {
         UserStatus currentUserStatus = Alumite.INSTANCE.users().selfUser().preferredUserStatus();
         preferredUserStatusMenuOpen.set(false);
         if (currentUserStatus == userStatus) {
             return;
         }
-
         preferredUserStatusUpdatePending.set(true);
-
         AlumiteMod.SCHEDULED_POOL.execute(() -> {
             try {
                 Alumite.INSTANCE.users().selfUser().updatePreferredUserStatus(userStatus);
             } catch (AlumiteApiException exception) {
                 Toast.show().message(SocialErrors.message(exception)).error();
             }
-
             Minecraft.getInstance().execute(() -> preferredUserStatusUpdatePending.set(false));
         });
-    }
-
-    private float preferredUserStatusMenuHeight() {
-        return USER_STATUS_MENU_PAD * 2f + SELECTABLE_PREFERRED_USER_STATUSES.length * USER_STATUS_MENU_ROW_H + Math.max(0, SELECTABLE_PREFERRED_USER_STATUSES.length - 1) * USER_STATUS_MENU_ROW_GAP;
-    }
-
-    private float preferredUserStatusMenuWidth(UIRenderer measure) {
-        int widestText = 0;
-        for (UserStatus userStatus : SELECTABLE_PREFERRED_USER_STATUSES) {
-            widestText = Math.max(widestText, measure.measureTextWidth(userStatus.label(), false));
-        }
-        float contentWidth = 12f + USER_STATUS_PICKER_DOT + 8f + widestText + 8f + measure.measureTextWidth("\u2713", false) + 12f;
-        return Math.max(USER_STATUS_MENU_MIN_W, Math.min(USER_STATUS_MENU_MAX_W, contentWidth));
-    }
-
-    private FWidget buildEmptyState(String message) {
-        return new FWidget() {
-            @Override
-            public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
-                return measure.getFontCapHeight() + 8f;
-            }
-
-            @Override
-            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
-                setBounds(lx, ly, lw, lh);
-            }
-
-            @Override
-            protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-                float centerX = x() + w() / 2f;
-                float textY = y() + 4f;
-                graphics.drawCenteredText(message, centerX, textY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
-            }
-        };
-    }
-
-    private FWidget buildChatHeader() {
-        SocialPlayerAvatarWidget headerAvatar = new SocialPlayerAvatarWidget(CHAT_HEADER_AVATAR,
-                () -> {
-                    Channel channel = selectedChannelId.get() == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId.get());
-                    DmChannel dmChannel = channel == null ? null : channel.asDmChannel();
-                    if (dmChannel == null || dmChannel.recipient() == null) {
-                        return null;
-                    }
-                    return dmAvatarMinecraftUuid(dmChannel.recipient());
-                },
-                () -> {
-                    Channel channel = selectedChannelId.get() == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId.get());
-                    return channelTitle(channel);
-                },
-                () -> {
-                    Channel channel = selectedChannelId.get() == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId.get());
-                    DmChannel dmChannel = channel == null ? null : channel.asDmChannel();
-                    if (dmChannel == null || dmChannel.recipient() == null) {
-                        return UserStatus.OFFLINE.color();
-                    }
-                    User recipient = dmChannel.recipient();
-                    UserStatus userStatus = recipient == null || recipient.userStatus() == null ? UserStatus.OFFLINE : recipient.userStatus();
-                    return userStatus.color();
-                });
-        return new FWidget() {
-            {
-                addChild(headerAvatar);
-            }
-
-            @Override
-            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
-                setBounds(lx, ly, lw, lh);
-                headerAvatar.layout(measure, lx, ly + (lh - CHAT_HEADER_AVATAR) / 2f, CHAT_HEADER_AVATAR, CHAT_HEADER_AVATAR);
-            }
-
-            @Override
-            protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-                float titleY = y() + (h() - graphics.getFontCapHeight()) / 2f;
-                float capHeight = graphics.getFontCapHeight();
-                if (activeTab.get() == Tab.FRIENDS) {
-                    Friend selectedFriend = selectedFriend();
-                    if (selectedFriend == null) {
-                        graphics.drawText(Component.translatable("alumite.social.tab_friends").getString(), x(), titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
-                    } else {
-                        User friendUser = selectedFriend.user();
-                        Activity friendActivity = friendUser != null ? friendUser.activity() : null;
-                        if (friendActivity != null) {
-                            float blockY = y() + (h() - capHeight * 2 - 3f) / 2f;
-                            graphics.drawText("Friend Profile", x(), blockY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
-                            graphics.drawText(friendActivity.label(), x(), blockY + capHeight + 3f, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
-                        } else {
-                            graphics.drawText("Friend Profile", x(), titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
-                        }
-                    }
-                    headerAvatar.setVisible(false);
-                    return;
-                }
-                Channel channel = selectedChannelId.get() == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId.get());
-                String title = channel == null ? Component.translatable("alumite.social.dm.title").getString() : channelTitle(channel);
-                DmChannel dmChannel = channel == null ? null : channel.asDmChannel();
-                String headerAvatarUuid = dmChannel != null && dmChannel.recipient() != null
-                        ? dmAvatarMinecraftUuid(dmChannel.recipient()) : null;
-                boolean showAvatar = headerAvatarUuid != null && !headerAvatarUuid.isBlank();
-                headerAvatar.setVisible(showAvatar);
-                float textLeft = showAvatar ? x() + CHAT_HEADER_AVATAR + 8f : x();
-                User recipient = dmChannel != null && dmChannel.recipient() != null ? dmChannel.recipient() : null;
-                Activity recipientActivity = recipient != null ? recipient.activity() : null;
-                if (recipientActivity != null) {
-                    float blockY = y() + (h() - capHeight * 2 - 3f) / 2f;
-                    graphics.drawText(title, textLeft, blockY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
-                    graphics.drawText(recipientActivity.label(), textLeft, blockY + capHeight + 3f, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
-                } else {
-                    graphics.drawText(title, textLeft, titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
-                }
-            }
-        };
     }
 
     private FWidget buildFriendsProfilePane() {
         Friend selectedFriend = selectedFriend();
         if (selectedFriend == null) {
-            return buildEmptyState(Component.translatable("alumite.social.dm.pick_friend").getString());
+            return new SocialEmptyStateWidget(Component.translatable("alumite.social.dm.pick_friend").getString());
         }
         User selectedFriendUser = selectedFriend.user();
         if (selectedFriendUser == null) {
-            return buildEmptyState(Component.translatable("alumite.social.error.generic").getString());
+            return new SocialEmptyStateWidget(Component.translatable("alumite.social.error.generic").getString());
         }
         return SocialFriendProfilePaneWidget.build(new SocialFriendProfilePaneWidget.Props(selectedFriendUser, () -> openDmForFriend(selectedFriend), () -> pendingRemoveFriend.set(selectedFriend)));
     }
@@ -883,13 +437,11 @@ public class SocialMainWorkspaceComponent extends FWidget {
     }
 
     private FWidget buildChatFooter() {
-        FOutlinedTextInputWidget dmInput = dmMessageInput;
-        dmInput.setPlaceholderSupplier(() -> {
+        dmMessageInput.setPlaceholderSupplier(() -> {
             Channel footerChannel = selectedChannelId.get() == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId.get());
-            String label = footerChannel == null ? Component.translatable("alumite.social.dm.title").getString() : channelTitle(footerChannel);
-            return "Message " + label;
+            return "Message " + ChannelUtils.title(footerChannel);
         });
-        return SocialChatComposerWidget.build(new SocialChatComposerWidget.Props(dmInput, this::sendSelectedMessage, () -> chatMessages.startEditLastOwnMessage(selectedChannelId.get(), this::anchorMessageScrollToBottom)));
+        return SocialChatComposerWidget.build(new SocialChatComposerWidget.Props(dmMessageInput, this::sendSelectedMessage, () -> chatMessages.startEditLastOwnMessage(selectedChannelId.get(), this::anchorMessageScrollToBottom)));
     }
 
     private void anchorMessageScrollToBottom() {
@@ -994,52 +546,17 @@ public class SocialMainWorkspaceComponent extends FWidget {
         });
     }
 
-    private FWidget buildFooter() {
-        FOutlinedTextInputWidget friendInput = addFriendInput;
-        FButtonWidget addBtn = new FButtonWidget(() -> {
-            String username = friendInput.value().trim();
-            if (username.isEmpty()) {
-                return;
+    private void sendFriendRequest(String username) {
+        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+            try {
+                Alumite.INSTANCE.sendFriendRequest(username);
+                Toast.show().message("Friend request sent!").success();
+            } catch (AlumiteApiException exception) {
+                Toast.show().message(SocialErrors.message(exception)).error();
+            } catch (Exception exception) {
+                Toast.show().message(Component.translatable("alumite.social.error.generic").getString()).error();
             }
-            friendInput.setValue("");
-            AlumiteMod.SCHEDULED_POOL.execute(() -> {
-                try {
-                    Alumite.INSTANCE.sendFriendRequest(username);
-                    Toast.show().message("Friend request sent!").success();
-                } catch (AlumiteApiException exception) {
-                    Toast.show().message(SocialErrors.message(exception)).error();
-                } catch (Exception exception) {
-                    Toast.show().message(Component.translatable("alumite.social.error.generic").getString()).error();
-                }
-            });
-        }, () -> Component.translatable("alumite.social.add_button").getString(), ADD_BTN_W, 1, 1f, 4f, 1f, 4f, 3f) {
-            @Override
-            protected int resolveButtonFillColorArgb(boolean hovered) {
-                return hovered ? UITheme.COLOR_ACCENT_HOVER : UITheme.COLOR_ACCENT;
-            }
-
-            @Override
-            protected int resolveButtonBorderColorArgb(boolean hovered) {
-                return hovered ? UITheme.COLOR_ACCENT_HOVER : UITheme.COLOR_ACCENT;
-            }
-        };
-
-        return new FWidget() {
-            {
-                addChild(friendInput);
-                addChild(addBtn);
-            }
-
-            @Override
-            public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
-                setBounds(lx, ly, lw, lh);
-                float inputW = lw - ADD_BTN_W - 4f;
-                float inputH = friendInput.intrinsicHeightForColumn(measure, inputW);
-                float inputY = ly + (lh - inputH) / 2f;
-                friendInput.layout(measure, lx, inputY, inputW, inputH);
-                addBtn.layout(measure, lx + inputW + 4f, ly + (lh - BTN_H) / 2f, ADD_BTN_W, BTN_H);
-            }
-        };
+        });
     }
 
     private enum Tab {CHAT, FRIENDS}

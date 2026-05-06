@@ -16,6 +16,7 @@ public class SocialLeftPaneWidget {
                 addChild(props.tabs());
                 addChild(props.list());
                 addChild(props.footer());
+                addChild(props.userProfileFooter());
             }
 
             @Override
@@ -39,12 +40,15 @@ public class SocialLeftPaneWidget {
                     props.footer().layout(measure, lx + props.padding(), cursorY, lw - 2f * props.padding(), 0f);
                 }
 
-                float listHeight = Math.max(0f, ly + lh - props.padding() - cursorY);
+                float profileFooterH = 36f;
+                float profileFooterY = ly + lh - 6f - profileFooterH;
+                float listHeight = Math.max(0f, profileFooterY - 8f - cursorY);
                 props.list().layout(measure, lx + props.padding(), cursorY, lw - 2f * props.padding(), listHeight);
+                props.userProfileFooter().layout(measure, lx + props.padding(), profileFooterY, lw - 2f * props.padding(), profileFooterH);
             }
         };
     }
 
     public record Props(float padding, float tabHeight, FRectWidget background, FWidget header, FWidget tabs,
-                        FWidget list, FWidget footer, BooleanSupplier footerVisible) {}
+                        FWidget list, FWidget footer, BooleanSupplier footerVisible, FWidget userProfileFooter) {}
 }
