@@ -56,12 +56,12 @@ public class AlumiteUsers {
     }
 
     public void setSelfUser(UserDTO dto) {
-        selfUser = dto == null ? null : new SelfUser(alumite, AlumiteModelMapper.toUser(new PublicUserDTO(
+        selfUser = new SelfUser(alumite, AlumiteModelMapper.toUser(new PublicUserDTO(
                 dto.id(),
                 dto.minecraftUuid(),
                 dto.minecraftName(),
                 dto.role(),
-                dto.status(),
+                dto.banned(),
                 dto.presence(),
                 dto.lastSeen())
         ), dto.preferredPresence());

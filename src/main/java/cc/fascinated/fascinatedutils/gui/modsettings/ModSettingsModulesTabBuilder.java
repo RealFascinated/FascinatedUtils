@@ -26,14 +26,14 @@ public class ModSettingsModulesTabBuilder {
     private static final float GRID_MARGIN_X_DESIGN = 8f;
     private static final int MODULE_CARD_GRID_MAX_COLUMNS = 3;
 
-    public static FWidget buildModulesTab(float paneWidth, float paneHeight, List<Module> modules, FState<Float> modulesGridScrollYRef, Module settingsModule, Runnable onBackFromModuleSettings, Callback<Module> onOpenModuleSettings, FState<Float> moduleSettingsScrollYRef, FState<String> moduleSearchRef, FState<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged, FState<String> settingsSearchRef, Runnable onSettingsSearchChanged, Consumer<ColorSetting> openColorPicker, Supplier<FOutlinedTextInputWidget> moduleDetailSearchFieldSupplier) {
+    public static FWidget buildModulesTab(float paneWidth, float paneHeight, List<Module> modules, FState<Float> modulesGridScrollYRef, Module settingsModule, Runnable onBackFromModuleSettings, Callback<Module> onOpenModuleSettings, FState<Float> moduleSettingsScrollYRef, FState<String> moduleSearchRef, FState<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged, FState<String> settingsSearchRef, Runnable onSettingsSearchChanged, Consumer<ColorSetting> openColorPicker, Supplier<FOutlinedTextInputWidget> moduleDetailSearchFieldSupplier, Supplier<FOutlinedTextInputWidget> moduleGridSearchFieldSupplier) {
         if (settingsModule != null) {
             return ModSettingsModuleDetailBuilder.moduleDetailViewportUi(paneWidth, paneHeight, settingsModule, onBackFromModuleSettings, moduleSettingsScrollYRef, settingsSearchRef, onSettingsSearchChanged, openColorPicker, moduleDetailSearchFieldSupplier.get());
         }
-        return buildModuleCardGrid(paneWidth, paneHeight, modules, modulesGridScrollYRef, onOpenModuleSettings, moduleSearchRef, moduleCategoryFilterRef, onFiltersChanged);
+        return buildModuleCardGrid(paneWidth, paneHeight, modules, modulesGridScrollYRef, onOpenModuleSettings, moduleSearchRef, moduleCategoryFilterRef, onFiltersChanged, moduleGridSearchFieldSupplier.get());
     }
 
-    private static FWidget buildModuleCardGrid(float paneWidth, float paneHeight, List<Module> modules, FState<Float> modulesGridScrollYRef, Callback<Module> onOpenModuleSettings, FState<String> moduleSearchRef, FState<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged) {
+    private static FWidget buildModuleCardGrid(float paneWidth, float paneHeight, List<Module> modules, FState<Float> modulesGridScrollYRef, Callback<Module> onOpenModuleSettings, FState<String> moduleSearchRef, FState<ModuleCategory> moduleCategoryFilterRef, Runnable onFiltersChanged, FOutlinedTextInputWidget searchInput) {
         float paddedInnerWidth = Math.max(0f, paneWidth - 2f * GRID_MARGIN_X_DESIGN);
         float settingsContentWidth = Math.max(28f, paddedInnerWidth);
         float gapY = 6f;
@@ -43,7 +43,6 @@ public class ModSettingsModulesTabBuilder {
         float cellWidth = (settingsContentWidth - gapX * Math.max(0, columnCount - 1)) / Math.max(1, columnCount);
         float cellHeight = FModuleVisibilityCardWidget.stackedCellOuterHeightPx();
 
-        FOutlinedTextInputWidget searchInput = new FOutlinedTextInputWidget(180, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN, () -> "Search modules...");
         String currentSearch = moduleSearchRef.get();
         searchInput.setValue(currentSearch == null ? "" : currentSearch);
         searchInput.setOnChange(text -> {

@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
@@ -39,6 +40,7 @@ public class FModulesTabElement extends FWidget {
     // Plain mutable fields
     private Module settingsScrollAnchorModule;
     private @Nullable FOutlinedTextInputWidget moduleDetailSearchField;
+    private @Nullable FOutlinedTextInputWidget moduleGridSearchInput;
     private @Nullable Module pendingModuleDetail;
     private Runnable rerenderCallback = () -> {};
 
@@ -93,6 +95,7 @@ public class FModulesTabElement extends FWidget {
         if (colorPickerWidget != null) colorPickerWidget.set(null);
         settingsScrollAnchorModule = null;
         moduleDetailSearchField = null;
+        moduleGridSearchInput = null;
         pendingModuleDetail = null;
         rerenderCallback = () -> {};
         profilePopupController.reset();
@@ -176,7 +179,7 @@ public class FModulesTabElement extends FWidget {
         splitDivider.setFillColorArgb(FascinatedGuiTheme.INSTANCE.borderMuted());
         splitLayout.addChild(splitDivider);
 
-        FWidget modulesPane = ModSettingsModulesTabBuilder.buildModulesTab(modulesPanelWidth, height, List.copyOf(ModuleRegistry.INSTANCE.getModules()), modulesGridScrollRef, moduleDetailModule.get(), this::closeModuleDetail, openModuleSettings, moduleSettingsScrollRef, moduleSearchRef, moduleCategoryFilterRef, this::onModuleFiltersChanged, moduleSettingsSearchRef, this::onModuleSettingsSearchChanged, this::openColorPicker, this::lazyModuleDetailSearchField);
+        FWidget modulesPane = ModSettingsModulesTabBuilder.buildModulesTab(modulesPanelWidth, height, List.copyOf(ModuleRegistry.INSTANCE.getModules()), modulesGridScrollRef, moduleDetailModule.get(), this::closeModuleDetail, openModuleSettings, moduleSettingsScrollRef, moduleSearchRef, moduleCategoryFilterRef, this::onModuleFiltersChanged, moduleSettingsSearchRef, this::onModuleSettingsSearchChanged, this::openColorPicker, this::lazyModuleDetailSearchField, this::lazyModuleGridSearchInput);
         splitLayout.addChild(modulesPane);
 
         FAbsoluteStackWidget rootStack = new FAbsoluteStackWidget();
@@ -267,6 +270,13 @@ public class FModulesTabElement extends FWidget {
             moduleDetailSearchField = ModSettingsModuleDetailBuilder.createSharedModuleDetailSearchField();
         }
         return moduleDetailSearchField;
+    }
+
+    private FOutlinedTextInputWidget lazyModuleGridSearchInput() {
+        if (moduleGridSearchInput == null) {
+            moduleGridSearchInput = new FOutlinedTextInputWidget(180, SettingsUiMetrics.SHELL_CONTROL_HEIGHT_DESIGN, () -> "Search modules...");
+        }
+        return moduleGridSearchInput;
     }
 
     private void syncScrollAnchors() {

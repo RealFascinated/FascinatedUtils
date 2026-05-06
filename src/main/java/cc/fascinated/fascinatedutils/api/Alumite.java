@@ -76,7 +76,7 @@ public class Alumite {
             if (isAccessTokenValid(stored.accessExpiresAt())) {
                 activeAccessToken = stored.accessToken();
                 activeRefreshToken = stored.refreshToken();
-                restoreActiveUserContext();
+                updateSelfUser();
                 scheduleTokenRefresh(stored.accessExpiresAt());
                 Client.LOG.info("[Alumite] Resumed session from stored access token.");
                 gateway.connect();
@@ -117,7 +117,7 @@ public class Alumite {
             RefreshResponseDTO refreshResponse = Constants.GSON.fromJson(response.body(), RefreshResponseDTO.class);
             activeAccessToken = refreshResponse.accessToken();
             activeRefreshToken = refreshResponse.refreshToken();
-            restoreActiveUserContext();
+            updateSelfUser();
             storeSession(accountKey, refreshResponse.refreshToken(), refreshResponse.accessToken(), refreshResponse.accessExpiresAt());
             scheduleTokenRefresh(refreshResponse.accessExpiresAt());
             Client.LOG.info("[Alumite] Session refreshed.");
@@ -130,7 +130,7 @@ public class Alumite {
         }
     }
 
-    private void restoreActiveUserContext() {
+    private void updateSelfUser() {
         users.setSelfUser(http.getObject(ROUTE_USERS + "/@me", UserDTO.class, "get current user", "Failed to load current user."));
     }
 
@@ -156,10 +156,10 @@ public class Alumite {
             VerifyResponseDTO result = Constants.GSON.fromJson(verifyResponse.body(), VerifyResponseDTO.class);
             activeAccessToken = result.accessToken();
             activeRefreshToken = result.refreshToken();
-            users.setSelfUser(result.user());
+            updateSelfUser();
             storeSession(activeAccountKey, result.refreshToken(), result.accessToken(), result.accessExpiresAt());
             scheduleTokenRefresh(result.accessExpiresAt());
-            Client.LOG.info("[Alumite] Authenticated as {}", result.user().minecraftName());
+            Client.LOG.info("[Alumite] Authenticated as {}", users.selfUser().user().minecraftName());
         } catch (Exception exception) {
             Client.LOG.warn("[Alumite] Login failed: {}", exception.getMessage());
         }
