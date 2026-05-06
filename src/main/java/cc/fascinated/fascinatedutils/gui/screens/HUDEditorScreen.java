@@ -68,9 +68,29 @@ public class HUDEditorScreen extends WidgetScreen {
 
         List<HudPanel> widgetList = HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets());
         HudPanel selected = pointerSession.selected();
+
+        // Determine which single widget owns the hover for this frame.
+        // Overlays (close button, branding) are rendered on top of all widgets, so they consume hover first.
+        // Among widgets, the last drawn (visually topmost) widget that contains the pointer wins.
+        float pointerX = UIScale.uiPointerX();
+        float pointerY = UIScale.uiPointerY();
+        boolean overlayConsumesHover = HudEditorOverlays.hitTestCloseEditorButton(pointerX, pointerY)
+            || HudEditorOverlays.hitTestModsButton(pointerX, pointerY);
+        HudPanel hoverOwner = null;
+        if (!overlayConsumesHover) {
+            for (int i = widgetList.size() - 1; i >= 0; i--) {
+                if (HudEditorChrome.isInActionZone(widgetList.get(i), pointerX, pointerY, canvasHeight)) {
+                    hoverOwner = widgetList.get(i);
+                    break;
+                }
+            }
+        }
+
         for (HudPanel widget : widgetList) {
             boolean repositionFromAnchor = widget != pointerSession.dragging() && widget != pointerSession.scalingWidget();
-            HudEditorChrome.drawWidgetEditorChrome(guiRenderer, widget, selected, deltaSeconds, canvasWidth, canvasHeight, repositionFromAnchor, UIScale.uiPointerX(), UIScale.uiPointerY());
+            float hx = widget == hoverOwner ? pointerX : Float.NaN;
+            float hy = widget == hoverOwner ? pointerY : Float.NaN;
+            HudEditorChrome.drawWidgetEditorChrome(guiRenderer, widget, selected, deltaSeconds, canvasWidth, canvasHeight, repositionFromAnchor, hx, hy);
         }
         HudEditorOverlays.drawSnapGuides(guiRenderer, canvasWidth, canvasHeight, pointerSession.snapGuideX(), pointerSession.snapGuideY(), pointerSession.snapGuideXIsCenter(), pointerSession.snapGuideYIsCenter());
         boolean idleHudSelection = pointerSession.dragging() == null && pointerSession.scalingWidget() == null;
