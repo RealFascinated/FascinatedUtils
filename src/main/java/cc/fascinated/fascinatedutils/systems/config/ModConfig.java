@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.systems.config;
+package cc.fascinated.fascinatedutils.systems.config;
 
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.AlumiteMod;

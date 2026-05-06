@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin;
+package cc.fascinated.fascinatedutils.mixin;
 
 import cc.fascinated.fascinatedutils.renderer.MeshRenderer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;

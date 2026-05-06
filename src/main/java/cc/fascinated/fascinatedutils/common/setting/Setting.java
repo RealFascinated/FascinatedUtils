@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.common.setting;
+package cc.fascinated.fascinatedutils.common.setting;
 
 import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
 import com.google.gson.Gson;

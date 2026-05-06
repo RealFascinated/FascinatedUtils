@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.waypoints;
+package cc.fascinated.fascinatedutils.mixin.waypoints;
 
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.PlayerDeathEvent;

@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.reach;
+package cc.fascinated.fascinatedutils.mixin.reach;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.reach.ReachWidget;

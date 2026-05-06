@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.client.keybind;
+package cc.fascinated.fascinatedutils.client.keybind;
 
 import cc.fascinated.fascinatedutils.gui.screens.SocialScreen;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;

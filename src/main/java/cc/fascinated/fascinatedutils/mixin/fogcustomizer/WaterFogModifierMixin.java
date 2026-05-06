@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.fogcustomizer;
+package cc.fascinated.fascinatedutils.mixin.fogcustomizer;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.FogCustomizerModule;

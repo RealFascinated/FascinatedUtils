@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.systems.modules.impl.wawla;
+package cc.fascinated.fascinatedutils.systems.modules.impl.wawla;
 
 import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;

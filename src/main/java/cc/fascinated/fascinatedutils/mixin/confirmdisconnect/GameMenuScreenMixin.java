@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.confirmdisconnect;
+package cc.fascinated.fascinatedutils.mixin.confirmdisconnect;
 
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import net.minecraft.client.Minecraft;

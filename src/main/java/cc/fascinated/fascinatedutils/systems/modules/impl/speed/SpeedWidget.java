@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.systems.modules.impl.speed;
+package cc.fascinated.fascinatedutils.systems.modules.impl.speed;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;

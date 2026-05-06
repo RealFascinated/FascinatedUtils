@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.gui.waypoints;
+package cc.fascinated.fascinatedutils.gui.waypoints;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;

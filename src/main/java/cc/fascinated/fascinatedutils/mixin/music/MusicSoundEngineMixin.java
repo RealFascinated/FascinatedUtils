@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.music;
+package cc.fascinated.fascinatedutils.mixin.music;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.music.MusicModule;

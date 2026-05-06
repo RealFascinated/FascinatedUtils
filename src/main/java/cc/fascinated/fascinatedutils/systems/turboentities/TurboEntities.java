@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.systems.turboentities;
+package cc.fascinated.fascinatedutils.systems.turboentities;
 
 import cc.fascinated.fascinatedutils.common.culling.CullCounters;
 import cc.fascinated.fascinatedutils.common.culling.OcclusionProvider;

@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.renderer.post;
+package cc.fascinated.fascinatedutils.renderer.post;
 
 import net.minecraft.resources.Identifier;
 

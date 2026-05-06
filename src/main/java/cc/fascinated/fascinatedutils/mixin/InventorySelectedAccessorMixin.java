@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin;
+package cc.fascinated.fascinatedutils.mixin;
 
 import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;

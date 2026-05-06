@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.systems.hud;
+package cc.fascinated.fascinatedutils.systems.hud;
 
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;

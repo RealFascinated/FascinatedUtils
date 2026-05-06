@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.worldsize;
+package cc.fascinated.fascinatedutils.mixin.worldsize;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.WorldSizeModule;

@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.gui.social.components;
+package cc.fascinated.fascinatedutils.gui.social.components;
 
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.Errors;

@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.gui.widgets.settings;
+package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.Setting;

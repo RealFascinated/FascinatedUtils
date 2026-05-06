@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.systems.turboparticles;
+package cc.fascinated.fascinatedutils.systems.turboparticles;
 
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;

@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin;
+package cc.fascinated.fascinatedutils.mixin;
 
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import net.minecraft.client.player.LocalPlayer;

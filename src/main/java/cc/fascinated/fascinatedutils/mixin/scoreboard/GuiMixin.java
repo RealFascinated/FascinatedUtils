@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.scoreboard;
+package cc.fascinated.fascinatedutils.mixin.scoreboard;
 
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;

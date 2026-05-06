@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.tab;
+package cc.fascinated.fascinatedutils.mixin.tab;
 
 import cc.fascinated.fascinatedutils.common.PingColors;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;

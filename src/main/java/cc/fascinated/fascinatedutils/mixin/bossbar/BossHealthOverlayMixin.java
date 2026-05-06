@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.bossbar;
+package cc.fascinated.fascinatedutils.mixin.bossbar;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.BossHealthOverlay;

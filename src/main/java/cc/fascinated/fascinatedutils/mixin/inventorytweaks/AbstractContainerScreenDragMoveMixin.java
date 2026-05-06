@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.inventorytweaks;
+package cc.fascinated.fascinatedutils.mixin.inventorytweaks;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.InventoryTweaksModule;

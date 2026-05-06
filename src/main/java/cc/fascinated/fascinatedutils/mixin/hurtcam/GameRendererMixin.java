@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.hurtcam;
+package cc.fascinated.fascinatedutils.mixin.hurtcam;
 
 import cc.fascinated.fascinatedutils.mixininterface.IGameRenderer;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;

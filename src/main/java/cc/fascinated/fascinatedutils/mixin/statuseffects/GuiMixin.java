@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.statuseffects;
+package cc.fascinated.fascinatedutils.mixin.statuseffects;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.StatusEffectsModule;

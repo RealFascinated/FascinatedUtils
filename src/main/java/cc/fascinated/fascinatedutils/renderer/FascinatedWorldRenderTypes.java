@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.renderer;
+package cc.fascinated.fascinatedutils.renderer;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
 import com.mojang.blaze3d.pipeline.RenderPipeline;

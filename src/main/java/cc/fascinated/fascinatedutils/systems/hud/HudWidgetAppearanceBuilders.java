@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.systems.hud;
+package cc.fascinated.fascinatedutils.systems.hud;
 
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;

@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.systems.modules;
+package cc.fascinated.fascinatedutils.systems.modules;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;

@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.macosresolution;
+package cc.fascinated.fascinatedutils.mixin.macosresolution;
 
 import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;

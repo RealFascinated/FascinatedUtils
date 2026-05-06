@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.title;
+package cc.fascinated.fascinatedutils.mixin.title;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;

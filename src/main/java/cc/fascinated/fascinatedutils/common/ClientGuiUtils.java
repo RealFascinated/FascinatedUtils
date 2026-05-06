@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.common;
+package cc.fascinated.fascinatedutils.common;
 
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import com.mojang.blaze3d.ProjectionType;

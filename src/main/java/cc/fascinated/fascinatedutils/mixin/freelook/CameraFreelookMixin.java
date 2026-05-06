@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.freelook;
+package cc.fascinated.fascinatedutils.mixin.freelook;
 
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;

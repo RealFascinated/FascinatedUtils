@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.zoom;
+package cc.fascinated.fascinatedutils.mixin.zoom;
 
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;

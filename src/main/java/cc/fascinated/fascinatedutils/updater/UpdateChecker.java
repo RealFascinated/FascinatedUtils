@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.updater;
+package cc.fascinated.fascinatedutils.updater;
 
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.common.types.GitHubAsset;

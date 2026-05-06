@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.turboentities;
+package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;

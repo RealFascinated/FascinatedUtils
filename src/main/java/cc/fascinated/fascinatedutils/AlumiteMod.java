@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils;
+package cc.fascinated.fascinatedutils;
 
 import net.fabricmc.api.ModInitializer;
 

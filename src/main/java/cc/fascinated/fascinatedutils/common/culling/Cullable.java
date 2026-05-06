@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.common.culling;
+package cc.fascinated.fascinatedutils.common.culling;
 
 /**
  * Interface injected into Entity and BlockEntity to track culling state.

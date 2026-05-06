@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin;
+package cc.fascinated.fascinatedutils.mixin;
 
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.Identifier;

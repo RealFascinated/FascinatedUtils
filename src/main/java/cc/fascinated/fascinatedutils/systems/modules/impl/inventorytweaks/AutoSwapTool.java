@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks;
+package cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks;
 
 import cc.fascinated.fascinatedutils.mixin.InventorySelectedAccessorMixin;
 import cc.fascinated.fascinatedutils.systems.modules.Feature;

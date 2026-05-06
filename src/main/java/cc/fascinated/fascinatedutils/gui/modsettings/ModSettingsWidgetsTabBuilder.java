@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.gui.modsettings;
+package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;

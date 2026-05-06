@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.gui;
+package cc.fascinated.fascinatedutils.gui;
 
 import cc.fascinated.fascinatedutils.systems.hud.HUDModuleWidgetsElement;
 import cc.fascinated.fascinatedutils.systems.modules.impl.waypoint.WaypointLabelHudElement;

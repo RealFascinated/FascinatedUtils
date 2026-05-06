@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.turboentities;
+package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.systems.turboentities.EntityRendererAccess;
 import net.minecraft.client.renderer.entity.EntityRenderer;

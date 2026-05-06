@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin;
+package cc.fascinated.fascinatedutils.mixin;
 
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.core.BlockPos;

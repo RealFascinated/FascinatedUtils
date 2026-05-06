@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.blur;
+package cc.fascinated.fascinatedutils.mixin.blur;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.BlurModule;

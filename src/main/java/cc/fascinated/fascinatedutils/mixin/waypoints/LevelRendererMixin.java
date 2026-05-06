@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.waypoints;
+package cc.fascinated.fascinatedutils.mixin.waypoints;
 
 import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;

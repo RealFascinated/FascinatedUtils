@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.systems.modules.impl.tps;
+package cc.fascinated.fascinatedutils.systems.modules.impl.tps;
 
 import cc.fascinated.fascinatedutils.common.IntegratedServerUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;

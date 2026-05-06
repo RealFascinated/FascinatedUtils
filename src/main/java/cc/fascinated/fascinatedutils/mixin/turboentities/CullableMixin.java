@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.mixin.turboentities;
+package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import net.minecraft.client.particle.Particle;

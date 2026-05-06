@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.gui.screens;
+package cc.fascinated.fascinatedutils.gui.screens;
 
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;

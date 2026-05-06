@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.gui.modsettings;
+package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FContextMenuWidget;

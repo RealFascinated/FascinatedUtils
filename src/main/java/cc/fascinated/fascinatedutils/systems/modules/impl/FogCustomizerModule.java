@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.systems.modules.impl;
+package cc.fascinated.fascinatedutils.systems.modules.impl;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.modules.Module;

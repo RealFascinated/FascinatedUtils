@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.gui.widgets;
+package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;

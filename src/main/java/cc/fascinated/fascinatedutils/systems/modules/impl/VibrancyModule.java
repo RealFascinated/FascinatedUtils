@@ -1,4 +1,4 @@
-﻿package cc.fascinated.fascinatedutils.systems.modules.impl;
+package cc.fascinated.fascinatedutils.systems.modules.impl;
 
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.mixin.GameRendererPostProcessorAccessorMixin;
