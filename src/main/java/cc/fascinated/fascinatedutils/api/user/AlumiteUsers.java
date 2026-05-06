@@ -82,11 +82,6 @@ public class AlumiteUsers {
     }
 
     public void replaceSocialFromNetwork(List<FriendEntryDTO> friendsDto, List<PendingFriendRequestDTO> incomingDto, List<PendingFriendRequestDTO> outgoingDto) {
-        usersById.clear();
-        SelfUser self = selfUser;
-        if (self != null) {
-            usersById.put(self.user().id(), self.user());
-        }
         friends = friendsDto == null ? List.of() : friendsDto.stream().map(this::toFriend).toList();
         incomingFriendRequests = incomingDto == null ? List.of() : incomingDto.stream().map(this::toPendingFriendRequest).toList();
         outgoingFriendRequests = outgoingDto == null ? List.of() : outgoingDto.stream().map(this::toPendingFriendRequest).toList();
