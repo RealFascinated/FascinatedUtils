@@ -10,7 +10,6 @@ import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FAvatarWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FIconButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 
@@ -23,11 +22,11 @@ public class SocialFriendRowWidget {
             private static final float AVATAR_SIZE = 32f;
             private static final float BTN_SIZE = 20f;
 
-            final FAvatarWidget avatar = new FAvatarWidget(AVATAR_SIZE, 4f,
+            final SocialPlayerAvatarWidget avatar = new SocialPlayerAvatarWidget(AVATAR_SIZE,
                     () -> props.user() == null ? null : props.user().minecraftUuid(),
-                    () -> displayName());
+                    () -> displayName(),
+                    () -> presenceColor());
             {
-                avatar.setPresenceDotColorSupplier(() -> presenceColor());
                 addChild(avatar);
             }
 

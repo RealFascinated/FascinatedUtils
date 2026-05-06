@@ -42,7 +42,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
     private static final float PRESENCE_MENU_PAD = 6f;
     private static final float PRESENCE_MENU_ROW_H = 30f;
     private static final float PRESENCE_MENU_ROW_GAP = 4f;
-    private static final float CHAT_HEADER_AVATAR = 28f;
+    private static final float CHAT_HEADER_AVATAR = 22f;
 
     private static final Presence[] SELECTABLE_PREFERRED_PRESENCES = {Presence.ONLINE, Presence.AWAY, Presence.DO_NOT_DISTURB, Presence.INVISIBLE};
     private static String lastOpenedChannelId;
@@ -613,11 +613,14 @@ public class SocialMainWorkspaceComponent extends FWidget {
             return "Channel #" + groupChannel.id();
         }
         DmChannel dmChannel = channel.asDmChannel();
-        if (dmChannel != null && dmChannel.recipient() != null) {
-            User recipient = displayUser(dmChannel.recipient());
-            if (recipient != null && recipient.minecraftName() != null && !recipient.minecraftName().isBlank()) {
-                return recipient.minecraftName();
+        if (dmChannel != null) {
+            if (dmChannel.recipient() != null) {
+                User recipient = displayUser(dmChannel.recipient());
+                if (recipient != null && recipient.minecraftName() != null && !recipient.minecraftName().isBlank()) {
+                    return recipient.minecraftName();
+                }
             }
+            return Component.translatable("alumite.social.dm.unknown_user").getString();
         }
         return Component.translatable("alumite.social.dm.title").getString();
     }
@@ -793,7 +796,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
     }
 
     private FWidget buildChatHeader() {
-        FAvatarWidget headerAvatar = new FAvatarWidget(CHAT_HEADER_AVATAR, 4f,
+        SocialPlayerAvatarWidget headerAvatar = new SocialPlayerAvatarWidget(CHAT_HEADER_AVATAR,
                 () -> {
                     Channel channel = selectedChannelId.get() == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId.get());
                     DmChannel dmChannel = channel == null ? null : channel.asDmChannel();
@@ -805,6 +808,16 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 () -> {
                     Channel channel = selectedChannelId.get() == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId.get());
                     return channelTitle(channel);
+                },
+                () -> {
+                    Channel channel = selectedChannelId.get() == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId.get());
+                    DmChannel dmChannel = channel == null ? null : channel.asDmChannel();
+                    if (dmChannel == null || dmChannel.recipient() == null) {
+                        return Presence.OFFLINE.color();
+                    }
+                    User recipient = displayUser(dmChannel.recipient());
+                    Presence presence = recipient == null || recipient.presence() == null ? Presence.OFFLINE : recipient.presence();
+                    return presence.color();
                 });
         return new FWidget() {
             {
@@ -868,7 +881,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
             String label = footerChannel == null ? Component.translatable("alumite.social.dm.title").getString() : channelTitle(footerChannel);
             return "Message " + label;
         });
-        return SocialChatComposerWidget.build(new SocialChatComposerWidget.Props(dmInput, this::sendSelectedMessage));
+        return SocialChatComposerWidget.build(new SocialChatComposerWidget.Props(dmInput, this::sendSelectedMessage, () -> chatMessages.startEditLastOwnMessage(selectedChannelId.get(), this::anchorMessageScrollToBottom)));
     }
 
     private void anchorMessageScrollToBottom() {

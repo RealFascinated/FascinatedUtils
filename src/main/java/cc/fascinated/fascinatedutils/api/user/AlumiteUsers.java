@@ -93,11 +93,14 @@ public class AlumiteUsers {
     }
 
     public User upsertUser(PublicUserDTO dto) {
-        return usersById.put(dto.id(), AlumiteModelMapper.toUser(dto));
+        User user = AlumiteModelMapper.toUser(dto);
+        usersById.put(dto.id(), user);
+        return user;
     }
 
     public User upsertUser(User user) {
-        return usersById.put(user.id(), user);
+        usersById.put(user.id(), user);
+        return user;
     }
 
     public void onFriendAdd(FriendEntryDTO entry) {

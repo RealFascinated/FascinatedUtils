@@ -316,6 +316,31 @@ class SocialChatMessagesHandler {
         });
     }
 
+    void startEditLastOwnMessage(String channelId, Runnable afterEdit) {
+        if (channelId == null) {
+            return;
+        }
+        Channel channel = Alumite.INSTANCE.channels().get(channelId);
+        if (channel == null) {
+            return;
+        }
+        List<ChannelMessage> messages = channel.messagesOrNull();
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+        String selfId = Alumite.INSTANCE.users().selfUser().user().id();
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            ChannelMessage message = messages.get(i);
+            if (Objects.equals(selfId, message.authorId())) {
+                editingMessage = message;
+                editMessageInput.setValue(message.content());
+                GuiFocusState.setFocusedId(editMessageInput.focusId());
+                afterEdit.run();
+                return;
+            }
+        }
+    }
+
     private FWidget buildEmpty(String message) {
         return new FWidget() {
             @Override

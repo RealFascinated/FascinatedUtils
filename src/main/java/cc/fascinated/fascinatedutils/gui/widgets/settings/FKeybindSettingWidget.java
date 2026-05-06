@@ -150,7 +150,7 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
         int textWidth = graphics.measureTextWidth(bindingLabel, false);
         float textX = chipLeft + Math.max(0f, (chipWidth - textWidth) * 0.5f);
         float textY = chipTop + Math.max(0f, (chipHeight - graphics.getFontCapHeight()) * 0.5f);
-        graphics.drawMiniMessageText("<color:" + Colors.rgbHex(locked ? graphics.theme().textMuted() : graphics.theme().textPrimary()) + ">" + bindingLabel + "</color>", textX, textY, false);
+        graphics.drawText(bindingLabel, textX, textY, locked ? graphics.theme().textMuted() : graphics.theme().textPrimary(), false, false);
         float[] resetSquare = inlineResetSquare();
         SettingRowResetLayout.paintGlyph(graphics, resetSquare[0], resetSquare[1], titleRowHeight, hoveredReset && !locked, keybindSetting.isAtDefault());
     }

@@ -21,9 +21,9 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 
-public class TitleScreen {
+public class TitleScreenAddon {
 
-    public static final TitleScreen INSTANCE = new TitleScreen();
+    public static final TitleScreenAddon INSTANCE = new TitleScreenAddon();
 
     private static final float BUTTON_SIZE = 16f;
     private static final float BUTTON_GAP = 4f;

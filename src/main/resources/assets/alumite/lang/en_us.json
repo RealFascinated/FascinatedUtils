@@ -84,6 +84,7 @@
   "alumite.social.add_friend_placeholder": "Add a friend...",
   "alumite.social.add_button": "Add",
   "alumite.social.dm.title": "Direct Messages",
+  "alumite.social.dm.unknown_user": "Unknown User",
   "alumite.social.dm.not_selected": "No conversation selected.",
   "alumite.social.dm.select_channel": "Select a channel.",
   "alumite.social.dm.member_count": "%s members",

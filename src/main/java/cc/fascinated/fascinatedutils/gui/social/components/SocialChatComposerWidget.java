@@ -38,10 +38,14 @@ public class SocialChatComposerWidget {
                     props.onSend().run();
                     return true;
                 }
+                if (keyCode == GLFW.GLFW_KEY_UP && props.input().value().isEmpty() && props.onUpArrow() != null) {
+                    props.onUpArrow().run();
+                    return true;
+                }
                 return false;
             }
         };
     }
 
-    public record Props(FOutlinedTextInputWidget input, Runnable onSend) {}
+    public record Props(FOutlinedTextInputWidget input, Runnable onSend, Runnable onUpArrow) {}
 }
