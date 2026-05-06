@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+﻿package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.*;
@@ -145,7 +145,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
         float settingsCornerMax = Math.max(0.5f, Math.min(settingsStripW, settingsStripH) * 0.5f - stripBorderThickness * 0.5f - 0.01f);
         float settingsCorner = Mth.clamp(corner, 0.5f, settingsCornerMax);
         graphics.fillRoundedRectFrame(settingsStripX, settingsStripY, settingsStripW, settingsStripH, settingsCorner, graphics.theme().border(), settingsFill, stripBorderThickness, stripBorderThickness, RectCornerRoundMask.NONE);
-        String settingsLabel = hasSettings ? Component.translatable("fascinatedutils.setting.shell.widget_settings.open").getString() : Component.translatable("fascinatedutils.setting.shell.widget_settings.unavailable").getString();
+        String settingsLabel = hasSettings ? Component.translatable("alumite.setting.shell.widget_settings.open").getString() : Component.translatable("alumite.setting.shell.widget_settings.unavailable").getString();
         int settingsLabelColor = hasSettings ? graphics.theme().widgetStateLabel() : graphics.theme().widgetStateLabelMuted();
         float settingsTextY = settingsStripY + (settingsStripH - graphics.getFontCapHeight()) * 0.5f;
         int settingsLabelWidth = graphics.measureTextWidth(settingsLabel, false);
@@ -160,7 +160,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
         int fillEnabled = hoverToggleStrip ? graphics.theme().widgetStateEnabledFillHover() : graphics.theme().widgetStateEnabledFill();
         int fillArgb = Colors.mixArgb(stripProgress, fillDisabled, fillEnabled);
         int borderArgb = Colors.mixArgb(stripProgress, graphics.theme().widgetStateDisabledBorder(), graphics.theme().widgetStateEnabledBorder());
-        String actionLabel = enabledSupplier.get() ? Component.translatable("fascinatedutils.setting.shell.widget_state.enabled").getString() : Component.translatable("fascinatedutils.setting.shell.widget_state.disabled").getString();
+        String actionLabel = enabledSupplier.get() ? Component.translatable("alumite.setting.shell.widget_state.enabled").getString() : Component.translatable("alumite.setting.shell.widget_state.disabled").getString();
         float stripCornerMax = Math.max(0.5f, Math.min(stripW, stripH) * 0.5f - stripBorderThickness * 0.5f - 0.01f);
         float stripCorner = Mth.clamp(corner, 0.5f, stripCornerMax);
         graphics.fillRoundedRectFrame(stripX, stripY, stripW, stripH, stripCorner, borderArgb, fillArgb, stripBorderThickness, stripBorderThickness, RectCornerRoundMask.BOTTOM);

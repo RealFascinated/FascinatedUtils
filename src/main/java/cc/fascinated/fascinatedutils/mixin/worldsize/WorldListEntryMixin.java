@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.worldsize;
+﻿package cc.fascinated.fascinatedutils.mixin.worldsize;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.WorldSizeModule;
@@ -32,7 +32,7 @@ public class WorldListEntryMixin {
     }
 
     @Inject(method = "extractContent", at = @At("HEAD"))
-    private void fascinatedutils$prependSizeToInfoText(CallbackInfo ci) {
+    private void alumite$prependSizeToInfoText(CallbackInfo ci) {
         WorldSizeModule module = ModuleRegistry.INSTANCE.getModule(WorldSizeModule.class).orElse(null);
         Component baseInfo = ComponentUtils.mergeStyles(this.summary.getInfo(), Style.EMPTY.withColor(-8355712));
         if (module == null || !module.isEnabled()) {

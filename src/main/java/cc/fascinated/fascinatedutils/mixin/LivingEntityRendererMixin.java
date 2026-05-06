@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin;
+﻿package cc.fascinated.fascinatedutils.mixin;
 
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import net.minecraft.client.player.LocalPlayer;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class LivingEntityRendererMixin {
 
     @Inject(method = "shouldShowName(Lnet/minecraft/world/entity/LivingEntity;D)Z", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$respectShowSelfNameplate(LivingEntity entity, double distanceToCameraSq, CallbackInfoReturnable<Boolean> cir) {
+    private void alumite$respectShowSelfNameplate(LivingEntity entity, double distanceToCameraSq, CallbackInfoReturnable<Boolean> cir) {
         if (!(entity instanceof LocalPlayer)) {
             return;
         }

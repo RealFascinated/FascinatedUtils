@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.common;
+﻿package cc.fascinated.fascinatedutils.common;
 
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import com.mojang.blaze3d.ProjectionType;
@@ -13,7 +13,7 @@ import org.joml.Matrix4f;
 public class ClientGuiUtils {
     private static final float NEAR_PLANE = -10f;
     private static final float FAR_PLANE = 100f;
-    private static final ProjectionMatrixBuffer PROJECTION_MATRIX = new ProjectionMatrixBuffer("fascinatedutils:gui_projection");
+    private static final ProjectionMatrixBuffer PROJECTION_MATRIX = new ProjectionMatrixBuffer("alumite:gui_projection");
 
     public static int getWindowWidth() {
         return Minecraft.getInstance().getWindow().getWidth();

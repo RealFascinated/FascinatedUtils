@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.music;
+﻿package cc.fascinated.fascinatedutils.mixin.music;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.music.MusicModule;
@@ -19,12 +19,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MinecraftMusicMixin {
 
     @WrapOperation(method = "updateLevelInEngines(Lnet/minecraft/client/multiplayer/ClientLevel;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundManager;stop()V"))
-    private void fascinatedutils$continueMusicAcrossLevelEngineTeardown(SoundManager soundManager, Operation<Void> original, ClientLevel newLevel, boolean stopSounds) {
+    private void alumite$continueMusicAcrossLevelEngineTeardown(SoundManager soundManager, Operation<Void> original, ClientLevel newLevel, boolean stopSounds) {
         ModuleRegistry.INSTANCE.getModule(MusicModule.class).ifPresentOrElse(module -> module.applyUpdateLevelEnginesSoundStop(soundManager, newLevel, () -> original.call(soundManager)), () -> original.call(soundManager));
     }
 
     @Inject(method = "getSituationalMusic", at = @At("RETURN"), cancellable = true)
-    private void fascinatedutils$legacyMusicChannels(CallbackInfoReturnable<Music> cir) {
+    private void alumite$legacyMusicChannels(CallbackInfoReturnable<Music> cir) {
         ModuleRegistry.INSTANCE.getModule(MusicModule.class).ifPresent(module -> {
             LegacyMusicFeature legacyMusic = module.getLegacyMusicFeature();
             if (!legacyMusic.isFilterActive()) {

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin;
+﻿package cc.fascinated.fascinatedutils.mixin;
 
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.core.BlockPos;
@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface ClientPlayerInteractionManagerAccessorMixin {
 
     @Accessor("destroyBlockPos")
-    BlockPos fascinatedutils$getCurrentBreakingPos();
+    BlockPos alumite$getCurrentBreakingPos();
 
     @Accessor("destroyProgress")
-    float fascinatedutils$getCurrentBreakingProgress();
+    float alumite$getCurrentBreakingProgress();
 }

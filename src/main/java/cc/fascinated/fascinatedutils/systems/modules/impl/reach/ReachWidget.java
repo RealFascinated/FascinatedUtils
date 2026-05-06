@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.modules.impl.reach;
+﻿package cc.fascinated.fascinatedutils.systems.modules.impl.reach;
 
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
@@ -30,7 +30,7 @@ public class ReachWidget extends HudHostModule {
     }
 
     @EventHandler
-    private void fascinatedutils$onClientTick(ClientTickEvent event) {
+    private void alumite$onClientTick(ClientTickEvent event) {
         Minecraft minecraftClient = event.minecraftClient();
         if (minecraftClient.level == null) {
             lastEntityReach = Float.NaN;

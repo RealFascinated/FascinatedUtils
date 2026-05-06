@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.freelook;
+﻿package cc.fascinated.fascinatedutils.mixin.freelook;
 
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 public abstract class MouseHandlerFreelookMixin {
 
     @ModifyArgs(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;turn(DD)V"))
-    private void fascinatedutils$redirectTurnForFreelook(Args args) {
+    private void alumite$redirectTurnForFreelook(Args args) {
         FreelookModule module = ModuleRegistry.INSTANCE.getModule(FreelookModule.class).filter(Module::isEnabled).filter(FreelookModule::isFreelookActive).orElse(null);
         if (module == null) {
             return;

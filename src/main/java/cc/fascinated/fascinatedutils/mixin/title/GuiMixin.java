@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.title;
+﻿package cc.fascinated.fascinatedutils.mixin.title;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
@@ -15,7 +15,7 @@ import java.util.Optional;
 public class GuiMixin {
 
     @ModifyArgs(method = "extractTitle", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix3x2fStack;scale(FF)Lorg/joml/Matrix3x2f;", ordinal = 0))
-    private void fascinatedutils$scaleTitle(Args args) {
+    private void alumite$scaleTitle(Args args) {
         Optional<TitlesModule> titlesOptional = ModuleRegistry.INSTANCE.getModule(TitlesModule.class);
         if (titlesOptional.isEmpty() || !titlesOptional.get().isEnabled()) {
             return;
@@ -30,7 +30,7 @@ public class GuiMixin {
     }
 
     @ModifyArgs(method = "extractTitle", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix3x2fStack;scale(FF)Lorg/joml/Matrix3x2f;", ordinal = 1))
-    private void fascinatedutils$scaleSubtitle(Args args) {
+    private void alumite$scaleSubtitle(Args args) {
         Optional<TitlesModule> titlesOptional = ModuleRegistry.INSTANCE.getModule(TitlesModule.class);
         if (titlesOptional.isEmpty() || !titlesOptional.get().isEnabled()) {
             return;

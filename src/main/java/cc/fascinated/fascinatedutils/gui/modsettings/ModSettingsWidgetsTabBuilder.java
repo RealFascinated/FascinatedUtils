@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+﻿package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
@@ -78,7 +78,7 @@ public class ModSettingsWidgetsTabBuilder {
         if (hudPanels == null || hudPanels.isEmpty()) {
             scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 2f));
             FLabelWidget empty = new FLabelWidget();
-            empty.setText(Component.translatable("fascinatedutils.setting.shell.empty_widgets").getString());
+            empty.setText(Component.translatable("alumite.setting.shell.empty_widgets").getString());
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.CENTER);
             scrollBody.addChild(empty);
@@ -135,7 +135,7 @@ public class ModSettingsWidgetsTabBuilder {
         if (widgetAllSettings.isEmpty()) {
             scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 2f));
             FLabelWidget empty = new FLabelWidget();
-            empty.setText(Component.translatable("fascinatedutils.setting.shell.widget_settings.empty").getString());
+            empty.setText(Component.translatable("alumite.setting.shell.widget_settings.empty").getString());
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.START);
             scrollBody.addChild(ModSettingsCategoryRows.wrapSettingsDetailRowInShellMargin(settingsContentWidth, settingsInnerWidth, new FMinWidthHostWidget(ModSettingsCategoryRows.settingsDetailPaddedInnerWidth(settingsInnerWidth), empty)));

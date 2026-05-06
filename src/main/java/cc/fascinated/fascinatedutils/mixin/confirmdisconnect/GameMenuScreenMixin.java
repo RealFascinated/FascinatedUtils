@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.confirmdisconnect;
+﻿package cc.fascinated.fascinatedutils.mixin.confirmdisconnect;
 
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import net.minecraft.client.Minecraft;
@@ -24,7 +24,7 @@ public abstract class GameMenuScreenMixin {
     private boolean awaitingConfirm = false;
 
     @Inject(method = "createPauseMenu", at = @At("RETURN"))
-    private void fascinatedutils$wrapDisconnectWithConfirm(CallbackInfo ci) {
+    private void alumite$wrapDisconnectWithConfirm(CallbackInfo ci) {
         if (!SettingsRegistry.INSTANCE.getSettings().getConfirmDisconnect().isEnabled() || Minecraft.getInstance().hasSingleplayerServer() || this.disconnectButton == null) {
             return;
         }
@@ -39,7 +39,7 @@ public abstract class GameMenuScreenMixin {
             onPressField.set(this.disconnectButton, (Button.OnPress) btn -> {
                 if (!this.awaitingConfirm) {
                     this.awaitingConfirm = true;
-                    btn.setMessage(Component.translatable("fascinatedutils.confirm_disconnect").withColor(0xFF5555));
+                    btn.setMessage(Component.translatable("alumite.confirm_disconnect").withColor(0xFF5555));
                     return;
                 }
                 btn.setMessage(originalLabel);

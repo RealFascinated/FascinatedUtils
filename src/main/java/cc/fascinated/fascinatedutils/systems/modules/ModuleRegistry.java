@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.modules;
+﻿package cc.fascinated.fascinatedutils.systems.modules;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
@@ -141,7 +141,7 @@ public class ModuleRegistry {
     }
 
     @EventHandler
-    private void fascinatedutils$onModuleEnabledStateChanged(ModuleEnabledStateChangedEvent event) {
+    private void alumite$onModuleEnabledStateChanged(ModuleEnabledStateChangedEvent event) {
         Module module = event.module();
         if (module.isEnabled()) {
             if (!enabledModules.contains(module)) {

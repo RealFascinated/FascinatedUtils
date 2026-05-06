@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui;
 
-import cc.fascinated.fascinatedutils.FascinatedUtils;
+import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
@@ -49,7 +49,7 @@ public class AvatarTextureCache {
             return null;
         }
         if (inFlight.add(uuid)) {
-            FascinatedUtils.SCHEDULED_POOL.execute(() -> download(uuid, onLoad));
+            AlumiteMod.SCHEDULED_POOL.execute(() -> download(uuid, onLoad));
         }
         return null;
     }
@@ -65,7 +65,7 @@ public class AvatarTextureCache {
                 return;
             }
             NativeImage image = NativeImage.read(response.body());
-            Identifier identifier = Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, "avatar/" + uuid);
+            Identifier identifier = Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "avatar/" + uuid);
             Minecraft.getInstance().execute(() -> {
                 DynamicTexture texture = new DynamicTexture(identifier::toString, image);
                 texture.upload();

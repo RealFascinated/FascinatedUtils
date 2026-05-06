@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.widgets.settings;
+﻿package cc.fascinated.fascinatedutils.gui.widgets.settings;
 
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
@@ -18,7 +18,7 @@ public class WSettingTooltip {
 
     public static String lockReasonText(Setting<?> setting) {
         String reason = setting.getLockedReasonText();
-        return reason == null ? Component.translatable("fascinatedutils.setting.ui.lock_reason.default").getString() : reason;
+        return reason == null ? Component.translatable("alumite.setting.ui.lock_reason.default").getString() : reason;
     }
 
     public static void drawTooltipForSetting(GuiRenderer graphics, float mouseX, float mouseY, Setting<?> setting) {
@@ -27,7 +27,7 @@ public class WSettingTooltip {
 
     public static void drawTooltipForSetting(GuiRenderer graphics, float mouseX, float mouseY, Setting<?> setting, boolean hoveredResetButton) {
         if (hoveredResetButton) {
-            WTooltip.draw(graphics, mouseX, mouseY, Component.translatable("fascinatedutils.setting.ui.reset.tooltip").getString());
+            WTooltip.draw(graphics, mouseX, mouseY, Component.translatable("alumite.setting.ui.reset.tooltip").getString());
             return;
         }
         String text = setting.isLocked() ? lockReasonText(setting) : setting.getTooltip();

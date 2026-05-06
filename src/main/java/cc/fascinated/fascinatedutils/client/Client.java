@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.client;
 
-import cc.fascinated.fascinatedutils.FascinatedUtils;
+import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.client.command.ClientCommandBootstrap;
 import cc.fascinated.fascinatedutils.client.keybind.Keybinds;
@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Client implements ClientModInitializer {
-    public static final Logger LOG = LoggerFactory.getLogger(FascinatedUtils.MOD_ID);
+    public static final Logger LOG = LoggerFactory.getLogger(AlumiteMod.MOD_ID);
 
 
     public static final TurboEntities TURBO_ENTITIES = new TurboEntities();

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.waypoints;
+﻿package cc.fascinated.fascinatedutils.gui.waypoints;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -25,7 +25,7 @@ public class WaypointRenamePopupWidget extends FPopupWidget {
         this.newName = currentName;
 
         titleLabel = new FLabelWidget();
-        titleLabel.setText(Component.translatable("fascinatedutils.waypoints.rename_popup.title").getString());
+        titleLabel.setText(Component.translatable("alumite.waypoints.rename_popup.title").getString());
         titleLabel.setAlignX(Align.START);
         titleLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textPrimary());
 
@@ -33,8 +33,8 @@ public class WaypointRenamePopupWidget extends FPopupWidget {
         nameInput.setValue(currentName);
         nameInput.setOnChange(value -> newName = value);
 
-        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.waypoints.popup.cancel").getString(), 100f, 1, 2f, 8f, 1f, 8f);
-        renameButton = new FButtonWidget(this::submit, () -> Component.translatable("fascinatedutils.waypoints.rename_popup.confirm").getString(), 100f, 1, 2f, 8f, 1f, 8f);
+        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("alumite.waypoints.popup.cancel").getString(), 100f, 1, 2f, 8f, 1f, 8f);
+        renameButton = new FButtonWidget(this::submit, () -> Component.translatable("alumite.waypoints.rename_popup.confirm").getString(), 100f, 1, 2f, 8f, 1f, 8f);
 
         addChild(titleLabel);
         addChild(nameInput);

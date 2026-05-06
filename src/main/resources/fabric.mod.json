@@ -1,13 +1,13 @@
-{
+﻿{
   "schemaVersion": 1,
-  "id": "fascinatedutils",
+  "id": "alumite",
   "version": "${version}",
-  "name": "FascinatedUtils",
+  "name": "Alumite",
   "description": "",
   "authors": [],
   "contact": {},
   "license": "All-Rights-Reserved",
-  "icon": "assets/fascinatedutils/textures/gui/sprites/ui/mod_settings/close.png",
+  "icon": "assets/alumite/textures/gui/sprites/ui/mod_settings/close.png",
   "environment": "client",
   "entrypoints": {
     "fabric-datagen": [
@@ -17,11 +17,11 @@
       "cc.fascinated.fascinatedutils.client.Client"
     ],
     "main": [
-      "cc.fascinated.fascinatedutils.FascinatedUtils"
+      "cc.fascinated.fascinatedutils.AlumiteMod"
     ]
   },
   "mixins": [
-    "fascinatedutils.mixins.json"
+    "alumite.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=${loader_version}",

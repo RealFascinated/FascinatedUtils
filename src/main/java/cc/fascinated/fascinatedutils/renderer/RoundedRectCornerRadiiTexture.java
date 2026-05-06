@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.renderer;
 
-import cc.fascinated.fascinatedutils.FascinatedUtils;
+import cc.fascinated.fascinatedutils.AlumiteMod;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.render.TextureSetup;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class RoundedRectCornerRadiiTexture {
     public static final RoundedRectCornerRadiiTexture INSTANCE = new RoundedRectCornerRadiiTexture();
-    private static final Identifier TEXTURE_ID = Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, "gpu/rounded_corner_radii_lut");
+    private static final Identifier TEXTURE_ID = Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "gpu/rounded_corner_radii_lut");
     private static final AtomicLong DISPOSABLE_LUT_SEQUENCE = new AtomicLong();
     private DynamicTexture backing;
 
@@ -29,7 +29,7 @@ public class RoundedRectCornerRadiiTexture {
         NativeImage image = new NativeImage(NativeImage.Format.RGBA, 5, 1, false);
         writeRadiiLutPixels(image, packedCornerRadii, lutRingStrokePx);
         long sequence = DISPOSABLE_LUT_SEQUENCE.getAndIncrement();
-        DynamicTexture texture = new DynamicTexture(() -> FascinatedUtils.MOD_ID + "/disposable_corner_lut/" + sequence, image);
+        DynamicTexture texture = new DynamicTexture(() -> AlumiteMod.MOD_ID + "/disposable_corner_lut/" + sequence, image);
         texture.upload();
         return texture;
     }

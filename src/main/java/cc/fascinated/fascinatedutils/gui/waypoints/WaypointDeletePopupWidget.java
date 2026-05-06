@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.waypoints;
+﻿package cc.fascinated.fascinatedutils.gui.waypoints;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
@@ -20,18 +20,18 @@ public class WaypointDeletePopupWidget extends FPopupWidget {
         super(onCancel);
 
         titleLabel = new FLabelWidget();
-        titleLabel.setText(Component.translatable("fascinatedutils.waypoints.delete_popup.title").getString());
+        titleLabel.setText(Component.translatable("alumite.waypoints.delete_popup.title").getString());
         titleLabel.setAlignX(Align.START);
         titleLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textPrimary());
 
         messageLabel = new FLabelWidget();
-        messageLabel.setText(Component.translatable("fascinatedutils.waypoints.delete_popup.message", waypointName).getString());
+        messageLabel.setText(Component.translatable("alumite.waypoints.delete_popup.message", waypointName).getString());
         messageLabel.setAlignX(Align.START);
         messageLabel.setOverflow(TextOverflow.WRAP);
         messageLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
 
-        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.waypoints.popup.cancel").getString(), 100f, 1, 2f, 8f, 1f, 8f);
-        deleteButton = new FButtonWidget(onConfirm, () -> Component.translatable("fascinatedutils.waypoints.delete_popup.confirm").getString(), 100f, 1, 2f, 8f, 1f, 8f) {
+        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("alumite.waypoints.popup.cancel").getString(), 100f, 1, 2f, 8f, 1f, 8f);
+        deleteButton = new FButtonWidget(onConfirm, () -> Component.translatable("alumite.waypoints.delete_popup.confirm").getString(), 100f, 1, 2f, 8f, 1f, 8f) {
             @Override
             protected int resolveButtonFillColorArgb(boolean hovered) {
                 return hovered ? 0xFF7E2E2E : 0xFF692727;

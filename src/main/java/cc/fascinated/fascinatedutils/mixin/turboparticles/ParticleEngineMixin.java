@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.turboparticles;
+﻿package cc.fascinated.fascinatedutils.mixin.turboparticles;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
@@ -24,7 +24,7 @@ import java.util.Map;
 public class ParticleEngineMixin {
 
     @Inject(method = "extract", at = @At("HEAD"))
-    private void fascinatedutils$onExtractHead(ParticlesRenderState particlesRenderState, Frustum frustum, Camera camera, float partialTickTime, CallbackInfo ci) {
+    private void alumite$onExtractHead(ParticlesRenderState particlesRenderState, Frustum frustum, Camera camera, float partialTickTime, CallbackInfo ci) {
         if (!SettingsRegistry.INSTANCE.getSettings().getTurboParticles().isEnabled()) {
             return;
         }

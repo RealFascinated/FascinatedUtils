@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.screens;
+﻿package cc.fascinated.fascinatedutils.gui.screens;
 
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
@@ -28,9 +28,9 @@ public class SocialScreen extends WidgetScreen {
     private float scrollAccum;
 
     public SocialScreen() {
-        super(Component.translatable("fascinatedutils.social.title"));
-        addFriendInput = new FOutlinedTextInputWidget(32, 22f, () -> Component.translatable("fascinatedutils.social.add_friend_placeholder").getString());
-        dmMessageInput = new FOutlinedTextInputWidget(512, 22f, () -> Component.translatable("fascinatedutils.social.dm.input_placeholder").getString());
+        super(Component.translatable("alumite.social.title"));
+        addFriendInput = new FOutlinedTextInputWidget(32, 22f, () -> Component.translatable("alumite.social.add_friend_placeholder").getString());
+        dmMessageInput = new FOutlinedTextInputWidget(512, 22f, () -> Component.translatable("alumite.social.dm.input_placeholder").getString());
 
         socialMainWorkspace = new SocialMainWorkspaceComponent(addFriendInput, dmMessageInput, () -> Minecraft.getInstance().setScreen(null));
         host.setRoot(socialMainWorkspace);

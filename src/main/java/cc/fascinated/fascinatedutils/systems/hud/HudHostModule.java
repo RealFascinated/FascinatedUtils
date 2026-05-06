@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.hud;
+﻿package cc.fascinated.fascinatedutils.systems.hud;
 
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
@@ -29,7 +29,7 @@ public abstract class HudHostModule extends Module {
     public static final String SETTING_PADDING = "hud_padding";
     public static final String SETTING_TEXT_SHADOW = "text_shadow";
     public static final String SETTING_REMOVE_MIN_WIDTH = "remove_min_width";
-    public static final String HUD_PANELS_CATEGORY_DISPLAY_KEY = "fascinatedutils.setting.category.hud_panels";
+    public static final String HUD_PANELS_CATEGORY_DISPLAY_KEY = "alumite.setting.category.hud_panels";
 
     private final HudDefaults hudDefaults;
     private final SliderSetting padding;
@@ -126,7 +126,7 @@ public abstract class HudHostModule extends Module {
 
     @Override
     protected String settingTranslationKeyPrefix(Setting<?> setting) {
-        return "fascinatedutils.module." + settingsTranslationSuffix;
+        return "alumite.module." + settingsTranslationSuffix;
     }
 
     @Override

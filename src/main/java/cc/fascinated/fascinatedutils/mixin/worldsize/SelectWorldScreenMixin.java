@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.worldsize;
+﻿package cc.fascinated.fascinatedutils.mixin.worldsize;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.WorldSizeModule;
@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class SelectWorldScreenMixin {
 
     @Inject(method = "init", at = @At("TAIL"))
-    private void fascinatedutils$refreshWorldSizes(CallbackInfo ci) {
+    private void alumite$refreshWorldSizes(CallbackInfo ci) {
         ModuleRegistry.INSTANCE.getModule(WorldSizeModule.class).ifPresent(WorldSizeModule::refreshSizes);
     }
 }

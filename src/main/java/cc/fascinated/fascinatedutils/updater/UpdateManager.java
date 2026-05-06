@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.updater;
+﻿package cc.fascinated.fascinatedutils.updater;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.SystemUtils;
@@ -36,7 +36,7 @@ public final class UpdateManager {
             return;
         }
 
-        ModContainer mod = FabricLoader.getInstance().getModContainer("fascinatedutils").orElse(null);
+        ModContainer mod = FabricLoader.getInstance().getModContainer("alumite").orElse(null);
         if (mod == null) {
             Client.LOG.warn("Mod container not found; cannot apply staged update");
             return;

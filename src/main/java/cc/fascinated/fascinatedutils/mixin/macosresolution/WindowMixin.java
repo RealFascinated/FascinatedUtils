@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.macosresolution;
+﻿package cc.fascinated.fascinatedutils.mixin.macosresolution;
 
 import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
@@ -19,7 +19,7 @@ public class WindowMixin {
     private int framebufferHeight;
 
     @Inject(method = "refreshFramebufferSize", at = @At(value = "RETURN"))
-    private void fascinatedutils$afterUpdateFrameBufferSize(CallbackInfo ci) {
+    private void alumite$afterUpdateFrameBufferSize(CallbackInfo ci) {
         BooleanSetting reduceMacOSResolution = SettingsRegistry.INSTANCE.getSettings().getReduceMacOSResolution();
 
         // prevents mis-scaled startup screen

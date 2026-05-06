@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.turboentities;
+﻿package cc.fascinated.fascinatedutils.systems.turboentities;
 
 import cc.fascinated.fascinatedutils.common.culling.CullCounters;
 import cc.fascinated.fascinatedutils.common.culling.OcclusionProvider;
@@ -71,7 +71,7 @@ public class TurboEntities {
     }
 
     @EventHandler
-    private void fascinatedutils$onClientStarted(ClientStartedEvent event) {
+    private void alumite$onClientStarted(ClientStartedEvent event) {
         boolean enabled = SettingsRegistry.INSTANCE.getSettings().getTurboEntities().isEnabled();
         previousEnabledState = enabled;
         turboEntitiesCullEnabledMirror = enabled;
@@ -81,7 +81,7 @@ public class TurboEntities {
     }
 
     @EventHandler
-    private void fascinatedutils$onClientTick(ClientTickEvent event) {
+    private void alumite$onClientTick(ClientTickEvent event) {
         lastTickedEntities = tickedEntities;
         lastSkippedEntityTicks = skippedEntityTicks;
         tickedEntities = 0;
@@ -109,7 +109,7 @@ public class TurboEntities {
     }
 
     @EventHandler
-    private void fascinatedutils$onClientStopping(ClientStoppingEvent event) {
+    private void alumite$onClientStopping(ClientStoppingEvent event) {
         turboEntitiesCullEnabledMirror = false;
         stopCullThread();
     }

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+﻿package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.gui.core.Align;
@@ -128,7 +128,7 @@ public class ModSettingsModulesTabBuilder {
         if (filteredModules.isEmpty()) {
             scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 2f));
             FLabelWidget empty = new FLabelWidget();
-            empty.setText(Component.translatable("fascinatedutils.setting.shell.empty_modules").getString());
+            empty.setText(Component.translatable("alumite.setting.shell.empty_modules").getString());
             empty.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             empty.setAlignX(Align.CENTER);
             scrollBody.addChild(empty);

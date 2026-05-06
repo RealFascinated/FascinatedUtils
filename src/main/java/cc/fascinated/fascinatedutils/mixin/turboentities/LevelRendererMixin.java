@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.turboentities;
+﻿package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class LevelRendererMixin {
 
     @Inject(method = "extractEntity", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$extractEntity(Entity entity, float partialTickTime, CallbackInfoReturnable<EntityRenderState> info) {
+    private void alumite$extractEntity(Entity entity, float partialTickTime, CallbackInfoReturnable<EntityRenderState> info) {
         if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
             return;
         }
@@ -47,7 +47,7 @@ public class LevelRendererMixin {
             return;
         }
 
-        if (cullable.fascinatedutils$isCulled()) {
+        if (cullable.alumite$isCulled()) {
             // Return an invisible state to skip rendering
             EntityRenderState state = new EntityRenderState();
             state.entityType = EntityType.INTERACTION;
@@ -56,11 +56,11 @@ public class LevelRendererMixin {
             return;
         }
 
-        cullable.fascinatedutils$setOutOfCamera(false);
+        cullable.alumite$setOutOfCamera(false);
     }
 
     @Inject(method = "extractVisibleEntities", at = @At("HEAD"))
-    private void fascinatedutils$extractVisibleEntities(Camera camera, Frustum frustum, DeltaTracker deltaTracker, LevelRenderState output, CallbackInfo info) {
+    private void alumite$extractVisibleEntities(Camera camera, Frustum frustum, DeltaTracker deltaTracker, LevelRenderState output, CallbackInfo info) {
         if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
             return;
         }

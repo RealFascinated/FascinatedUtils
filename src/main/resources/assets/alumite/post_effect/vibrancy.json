@@ -1,11 +1,11 @@
-{
+﻿{
   "targets": {
     "swap": {}
   },
   "passes": [
     {
       "vertex_shader": "minecraft:core/screenquad",
-      "fragment_shader": "fascinatedutils:post/vibrancy",
+      "fragment_shader": "alumite:post/vibrancy",
       "inputs": [
         {
           "sampler_name": "Diffuse",

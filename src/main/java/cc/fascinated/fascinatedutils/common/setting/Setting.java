@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.common.setting;
+﻿package cc.fascinated.fascinatedutils.common.setting;
 
 import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
 import com.google.gson.Gson;
@@ -26,7 +26,7 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
     private final Supplier<String> nameProvider;
     private final Supplier<@Nullable String> tooltipProvider;
     private final List<Setting<?>> subSettings = new ArrayList<>();
-    private String translationKeyPrefix = "fascinatedutils.setting";
+    private String translationKeyPrefix = "alumite.setting";
     private T value;
     private boolean subSetting;
 

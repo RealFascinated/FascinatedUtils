@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.renderer;
 
-import cc.fascinated.fascinatedutils.FascinatedUtils;
+import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.NativeImage;
@@ -204,7 +204,7 @@ public class MeshRenderer {
         if (whiteDot == null) {
             NativeImage image = new NativeImage(NativeImage.Format.RGBA, 1, 1, false);
             image.setPixel(0, 0, 0xFFFFFFFF);
-            whiteDot = new DynamicTexture(() -> FascinatedUtils.MOD_ID + "/white_dot", image);
+            whiteDot = new DynamicTexture(() -> AlumiteMod.MOD_ID + "/white_dot", image);
             whiteDot.upload();
         }
         whiteTextureSetup = TextureSetup.singleTexture(whiteDot.getTextureView(), whiteDot.getSampler());

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.statuseffects;
+﻿package cc.fascinated.fascinatedutils.mixin.statuseffects;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.StatusEffectsModule;
@@ -16,7 +16,7 @@ import java.util.Optional;
 public class GuiMixin {
 
     @Inject(method = "extractEffects", at = @At(value = "HEAD"), cancellable = true)
-    private void fascinatedutils$hideStatusEffects(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo callbackInfo) {
+    private void alumite$hideStatusEffects(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo callbackInfo) {
         Optional<StatusEffectsModule> statusEffectsOptional = ModuleRegistry.INSTANCE.getModule(StatusEffectsModule.class);
         if (statusEffectsOptional.isEmpty()) {
             return;

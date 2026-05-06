@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.turboentities;
+﻿package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ClientLevelTickMixin {
 
     @Inject(method = "tickNonPassenger", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$skipCulledEntityTick(Entity entity, CallbackInfo info) {
+    private void alumite$skipCulledEntityTick(Entity entity, CallbackInfo info) {
         if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
             return;
         }
@@ -42,7 +42,7 @@ public class ClientLevelTickMixin {
             return;
         }
 
-        if (!(entity instanceof Cullable cullable) || !cullable.fascinatedutils$isCulled()) {
+        if (!(entity instanceof Cullable cullable) || !cullable.alumite$isCulled()) {
             Client.TURBO_ENTITIES.incrementTickedEntities();
             return;
         }

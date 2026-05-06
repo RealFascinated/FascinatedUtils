@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.modules.impl.tps;
+﻿package cc.fascinated.fascinatedutils.systems.modules.impl.tps;
 
 import cc.fascinated.fascinatedutils.common.IntegratedServerUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
@@ -52,7 +52,7 @@ public class TpsWidget extends HudHostModule {
     }
 
     @EventHandler
-    private void fascinatedutils$onClientTick(ClientTickEvent event) {
+    private void alumite$onClientTick(ClientTickEvent event) {
         updateSamples(event.minecraftClient());
     }
 

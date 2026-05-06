@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.blur;
+﻿package cc.fascinated.fascinatedutils.mixin.blur;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.BlurModule;
@@ -32,7 +32,7 @@ public abstract class GlobalSettingsUniformMixin {
      * identical to vanilla when the module is off.
      */
     @Inject(method = "update", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$writeFloatBlurRadius(int width, int height, double glintAlpha, long gameTime, DeltaTracker deltaTracker, int menuBlurRadius, Vec3 cameraPos, boolean useRgss, CallbackInfo ci) {
+    private void alumite$writeFloatBlurRadius(int width, int height, double glintAlpha, long gameTime, DeltaTracker deltaTracker, int menuBlurRadius, Vec3 cameraPos, boolean useRgss, CallbackInfo ci) {
 
         BlurModule module = ModuleRegistry.INSTANCE.getModule(BlurModule.class).orElse(null);
         float floatRadius = (module != null && module.isEnabled()) ? module.getBlurStrength().getValue().floatValue() * module.getProgress() : (float) menuBlurRadius;

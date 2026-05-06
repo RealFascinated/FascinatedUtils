@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.turboentities;
+﻿package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class SignBackCullingMixin {
 
     @Inject(method = "submitSignText", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$cullSignText(SignRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, SignText signText, CallbackInfo info) {
+    private void alumite$cullSignText(SignRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, SignText signText, CallbackInfo info) {
         if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
             return;
         }

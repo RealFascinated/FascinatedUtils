@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks;
+﻿package cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks;
 
 import cc.fascinated.fascinatedutils.mixin.InventorySelectedAccessorMixin;
 import cc.fascinated.fascinatedutils.systems.modules.Feature;
@@ -53,7 +53,7 @@ public class AutoSwapTool extends Feature<InventoryTweaksModule> {
 
         Inventory inventory = player.getInventory();
         InventorySelectedAccessorMixin accessor = (InventorySelectedAccessorMixin) inventory;
-        int currentSlot = accessor.fascinatedutils$getSelected();
+        int currentSlot = accessor.alumite$getSelected();
 
         for (int slot = 0; slot < 36; slot++) {
             if (slot == currentSlot) {
@@ -65,7 +65,7 @@ public class AutoSwapTool extends Feature<InventoryTweaksModule> {
             }
 
             if (slot < Inventory.getSelectionSize()) {
-                accessor.fascinatedutils$setSelected(slot);
+                accessor.alumite$setSelected(slot);
                 player.connection.send(new ServerboundSetCarriedItemPacket(slot));
             }
             else {

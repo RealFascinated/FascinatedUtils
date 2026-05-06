@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.freelook;
+﻿package cc.fascinated.fascinatedutils.mixin.freelook;
 
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class CameraFreelookMixin {
 
     @Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewYRot(F)F"))
-    private float fascinatedutils$redirectViewYRot(Entity entity, float partialTick) {
+    private float alumite$redirectViewYRot(Entity entity, float partialTick) {
         FreelookModule module = ModuleRegistry.INSTANCE.getModule(FreelookModule.class).filter(Module::isEnabled).filter(FreelookModule::isFreelookActive).orElse(null);
         if (module == null) {
             return entity.getViewYRot(partialTick);
@@ -23,7 +23,7 @@ public abstract class CameraFreelookMixin {
     }
 
     @Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewXRot(F)F"))
-    private float fascinatedutils$redirectViewXRot(Entity entity, float partialTick) {
+    private float alumite$redirectViewXRot(Entity entity, float partialTick) {
         FreelookModule module = ModuleRegistry.INSTANCE.getModule(FreelookModule.class).filter(Module::isEnabled).filter(FreelookModule::isFreelookActive).orElse(null);
         if (module == null) {
             return entity.getViewXRot(partialTick);

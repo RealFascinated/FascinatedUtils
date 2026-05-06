@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+﻿package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.FState;
@@ -47,7 +47,7 @@ public class ModSettingsProfilesTabBuilder {
 
         FColumnWidget scrollBody = new FColumnWidget(gap, Align.CENTER);
 
-        FButtonWidget createProfileButton = new SelectableButtonWidget(onOpenCreateProfilePopup, () -> Component.translatable("fascinatedutils.setting.shell.new_profile_button").getString(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f, () -> false) {
+        FButtonWidget createProfileButton = new SelectableButtonWidget(onOpenCreateProfilePopup, () -> Component.translatable("alumite.setting.shell.new_profile_button").getString(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f, () -> false) {
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 return controlsHeight;
@@ -65,7 +65,7 @@ public class ModSettingsProfilesTabBuilder {
         Optional<UUID> activeProfileId = ModConfig.profiles().getActiveProfileId();
         if (profileEntries.isEmpty()) {
             FLabelWidget emptyLabel = new FLabelWidget();
-            emptyLabel.setText(Component.translatable("fascinatedutils.setting.shell.profiles_empty").getString());
+            emptyLabel.setText(Component.translatable("alumite.setting.shell.profiles_empty").getString());
             emptyLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
             emptyLabel.setAlignX(Align.START);
             scrollBody.addChild(wrapWithSidePad(settingsContentWidth, settingsInnerWidth, emptyLabel));
@@ -100,7 +100,7 @@ public class ModSettingsProfilesTabBuilder {
         FWidget profilesScrollClip = wrapScrollClip(scrollBody, gap, scrollYRef);
         FWidget bottomHudButtonRow = null;
         if (onOpenHudLayoutEditor != null) {
-            FButtonWidget editHudLayoutButton = new SelectableButtonWidget(onOpenHudLayoutEditor, () -> Component.translatable("fascinatedutils.setting.shell.edit_hud_layout").getString(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f, () -> false);
+            FButtonWidget editHudLayoutButton = new SelectableButtonWidget(onOpenHudLayoutEditor, () -> Component.translatable("alumite.setting.shell.edit_hud_layout").getString(), settingsInnerWidth, 1, 1f, 6f, 1.12f, 6f, 2f, () -> false);
             bottomHudButtonRow = wrapWithSidePad(settingsContentWidth, settingsInnerWidth, editHudLayoutButton);
         }
 

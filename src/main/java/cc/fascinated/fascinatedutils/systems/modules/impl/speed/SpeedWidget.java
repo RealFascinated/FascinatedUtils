@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.modules.impl.speed;
+﻿package cc.fascinated.fascinatedutils.systems.modules.impl.speed;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
@@ -37,7 +37,7 @@ public class SpeedWidget extends HudHostModule {
     }
 
     @EventHandler
-    private void fascinatedutils$onClientTick(ClientTickEvent event) {
+    private void alumite$onClientTick(ClientTickEvent event) {
         Minecraft minecraftClient = event.minecraftClient();
         LocalPlayer player = minecraftClient.player;
         if (minecraftClient.level == null || player == null) {

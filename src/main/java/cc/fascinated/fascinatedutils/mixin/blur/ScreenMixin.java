@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.blur;
+﻿package cc.fascinated.fascinatedutils.mixin.blur;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.BlurModule;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ScreenMixin {
 
     @Inject(method = "extractBlurredBackground", at = @At("HEAD"))
-    private void fascinatedutils$onBlurBackground(GuiGraphicsExtractor graphics, CallbackInfo ci) {
+    private void alumite$onBlurBackground(GuiGraphicsExtractor graphics, CallbackInfo ci) {
         BlurModule module = ModuleRegistry.INSTANCE.getModule(BlurModule.class).orElse(null);
         if (module == null || !module.isEnabled()) {
             return;
@@ -25,7 +25,7 @@ public abstract class ScreenMixin {
     }
 
     @Inject(method = "extractTransparentBackground", at = @At("HEAD"))
-    private void fascinatedutils$onTransparentBackground(GuiGraphicsExtractor graphics, CallbackInfo ci) {
+    private void alumite$onTransparentBackground(GuiGraphicsExtractor graphics, CallbackInfo ci) {
         BlurModule module = ModuleRegistry.INSTANCE.getModule(BlurModule.class).orElse(null);
         if (module == null || !module.isEnabled()) {
             return;

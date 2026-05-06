@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.zoom;
+﻿package cc.fascinated.fascinatedutils.mixin.zoom;
 
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 public abstract class MouseHandlerMixin {
 
     @ModifyArgs(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;turn(DD)V"))
-    private void fascinatedutils$scaleMouseLookWhileZoomed(Args args) {
+    private void alumite$scaleMouseLookWhileZoomed(Args args) {
         float factor = ModuleRegistry.INSTANCE.getModule(ZoomModule.class).filter(Module::isEnabled).map(ZoomModule::zoomMouseLookScale).orElse(1f);
         if (factor >= 1f - 1e-4f) {
             return;

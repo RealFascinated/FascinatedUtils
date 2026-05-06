@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.inventorytweaks;
+﻿package cc.fascinated.fascinatedutils.mixin.inventorytweaks;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.InventoryTweaksModule;
@@ -30,67 +30,67 @@ import java.util.Set;
 public abstract class AbstractContainerScreenDragMoveMixin {
 
     @Unique
-    private final Set<Integer> fascinatedutils$visitedSlots = new HashSet<>();
+    private final Set<Integer> alumite$visitedSlots = new HashSet<>();
     @Shadow
     protected Slot hoveredSlot;
     @Final
     @Shadow
     protected AbstractContainerMenu menu;
     @Unique
-    private boolean fascinatedutils$shiftDragging = false;
+    private boolean alumite$shiftDragging = false;
     @Unique
-    private boolean fascinatedutils$didDrag = false;
+    private boolean alumite$didDrag = false;
     @Unique
-    private double fascinatedutils$scrollAccumulator = 0;
+    private double alumite$scrollAccumulator = 0;
 
     @Shadow
     protected abstract void slotClicked(Slot slot, int slotId, int buttonNum, ContainerInput containerInput);
 
     @Inject(method = "mouseClicked", at = @At("RETURN"))
-    private void fascinatedutils$afterMouseClicked(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
-        Optional<QuickMove> quickMove = fascinatedutils$quickMove();
+    private void alumite$afterMouseClicked(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
+        Optional<QuickMove> quickMove = alumite$quickMove();
         if (!quickMove.map(QuickMove::isEnabled).orElse(false)) {
-            fascinatedutils$abortQuickMoveDragSession();
+            alumite$abortQuickMoveDragSession();
             return;
         }
         if (event.button() != 0) {
-            if (fascinatedutils$shiftDragging) {
-                fascinatedutils$abortQuickMoveDragSession();
+            if (alumite$shiftDragging) {
+                alumite$abortQuickMoveDragSession();
             }
             return;
         }
         if (!event.hasShiftDown()) {
-            if (fascinatedutils$shiftDragging) {
-                fascinatedutils$abortQuickMoveDragSession();
+            if (alumite$shiftDragging) {
+                alumite$abortQuickMoveDragSession();
             }
             return;
         }
         boolean clickLeftRoomForDragOutsideSlots = hoveredSlot != null || !Boolean.TRUE.equals(cir.getReturnValue());
         if (!clickLeftRoomForDragOutsideSlots) {
-            fascinatedutils$abortQuickMoveDragSession();
+            alumite$abortQuickMoveDragSession();
             return;
         }
-        fascinatedutils$shiftDragging = true;
-        fascinatedutils$didDrag = false;
-        fascinatedutils$visitedSlots.clear();
+        alumite$shiftDragging = true;
+        alumite$didDrag = false;
+        alumite$visitedSlots.clear();
         if (hoveredSlot != null) {
             int slotId = menu.slots.indexOf(hoveredSlot);
             if (slotId >= 0) {
-                fascinatedutils$visitedSlots.add(slotId);
+                alumite$visitedSlots.add(slotId);
             }
         }
     }
 
     @Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$onMouseDragged(MouseButtonEvent event, double dx, double dy, CallbackInfoReturnable<Boolean> cir) {
-        Optional<QuickMove> featureOpt = fascinatedutils$quickMove();
-        if (!fascinatedutils$shiftDragging || !featureOpt.map(QuickMove::isEnabled).orElse(false)) {
+    private void alumite$onMouseDragged(MouseButtonEvent event, double dx, double dy, CallbackInfoReturnable<Boolean> cir) {
+        Optional<QuickMove> featureOpt = alumite$quickMove();
+        if (!alumite$shiftDragging || !featureOpt.map(QuickMove::isEnabled).orElse(false)) {
             return;
         }
         com.mojang.blaze3d.platform.Window window = Minecraft.getInstance().getWindow();
         boolean shiftHeld = event.hasShiftDown() || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_SHIFT) || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_SHIFT);
         if (event.button() != 0 || !shiftHeld) {
-            fascinatedutils$abortQuickMoveDragSession();
+            alumite$abortQuickMoveDragSession();
             return;
         }
         if (hoveredSlot == null) {
@@ -98,9 +98,9 @@ public abstract class AbstractContainerScreenDragMoveMixin {
         }
         int slotId = menu.slots.indexOf(hoveredSlot);
         if (slotId >= 0) {
-            boolean visited = featureOpt.map(feature -> feature.tryVisitSlot(hoveredSlot, slotId, fascinatedutils$visitedSlots, this::slotClicked)).orElse(false);
+            boolean visited = featureOpt.map(feature -> feature.tryVisitSlot(hoveredSlot, slotId, alumite$visitedSlots, this::slotClicked)).orElse(false);
             if (visited) {
-                fascinatedutils$didDrag = true;
+                alumite$didDrag = true;
             }
         }
         cir.setReturnValue(true);
@@ -108,15 +108,15 @@ public abstract class AbstractContainerScreenDragMoveMixin {
     }
 
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$onMouseReleased(MouseButtonEvent event, CallbackInfoReturnable<Boolean> cir) {
+    private void alumite$onMouseReleased(MouseButtonEvent event, CallbackInfoReturnable<Boolean> cir) {
         if (event.button() != 0) {
-            if (fascinatedutils$shiftDragging) {
-                fascinatedutils$abortQuickMoveDragSession();
+            if (alumite$shiftDragging) {
+                alumite$abortQuickMoveDragSession();
             }
             return;
         }
-        boolean wasDragging = fascinatedutils$shiftDragging && fascinatedutils$didDrag;
-        fascinatedutils$abortQuickMoveDragSession();
+        boolean wasDragging = alumite$shiftDragging && alumite$didDrag;
+        alumite$abortQuickMoveDragSession();
         if (wasDragging) {
             cir.setReturnValue(true);
             cir.cancel();
@@ -124,8 +124,8 @@ public abstract class AbstractContainerScreenDragMoveMixin {
     }
 
     @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$onMouseScrolled(double x, double y, double scrollX, double scrollY, CallbackInfoReturnable<Boolean> cir) {
-        Optional<ScrollMove> featureOpt = fascinatedutils$scrollMove();
+    private void alumite$onMouseScrolled(double x, double y, double scrollX, double scrollY, CallbackInfoReturnable<Boolean> cir) {
+        Optional<ScrollMove> featureOpt = alumite$scrollMove();
         if (!featureOpt.map(ScrollMove::isEnabled).orElse(false)) {
             return;
         }
@@ -133,21 +133,21 @@ public abstract class AbstractContainerScreenDragMoveMixin {
             return;
         }
         if (hoveredSlot == null) {
-            fascinatedutils$scrollAccumulator = 0;
+            alumite$scrollAccumulator = 0;
             return;
         }
         if (!Minecraft.getInstance().player.containerMenu.getCarried().isEmpty()) {
             return;
         }
 
-        fascinatedutils$scrollAccumulator += scrollY;
-        int ticks = (int) fascinatedutils$scrollAccumulator;
+        alumite$scrollAccumulator += scrollY;
+        int ticks = (int) alumite$scrollAccumulator;
         if (ticks == 0) {
             cir.setReturnValue(false);
             cir.cancel();
             return;
         }
-        fascinatedutils$scrollAccumulator -= ticks;
+        alumite$scrollAccumulator -= ticks;
 
         featureOpt.ifPresent(feature -> feature.scroll(ticks, hoveredSlot, menu, this::slotClicked));
 
@@ -156,19 +156,19 @@ public abstract class AbstractContainerScreenDragMoveMixin {
     }
 
     @Unique
-    private void fascinatedutils$abortQuickMoveDragSession() {
-        fascinatedutils$shiftDragging = false;
-        fascinatedutils$didDrag = false;
-        fascinatedutils$visitedSlots.clear();
+    private void alumite$abortQuickMoveDragSession() {
+        alumite$shiftDragging = false;
+        alumite$didDrag = false;
+        alumite$visitedSlots.clear();
     }
 
     @Unique
-    private Optional<QuickMove> fascinatedutils$quickMove() {
+    private Optional<QuickMove> alumite$quickMove() {
         return ModuleRegistry.INSTANCE.getModule(InventoryTweaksModule.class).map(InventoryTweaksModule::getQuickMoveFeature);
     }
 
     @Unique
-    private Optional<ScrollMove> fascinatedutils$scrollMove() {
+    private Optional<ScrollMove> alumite$scrollMove() {
         return ModuleRegistry.INSTANCE.getModule(InventoryTweaksModule.class).map(InventoryTweaksModule::getScrollMoveFeature);
     }
 }

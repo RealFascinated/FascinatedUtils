@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.tab;
+﻿package cc.fascinated.fascinatedutils.mixin.tab;
 
 import cc.fascinated.fascinatedutils.common.PingColors;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
@@ -37,7 +37,7 @@ public class PlayerListHudMixin {
     }
 
     @ModifyConstant(method = "extractRenderState", constant = @Constant(intValue = 13))
-    private int fascinatedutils$tabListPingColumnWidthWhenMs(int original) {
+    private int alumite$tabListPingColumnWidthWhenMs(int original) {
         Optional<TabModule> tabModuleOptional = ModuleRegistry.INSTANCE.getModule(TabModule.class);
         if (tabModuleOptional.isEmpty() || !tabModuleOptional.get().isEnabled() || tabModuleOptional.get().getPingMode().getValue() != TabModule.PingMode.MILLISECONDS) {
             return original;
@@ -46,7 +46,7 @@ public class PlayerListHudMixin {
     }
 
     @Inject(method = "extractPingIcon", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$tabPingMode(GuiGraphicsExtractor graphics, int slotWidth, int xo, int yo, PlayerInfo info, CallbackInfo callbackInfo) {
+    private void alumite$tabPingMode(GuiGraphicsExtractor graphics, int slotWidth, int xo, int yo, PlayerInfo info, CallbackInfo callbackInfo) {
         Optional<TabModule> tabModuleOptional = ModuleRegistry.INSTANCE.getModule(TabModule.class);
         if (tabModuleOptional.isEmpty() || !tabModuleOptional.get().isEnabled()) {
             return;

@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.api;
 
-import cc.fascinated.fascinatedutils.FascinatedUtils;
+import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.api.ws.GatewayHandler;
 import cc.fascinated.fascinatedutils.api.ws.GatewayOpcode;
 import cc.fascinated.fascinatedutils.api.ws.OutboundMessage;
@@ -160,6 +160,6 @@ class AlumiteGateway implements WebSocket.Listener {
         int delay = reconnectDelayMs;
         reconnectDelayMs = Math.min(reconnectDelayMs * 2, MAX_RECONNECT_DELAY_MS);
         Client.LOG.info("[AlumiteGateway] Reconnecting in {}ms...", delay);
-        FascinatedUtils.SCHEDULED_POOL.schedule(this::doConnect, delay, TimeUnit.MILLISECONDS);
+        AlumiteMod.SCHEDULED_POOL.schedule(this::doConnect, delay, TimeUnit.MILLISECONDS);
     }
 }

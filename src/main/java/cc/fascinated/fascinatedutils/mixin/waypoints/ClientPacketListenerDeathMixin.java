@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.waypoints;
+﻿package cc.fascinated.fascinatedutils.mixin.waypoints;
 
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.PlayerDeathEvent;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ClientPacketListenerDeathMixin {
 
     @Inject(method = "handlePlayerCombatKill", at = @At("HEAD"))
-    private void fascinatedutils$onPlayerCombatKill(ClientboundPlayerCombatKillPacket packet, CallbackInfo ci) {
+    private void alumite$onPlayerCombatKill(ClientboundPlayerCombatKillPacket packet, CallbackInfo ci) {
         Minecraft minecraft = Minecraft.getInstance();
         if (!minecraft.isSameThread() || minecraft.player == null) {
             return;

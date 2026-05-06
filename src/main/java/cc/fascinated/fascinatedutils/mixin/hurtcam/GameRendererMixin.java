@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.hurtcam;
+﻿package cc.fascinated.fascinatedutils.mixin.hurtcam;
 
 import cc.fascinated.fascinatedutils.mixininterface.IGameRenderer;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
@@ -17,7 +17,7 @@ import java.util.Optional;
 public abstract class GameRendererMixin implements IGameRenderer {
 
     @Inject(method = "bobHurt", at = @At("HEAD"), cancellable = true, require = 0)
-    private void fascinatedutils$cancelHurtcamTilt(CameraRenderState cameraState, PoseStack poseStack, CallbackInfo callbackInfo) {
+    private void alumite$cancelHurtcamTilt(CameraRenderState cameraState, PoseStack poseStack, CallbackInfo callbackInfo) {
         Optional<HurtcamModule> module = ModuleRegistry.INSTANCE.getModule(HurtcamModule.class);
         if (module.isPresent()) {
             HurtcamModule hurtcamModule = module.get();

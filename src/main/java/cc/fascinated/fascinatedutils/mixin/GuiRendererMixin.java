@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin;
+﻿package cc.fascinated.fascinatedutils.mixin;
 
 import cc.fascinated.fascinatedutils.renderer.MeshRenderer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -17,7 +17,7 @@ public abstract class GuiRendererMixin {
      * mutating one shared LUT during {@code prepareSimpleElement} cannot match per-draw sampling.
      */
     @Inject(method = "render(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;)V", at = @At("TAIL"))
-    private void fascinatedutils$releaseRoundRectDisposableLuts(GpuBufferSlice fogBuffer, CallbackInfo callbackInfo) {
+    private void alumite$releaseRoundRectDisposableLuts(GpuBufferSlice fogBuffer, CallbackInfo callbackInfo) {
         MeshRenderer.INSTANCE.releaseDisposableRadiiLutsAfterGuiRenderPass();
     }
 }

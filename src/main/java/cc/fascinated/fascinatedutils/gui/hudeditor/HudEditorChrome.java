@@ -7,6 +7,7 @@ import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,50 @@ public class HudEditorChrome {
     public static final float SETTINGS_BUTTON_SIZE = 13f;
     private static final int SELECTED_COLOR = UiColor.argb("#913de2");
     private static final int SCALE_HANDLE_FILL = UiColor.argb("#ede4fa");
-    private static final float BUTTON_ICON_INSET = 1f;
+    private static final int BUTTON_BG_IDLE = UiColor.argb("#CC000000");
+    private static final int BUTTON_BG_HOVERED = UiColor.argb("#EE1a0a2e");
+    private static final float BUTTON_ICON_INSET = 2f;
+
+    /** True when the scale handle sits on the right edge of the widget for the given anchor. */
+    private static boolean handleOnRight(HUDWidgetAnchor anchor) {
+        return switch (anchor) {
+            case TOP_RIGHT, BOTTOM_RIGHT, RIGHT -> false;
+            default -> true;
+        };
+    }
+
+    /** True when the scale handle sits on the bottom edge of the widget for the given anchor. */
+    private static boolean handleOnBottom(HUDWidgetAnchor anchor) {
+        return switch (anchor) {
+            case BOTTOM_LEFT, BOTTOM_RIGHT, BOTTOM -> false;
+            default -> true;
+        };
+    }
+
+    /**
+     * X of the fixed corner used as the reference point for scale drag math.
+     * This is the corner diagonally opposite the scale handle.
+     *
+     * @param widget widget being scaled
+     * @return reference X in logical space
+     */
+    public static float scaleDragOriginX(HudPanel widget) {
+        return handleOnRight(widget.getHudState().getHudAnchor())
+            ? widget.getHudState().getPositionX()
+            : widget.getHudState().getPositionX() + widget.getScaledWidth();
+    }
+
+    /**
+     * Y of the fixed corner used as the reference point for scale drag math.
+     *
+     * @param widget widget being scaled
+     * @return reference Y in logical space
+     */
+    public static float scaleDragOriginY(HudPanel widget) {
+        return handleOnBottom(widget.getHudState().getHudAnchor())
+            ? widget.getHudState().getPositionY()
+            : widget.getHudState().getPositionY() + widget.getScaledHeight();
+    }
 
     /**
      * Widgets eligible for layout editing: matches {@link HUDManager#renderHUD}
@@ -68,33 +112,94 @@ public class HudEditorChrome {
     }
 
     /**
+     * Y coordinate of the top of the action button bar.
+     *
+     * <p>When the widget is tall enough the buttons sit inside its top edge; otherwise they float above
+     * (preferred) or below when there is no space above.
+     *
+     * @param widgetY      widget top in logical space
+     * @param scaledHeight widget height including scale
+     * @param canvasHeight logical canvas height
+     * @return Y of the button bar top
+     */
+    private static float buttonBarY(float widgetY, float scaledHeight, float canvasHeight) {
+        float barHeight = CLOSE_BUTTON_SIZE + 2 * CLOSE_BUTTON_PAD;
+        if (scaledHeight >= barHeight) {
+            return widgetY;
+        }
+        float aboveY = widgetY - barHeight;
+        if (aboveY >= 0f) {
+            return aboveY;
+        }
+        return widgetY + scaledHeight;
+    }
+
+    /**
+     * Returns true when the pointer is inside the widget bounds or, when the button bar is rendered outside
+     * the widget, inside the button bar strip — preventing hover from flickering as the cursor moves toward
+     * the action buttons.
+     *
+     * @param widget      widget to test
+     * @param pointerX    pointer X in logical space
+     * @param pointerY    pointer Y in logical space
+     * @param canvasHeight logical canvas height
+     * @return true when the pointer is in the combined hit zone
+     */
+    public static boolean isInActionZone(HudPanel widget, float pointerX, float pointerY, float canvasHeight) {
+        if (widget.containsPoint(pointerX, pointerY)) {
+            return true;
+        }
+        float widgetX = widget.getHudState().getPositionX();
+        float widgetY = widget.getHudState().getPositionY();
+        float scaledWidth = widget.getScaledWidth();
+        float scaledHeight = widget.getScaledHeight();
+        float barY = buttonBarY(widgetY, scaledHeight, canvasHeight);
+        if (barY == widgetY) {
+            return false; // buttons are inside the widget; containsPoint() already covered it
+        }
+        float barHeight = CLOSE_BUTTON_SIZE + 2 * CLOSE_BUTTON_PAD;
+        return pointerX >= widgetX && pointerX <= widgetX + scaledWidth
+            && pointerY >= barY && pointerY <= barY + barHeight;
+    }
+
+    /**
      * Whether the pointer lies over the settings button for the given widget.
      *
-     * @param widget   widget to test
-     * @param pointerX pointer X in logical space
-     * @param pointerY pointer Y in logical space
+     * @param widget      widget to test
+     * @param pointerX    pointer X in logical space
+     * @param pointerY    pointer Y in logical space
+     * @param canvasHeight logical canvas height
      * @return true when the point is inside the settings button rectangle
      */
-    public static boolean settingsButtonContainsPoint(HudPanel widget, float pointerX, float pointerY) {
+    public static boolean settingsButtonContainsPoint(HudPanel widget, float pointerX, float pointerY, float canvasHeight) {
+        float barY = buttonBarY(widget.getHudState().getPositionY(), widget.getScaledHeight(), canvasHeight);
         float buttonX = widget.getHudState().getPositionX() + CLOSE_BUTTON_PAD;
-        float buttonY = widget.getHudState().getPositionY() + CLOSE_BUTTON_PAD;
+        float buttonY = barY + CLOSE_BUTTON_PAD;
         return pointerX >= buttonX && pointerX <= buttonX + SETTINGS_BUTTON_SIZE && pointerY >= buttonY && pointerY <= buttonY + SETTINGS_BUTTON_SIZE;
     }
 
-    public static boolean closeButtonContainsPoint(HudPanel widget, float pointerX, float pointerY) {
+    public static boolean closeButtonContainsPoint(HudPanel widget, float pointerX, float pointerY, float canvasHeight) {
         float widgetX = widget.getHudState().getPositionX();
         float scaledWidth = widget.getScaledWidth();
+        float barY = buttonBarY(widget.getHudState().getPositionY(), widget.getScaledHeight(), canvasHeight);
         float buttonX = widgetX + scaledWidth - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_PAD;
-        float buttonY = widget.getHudState().getPositionY() + CLOSE_BUTTON_PAD;
+        float buttonY = barY + CLOSE_BUTTON_PAD;
         return pointerX >= buttonX && pointerX <= buttonX + CLOSE_BUTTON_SIZE && pointerY >= buttonY && pointerY <= buttonY + CLOSE_BUTTON_SIZE;
     }
 
     public static boolean scaleHandleContainsPoint(HudPanel widget, float pointerX, float pointerY) {
+        float snappedSize = Math.max(1f, (float) Math.round(SCALE_HANDLE_SIZE));
+        HUDWidgetAnchor anchor = widget.getHudState().getHudAnchor();
         float widgetX = widget.getHudState().getPositionX();
         float widgetY = widget.getHudState().getPositionY();
-        float handleLeft = widgetX + widget.getScaledWidth() - SCALE_HANDLE_SIZE;
-        float handleTop = widgetY + widget.getScaledHeight() - SCALE_HANDLE_SIZE;
-        return pointerX >= handleLeft && pointerX <= widgetX + widget.getScaledWidth() && pointerY >= handleTop && pointerY <= widgetY + widget.getScaledHeight();
+        float handleLeft = (float) Math.floor(handleOnRight(anchor)
+            ? widgetX + widget.getScaledWidth() - snappedSize
+            : widgetX);
+        float handleTop = (float) Math.floor(handleOnBottom(anchor)
+            ? widgetY + widget.getScaledHeight() - snappedSize
+            : widgetY);
+        return pointerX >= handleLeft && pointerX <= handleLeft + snappedSize
+            && pointerY >= handleTop && pointerY <= handleTop + snappedSize;
     }
 
     public static void drawWidgetEditorChrome(GuiRenderer glRenderer, HudPanel widget, HudPanel selectedWidget, float deltaSeconds, float canvasWidth, float canvasHeight, boolean repositionFromAnchor) {
@@ -132,16 +237,21 @@ public class HudEditorChrome {
             glRenderer.popTranslate();
         }
 
-        boolean pointerOverWidget = !Float.isNaN(pointerX) && widget.containsPoint(pointerX, pointerY);
+        boolean pointerOverWidget = !Float.isNaN(pointerX) && isInActionZone(widget, pointerX, pointerY, canvasHeight);
         if (pointerOverWidget) {
-            boolean closeHovered = closeButtonContainsPoint(widget, pointerX, pointerY);
-            boolean settingsHovered = settingsButtonContainsPoint(widget, pointerX, pointerY);
-            drawSettingsButton(glRenderer, widget.getHudState().getPositionX(), widget.getHudState().getPositionY(), settingsHovered);
-            drawCloseButton(glRenderer, widget.getHudState().getPositionX(), widget.getHudState().getPositionY(), widget.getScaledWidth(), closeHovered);
+            float widgetX = widget.getHudState().getPositionX();
+            float widgetY = widget.getHudState().getPositionY();
+            float scaledWidth = widget.getScaledWidth();
+            float scaledHeight = widget.getScaledHeight();
+            float barY = buttonBarY(widgetY, scaledHeight, canvasHeight);
+            boolean closeHovered = closeButtonContainsPoint(widget, pointerX, pointerY, canvasHeight);
+            boolean settingsHovered = settingsButtonContainsPoint(widget, pointerX, pointerY, canvasHeight);
+            drawSettingsButton(glRenderer, widgetX, barY, settingsHovered);
+            drawCloseButton(glRenderer, widgetX, barY, scaledWidth, closeHovered);
         }
 
         if (widget == selectedWidget) {
-            drawScaleHandle(glRenderer, widget.getHudState().getPositionX(), widget.getHudState().getPositionY(), widget.getScaledWidth(), widget.getScaledHeight());
+            drawScaleHandle(glRenderer, widget);
         }
 
         glRenderer.endRenderSegment();
@@ -176,10 +286,17 @@ public class HudEditorChrome {
         }
     }
 
-    private static void drawScaleHandle(GuiRenderer glRenderer, float widgetX, float widgetY, float scaledWidth, float scaledHeight) {
+    private static void drawScaleHandle(GuiRenderer glRenderer, HudPanel widget) {
         float snappedSize = Math.max(1f, (float) Math.round(SCALE_HANDLE_SIZE));
-        float handleLeft = (float) Math.floor(widgetX + scaledWidth - snappedSize);
-        float handleTop = (float) Math.floor(widgetY + scaledHeight - snappedSize);
+        HUDWidgetAnchor anchor = widget.getHudState().getHudAnchor();
+        float widgetX = widget.getHudState().getPositionX();
+        float widgetY = widget.getHudState().getPositionY();
+        float handleLeft = (float) Math.floor(handleOnRight(anchor)
+            ? widgetX + widget.getScaledWidth() - snappedSize
+            : widgetX);
+        float handleTop = (float) Math.floor(handleOnBottom(anchor)
+            ? widgetY + widget.getScaledHeight() - snappedSize
+            : widgetY);
         glRenderer.drawRect(handleLeft, handleTop, snappedSize, snappedSize, SCALE_HANDLE_FILL);
         drawAxisAlignedBorder1px(glRenderer, handleLeft, handleTop, snappedSize, snappedSize, SELECTED_COLOR);
     }
@@ -187,14 +304,16 @@ public class HudEditorChrome {
     private static void drawSettingsButton(GuiRenderer glRenderer, float widgetX, float widgetY, boolean hovered) {
         float buttonX = widgetX + CLOSE_BUTTON_PAD;
         float buttonY = widgetY + CLOSE_BUTTON_PAD;
-        int iconColor = hovered ? 0xFFFFFFFF : 0xAAFFFFFF;
+        glRenderer.drawRect(buttonX, buttonY, SETTINGS_BUTTON_SIZE, SETTINGS_BUTTON_SIZE, hovered ? BUTTON_BG_HOVERED : BUTTON_BG_IDLE);
+        int iconColor = hovered ? 0xFFFFFFFF : 0xDDFFFFFF;
         glRenderer.drawTexture(ModUiTextures.SETTINGS.getId(), buttonX + BUTTON_ICON_INSET, buttonY + BUTTON_ICON_INSET, SETTINGS_BUTTON_SIZE - BUTTON_ICON_INSET * 2f, SETTINGS_BUTTON_SIZE - BUTTON_ICON_INSET * 2f, iconColor);
     }
 
     private static void drawCloseButton(GuiRenderer glRenderer, float widgetX, float widgetY, float scaledWidth, boolean hovered) {
         float buttonX = widgetX + scaledWidth - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_PAD;
         float buttonY = widgetY + CLOSE_BUTTON_PAD;
-        int iconColor = hovered ? 0xFFFFFFFF : 0xAAFFFFFF;
+        glRenderer.drawRect(buttonX, buttonY, CLOSE_BUTTON_SIZE, CLOSE_BUTTON_SIZE, hovered ? BUTTON_BG_HOVERED : BUTTON_BG_IDLE);
+        int iconColor = hovered ? 0xFFFFFFFF : 0xDDFFFFFF;
         glRenderer.drawTexture(ModUiTextures.CLOSE.getId(), buttonX + BUTTON_ICON_INSET, buttonY + BUTTON_ICON_INSET, CLOSE_BUTTON_SIZE - BUTTON_ICON_INSET * 2f, CLOSE_BUTTON_SIZE - BUTTON_ICON_INSET * 2f, iconColor);
     }
 }

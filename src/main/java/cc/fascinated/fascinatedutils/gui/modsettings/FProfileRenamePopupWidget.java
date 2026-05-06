@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+﻿package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
@@ -33,13 +33,13 @@ public class FProfileRenamePopupWidget extends FPopupWidget {
         this.newName = currentName;
 
         titleLabel = new FLabelWidget();
-        titleLabel.setText(Component.translatable("fascinatedutils.setting.shell.profile_rename_popup_title").getString());
+        titleLabel.setText(Component.translatable("alumite.setting.shell.profile_rename_popup_title").getString());
         titleLabel.setAlignX(Align.START);
         titleLabel.setOverflow(TextOverflow.WRAP);
         titleLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textPrimary());
 
         descriptionLabel = new FLabelWidget();
-        descriptionLabel.setText(Component.translatable("fascinatedutils.setting.shell.profile_rename_popup_description").getString());
+        descriptionLabel.setText(Component.translatable("alumite.setting.shell.profile_rename_popup_description").getString());
         descriptionLabel.setAlignX(Align.START);
         descriptionLabel.setOverflow(TextOverflow.WRAP);
         descriptionLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
@@ -56,8 +56,8 @@ public class FProfileRenamePopupWidget extends FPopupWidget {
         validationLabel.setOverflow(TextOverflow.WRAP);
         validationLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textAccent());
 
-        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_cancel").getString(), 100f, 1, 2f, 8f, 1f, 8f);
-        renameButton = new FButtonWidget(this::submit, () -> Component.translatable("fascinatedutils.setting.shell.profile_rename_popup_confirm").getString(), 100f, 1, 2f, 8f, 1f, 8f) {
+        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("alumite.setting.shell.profile_popup_cancel").getString(), 100f, 1, 2f, 8f, 1f, 8f);
+        renameButton = new FButtonWidget(this::submit, () -> Component.translatable("alumite.setting.shell.profile_rename_popup_confirm").getString(), 100f, 1, 2f, 8f, 1f, 8f) {
             @Override
             protected int resolveButtonBorderColorArgb(boolean hovered) {
                 if (!isInputValid()) {
@@ -139,14 +139,14 @@ public class FProfileRenamePopupWidget extends FPopupWidget {
     private String resolveValidationMessage(String requestedName) {
         String normalizedName = requestedName == null ? "" : requestedName.trim();
         if (normalizedName.isEmpty()) {
-            return Component.translatable("fascinatedutils.setting.shell.profile_name_error_empty").getString();
+            return Component.translatable("alumite.setting.shell.profile_name_error_empty").getString();
         }
         String normalizedCurrentName = currentProfileName == null ? "" : currentProfileName.trim();
         if (normalizedName.equalsIgnoreCase(normalizedCurrentName)) {
             return "";
         }
         if (ModConfig.profiles().profileNameExists(normalizedName)) {
-            return Component.translatable("fascinatedutils.setting.shell.profile_name_error_duplicate_rename").getString();
+            return Component.translatable("alumite.setting.shell.profile_name_error_duplicate_rename").getString();
         }
         return "";
     }

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+﻿package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
@@ -70,7 +70,7 @@ public class ModSettingsShellFrame {
         boolean showHudLayoutChip = hudLayoutButtonHost.root() != null;
         ModSettingsShellLayout.ShellBounds hudLayoutButtonRect;
         if (showHudLayoutChip) {
-            String hudLayoutLabel = Component.translatable("fascinatedutils.setting.shell.edit_hud_layout").getString();
+            String hudLayoutLabel = Component.translatable("alumite.setting.shell.edit_hud_layout").getString();
             float hudButtonW = Math.max(34f, glUiRenderer.measureTextWidth(hudLayoutLabel, false) + 2f * FHudLayoutEditorChipWidget.HORIZONTAL_TEXT_PAD_DESIGN);
             float hudButtonH = FHudLayoutEditorChipWidget.chipHeightPx();
             float betweenHudAndClose = 3f;

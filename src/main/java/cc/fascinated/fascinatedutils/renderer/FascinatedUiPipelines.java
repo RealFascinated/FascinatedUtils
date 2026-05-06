@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.renderer;
 
-import cc.fascinated.fascinatedutils.FascinatedUtils;
+import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
@@ -14,12 +14,12 @@ public class FascinatedUiPipelines {
     /**
      * Axis-aligned quad with white texture and per-vertex color (non-SDF textured path).
      */
-    public static final RenderPipeline AXIS_TEX_COLOR = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET, RenderPipelines.GUI_TEXTURED_SNIPPET).withLocation(Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, "pipeline/axis_tex_color")).withVertexShader(Identifier.withDefaultNamespace("core/position_tex_color")).withFragmentShader(Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, "core/fui_axis_tex_color")).withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false)).withCull(false).withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT)).withSampler("Sampler0").build());
+    public static final RenderPipeline AXIS_TEX_COLOR = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET, RenderPipelines.GUI_TEXTURED_SNIPPET).withLocation(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "pipeline/axis_tex_color")).withVertexShader(Identifier.withDefaultNamespace("core/position_tex_color")).withFragmentShader(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "core/fui_axis_tex_color")).withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false)).withCull(false).withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT)).withSampler("Sampler0").build());
 
     /**
      * Solid {@code POSITION} + {@code Color} quad ({@code pos_color} path).
      */
-    public static final RenderPipeline SOLID_COLOR = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET, RenderPipelines.DEBUG_FILLED_SNIPPET).withLocation(Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, "pipeline/solid_color")).withVertexShader(Identifier.withDefaultNamespace("core/position_color")).withFragmentShader(Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, "core/fui_solid_color")).withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false)).withCull(false).withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT)).build());
+    public static final RenderPipeline SOLID_COLOR = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET, RenderPipelines.DEBUG_FILLED_SNIPPET).withLocation(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "pipeline/solid_color")).withVertexShader(Identifier.withDefaultNamespace("core/position_color")).withFragmentShader(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "core/fui_solid_color")).withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false)).withCull(false).withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT)).build());
 
     /**
      * Rounded fill: all four corners filleted; radius comes from vertex alpha ({@link MeshRenderer#packArgbRadius}).
@@ -51,13 +51,13 @@ public class FascinatedUiPipelines {
      * the five presets, or when gradient alphas are not both fully opaque (vertex alpha carries radius on preset
      * paths).
      */
-    public static final RenderPipeline ROUNDED_RECT_TEX_LUT = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET, RenderPipelines.GUI_TEXTURED_SNIPPET).withLocation(Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, "pipeline/rounded_rect_tex_lut")).withVertexShader(Identifier.withDefaultNamespace("core/position_tex_color")).withFragmentShader(Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, "core/fui_rounded_rect")).withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false)).withCull(false).withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT)).withSampler("Sampler0").withSampler("Sampler1").build());
+    public static final RenderPipeline ROUNDED_RECT_TEX_LUT = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET, RenderPipelines.GUI_TEXTURED_SNIPPET).withLocation(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "pipeline/rounded_rect_tex_lut")).withVertexShader(Identifier.withDefaultNamespace("core/position_tex_color")).withFragmentShader(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "core/fui_rounded_rect")).withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false)).withCull(false).withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT)).withSampler("Sampler0").withSampler("Sampler1").build());
 
     private FascinatedUiPipelines() {
     }
 
     private static RenderPipeline registerRoundedPreset(String pipelinePath, String fragmentPath) {
-        return RenderPipelines.register(RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET, RenderPipelines.GUI_TEXTURED_SNIPPET).withLocation(Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, pipelinePath)).withVertexShader(Identifier.withDefaultNamespace("core/position_tex_color")).withFragmentShader(Identifier.fromNamespaceAndPath(FascinatedUtils.MOD_ID, fragmentPath)).withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false)).withCull(false).withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT)).withSampler("Sampler0").build());
+        return RenderPipelines.register(RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET, RenderPipelines.GUI_TEXTURED_SNIPPET).withLocation(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, pipelinePath)).withVertexShader(Identifier.withDefaultNamespace("core/position_tex_color")).withFragmentShader(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, fragmentPath)).withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false)).withCull(false).withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT)).withSampler("Sampler0").build());
     }
 
     /**

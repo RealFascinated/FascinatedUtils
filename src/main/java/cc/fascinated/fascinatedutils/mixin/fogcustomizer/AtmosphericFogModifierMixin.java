@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.fogcustomizer;
+﻿package cc.fascinated.fascinatedutils.mixin.fogcustomizer;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.FogCustomizerModule;
@@ -19,7 +19,7 @@ import java.util.Optional;
 public class AtmosphericFogModifierMixin {
 
     @Inject(method = "setupFog", at = @At("TAIL"))
-    private void fascinatedutils$adjustAtmosphericFog(FogData fog, Camera camera, ClientLevel level, float renderDistance, DeltaTracker deltaTracker, CallbackInfo callbackInfo) {
+    private void alumite$adjustAtmosphericFog(FogData fog, Camera camera, ClientLevel level, float renderDistance, DeltaTracker deltaTracker, CallbackInfo callbackInfo) {
         Optional<FogCustomizerModule> optionalModule = ModuleRegistry.INSTANCE.getModule(FogCustomizerModule.class);
         if (optionalModule.isEmpty() || !optionalModule.get().isEnabled()) {
             return;

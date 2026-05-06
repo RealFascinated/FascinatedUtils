@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.client.keybind;
+﻿package cc.fascinated.fascinatedutils.client.keybind;
 
 import cc.fascinated.fascinatedutils.gui.screens.SocialScreen;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
@@ -13,8 +13,8 @@ public class Keybinds {
     private static KeyMapping socialKeybind;
 
     public Keybinds() {
-        openMenuKeybind = KeybindsWrapper.registerCallbackKeybind("key.fascinatedutils.open_menu", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, KeybindsWrapper.CATEGORY, () -> HUDManager.INSTANCE.setEditMode(!HUDManager.INSTANCE.isEditMode()));
-        socialKeybind = KeybindsWrapper.registerCallbackKeybind("key.fascinatedutils.open_social", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_BACKSLASH, KeybindsWrapper.CATEGORY, () -> {
+        openMenuKeybind = KeybindsWrapper.registerCallbackKeybind("key.alumite.open_menu", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, KeybindsWrapper.CATEGORY, () -> HUDManager.INSTANCE.setEditMode(!HUDManager.INSTANCE.isEditMode()));
+        socialKeybind = KeybindsWrapper.registerCallbackKeybind("key.alumite.open_social", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_BACKSLASH, KeybindsWrapper.CATEGORY, () -> {
             Minecraft minecraftClient = Minecraft.getInstance();
             Screen currentScreen = minecraftClient.screen;
             if (currentScreen instanceof SocialScreen) {

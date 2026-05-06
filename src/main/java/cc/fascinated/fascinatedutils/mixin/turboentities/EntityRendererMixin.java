@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.turboentities;
+﻿package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.systems.turboentities.EntityRendererAccess;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -18,13 +18,13 @@ public abstract class EntityRendererMixin<T extends Entity> implements EntityRen
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean fascinatedutils$affectedByCulling(Entity entity) {
+    public boolean alumite$affectedByCulling(Entity entity) {
         return affectedByCulling((T) entity);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public AABB fascinatedutils$getCullingBox(Entity entity) {
+    public AABB alumite$getCullingBox(Entity entity) {
         return getBoundingBoxForCulling((T) entity);
     }
 }

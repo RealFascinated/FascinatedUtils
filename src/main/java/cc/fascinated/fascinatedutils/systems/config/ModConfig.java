@@ -1,7 +1,7 @@
-package cc.fascinated.fascinatedutils.systems.config;
+﻿package cc.fascinated.fascinatedutils.systems.config;
 
 import cc.fascinated.fascinatedutils.Constants;
-import cc.fascinated.fascinatedutils.FascinatedUtils;
+import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.systems.config.impl.config.ConfigRepository;
@@ -39,7 +39,7 @@ public class ModConfig {
     }
 
     public static Path getDirectory() {
-        return FabricLoader.getInstance().getConfigDir().resolve(FascinatedUtils.MOD_ID);
+        return FabricLoader.getInstance().getConfigDir().resolve(AlumiteMod.MOD_ID);
     }
 
     public static Path getConfigPath() {
@@ -59,7 +59,7 @@ public class ModConfig {
     }
 
     @EventHandler
-    private void fascinatedutils$onClientStopping(ClientStoppingEvent event) {
+    private void alumite$onClientStopping(ClientStoppingEvent event) {
         profileRepository.saveActiveProfile();
         configRepository.save();
         waypointRepository.save();

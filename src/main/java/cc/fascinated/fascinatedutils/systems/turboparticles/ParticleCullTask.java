@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.turboparticles;
+﻿package cc.fascinated.fascinatedutils.systems.turboparticles;
 
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
@@ -131,15 +131,15 @@ public class ParticleCullTask implements Runnable {
                 // 1. Distance Culling (Fastest)
                 double distSq = particle.getBoundingBox().getCenter().distanceToSqr(lastCameraPos);
                 if (distSq > PARTICLE_FORCE_CULL_DISTANCE_SQ) {
-                    cullable.fascinatedutils$setCulled(true);
+                    cullable.alumite$setCulled(true);
                 }
                 else {
                     // 2. Frustum and Occlusion Culling
                     AABB box = cullingBoxForParticle(particle);
-                    cullable.fascinatedutils$setCulled(!isVisible(box));
+                    cullable.alumite$setCulled(!isVisible(box));
                 }
 
-                if (cullable.fascinatedutils$isCulled()) {
+                if (cullable.alumite$isCulled()) {
                     culled++;
                 }
             } catch (Exception ignored) {

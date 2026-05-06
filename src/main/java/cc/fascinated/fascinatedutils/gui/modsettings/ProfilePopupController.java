@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+﻿package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FContextMenuWidget;
@@ -66,10 +66,10 @@ public class ProfilePopupController {
         if (showContextMenu && contextMenuProfileId != null) {
             stack.addChild(new FContextMenuWidget(contextMenuX, contextMenuY, this::closeContextMenu, List.of(
                     new FContextMenuWidget.Item(
-                            () -> Component.translatable("fascinatedutils.setting.shell.profile_context_rename").getString(),
+                            () -> Component.translatable("alumite.setting.shell.profile_context_rename").getString(),
                             () -> { handleRenameAction(); }),
                     new FContextMenuWidget.Item(
-                            () -> Component.translatable("fascinatedutils.setting.shell.profile_context_delete").getString(),
+                            () -> Component.translatable("alumite.setting.shell.profile_context_delete").getString(),
                             () -> { handleDeleteAction(); })
             )));
         }

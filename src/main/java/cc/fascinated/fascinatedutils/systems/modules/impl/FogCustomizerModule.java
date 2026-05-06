@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.modules.impl;
+﻿package cc.fascinated.fascinatedutils.systems.modules.impl;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
@@ -8,7 +8,7 @@ import lombok.Getter;
 @Getter
 public class FogCustomizerModule extends Module {
 
-    private static final String FOG_DENSITY_CATEGORY_KEY = "fascinatedutils.setting.category.fog_density";
+    private static final String FOG_DENSITY_CATEGORY_KEY = "alumite.setting.category.fog_density";
 
     private final SliderSetting atmosphericFogStrength = SliderSetting.builder().id("atmospheric_fog").defaultValue(1f).minValue(0f).maxValue(2f).step(0.1f).categoryDisplayKey(FOG_DENSITY_CATEGORY_KEY).build();
     private final SliderSetting waterFogStrength = SliderSetting.builder().id("water_fog").defaultValue(1f).minValue(0f).maxValue(2f).step(0.1f).categoryDisplayKey(FOG_DENSITY_CATEGORY_KEY).build();

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+﻿package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.FState;
@@ -31,17 +31,17 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
         this.onSubmit = onSubmit;
 
         titleLabel = new FLabelWidget();
-        titleLabel.setText(Component.translatable("fascinatedutils.setting.shell.profile_popup_title").getString());
+        titleLabel.setText(Component.translatable("alumite.setting.shell.profile_popup_title").getString());
         titleLabel.setAlignX(Align.START);
         titleLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textPrimary());
 
         descriptionLabel = new FLabelWidget();
-        descriptionLabel.setText(Component.translatable("fascinatedutils.setting.shell.profile_popup_description").getString());
+        descriptionLabel.setText(Component.translatable("alumite.setting.shell.profile_popup_description").getString());
         descriptionLabel.setAlignX(Align.START);
         descriptionLabel.setOverflow(TextOverflow.WRAP);
         descriptionLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
 
-        profileNameInput = new FOutlinedTextInputWidget(45, 17f, () -> Component.translatable("fascinatedutils.setting.shell.profile_name_placeholder").getString());
+        profileNameInput = new FOutlinedTextInputWidget(45, 17f, () -> Component.translatable("alumite.setting.shell.profile_name_placeholder").getString());
         profileNameInput.setValue(profileNameRef.get() == null ? "" : profileNameRef.get());
         profileNameInput.setOnChange(value -> {
             profileNameRef.setQuiet(value);
@@ -53,10 +53,10 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
         validationLabel.setOverflow(TextOverflow.WRAP);
         validationLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textAccent());
 
-        copyDefaultToggleCheckbox = new FIconCheckboxWidget(Boolean.TRUE.equals(copyDefaultProfileSettingsRef.get()), checked -> copyDefaultProfileSettingsRef.setQuiet(checked), () -> Boolean.TRUE.equals(copyDefaultProfileSettingsRef.get()) ? Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_on").getString() : Component.translatable("fascinatedutils.setting.shell.profile_popup_copy_default_off").getString(), 154f);
+        copyDefaultToggleCheckbox = new FIconCheckboxWidget(Boolean.TRUE.equals(copyDefaultProfileSettingsRef.get()), checked -> copyDefaultProfileSettingsRef.setQuiet(checked), () -> Boolean.TRUE.equals(copyDefaultProfileSettingsRef.get()) ? Component.translatable("alumite.setting.shell.profile_popup_copy_default_on").getString() : Component.translatable("alumite.setting.shell.profile_popup_copy_default_off").getString(), 154f);
 
-        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_cancel").getString(), 70f, 1, 1f, 6f, 1f, 6f);
-        createButton = new FButtonWidget(this::submit, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_create").getString(), 70f, 1, 1f, 6f, 1f, 6f) {
+        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("alumite.setting.shell.profile_popup_cancel").getString(), 70f, 1, 1f, 6f, 1f, 6f);
+        createButton = new FButtonWidget(this::submit, () -> Component.translatable("alumite.setting.shell.profile_popup_create").getString(), 70f, 1, 1f, 6f, 1f, 6f) {
             @Override
             protected int resolveButtonBorderColorArgb(boolean hovered) {
                 if (!isInputValid()) {
@@ -80,10 +80,10 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
     private static String resolveValidationMessage(String requestedName) {
         String normalizedName = requestedName == null ? "" : requestedName.trim();
         if (normalizedName.isEmpty()) {
-            return Component.translatable("fascinatedutils.setting.shell.profile_name_error_empty").getString();
+            return Component.translatable("alumite.setting.shell.profile_name_error_empty").getString();
         }
         if (ModConfig.profiles().profileNameExists(normalizedName)) {
-            return Component.translatable("fascinatedutils.setting.shell.profile_name_error_duplicate_create").getString();
+            return Component.translatable("alumite.setting.shell.profile_name_error_duplicate_create").getString();
         }
         return "";
     }

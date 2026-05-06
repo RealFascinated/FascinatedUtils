@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.widgets;
+﻿package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.gui.core.Callback;
 import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
@@ -21,8 +21,8 @@ public class FShellTabStripWidget extends FWidget {
     private float trackHeight;
 
     public FShellTabStripWidget(Callback<String> onSelect) {
-        modulesSegment = new FClickableTabSegmentWidget(TAB_KEY_MODULES, Component.translatable("fascinatedutils.setting.shell.tab_modules").getString(), onSelect);
-        settingsSegment = new FClickableTabSegmentWidget(TAB_KEY_SETTINGS, Component.translatable("fascinatedutils.setting.shell.tab_settings").getString(), onSelect);
+        modulesSegment = new FClickableTabSegmentWidget(TAB_KEY_MODULES, Component.translatable("alumite.setting.shell.tab_modules").getString(), onSelect);
+        settingsSegment = new FClickableTabSegmentWidget(TAB_KEY_SETTINGS, Component.translatable("alumite.setting.shell.tab_settings").getString(), onSelect);
         addChild(modulesSegment);
         addChild(settingsSegment);
     }

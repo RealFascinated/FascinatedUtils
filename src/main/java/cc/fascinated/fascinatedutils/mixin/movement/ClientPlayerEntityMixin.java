@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.movement;
+﻿package cc.fascinated.fascinatedutils.mixin.movement;
 
 import cc.fascinated.fascinatedutils.common.PlayerUtils;
 import net.minecraft.client.player.LocalPlayer;
@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(LocalPlayer.class)
 public abstract class ClientPlayerEntityMixin {
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Abilities;getFlyingSpeed()F"))
-    private float fascinatedutils$scaleVerticalCreativeFlight(Abilities abilities) {
+    private float alumite$scaleVerticalCreativeFlight(Abilities abilities) {
         float base = abilities.getFlyingSpeed();
         Player self = (Player) (Object) this;
         return PlayerUtils.scaleFlyingSpeed(self, base);

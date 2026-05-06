@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin;
+﻿package cc.fascinated.fascinatedutils.mixin;
 
 import cc.fascinated.fascinatedutils.common.FrameCounter;
 import cc.fascinated.fascinatedutils.gui.UIScale;
@@ -43,7 +43,7 @@ public abstract class GameRendererMixin implements IGameRenderer {
     private FogRenderer fogRenderer;
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/render/GuiRenderer;render(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;)V", shift = At.Shift.AFTER))
-    private void fascinatedutils$onRenderGui(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo callbackInfo) {
+    private void alumite$onRenderGui(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo callbackInfo) {
         FrameCounter.getInstance().onFrame();
 
         if (!(minecraft.screen instanceof WidgetScreen widgetScreen)) {

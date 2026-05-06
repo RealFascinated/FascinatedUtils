@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.modules.impl;
+﻿package cc.fascinated.fascinatedutils.systems.modules.impl;
 
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.mixin.GameRendererPostProcessorAccessorMixin;
@@ -14,7 +14,7 @@ public class VibrancyModule extends Module {
     /**
      * GameRenderer post-processor id for this module (shell blur restore must skip this when the module is off).
      */
-    public static final Identifier POST_EFFECT_ID = Identifier.fromNamespaceAndPath("fascinatedutils", "vibrancy");
+    public static final Identifier POST_EFFECT_ID = Identifier.fromNamespaceAndPath("alumite", "vibrancy");
 
     public VibrancyModule() {
         super("Vibrancy", ModuleCategory.GENERAL);
@@ -51,8 +51,8 @@ public class VibrancyModule extends Module {
         if (POST_EFFECT_ID.equals(gameRenderer.currentPostEffect())) {
             return;
         }
-        accessor.fascinatedutils$setPostProcessor(POST_EFFECT_ID);
-        accessor.fascinatedutils$setPostProcessorEnabled(true);
+        accessor.alumite$setPostProcessor(POST_EFFECT_ID);
+        accessor.alumite$setPostProcessorEnabled(true);
     }
 
     private void disableVibrancyPostProcessor(@Nullable GameRenderer gameRenderer) {

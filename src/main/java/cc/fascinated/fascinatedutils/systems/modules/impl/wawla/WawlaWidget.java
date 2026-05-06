@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.modules.impl.wawla;
+﻿package cc.fascinated.fascinatedutils.systems.modules.impl.wawla;
 
 import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
@@ -113,11 +113,11 @@ public class WawlaWidget extends HudHostModule {
             return 0f;
         }
         ClientPlayerInteractionManagerAccessorMixin accessor = (ClientPlayerInteractionManagerAccessorMixin) mc.gameMode;
-        BlockPos currentBreakingPos = accessor.fascinatedutils$getCurrentBreakingPos();
+        BlockPos currentBreakingPos = accessor.alumite$getCurrentBreakingPos();
         if (currentBreakingPos == null || !currentBreakingPos.equals(blockPos)) {
             return 0f;
         }
-        return Mth.clamp(accessor.fascinatedutils$getCurrentBreakingProgress(), 0f, 1f);
+        return Mth.clamp(accessor.alumite$getCurrentBreakingProgress(), 0f, 1f);
     }
 
     public @Nullable CrosshairTarget resolveCrosshairTarget(boolean editorMode) {

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.music;
+﻿package cc.fascinated.fascinatedutils.mixin.music;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.music.MusicModule;
@@ -27,7 +27,7 @@ public class MusicManagerMixin {
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
-    private void fascinatedutils$clearDisconnectRetainWhenInWorld(CallbackInfo callbackInfo) {
+    private void alumite$clearDisconnectRetainWhenInWorld(CallbackInfo callbackInfo) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null) {
             return;
@@ -40,7 +40,7 @@ public class MusicManagerMixin {
     }
 
     @Inject(method = "stopPlaying()V", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$retainMusicSkipStopPlaying(CallbackInfo callbackInfo) {
+    private void alumite$retainMusicSkipStopPlaying(CallbackInfo callbackInfo) {
         Minecraft minecraft = Minecraft.getInstance();
         withMusicModule(module -> {
             if (!module.shouldSuppressStoppingCurrentMusicTrack(minecraft)) {
@@ -54,7 +54,7 @@ public class MusicManagerMixin {
     }
 
     @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundManager;stop(Lnet/minecraft/client/resources/sounds/SoundInstance;)V"))
-    private void fascinatedutils$retainBackgroundMusicDuringDisconnect(SoundManager soundManager, SoundInstance soundInstance, Operation<Void> original) {
+    private void alumite$retainBackgroundMusicDuringDisconnect(SoundManager soundManager, SoundInstance soundInstance, Operation<Void> original) {
         Minecraft minecraft = Minecraft.getInstance();
         ModuleRegistry.INSTANCE.getModule(MusicModule.class).ifPresentOrElse(module -> {
             if (!module.shouldSuppressStoppingCurrentMusicTrack(minecraft)) {

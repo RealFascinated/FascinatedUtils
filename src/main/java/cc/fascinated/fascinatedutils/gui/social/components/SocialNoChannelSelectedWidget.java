@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.social.components;
+﻿package cc.fascinated.fascinatedutils.gui.social.components;
 
 import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -17,7 +17,7 @@ public class SocialNoChannelSelectedWidget {
 
             @Override
             protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-                String message = Component.translatable("fascinatedutils.social.dm.select_channel").getString();
+                String message = Component.translatable("alumite.social.dm.select_channel").getString();
                 graphics.drawCenteredText(message, x() + w() / 2f, y() + (h() - graphics.getFontCapHeight()) / 2f, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
             }
         };

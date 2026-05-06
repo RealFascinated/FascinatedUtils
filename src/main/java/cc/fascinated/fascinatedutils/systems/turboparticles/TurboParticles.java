@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.turboparticles;
+﻿package cc.fascinated.fascinatedutils.systems.turboparticles;
 
 import cc.fascinated.fascinatedutils.common.culling.CullCounters;
 import cc.fascinated.fascinatedutils.common.culling.OcclusionProvider;
@@ -33,7 +33,7 @@ public class TurboParticles {
     }
 
     @EventHandler
-    private void fascinatedutils$onClientStarted(ClientStartedEvent event) {
+    private void alumite$onClientStarted(ClientStartedEvent event) {
         previousEnabledState = SettingsRegistry.INSTANCE.getSettings().getTurboParticles().isEnabled();
         if (previousEnabledState) {
             startParticleCullThread();
@@ -41,7 +41,7 @@ public class TurboParticles {
     }
 
     @EventHandler
-    private void fascinatedutils$onClientTick(ClientTickEvent event) {
+    private void alumite$onClientTick(ClientTickEvent event) {
         boolean enabled = SettingsRegistry.INSTANCE.getSettings().getTurboParticles().isEnabled();
         if (enabled == previousEnabledState) {
             return;
@@ -57,7 +57,7 @@ public class TurboParticles {
     }
 
     @EventHandler
-    private void fascinatedutils$onClientStopping(ClientStoppingEvent event) {
+    private void alumite$onClientStopping(ClientStoppingEvent event) {
         stopParticleCullThread();
     }
 

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.turboentities;
+﻿package cc.fascinated.fascinatedutils.systems.turboentities;
 
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
@@ -164,23 +164,23 @@ public class EntitiesCullTask implements Runnable {
             considered++;
 
             if (Minecraft.getInstance().shouldEntityAppearGlowing(entity) || (Minecraft.getInstance().player != null && Minecraft.getInstance().player.getVehicle() == entity)) {
-                cullable.fascinatedutils$setCulled(false);
+                cullable.alumite$setCulled(false);
             }
             else if (entity.distanceToSqr(lastCameraPos.x, lastCameraPos.y, lastCameraPos.z) > ENTITY_FORCE_CULL_DISTANCE_SQ) {
-                cullable.fascinatedutils$setCulled(true);
+                cullable.alumite$setCulled(true);
             }
             else {
                 EntityRenderer<?, ?> renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
-                if (!(renderer instanceof EntityRendererAccess rendererAccess) || !rendererAccess.fascinatedutils$affectedByCulling(entity)) {
-                    cullable.fascinatedutils$setCulled(false);
+                if (!(renderer instanceof EntityRendererAccess rendererAccess) || !rendererAccess.alumite$affectedByCulling(entity)) {
+                    cullable.alumite$setCulled(false);
                 }
                 else {
                     AABB box = getCullingBox(entity, rendererAccess);
-                    cullable.fascinatedutils$setCulled(!isVisible(box));
+                    cullable.alumite$setCulled(!isVisible(box));
                 }
             }
 
-            if (cullable.fascinatedutils$isCulled()) {
+            if (cullable.alumite$isCulled()) {
                 culled++;
             }
         }
@@ -201,19 +201,19 @@ public class EntitiesCullTask implements Runnable {
 
                 BlockPos pos = blockEntity.getBlockPos();
                 if (Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(blockEntity) == null) {
-                    cullable.fascinatedutils$setCulled(false);
+                    cullable.alumite$setCulled(false);
                     continue;
                 }
                 else if (pos.distToCenterSqr(lastCameraPos) > BLOCK_ENTITY_FORCE_CULL_DISTANCE_SQ) {
-                    cullable.fascinatedutils$setCulled(true);
+                    cullable.alumite$setCulled(true);
                 }
                 else {
                     AABB box = BlockEntityCullBounds.forCull(blockEntity, pos);
-                    cullable.fascinatedutils$setCulled(!isVisible(box));
+                    cullable.alumite$setCulled(!isVisible(box));
                 }
 
                 considered++;
-                if (cullable.fascinatedutils$isCulled()) {
+                if (cullable.alumite$isCulled()) {
                     culled++;
                 }
             } catch (Exception ignored) {
@@ -246,6 +246,6 @@ public class EntitiesCullTask implements Runnable {
         if (entity instanceof ArmorStand armorStand && armorStand.isMarker()) {
             return EntityType.ARMOR_STAND.getDimensions().makeBoundingBox(entity.position());
         }
-        return rendererAccess.fascinatedutils$getCullingBox(entity);
+        return rendererAccess.alumite$getCullingBox(entity);
     }
 }

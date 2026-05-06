@@ -50,6 +50,7 @@
     "tab.PlayerTabOverlayMixin",
     "timechanger.ClientClockManagerMixin",
     "title.GuiMixin",
+    "titlemenu.TitleScreenMixin",
     "turboentities.BlockEntityRenderDispatcherMixin",
     "turboentities.ClientLevelTickMixin",
     "turboentities.CullableMixin",

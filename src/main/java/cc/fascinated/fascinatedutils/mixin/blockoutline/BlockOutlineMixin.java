@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.blockoutline;
+﻿package cc.fascinated.fascinatedutils.mixin.blockoutline;
 
 import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
@@ -34,17 +34,17 @@ public class BlockOutlineMixin {
     }
 
     @ModifyArg(method = "renderBlockOutline", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderHitOutline(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;DDDLnet/minecraft/client/renderer/state/level/BlockOutlineRenderState;IF)V", ordinal = 0), index = 6)
-    private int fascinatedutils$modifyOutlineColorFirst(int color) {
+    private int alumite$modifyOutlineColorFirst(int color) {
         return resolveColor(color);
     }
 
     @ModifyArg(method = "renderBlockOutline", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderHitOutline(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;DDDLnet/minecraft/client/renderer/state/level/BlockOutlineRenderState;IF)V", ordinal = 1), index = 6)
-    private int fascinatedutils$modifyOutlineColorSecond(int color) {
+    private int alumite$modifyOutlineColorSecond(int color) {
         return resolveColor(color);
     }
 
     @Inject(method = "renderBlockOutline", at = @At("TAIL"))
-    private void fascinatedutils$renderFullBlock(MultiBufferSource.BufferSource bufferSource, PoseStack poseStack, boolean isTranslucent, LevelRenderState levelRenderState, CallbackInfo ci) {
+    private void alumite$renderFullBlock(MultiBufferSource.BufferSource bufferSource, PoseStack poseStack, boolean isTranslucent, LevelRenderState levelRenderState, CallbackInfo ci) {
         Optional<BlockOutlineModule> opt = ModuleRegistry.INSTANCE.getModule(BlockOutlineModule.class);
         if (opt.isEmpty() || !opt.get().isEnabled() || !opt.get().getShowBlockColor().isEnabled()) {
             return;

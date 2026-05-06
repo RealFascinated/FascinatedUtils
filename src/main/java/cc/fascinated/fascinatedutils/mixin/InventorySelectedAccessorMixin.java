@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin;
+﻿package cc.fascinated.fascinatedutils.mixin;
 
 import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface InventorySelectedAccessorMixin {
 
     @Accessor("selected")
-    int fascinatedutils$getSelected();
+    int alumite$getSelected();
 
     @Accessor("selected")
-    void fascinatedutils$setSelected(int selected);
+    void alumite$setSelected(int selected);
 }

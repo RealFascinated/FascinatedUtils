@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.social.components;
+﻿package cc.fascinated.fascinatedutils.gui.social.components;
 
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.Errors;
@@ -8,9 +8,9 @@ class SocialErrors {
 
     static String message(Errors error) {
         if (error == null) {
-            return Component.translatable("fascinatedutils.social.error.generic").getString();
+            return Component.translatable("alumite.social.error.generic").getString();
         }
-        String translationKey = "fascinatedutils.social.error." + error.getCode();
+        String translationKey = "alumite.social.error." + error.getCode();
         String translated = Component.translatable(translationKey).getString();
         if (translated.equals(translationKey)) {
             return error.getDisplayText();
@@ -27,6 +27,6 @@ class SocialErrors {
         if (displayText != null && !displayText.isBlank()) {
             return displayText;
         }
-        return Component.translatable("fascinatedutils.social.error.generic").getString();
+        return Component.translatable("alumite.social.error.generic").getString();
     }
 }

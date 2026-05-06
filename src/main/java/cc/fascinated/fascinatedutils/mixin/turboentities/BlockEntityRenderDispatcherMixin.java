@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.turboentities;
+﻿package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
@@ -20,7 +20,7 @@ public abstract class BlockEntityRenderDispatcherMixin {
     public abstract <E extends BlockEntity> BlockEntityRenderer<? super E, ?> getRenderer(E blockEntity);
 
     @Inject(method = "tryExtractRenderState", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$tryExtractRenderState(BlockEntity blockEntity, float partialTicks, CrumblingOverlay breakProgress, CallbackInfoReturnable<BlockEntityRenderState> info) {
+    private void alumite$tryExtractRenderState(BlockEntity blockEntity, float partialTicks, CrumblingOverlay breakProgress, CallbackInfoReturnable<BlockEntityRenderState> info) {
         if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
             return;
         }
@@ -34,7 +34,7 @@ public abstract class BlockEntityRenderDispatcherMixin {
             return;
         }
 
-        if (cullable.fascinatedutils$isCulled()) {
+        if (cullable.alumite$isCulled()) {
             if (blockEntityRenderer.shouldRenderOffScreen()) {
                 return;
             }
@@ -42,6 +42,6 @@ public abstract class BlockEntityRenderDispatcherMixin {
             return;
         }
 
-        cullable.fascinatedutils$setOutOfCamera(false);
+        cullable.alumite$setOutOfCamera(false);
     }
 }

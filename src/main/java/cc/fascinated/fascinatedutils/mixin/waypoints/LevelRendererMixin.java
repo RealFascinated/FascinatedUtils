@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.waypoints;
+﻿package cc.fascinated.fascinatedutils.mixin.waypoints;
 
 import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
@@ -25,7 +25,7 @@ import java.util.Optional;
 public class LevelRendererMixin {
 
     @Inject(method = "renderBlockOutline", at = @At("RETURN"))
-    private void fascinatedutils$renderWaypointBeams(MultiBufferSource.BufferSource bufferSource, PoseStack poseStack, boolean onlyTranslucentBlocks, LevelRenderState levelRenderState, CallbackInfo ci) {
+    private void alumite$renderWaypointBeams(MultiBufferSource.BufferSource bufferSource, PoseStack poseStack, boolean onlyTranslucentBlocks, LevelRenderState levelRenderState, CallbackInfo ci) {
         if (!onlyTranslucentBlocks) {
             return;
         }

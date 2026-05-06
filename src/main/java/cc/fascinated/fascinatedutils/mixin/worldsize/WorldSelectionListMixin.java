@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.worldsize;
+﻿package cc.fascinated.fascinatedutils.mixin.worldsize;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.WorldSizeModule;
@@ -14,7 +14,7 @@ public class WorldSelectionListMixin {
     private static final int SIZE_EXTRA_WIDTH = 40;
 
     @Inject(method = "getRowWidth", at = @At("RETURN"), cancellable = true)
-    private void fascinatedutils$expandRowWidthForSize(CallbackInfoReturnable<Integer> cir) {
+    private void alumite$expandRowWidthForSize(CallbackInfoReturnable<Integer> cir) {
         WorldSizeModule module = ModuleRegistry.INSTANCE.getModule(WorldSizeModule.class).orElse(null);
         if (module != null && module.isEnabled()) {
             cir.setReturnValue(cir.getReturnValue() + SIZE_EXTRA_WIDTH);

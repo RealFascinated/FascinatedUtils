@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.music;
+﻿package cc.fascinated.fascinatedutils.mixin.music;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.music.MusicModule;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MusicSoundEngineMixin {
 
     @Inject(method = "play", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/sounds/SoundInstance;getSound()Lnet/minecraft/client/resources/sounds/Sound;", shift = At.Shift.AFTER), cancellable = true)
-    private void fascinatedutils$legacyMusicStreams(SoundInstance instance, CallbackInfoReturnable<SoundEngine.PlayResult> cir) {
+    private void alumite$legacyMusicStreams(SoundInstance instance, CallbackInfoReturnable<SoundEngine.PlayResult> cir) {
         ModuleRegistry.INSTANCE.getModule(MusicModule.class).ifPresent(module -> {
             LegacyMusicFeature legacyMusic = module.getLegacyMusicFeature();
             if (legacyMusic.blocksNonLegacyMusicPlayback(instance)) {

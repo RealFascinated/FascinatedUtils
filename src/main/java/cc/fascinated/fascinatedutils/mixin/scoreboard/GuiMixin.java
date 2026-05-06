@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.scoreboard;
+﻿package cc.fascinated.fascinatedutils.mixin.scoreboard;
 
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class GuiMixin {
 
     @Inject(method = "displayScoreboardSidebar", at = @At(value = "HEAD"), cancellable = true)
-    private void fascinatedutils$displayScoreboardSidebar(GuiGraphicsExtractor graphics, Objective objective, CallbackInfo ci) {
+    private void alumite$displayScoreboardSidebar(GuiGraphicsExtractor graphics, Objective objective, CallbackInfo ci) {
         ci.cancel();
     }
 }

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.turboparticles;
+﻿package cc.fascinated.fascinatedutils.mixin.turboparticles;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class SingleQuadParticleMixin {
 
     @Inject(method = "extract", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$earlyCull(CallbackInfo ci) {
+    private void alumite$earlyCull(CallbackInfo ci) {
         if (!SettingsRegistry.INSTANCE.getSettings().getTurboParticles().isEnabled()) {
             return;
         }
@@ -27,7 +27,7 @@ public abstract class SingleQuadParticleMixin {
             return;
         }
 
-        if (cullable.fascinatedutils$isCulled()) {
+        if (cullable.alumite$isCulled()) {
             Client.TURBO_PARTICLES.incrementConsidered(true);
             ci.cancel();
             return;

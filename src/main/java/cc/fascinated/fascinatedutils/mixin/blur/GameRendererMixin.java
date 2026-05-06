@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.blur;
+﻿package cc.fascinated.fascinatedutils.mixin.blur;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.BlurModule;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class GameRendererMixin {
 
     @Inject(method = "extract", at = @At("HEAD"))
-    private void fascinatedutils$blurFrameBegin(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
+    private void alumite$blurFrameBegin(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
         BlurModule module = ModuleRegistry.INSTANCE.getModule(BlurModule.class).orElse(null);
         if (module != null) {
             module.beginFrame();
@@ -21,7 +21,7 @@ public abstract class GameRendererMixin {
     }
 
     @Inject(method = "extract", at = @At("TAIL"))
-    private void fascinatedutils$blurFrameEnd(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
+    private void alumite$blurFrameEnd(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
         BlurModule module = ModuleRegistry.INSTANCE.getModule(BlurModule.class).orElse(null);
         if (module != null) {
             module.advanceAnimation(deltaTracker.getRealtimeDeltaTicks() / 20f);

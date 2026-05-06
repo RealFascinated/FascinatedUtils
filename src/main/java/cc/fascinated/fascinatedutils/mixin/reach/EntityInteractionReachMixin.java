@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.reach;
+﻿package cc.fascinated.fascinatedutils.mixin.reach;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.reach.ReachWidget;
@@ -21,12 +21,12 @@ import java.util.Optional;
 public class EntityInteractionReachMixin {
 
     @Inject(method = "attack", at = @At("HEAD"))
-    private void fascinatedutils$recordAttackReach(Player player, Entity entity, CallbackInfo ci) {
+    private void alumite$recordAttackReach(Player player, Entity entity, CallbackInfo ci) {
         recordReach(player, entity);
     }
 
     @Inject(method = "interact", at = @At("HEAD"))
-    private void fascinatedutils$recordInteractReach(Player player, Entity entity, EntityHitResult hitResult, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
+    private void alumite$recordInteractReach(Player player, Entity entity, EntityHitResult hitResult, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
         recordReach(player, entity);
     }
 

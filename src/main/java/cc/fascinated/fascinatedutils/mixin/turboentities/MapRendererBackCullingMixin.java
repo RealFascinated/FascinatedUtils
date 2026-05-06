@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.turboentities;
+﻿package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MapRendererBackCullingMixin {
 
     @Inject(method = "render*", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$cullBack(MapRenderState mapRenderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, boolean showOnlyFrame, int lightCoords, CallbackInfo info) {
+    private void alumite$cullBack(MapRenderState mapRenderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, boolean showOnlyFrame, int lightCoords, CallbackInfo info) {
         if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
             return;
         }

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin;
+﻿package cc.fascinated.fascinatedutils.mixin;
 
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.mouse.MouseClickEvent;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MouseHandlerMixin {
 
     @Inject(method = "onButton", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils(long handle, MouseButtonInfo rawButtonInfo, int action, CallbackInfo callbackInfo) {
+    private void alumite(long handle, MouseButtonInfo rawButtonInfo, int action, CallbackInfo callbackInfo) {
         long clientWindowHandle = Minecraft.getInstance().getWindow().handle();
         if (handle != clientWindowHandle) {
             return;
@@ -28,7 +28,7 @@ public abstract class MouseHandlerMixin {
     }
 
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils(long handle, double xoffset, double yoffset, CallbackInfo callbackInfo) {
+    private void alumite(long handle, double xoffset, double yoffset, CallbackInfo callbackInfo) {
         long clientWindowHandle = Minecraft.getInstance().getWindow().handle();
         if (handle != clientWindowHandle) {
             return;

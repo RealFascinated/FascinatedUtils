@@ -10,7 +10,7 @@ out vec4 fragColor;
 
 void main() {
     vec4 inTexel = texture(DiffuseSampler, texCoord);
-    float vibrancy = 0.4;
+    float vibrancy = 0.35;
 
     float lum = dot(inTexel, coeff);
     vec4 mask = clamp(inTexel - vec4(lum), 0.0, 1.0);

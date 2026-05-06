@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.bossbar;
+﻿package cc.fascinated.fascinatedutils.mixin.bossbar;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.BossHealthOverlay;
@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class BossHealthOverlayMixin {
 
     @Inject(method = "extractRenderState", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$cancelVanillaBossBar(GuiGraphicsExtractor graphics, CallbackInfo ci) {
+    private void alumite$cancelVanillaBossBar(GuiGraphicsExtractor graphics, CallbackInfo ci) {
         ci.cancel();
     }
 }

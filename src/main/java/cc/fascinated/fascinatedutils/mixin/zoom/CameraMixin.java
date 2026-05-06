@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.zoom;
+﻿package cc.fascinated.fascinatedutils.mixin.zoom;
 
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.render.ClientFovEvent;
@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class CameraMixin {
 
     @Inject(method = "calculateFov", at = @At("RETURN"), cancellable = true)
-    private void fascinatedutils$postClientFov(float partialTicks, CallbackInfoReturnable<Float> cir) {
+    private void alumite$postClientFov(float partialTicks, CallbackInfoReturnable<Float> cir) {
         Camera camera = (Camera) (Object) this;
         float vanillaFov = cir.getReturnValue();
         ClientFovEvent event = new ClientFovEvent(camera, partialTicks, true, vanillaFov);

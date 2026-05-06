@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.turboentities;
+﻿package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import net.minecraft.client.particle.Particle;
@@ -11,28 +11,28 @@ import org.spongepowered.asm.mixin.Unique;
 public class CullableMixin implements Cullable {
 
     @Unique
-    private boolean fascinatedutils$culled = false;
+    private boolean alumite$culled = false;
 
     @Unique
-    private boolean fascinatedutils$outOfCamera = false;
+    private boolean alumite$outOfCamera = false;
 
     @Override
-    public void fascinatedutils$setCulled(boolean culled) {
-        this.fascinatedutils$culled = culled;
+    public void alumite$setCulled(boolean culled) {
+        this.alumite$culled = culled;
     }
 
     @Override
-    public boolean fascinatedutils$isCulled() {
-        return fascinatedutils$culled;
+    public boolean alumite$isCulled() {
+        return alumite$culled;
     }
 
     @Override
-    public void fascinatedutils$setOutOfCamera(boolean outOfCamera) {
-        this.fascinatedutils$outOfCamera = outOfCamera;
+    public void alumite$setOutOfCamera(boolean outOfCamera) {
+        this.alumite$outOfCamera = outOfCamera;
     }
 
     @Override
-    public boolean fascinatedutils$isOutOfCamera() {
-        return fascinatedutils$outOfCamera;
+    public boolean alumite$isOutOfCamera() {
+        return alumite$outOfCamera;
     }
 }

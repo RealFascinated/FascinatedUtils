@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.modules.impl;
+﻿package cc.fascinated.fascinatedutils.systems.modules.impl;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
@@ -24,7 +24,7 @@ public class ParticleFilterModule extends Module {
     private void initParticleToggles() {
         for (Identifier identifier : BuiltInRegistries.PARTICLE_TYPE.keySet()) {
             String id = identifier.getNamespace() + ":" + identifier.getPath();
-            BooleanSetting particleToggle = BooleanSetting.builder().categoryDisplayKey("fascinatedutils.setting.category.particle_filter").id(id).displayName(() -> id).tooltip(() -> I18n.get("fascinatedutils.module.particlefilter.toggle.description")).defaultValue(true).build();
+            BooleanSetting particleToggle = BooleanSetting.builder().categoryDisplayKey("alumite.setting.category.particle_filter").id(id).displayName(() -> id).tooltip(() -> I18n.get("alumite.module.particlefilter.toggle.description")).defaultValue(true).build();
             particleToggles.add(particleToggle);
             addSetting(particleToggle);
         }

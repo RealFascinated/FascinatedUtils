@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+﻿package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
@@ -24,18 +24,18 @@ public class FProfileDeletePopupWidget extends FPopupWidget {
         this.onConfirm = onConfirm;
 
         titleLabel = new FLabelWidget();
-        titleLabel.setText(Component.translatable("fascinatedutils.setting.shell.profile_delete_popup_title").getString());
+        titleLabel.setText(Component.translatable("alumite.setting.shell.profile_delete_popup_title").getString());
         titleLabel.setAlignX(Align.START);
         titleLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textPrimary());
 
         messageLabel = new FLabelWidget();
-        messageLabel.setText(Component.translatable("fascinatedutils.setting.shell.profile_delete_popup_message", profileName).getString());
+        messageLabel.setText(Component.translatable("alumite.setting.shell.profile_delete_popup_message", profileName).getString());
         messageLabel.setAlignX(Align.START);
         messageLabel.setOverflow(TextOverflow.WRAP);
         messageLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
 
-        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("fascinatedutils.setting.shell.profile_popup_cancel").getString(), 100f, 1, 2f, 8f, 1f, 8f);
-        deleteButton = new FButtonWidget(onConfirm, () -> Component.translatable("fascinatedutils.setting.shell.profile_delete_button").getString(), 100f, 1, 2f, 8f, 1f, 8f) {
+        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("alumite.setting.shell.profile_popup_cancel").getString(), 100f, 1, 2f, 8f, 1f, 8f);
+        deleteButton = new FButtonWidget(onConfirm, () -> Component.translatable("alumite.setting.shell.profile_delete_button").getString(), 100f, 1, 2f, 8f, 1f, 8f) {
             @Override
             protected int resolveButtonFillColorArgb(boolean hovered) {
                 return hovered ? 0xFF7E2E2E : 0xFF692727;

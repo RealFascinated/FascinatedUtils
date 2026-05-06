@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.inventorytweaks;
+﻿package cc.fascinated.fascinatedutils.mixin.inventorytweaks;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.InventoryTweaksModule;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class InventoryItemBreakMixin {
 
     @Inject(method = "setItem", at = @At("HEAD"))
-    private void fascinatedutils$onSetItem(int slot, ItemStack newStack, CallbackInfo ci) {
+    private void alumite$onSetItem(int slot, ItemStack newStack, CallbackInfo ci) {
         Inventory inventory = (Inventory) (Object) this;
         if (!(inventory.player instanceof LocalPlayer localPlayer)) {
             return;

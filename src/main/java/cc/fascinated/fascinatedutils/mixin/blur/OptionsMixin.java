@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.mixin.blur;
+﻿package cc.fascinated.fascinatedutils.mixin.blur;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.BlurModule;
@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class OptionsMixin {
 
     @Inject(method = "getMenuBackgroundBlurriness", at = @At("HEAD"), cancellable = true)
-    private void fascinatedutils$scaleBlurByProgress(CallbackInfoReturnable<Integer> cir) {
+    private void alumite$scaleBlurByProgress(CallbackInfoReturnable<Integer> cir) {
         BlurModule module = ModuleRegistry.INSTANCE.getModule(BlurModule.class).orElse(null);
         if (module != null && module.isEnabled()) {
             cir.setReturnValue(Math.round(module.getBlurStrength().getValue().floatValue() * module.getProgress()));

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.hud;
+﻿package cc.fascinated.fascinatedutils.systems.hud;
 
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
@@ -114,12 +114,12 @@ public class HUDManager {
     }
 
     @EventHandler
-    private void fascinatedutils$onClientStarted(ClientStartedEvent event) {
+    private void alumite$onClientStarted(ClientStartedEvent event) {
         loadAll();
     }
 
     @EventHandler
-    private void fascinatedutils$onClientStopping(ClientStoppingEvent event) {
+    private void alumite$onClientStopping(ClientStoppingEvent event) {
         saveAll();
     }
 }

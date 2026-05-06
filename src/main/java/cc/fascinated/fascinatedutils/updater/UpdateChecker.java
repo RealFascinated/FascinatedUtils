@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.updater;
+﻿package cc.fascinated.fascinatedutils.updater;
 
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.common.types.GitHubAsset;
@@ -98,7 +98,7 @@ public class UpdateChecker {
             return;
         }
 
-        ModContainer mod = FabricLoader.getInstance().getModContainer("fascinatedutils").orElse(null);
+        ModContainer mod = FabricLoader.getInstance().getModContainer("alumite").orElse(null);
         if (mod == null) {
             return;
         }
