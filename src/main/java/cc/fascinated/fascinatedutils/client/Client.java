@@ -19,7 +19,7 @@ import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.notification.MessageNotifications;
 import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
 import cc.fascinated.fascinatedutils.systems.turboparticles.TurboParticles;
-import cc.fascinated.fascinatedutils.updater.UpdateManager;
+import cc.fascinated.fascinatedutils.updater.Updater;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
@@ -66,7 +66,7 @@ public class Client implements ClientModInitializer {
 
         // Register updater shutdown hook; check and download will run on game exit
         if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            UpdateManager.registerShutdownHook();
+            Updater.INSTANCE.start();
         }
     }
 }

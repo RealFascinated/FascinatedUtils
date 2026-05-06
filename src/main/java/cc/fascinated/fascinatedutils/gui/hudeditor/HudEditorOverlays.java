@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.gui.hudeditor;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.updater.Updater;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
@@ -151,7 +152,12 @@ public class HudEditorOverlays {
      */
     public static void drawVersionLabel(GuiRenderer glRenderer, float canvasWidth, float canvasHeight) {
         String label = Component.translatable("alumite.setting.hud_editor.branding.version_label", Constants.GAME_VERSION, Constants.MOD_VERSION).getString();
-        float posY = canvasHeight - glRenderer.getFontHeight() - CLOSE_EDITOR_MARGIN;
+        float lineHeight = glRenderer.getFontHeight();
+        float posY = canvasHeight - lineHeight - CLOSE_EDITOR_MARGIN;
+        if (Updater.INSTANCE.isHasUpdate()) {
+            String updateLabel = Component.translatable("alumite.setting.hud_editor.branding.update_available").getString();
+            glRenderer.drawText(updateLabel, CLOSE_EDITOR_MARGIN, posY - lineHeight, 0xFF55FF55, false, false);
+        }
         glRenderer.drawText(label, CLOSE_EDITOR_MARGIN, posY, 0x80FFFFFF, false, false);
     }
 

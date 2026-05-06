@@ -11,6 +11,7 @@
   "alumite.setting.hud_editor.branding.title": "Alumite",
   "alumite.setting.hud_editor.branding.mods_button": "Mods",
   "alumite.setting.hud_editor.branding.version_label": "Alumite %s (%s)",
+  "alumite.setting.hud_editor.branding.update_available": "Update Available",
   "alumite.setting.shell.title": "Alumite",
   "alumite.setting.shell.empty_modules": "No modules available.",
   "alumite.setting.shell.no_settings": "No settings for this module.",
@@ -430,7 +431,7 @@
   "alumite.wawla.sweet_berry.some": "Berries: Some",
   "alumite.wawla.sweet_berry.full": "Berries: Full",
   "alumite.wawla.target.signal": "Signal: %s/15",
-  "alumite.social.user_status.in_singleplayer": "In Singleplayer",
-  "alumite.social.user_status.in_server": "In Server",
+  "alumite.social.user_status.in_singleplayer": "Playing Singleplayer",
+  "alumite.social.user_status.in_server": "Playing Multiplayer",
   "alumite.social.user_status.in_main_menu": "In Main Menu"
 }
