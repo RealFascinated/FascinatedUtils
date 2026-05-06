@@ -9,7 +9,8 @@ import cc.fascinated.fascinatedutils.api.channel.GroupChannel;
 import cc.fascinated.fascinatedutils.api.channel.LastMessagePreview;
 import cc.fascinated.fascinatedutils.api.friend.Friend;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
-import cc.fascinated.fascinatedutils.api.user.Presence;
+import cc.fascinated.fascinatedutils.api.user.Activity;
+import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.common.TimeUtils;
 import cc.fascinated.fascinatedutils.gui.core.*;
@@ -35,16 +36,16 @@ public class SocialMainWorkspaceComponent extends FWidget {
     private static final float BTN_H = 20f;
     private static final float ADD_BTN_W = 36f;
     private static final float TAB_H = 26f;
-    private static final float PRESENCE_PICKER_H = 24f;
-    private static final float PRESENCE_PICKER_DOT = 8f;
-    private static final float PRESENCE_MENU_MIN_W = 176f;
-    private static final float PRESENCE_MENU_MAX_W = 220f;
-    private static final float PRESENCE_MENU_PAD = 6f;
-    private static final float PRESENCE_MENU_ROW_H = 30f;
-    private static final float PRESENCE_MENU_ROW_GAP = 4f;
+    private static final float USER_STATUS_PICKER_H = 24f;
+    private static final float USER_STATUS_PICKER_DOT = 8f;
+    private static final float USER_STATUS_MENU_MIN_W = 176f;
+    private static final float USER_STATUS_MENU_MAX_W = 220f;
+    private static final float USER_STATUS_MENU_PAD = 6f;
+    private static final float USER_STATUS_MENU_ROW_H = 30f;
+    private static final float USER_STATUS_MENU_ROW_GAP = 4f;
     private static final float CHAT_HEADER_AVATAR = 22f;
 
-    private static final Presence[] SELECTABLE_PREFERRED_PRESENCES = {Presence.ONLINE, Presence.AWAY, Presence.DO_NOT_DISTURB, Presence.INVISIBLE};
+    private static final UserStatus[] SELECTABLE_PREFERRED_USER_STATUSES = {UserStatus.ONLINE, UserStatus.AWAY, UserStatus.DO_NOT_DISTURB, UserStatus.INVISIBLE};
     private static String lastOpenedChannelId;
     // Node registry — preserves FState across re-renders
     private final FNodeRegistry nodes = new FNodeRegistry();
@@ -65,8 +66,8 @@ public class SocialMainWorkspaceComponent extends FWidget {
     private FState<Boolean> sendMessagePending;
     private FState<Friend> pendingRemoveFriend;
     private FState<PendingFriendRequest> pendingCancelRequest;
-    private FState<Boolean> preferredPresenceMenuOpen;
-    private FState<Boolean> preferredPresenceUpdatePending;
+    private FState<Boolean> preferredUserStatusMenuOpen;
+    private FState<Boolean> preferredUserStatusUpdatePending;
     private FState<Float> scrollYRef;
     private FState<Float> messageScrollYRef;
 
@@ -75,10 +76,10 @@ public class SocialMainWorkspaceComponent extends FWidget {
     private float panelY;
     private float panelW;
     private float panelH;
-    private float preferredPresenceButtonX;
-    private float preferredPresenceButtonY;
-    private float preferredPresenceButtonW;
-    private float preferredPresenceButtonH;
+    private float preferredUserStatusButtonX;
+    private float preferredUserStatusButtonY;
+    private float preferredUserStatusButtonW;
+    private float preferredUserStatusButtonH;
     private FState<User> userContextMenuUser;
     private FState<Float> userContextMenuX;
     private FState<Float> userContextMenuY;
@@ -113,15 +114,15 @@ public class SocialMainWorkspaceComponent extends FWidget {
         root.render(graphics, frame, deltaSeconds);
     }
 
-    /** Returns whether the preferred presence dropdown is currently open. */
-    public boolean isPresenceMenuOpen() {
-        return preferredPresenceMenuOpen != null && preferredPresenceMenuOpen.get();
+    /** Returns whether the preferred user status dropdown is currently open. */
+    public boolean isUserStatusMenuOpen() {
+        return preferredUserStatusMenuOpen != null && preferredUserStatusMenuOpen.get();
     }
 
-    /** Closes the preferred presence dropdown. */
-    public void closePresenceMenu() {
-        if (preferredPresenceMenuOpen != null) {
-            preferredPresenceMenuOpen.set(false);
+    /** Closes the preferred user status dropdown. */
+    public void closeUserStatusMenu() {
+        if (preferredUserStatusMenuOpen != null) {
+            preferredUserStatusMenuOpen.set(false);
         }
     }
 
@@ -138,8 +139,8 @@ public class SocialMainWorkspaceComponent extends FWidget {
         sendMessagePending = ctx.useState(false);
         pendingRemoveFriend = ctx.useState(null);
         pendingCancelRequest = ctx.useState(null);
-        preferredPresenceMenuOpen = ctx.useState(false);
-        preferredPresenceUpdatePending = ctx.useState(false);
+        preferredUserStatusMenuOpen = ctx.useState(false);
+        preferredUserStatusUpdatePending = ctx.useState(false);
         scrollYRef = ctx.useState(0f);
         messageScrollYRef = ctx.useState(SocialChatMessagesHandler.MESSAGE_SCROLL_ANCHOR_BOTTOM);
         userContextMenuUser = ctx.useState(null);
@@ -166,7 +167,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 setBounds(lx, ly, lw, lh);
 
                 if (pendingRemoveFriend.get() != null || pendingCancelRequest.get() != null || chatMessages.hasActiveOverlay()) {
-                    preferredPresenceMenuOpen.setQuiet(false);
+                    preferredUserStatusMenuOpen.setQuiet(false);
                     chatMessages.suppressContextualOverlays();
                     userContextMenuUser.setQuiet(null);
                 }
@@ -230,8 +231,8 @@ public class SocialMainWorkspaceComponent extends FWidget {
                     overlay.layout(measure, lx, ly, lw, lh);
                 }
 
-                if (preferredPresenceMenuOpen.get()) {
-                    FWidget overlay = buildPreferredPresenceMenuOverlay();
+                if (preferredUserStatusMenuOpen.get()) {
+                    FWidget overlay = buildPreferredUserStatusMenuOverlay();
                     addChild(overlay);
                     overlay.layout(measure, lx, ly, lw, lh);
                 }
@@ -250,27 +251,18 @@ public class SocialMainWorkspaceComponent extends FWidget {
         };
     }
 
-    private static String presenceStatusLine(User user) {
-        Presence presence = user == null || user.presence() == null ? Presence.OFFLINE : user.presence();
-        if (presence == Presence.OFFLINE) {
-            if (user != null && user.lastSeen() != null) {
-                long lastSeenTime = user.lastSeen().getTime();
-                return Component.translatable("alumite.social.presence.offline").getString() + " · " + TimeUtils.timeAgo(lastSeenTime, System.currentTimeMillis() - lastSeenTime < 61_000 ? 1 : 2);
-            }
-            return Component.translatable("alumite.social.presence.offline").getString();
+    private static String userStatusLine(User user) {
+        UserStatus userStatus = user == null || user.userStatus() == null ? UserStatus.OFFLINE : user.userStatus();
+        if (userStatus == UserStatus.OFFLINE && user != null && user.lastSeen() != null) {
+            long lastSeenTime = user.lastSeen().getTime();
+            return userStatus.label() + " · " + TimeUtils.timeAgo(lastSeenTime, System.currentTimeMillis() - lastSeenTime < 61_000 ? 1 : 2);
         }
-        return preferredPresenceLabel(presence);
+        if (user != null && user.activity() != null && userStatus != UserStatus.OFFLINE) {
+            return userStatus.label() + " · " + user.activity().label();
+        }
+        return userStatus.label();
     }
 
-    private static String preferredPresenceLabel(Presence presence) {
-        return switch (presence) {
-            case ONLINE -> Component.translatable("alumite.social.presence.online").getString();
-            case AWAY -> Component.translatable("alumite.social.presence.away").getString();
-            case DO_NOT_DISTURB -> Component.translatable("alumite.social.presence.do_not_disturb").getString();
-            case INVISIBLE -> Component.translatable("alumite.social.presence.invisible").getString();
-            case OFFLINE -> Component.translatable("alumite.social.presence.offline").getString();
-        };
-    }
 
     private FWidget buildPanelContent(float panelW) {
         FRectWidget panelBg = new FRectWidget();
@@ -315,20 +307,20 @@ public class SocialMainWorkspaceComponent extends FWidget {
 
     private FWidget buildHeader() {
         FWidget compactHeader = SocialHeaderWidget.build(new SocialHeaderWidget.Props(this::handleAddFriendFromHeader, this::handleNewChatAction, () -> searchOpen.set(!searchOpen.get()), searchOpen::get));
-        FWidget preferredPresencePicker = buildPreferredPresencePicker();
+        FWidget preferredUserStatusPicker = buildPreferredUserStatusPicker();
         FOutlinedTextInputWidget searchInput = chatSearchInput;
 
         return new FWidget() {
             {
                 addChild(compactHeader);
                 addChild(searchInput);
-                addChild(preferredPresencePicker);
+                addChild(preferredUserStatusPicker);
             }
 
             @Override
             public float intrinsicHeightForColumn(UIRenderer measure, float widthBudget) {
                 float searchH = searchOpen.get() ? searchInput.intrinsicHeightForColumn(measure, widthBudget) + 6f : 0f;
-                return 24f + 6f + searchH + PRESENCE_PICKER_H;
+                return 24f + 6f + searchH + USER_STATUS_PICKER_H;
             }
 
             @Override
@@ -346,42 +338,42 @@ public class SocialMainWorkspaceComponent extends FWidget {
                     searchInput.setVisible(false);
                     searchInput.layout(measure, lx, cursorY, lw, 0f);
                 }
-                preferredPresencePicker.layout(measure, lx, cursorY, lw, PRESENCE_PICKER_H);
+                preferredUserStatusPicker.layout(measure, lx, cursorY, lw, USER_STATUS_PICKER_H);
             }
         };
     }
 
-    private FWidget buildPreferredPresencePicker() {
+    private FWidget buildPreferredUserStatusPicker() {
         return new FWidget() {
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, lw, lh);
-                preferredPresenceButtonX = lx;
-                preferredPresenceButtonY = ly;
-                preferredPresenceButtonW = lw;
-                preferredPresenceButtonH = lh;
+                preferredUserStatusButtonX = lx;
+                preferredUserStatusButtonY = ly;
+                preferredUserStatusButtonW = lw;
+                preferredUserStatusButtonH = lh;
             }
 
             @Override
             protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
                 float mouseX = frame.pointerX();
                 float mouseY = frame.pointerY();
-                boolean interactive = !preferredPresenceUpdatePending.get();
-                int fillColor = preferredPresenceMenuOpen.get() ? 0xFF2B3142 : containsPoint(mouseX, mouseY) && interactive ? 0xFF242A38 : 0xFF202531;
-                int borderColor = preferredPresenceMenuOpen.get() ? 0xFF6E7897 : containsPoint(mouseX, mouseY) && interactive ? 0xFF59617A : 0xFF454A60;
+                boolean interactive = !preferredUserStatusUpdatePending.get();
+                int fillColor = preferredUserStatusMenuOpen.get() ? 0xFF2B3142 : containsPoint(mouseX, mouseY) && interactive ? 0xFF242A38 : 0xFF202531;
+                int borderColor = preferredUserStatusMenuOpen.get() ? 0xFF6E7897 : containsPoint(mouseX, mouseY) && interactive ? 0xFF59617A : 0xFF454A60;
                 graphics.fillRoundedRectFrame(x(), y(), w(), h(), 6f, borderColor, fillColor, 1f, 1f, RectCornerRoundMask.ALL);
 
-                Presence presence = Alumite.INSTANCE.users().selfUser().preferredPresence();
+                UserStatus userStatus = Alumite.INSTANCE.users().selfUser().preferredUserStatus();
                 float dotX = x() + 8f;
-                float dotY = y() + (h() - PRESENCE_PICKER_DOT) / 2f;
-                graphics.fillRoundedRect(dotX, dotY, PRESENCE_PICKER_DOT, PRESENCE_PICKER_DOT, PRESENCE_PICKER_DOT / 2f, presence.color(), RectCornerRoundMask.ALL);
+                float dotY = y() + (h() - USER_STATUS_PICKER_DOT) / 2f;
+                graphics.fillRoundedRect(dotX, dotY, USER_STATUS_PICKER_DOT, USER_STATUS_PICKER_DOT, USER_STATUS_PICKER_DOT / 2f, userStatus.color(), RectCornerRoundMask.ALL);
 
-                String label = preferredPresenceUpdatePending.get() ? Component.translatable("alumite.social.presence.updating").getString() : preferredPresenceLabel(presence);
+                String label = preferredUserStatusUpdatePending.get() ? Component.translatable("alumite.social.user_status.updating").getString() : userStatus.label();
                 float textY = y() + (h() - graphics.getFontCapHeight()) / 2f;
-                graphics.drawText(label, dotX + PRESENCE_PICKER_DOT + 6f, textY, preferredPresenceUpdatePending.get() ? FascinatedGuiTheme.INSTANCE.textMuted() : FascinatedGuiTheme.INSTANCE.textPrimary(), false, false);
+                graphics.drawText(label, dotX + USER_STATUS_PICKER_DOT + 6f, textY, preferredUserStatusUpdatePending.get() ? FascinatedGuiTheme.INSTANCE.textMuted() : FascinatedGuiTheme.INSTANCE.textPrimary(), false, false);
 
-                if (!preferredPresenceUpdatePending.get()) {
-                    graphics.drawText(preferredPresenceMenuOpen.get() ? "\u25B4" : "\u25BE", x() + w() - 12f, textY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                if (!preferredUserStatusUpdatePending.get()) {
+                    graphics.drawText(preferredUserStatusMenuOpen.get() ? "\u25B4" : "\u25BE", x() + w() - 12f, textY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
                 }
             }
 
@@ -392,7 +384,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
 
             @Override
             public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
-                return preferredPresenceUpdatePending.get() ? UiPointerCursor.DEFAULT : UiPointerCursor.HAND;
+                return preferredUserStatusUpdatePending.get() ? UiPointerCursor.DEFAULT : UiPointerCursor.HAND;
             }
 
             @Override
@@ -400,17 +392,17 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 if (button != 0) {
                     return false;
                 }
-                if (preferredPresenceUpdatePending.get()) {
+                if (preferredUserStatusUpdatePending.get()) {
                     return true;
                 }
-                preferredPresenceMenuOpen.set(!preferredPresenceMenuOpen.get());
+                preferredUserStatusMenuOpen.set(!preferredUserStatusMenuOpen.get());
                 return true;
             }
         };
     }
 
-    private FWidget buildPreferredPresenceMenuOverlay() {
-        FWidget menu = buildPreferredPresenceMenu();
+    private FWidget buildPreferredUserStatusMenuOverlay() {
+        FWidget menu = buildPreferredUserStatusMenu();
         return new FWidget() {
             {
                 addChild(menu);
@@ -419,9 +411,9 @@ public class SocialMainWorkspaceComponent extends FWidget {
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, lw, lh);
-                float menuWidth = preferredPresenceMenuWidth(measure);
-                float menuHeight = preferredPresenceMenuHeight();
-                float menuX = preferredPresenceButtonX + preferredPresenceButtonW - menuWidth;
+                float menuWidth = preferredUserStatusMenuWidth(measure);
+                float menuHeight = preferredUserStatusMenuHeight();
+                float menuX = preferredUserStatusButtonX + preferredUserStatusButtonW - menuWidth;
                 float minMenuX = panelX + PAD;
                 float maxMenuX = panelX + panelW - PAD - menuWidth;
                 if (maxMenuX < minMenuX) {
@@ -430,7 +422,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 else {
                     menuX = Math.max(minMenuX, Math.min(menuX, maxMenuX));
                 }
-                float menuY = preferredPresenceButtonY + preferredPresenceButtonH + 4f;
+                float menuY = preferredUserStatusButtonY + preferredUserStatusButtonH + 4f;
                 float maxMenuY = panelY + panelH - PAD - menuHeight;
                 if (menuY > maxMenuY) {
                     menuY = Math.max(panelY + PAD, maxMenuY);
@@ -458,7 +450,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
                     return false;
                 }
                 if (!menu.containsPoint(pointerX, pointerY)) {
-                    preferredPresenceMenuOpen.set(false);
+                    preferredUserStatusMenuOpen.set(false);
                     return true;
                 }
                 return false;
@@ -466,7 +458,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
         };
     }
 
-    private FWidget buildPreferredPresenceMenu() {
+    private FWidget buildPreferredUserStatusMenu() {
         return new FWidget() {
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
@@ -480,28 +472,28 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 graphics.fillRoundedRectFrame(x(), y(), w(), h(), UITheme.CORNER_RADIUS_MD, 0xFF454A60, 0xFF171B24, 1f, 1f, RectCornerRoundMask.ALL);
 
                 float checkmarkWidth = graphics.measureTextWidth("\u2713", false);
-                float rowY = y() + PRESENCE_MENU_PAD;
-                Presence currentPresence = Alumite.INSTANCE.users().selfUser().preferredPresence();
-                for (Presence presence : SELECTABLE_PREFERRED_PRESENCES) {
-                    boolean rowHovered = mouseX >= x() + 4f && mouseX < x() + w() - 4f && mouseY >= rowY && mouseY < rowY + PRESENCE_MENU_ROW_H;
-                    boolean selected = currentPresence == presence;
+                float rowY = y() + USER_STATUS_MENU_PAD;
+                UserStatus currentUserStatus = Alumite.INSTANCE.users().selfUser().preferredUserStatus();
+                for (UserStatus userStatus : SELECTABLE_PREFERRED_USER_STATUSES) {
+                    boolean rowHovered = mouseX >= x() + 4f && mouseX < x() + w() - 4f && mouseY >= rowY && mouseY < rowY + USER_STATUS_MENU_ROW_H;
+                    boolean selected = currentUserStatus == userStatus;
                     int rowColor = selected ? 0x334960C8 : rowHovered ? 0x22FFFFFF : 0x00000000;
                     if (rowColor != 0) {
-                        graphics.fillRoundedRect(x() + 4f, rowY, w() - 8f, PRESENCE_MENU_ROW_H, UITheme.CORNER_RADIUS_SM, rowColor, RectCornerRoundMask.ALL);
+                        graphics.fillRoundedRect(x() + 4f, rowY, w() - 8f, USER_STATUS_MENU_ROW_H, UITheme.CORNER_RADIUS_SM, rowColor, RectCornerRoundMask.ALL);
                     }
 
                     float dotX = x() + 12f;
-                    float dotY = rowY + (PRESENCE_MENU_ROW_H - PRESENCE_PICKER_DOT) * 0.5f;
-                    graphics.fillRoundedRect(dotX, dotY, PRESENCE_PICKER_DOT, PRESENCE_PICKER_DOT, PRESENCE_PICKER_DOT / 2f, presence.color(), RectCornerRoundMask.ALL);
+                    float dotY = rowY + (USER_STATUS_MENU_ROW_H - USER_STATUS_PICKER_DOT) * 0.5f;
+                    graphics.fillRoundedRect(dotX, dotY, USER_STATUS_PICKER_DOT, USER_STATUS_PICKER_DOT, USER_STATUS_PICKER_DOT / 2f, userStatus.color(), RectCornerRoundMask.ALL);
 
-                    float labelX = dotX + PRESENCE_PICKER_DOT + 8f;
-                    float textY = rowY + (PRESENCE_MENU_ROW_H - graphics.getFontCapHeight()) * 0.5f;
-                    graphics.drawText(preferredPresenceLabel(presence), labelX, textY, FascinatedGuiTheme.INSTANCE.textPrimary(), false, false);
+                    float labelX = dotX + USER_STATUS_PICKER_DOT + 8f;
+                    float textY = rowY + (USER_STATUS_MENU_ROW_H - graphics.getFontCapHeight()) * 0.5f;
+                    graphics.drawText(userStatus.label(), labelX, textY, FascinatedGuiTheme.INSTANCE.textPrimary(), false, false);
 
                     if (selected) {
-                        graphics.drawText("\u2713", x() + w() - 12f - checkmarkWidth, rowY + (PRESENCE_MENU_ROW_H - graphics.getFontCapHeight()) * 0.5f, 0xFF9DB4FF, false, false);
+                        graphics.drawText("\u2713", x() + w() - 12f - checkmarkWidth, rowY + (USER_STATUS_MENU_ROW_H - graphics.getFontCapHeight()) * 0.5f, 0xFF9DB4FF, false, false);
                     }
-                    rowY += PRESENCE_MENU_ROW_H + PRESENCE_MENU_ROW_GAP;
+                    rowY += USER_STATUS_MENU_ROW_H + USER_STATUS_MENU_ROW_GAP;
                 }
             }
 
@@ -512,7 +504,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
 
             @Override
             public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
-                return pointerX >= x() + 4f && pointerX < x() + w() - 4f && pointerY >= y() + PRESENCE_MENU_PAD && pointerY < y() + h() - PRESENCE_MENU_PAD ? UiPointerCursor.HAND : UiPointerCursor.DEFAULT;
+                return pointerX >= x() + 4f && pointerX < x() + w() - 4f && pointerY >= y() + USER_STATUS_MENU_PAD && pointerY < y() + h() - USER_STATUS_MENU_PAD ? UiPointerCursor.HAND : UiPointerCursor.DEFAULT;
             }
 
             @Override
@@ -521,13 +513,13 @@ public class SocialMainWorkspaceComponent extends FWidget {
                     return false;
                 }
 
-                float rowY = y() + PRESENCE_MENU_PAD;
-                for (Presence presence : SELECTABLE_PREFERRED_PRESENCES) {
-                    if (pointerX >= x() + 4f && pointerX < x() + w() - 4f && pointerY >= rowY && pointerY < rowY + PRESENCE_MENU_ROW_H) {
-                        updatePreferredPresence(presence);
+                float rowY = y() + USER_STATUS_MENU_PAD;
+                for (UserStatus userStatus : SELECTABLE_PREFERRED_USER_STATUSES) {
+                    if (pointerX >= x() + 4f && pointerX < x() + w() - 4f && pointerY >= rowY && pointerY < rowY + USER_STATUS_MENU_ROW_H) {
+                        updatePreferredUserStatus(userStatus);
                         return true;
                     }
-                    rowY += PRESENCE_MENU_ROW_H + PRESENCE_MENU_ROW_GAP;
+                    rowY += USER_STATUS_MENU_ROW_H + USER_STATUS_MENU_ROW_GAP;
                 }
 
                 return false;
@@ -538,7 +530,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
     private FWidget buildTabs() {
         final int friendCount = Alumite.INSTANCE.users().friends().size();
         final String chatLabel = Component.translatable("alumite.social.tab_chat").getString();
-        final String friendsLabel = Component.translatable("alumite.social.tab_friends", friendCount).getString();
+        final String friendsLabel = Component.translatable("alumite.social.tab_friends", String.valueOf(friendCount)).getString();
         return SocialModeTabsWidget.build(new SocialModeTabsWidget.Props(chatLabel, friendsLabel, Alumite.INSTANCE.users().incomingFriendRequests().size(), () -> activeTab.get() == Tab.CHAT, () -> {
             if (activeTab.get() != Tab.CHAT) {
                 activeTab.set(Tab.CHAT);
@@ -569,13 +561,13 @@ public class SocialMainWorkspaceComponent extends FWidget {
         String channelLabel = channelTitle(channel);
         String channelAvatarMinecraftUuid = channelListAvatarMinecraftUuid(channel);
         DmChannel dmChannel = channel.asDmChannel();
-        User dmRecipient = dmChannel != null ? displayUser(dmChannel.recipient()) : null;
+        User dmRecipient = dmChannel != null ? dmChannel.recipient() : null;
         BiConsumer<Float, Float> onContextMenu = dmRecipient != null ? (mx, my) -> {
             userContextMenuUser.set(dmRecipient);
             userContextMenuX.set(mx);
             userContextMenuY.set(my);
         } : null;
-        return SocialChatRowWidget.build(new SocialChatRowWidget.Props(channelLabel, channelAvatarMinecraftUuid, snippet, channelListPresenceColor(channel), Objects.equals(selectedChannelId.get(), channel.id()), channelHasUnread(channel), () -> selectChannel(channel.id(), false), dmChannel != null ? () -> closeDmChannel(channel.id()) : null, onContextMenu), innerW, ROW_H);
+        return SocialChatRowWidget.build(new SocialChatRowWidget.Props(channelLabel, channelAvatarMinecraftUuid, snippet, channelListUserStatusColor(channel), Objects.equals(selectedChannelId.get(), channel.id()), channelHasUnread(channel), () -> selectChannel(channel.id(), false), dmChannel != null ? () -> closeDmChannel(channel.id()) : null, onContextMenu), innerW, ROW_H);
     }
 
     private String channelListSnippet(Channel channel) {
@@ -615,7 +607,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
         DmChannel dmChannel = channel.asDmChannel();
         if (dmChannel != null) {
             if (dmChannel.recipient() != null) {
-                User recipient = displayUser(dmChannel.recipient());
+                User recipient = dmChannel.recipient();
                 if (recipient != null && recipient.minecraftName() != null && !recipient.minecraftName().isBlank()) {
                     return recipient.minecraftName();
                 }
@@ -640,14 +632,14 @@ public class SocialMainWorkspaceComponent extends FWidget {
         if (recipientUser == null) {
             return null;
         }
-        User recipient = displayUser(recipientUser);
+        User recipient = recipientUser;
         if (recipient == null || recipient.minecraftUuid() == null || recipient.minecraftUuid().isBlank()) {
             return null;
         }
         return recipient.minecraftUuid();
     }
 
-    private int channelListPresenceColor(Channel channel) {
+    private int channelListUserStatusColor(Channel channel) {
         if (channel == null) {
             return UITheme.COLOR_ACCENT;
         }
@@ -657,15 +649,15 @@ public class SocialMainWorkspaceComponent extends FWidget {
         }
         User recipient = dmChannel.recipient();
         if (recipient == null) {
-            return Presence.OFFLINE.color();
+            return UserStatus.OFFLINE.color();
         }
-        Presence status = recipient.presence();
-        return (status != null ? status : Presence.OFFLINE).color();
+        UserStatus status = recipient.userStatus();
+        return (status != null ? status : UserStatus.OFFLINE).color();
     }
 
     private FWidget buildFriendRow(Friend friend, float innerW) {
-        User friendUser = displayUser(friend.user());
-        return SocialFriendRowWidget.build(new SocialFriendRowWidget.Props(friendUser, presenceStatusLine(friendUser), Objects.equals(selectedFriendUserId.get(), friend.user().id()), () -> selectedFriendUserId.set(friend.user().id()), () -> pendingRemoveFriend.set(friend), friendUser != null ? (mx, my) -> {
+        User friendUser = friend.user();
+        return SocialFriendRowWidget.build(new SocialFriendRowWidget.Props(friendUser, userStatusLine(friendUser), Objects.equals(selectedFriendUserId.get(), friend.user().id()), () -> selectedFriendUserId.set(friend.user().id()), () -> pendingRemoveFriend.set(friend), friendUser != null ? (mx, my) -> {
             userContextMenuUser.set(friendUser);
             userContextMenuX.set(mx);
             userContextMenuY.set(my);
@@ -739,37 +731,37 @@ public class SocialMainWorkspaceComponent extends FWidget {
         };
     }
 
-    private void updatePreferredPresence(Presence presence) {
-        Presence currentPresence = Alumite.INSTANCE.users().selfUser().preferredPresence();
-        preferredPresenceMenuOpen.set(false);
-        if (currentPresence == presence) {
+    private void updatePreferredUserStatus(UserStatus userStatus) {
+        UserStatus currentUserStatus = Alumite.INSTANCE.users().selfUser().preferredUserStatus();
+        preferredUserStatusMenuOpen.set(false);
+        if (currentUserStatus == userStatus) {
             return;
         }
 
-        preferredPresenceUpdatePending.set(true);
+        preferredUserStatusUpdatePending.set(true);
 
         AlumiteMod.SCHEDULED_POOL.execute(() -> {
             try {
-                Alumite.INSTANCE.updatePreferredPresence(presence);
+                Alumite.INSTANCE.users().selfUser().updatePreferredUserStatus(userStatus);
             } catch (AlumiteApiException exception) {
                 Toast.show().message(SocialErrors.message(exception)).error();
             }
 
-            Minecraft.getInstance().execute(() -> preferredPresenceUpdatePending.set(false));
+            Minecraft.getInstance().execute(() -> preferredUserStatusUpdatePending.set(false));
         });
     }
 
-    private float preferredPresenceMenuHeight() {
-        return PRESENCE_MENU_PAD * 2f + SELECTABLE_PREFERRED_PRESENCES.length * PRESENCE_MENU_ROW_H + Math.max(0, SELECTABLE_PREFERRED_PRESENCES.length - 1) * PRESENCE_MENU_ROW_GAP;
+    private float preferredUserStatusMenuHeight() {
+        return USER_STATUS_MENU_PAD * 2f + SELECTABLE_PREFERRED_USER_STATUSES.length * USER_STATUS_MENU_ROW_H + Math.max(0, SELECTABLE_PREFERRED_USER_STATUSES.length - 1) * USER_STATUS_MENU_ROW_GAP;
     }
 
-    private float preferredPresenceMenuWidth(UIRenderer measure) {
+    private float preferredUserStatusMenuWidth(UIRenderer measure) {
         int widestText = 0;
-        for (Presence presence : SELECTABLE_PREFERRED_PRESENCES) {
-            widestText = Math.max(widestText, measure.measureTextWidth(preferredPresenceLabel(presence), false));
+        for (UserStatus userStatus : SELECTABLE_PREFERRED_USER_STATUSES) {
+            widestText = Math.max(widestText, measure.measureTextWidth(userStatus.label(), false));
         }
-        float contentWidth = 12f + PRESENCE_PICKER_DOT + 8f + widestText + 8f + measure.measureTextWidth("\u2713", false) + 12f;
-        return Math.max(PRESENCE_MENU_MIN_W, Math.min(PRESENCE_MENU_MAX_W, contentWidth));
+        float contentWidth = 12f + USER_STATUS_PICKER_DOT + 8f + widestText + 8f + measure.measureTextWidth("\u2713", false) + 12f;
+        return Math.max(USER_STATUS_MENU_MIN_W, Math.min(USER_STATUS_MENU_MAX_W, contentWidth));
     }
 
     private FWidget buildEmptyState(String message) {
@@ -786,8 +778,6 @@ public class SocialMainWorkspaceComponent extends FWidget {
 
             @Override
             protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-                float mouseX = frame.pointerX();
-                float mouseY = frame.pointerY();
                 float centerX = x() + w() / 2f;
                 float textY = y() + 4f;
                 graphics.drawCenteredText(message, centerX, textY, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
@@ -813,11 +803,11 @@ public class SocialMainWorkspaceComponent extends FWidget {
                     Channel channel = selectedChannelId.get() == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId.get());
                     DmChannel dmChannel = channel == null ? null : channel.asDmChannel();
                     if (dmChannel == null || dmChannel.recipient() == null) {
-                        return Presence.OFFLINE.color();
+                        return UserStatus.OFFLINE.color();
                     }
-                    User recipient = displayUser(dmChannel.recipient());
-                    Presence presence = recipient == null || recipient.presence() == null ? Presence.OFFLINE : recipient.presence();
-                    return presence.color();
+                    User recipient = dmChannel.recipient();
+                    UserStatus userStatus = recipient == null || recipient.userStatus() == null ? UserStatus.OFFLINE : recipient.userStatus();
+                    return userStatus.color();
                 });
         return new FWidget() {
             {
@@ -833,12 +823,22 @@ public class SocialMainWorkspaceComponent extends FWidget {
             @Override
             protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
                 float titleY = y() + (h() - graphics.getFontCapHeight()) / 2f;
+                float capHeight = graphics.getFontCapHeight();
                 if (activeTab.get() == Tab.FRIENDS) {
                     Friend selectedFriend = selectedFriend();
-                    String friendTitle = selectedFriend == null
-                            ? Component.translatable("alumite.social.tab_friends").getString()
-                            : "Friend Profile";
-                    graphics.drawText(friendTitle, x(), titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
+                    if (selectedFriend == null) {
+                        graphics.drawText(Component.translatable("alumite.social.tab_friends").getString(), x(), titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
+                    } else {
+                        User friendUser = selectedFriend.user();
+                        Activity friendActivity = friendUser != null ? friendUser.activity() : null;
+                        if (friendActivity != null) {
+                            float blockY = y() + (h() - capHeight * 2 - 3f) / 2f;
+                            graphics.drawText("Friend Profile", x(), blockY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
+                            graphics.drawText(friendActivity.label(), x(), blockY + capHeight + 3f, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                        } else {
+                            graphics.drawText("Friend Profile", x(), titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
+                        }
+                    }
                     headerAvatar.setVisible(false);
                     return;
                 }
@@ -850,7 +850,15 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 boolean showAvatar = headerAvatarUuid != null && !headerAvatarUuid.isBlank();
                 headerAvatar.setVisible(showAvatar);
                 float textLeft = showAvatar ? x() + CHAT_HEADER_AVATAR + 8f : x();
-                graphics.drawText(title, textLeft, titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
+                User recipient = dmChannel != null && dmChannel.recipient() != null ? dmChannel.recipient() : null;
+                Activity recipientActivity = recipient != null ? recipient.activity() : null;
+                if (recipientActivity != null) {
+                    float blockY = y() + (h() - capHeight * 2 - 3f) / 2f;
+                    graphics.drawText(title, textLeft, blockY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
+                    graphics.drawText(recipientActivity.label(), textLeft, blockY + capHeight + 3f, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                } else {
+                    graphics.drawText(title, textLeft, titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
+                }
             }
         };
     }
@@ -860,7 +868,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
         if (selectedFriend == null) {
             return buildEmptyState(Component.translatable("alumite.social.dm.pick_friend").getString());
         }
-        User selectedFriendUser = displayUser(selectedFriend.user());
+        User selectedFriendUser = selectedFriend.user();
         if (selectedFriendUser == null) {
             return buildEmptyState(Component.translatable("alumite.social.error.generic").getString());
         }
@@ -984,20 +992,6 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 Minecraft.getInstance().execute(() -> Toast.show().message(Component.translatable("alumite.social.error.generic").getString()).error());
             }
         });
-    }
-
-    private User displayUser(User user) {
-        if (user == null) {
-            return null;
-        }
-        if (user.resolved()) {
-            return user;
-        }
-        try {
-            return Alumite.INSTANCE.users().resolveUser(user.id());
-        } catch (AlumiteApiException exception) {
-            return null;
-        }
     }
 
     private FWidget buildFooter() {

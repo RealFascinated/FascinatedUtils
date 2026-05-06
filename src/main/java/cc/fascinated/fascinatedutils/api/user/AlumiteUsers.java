@@ -52,8 +52,8 @@ public class AlumiteUsers {
     }
 
     public void setSelfUser(UserDTO dto) {
-        User user = AlumiteModelMapper.toUser(new PublicUserDTO(dto.id(), dto.minecraftUuid(), dto.minecraftName(), dto.role(), dto.banned(), dto.presence(), dto.lastSeen()));
-        selfUser = new SelfUser(alumite, user, dto.preferredPresence());
+        User user = AlumiteModelMapper.toUser(dto);
+        selfUser = new SelfUser(alumite, user, dto.preferredUserStatus(), null);
         usersById.put(dto.id(), user);
     }
 
@@ -67,7 +67,7 @@ public class AlumiteUsers {
 
     public User resolveUser(String userId) throws AlumiteApiException {
         User cached = cachedUser(userId);
-        if (cached != null && cached.resolved()) {
+        if (cached != null) {
             return cached;
         }
         return fetchUser(userId);

@@ -24,7 +24,7 @@ public class SocialChatRowWidget {
             final SocialPlayerAvatarWidget avatar = new SocialPlayerAvatarWidget(AVATAR_SIZE,
                     () -> props.avatarMinecraftUuid(),
                     () -> props.displayName(),
-                    () -> props.presenceColor());
+                    () -> props.userStatusColor());
             {
                 addChild(avatar);
             }
@@ -148,7 +148,7 @@ public class SocialChatRowWidget {
         };
     }
 
-    public record Props(String displayName, String avatarMinecraftUuid, String snippet, int presenceColor,
+    public record Props(String displayName, String avatarMinecraftUuid, String snippet, int userStatusColor,
                         boolean selected, boolean showUnreadBadge, Runnable onSelect, Runnable onCloseChannel,
                         BiConsumer<Float, Float> onContextMenu) {}
 }

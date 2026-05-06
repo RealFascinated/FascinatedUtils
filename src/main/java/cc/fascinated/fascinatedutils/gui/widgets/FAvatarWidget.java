@@ -14,7 +14,7 @@ import java.util.function.Supplier;
  * A square avatar widget that shows a Minecraft player skin, or falls back to a colored tile
  * with the player's initial when the texture is unavailable.
  *
- * <p>Optionally renders a presence-dot indicator in the bottom-right quadrant.
+ * <p>Optionally renders a user status dot indicator in the bottom-right quadrant.
  * Optionally renders a bordered frame around the avatar (e.g. for profile cards).
  * Not interactive — {@link cc.fascinated.fascinatedutils.gui.core.PointerHitKind#NONE}.
  */
@@ -28,7 +28,7 @@ public class FAvatarWidget extends FWidget {
     private int textureBackgroundArgb = 0xFF000000;
     private Integer borderArgb = null;
     private float borderThickness = 1f;
-    private IntSupplier presenceDotColorSupplier = null;
+    private IntSupplier userStatusDotColorSupplier = null;
 
     /**
      * Creates an avatar widget that draws a player skin or initials fallback.
@@ -76,12 +76,12 @@ public class FAvatarWidget extends FWidget {
     }
 
     /**
-     * Enables the presence-dot indicator rendered in the bottom-right quadrant of the avatar.
+     * Enables the user status dot indicator rendered in the bottom-right quadrant of the avatar.
      *
-     * @param supplier supplies the packed ARGB presence color each frame; pass {@code null} to hide the dot
+     * @param supplier supplies the packed ARGB user status color each frame; pass {@code null} to hide the dot
      */
-    public void setPresenceDotColorSupplier(IntSupplier supplier) {
-        this.presenceDotColorSupplier = supplier;
+    public void setUserStatusDotColorSupplier(IntSupplier supplier) {
+        this.userStatusDotColorSupplier = supplier;
     }
 
     @Override
@@ -128,11 +128,11 @@ public class FAvatarWidget extends FWidget {
             graphics.drawCenteredText(initial, x() + size * 0.5f, y() + (size - graphics.getFontCapHeight()) * 0.5f,
                     0xFFFFFFFF, false, true);
         }
-        if (presenceDotColorSupplier != null) {
+        if (userStatusDotColorSupplier != null) {
             float dotX = x() + size * 0.75f;
             float dotY = y() + size * 0.75f;
             graphics.fillRoundedRect(dotX - 1f, dotY - 1f, 8f, 8f, 4f, 0xFF1A1E24, RectCornerRoundMask.ALL);
-            graphics.fillRoundedRect(dotX, dotY, 6f, 6f, 3f, presenceDotColorSupplier.getAsInt(), RectCornerRoundMask.ALL);
+            graphics.fillRoundedRect(dotX, dotY, 6f, 6f, 3f, userStatusDotColorSupplier.getAsInt(), RectCornerRoundMask.ALL);
         }
     }
 }

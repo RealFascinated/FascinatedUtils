@@ -94,8 +94,8 @@ public class SocialScreen extends WidgetScreen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (socialMainWorkspace.isPresenceMenuOpen() && event.key() == GLFW.GLFW_KEY_ESCAPE) {
-            socialMainWorkspace.closePresenceMenu();
+        if (socialMainWorkspace.isUserStatusMenuOpen() && event.key() == GLFW.GLFW_KEY_ESCAPE) {
+            socialMainWorkspace.closeUserStatusMenu();
             return true;
         }
         boolean handled = host.dispatchInput(new InputEvent.KeyPress(event.key(), event.scancode(), event.modifiers()));

@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.titlemenu;
 
+import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
+import cc.fascinated.fascinatedutils.event.impl.TitleScreenLoadEvent;
 import cc.fascinated.fascinatedutils.systems.titlescreen.TitleScreenAddon;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -13,6 +15,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TitleScreen.class)
 public class TitleScreenMixin {
+
+    @Inject(method = "init", at = @At("TAIL"))
+    private void alumite$onTitleScreenInit(CallbackInfo ci) {
+        FascinatedEventBus.INSTANCE.post(new TitleScreenLoadEvent());
+    }
 
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void alumite$drawTitleMenuOverlay(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {

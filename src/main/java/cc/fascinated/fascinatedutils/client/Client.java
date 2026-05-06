@@ -12,6 +12,9 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.gui.ModUiClientEntry;
 import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
+import cc.fascinated.fascinatedutils.event.impl.JoinMultiplayerServerEvent;
+import cc.fascinated.fascinatedutils.event.impl.SingleplayerWorldLoadEvent;
+import cc.fascinated.fascinatedutils.systems.activity.ActivityHandler;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.notification.MessageNotifications;
 import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
@@ -21,6 +24,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +44,16 @@ public class Client implements ClientModInitializer {
         eventBus.subscribe(TURBO_PARTICLES);
         eventBus.subscribe(TURBO_ENTITIES);
         eventBus.subscribe(new MessageNotifications());
+        eventBus.subscribe(ActivityHandler.INSTANCE);
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> eventBus.post(new ClientStartedEvent(client)));
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            if (client.isSingleplayer()) {
+                eventBus.post(new SingleplayerWorldLoadEvent());
+            } else {
+                eventBus.post(new JoinMultiplayerServerEvent());
+            }
+        });
         ModuleRegistry.INSTANCE.initialize();
         FascinatedWorldRenderTypes.registerWithIris();
         RainbowColors.init();

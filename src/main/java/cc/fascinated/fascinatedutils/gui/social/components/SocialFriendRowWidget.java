@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.social.components;
 
-import cc.fascinated.fascinatedutils.api.user.Presence;
+import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
@@ -25,7 +25,7 @@ public class SocialFriendRowWidget {
             final SocialPlayerAvatarWidget avatar = new SocialPlayerAvatarWidget(AVATAR_SIZE,
                     () -> props.user() == null ? null : props.user().minecraftUuid(),
                     () -> displayName(),
-                    () -> presenceColor());
+                    () -> userStatusColor());
             {
                 addChild(avatar);
             }
@@ -77,7 +77,7 @@ public class SocialFriendRowWidget {
                 float textX = avatar.x() + AVATAR_SIZE + 6f;
                 float textY = y() + 8f;
                 graphics.drawText(displayName(), textX, textY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
-                graphics.drawText(props.statusText(), textX, textY + graphics.getFontCapHeight() + 3f, presenceColor(), false, false);
+                graphics.drawText(props.statusText(), textX, textY + graphics.getFontCapHeight() + 3f, userStatusColor(), false, false);
             }
 
             @Override
@@ -114,9 +114,9 @@ public class SocialFriendRowWidget {
                 return props.user() == null || props.user().minecraftName() == null || props.user().minecraftName().isBlank() ? "..." : props.user().minecraftName();
             }
 
-            private int presenceColor() {
-                Presence presence = props.user() == null || props.user().presence() == null ? Presence.OFFLINE : props.user().presence();
-                return presence.color();
+            private int userStatusColor() {
+                UserStatus userStatus = props.user() == null || props.user().userStatus() == null ? UserStatus.OFFLINE : props.user().userStatus();
+                return userStatus.color();
             }
         };
     }

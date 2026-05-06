@@ -17,7 +17,7 @@ public class AlumiteModelMapper {
         if (dto == null) {
             return null;
         }
-        return new User(dto.id(), dto.minecraftUuid(), dto.minecraftName(), dto.role(), dto.banned(), dto.presence(), dto.lastSeen());
+        return new User(dto.id(), dto.minecraftUuid(), dto.minecraftName(), dto.role(), dto.banned(), dto.userStatus(), dto.activity(), dto.lastSeen());
     }
 
     public static ChannelKind toChannelKind(ChannelKindDTO dto) {

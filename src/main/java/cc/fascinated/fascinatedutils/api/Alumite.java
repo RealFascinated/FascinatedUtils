@@ -12,9 +12,11 @@ import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestDTO;
 import cc.fascinated.fascinatedutils.api.friend.json.SendFriendRequestBodyDTO;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteHttpClient;
 import cc.fascinated.fascinatedutils.api.user.AlumiteUsers;
-import cc.fascinated.fascinatedutils.api.user.Presence;
+import cc.fascinated.fascinatedutils.api.user.Activity;
+import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.api.user.json.PublicUserDTO;
-import cc.fascinated.fascinatedutils.api.user.json.UpdatePresenceBodyDTO;
+import cc.fascinated.fascinatedutils.api.user.json.UpdateActivityBodyDTO;
+import cc.fascinated.fascinatedutils.api.user.json.UpdateUserStatusBodyDTO;
 import cc.fascinated.fascinatedutils.api.user.json.UserDTO;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
@@ -42,7 +44,8 @@ public class Alumite {
     private static final String ROUTE_FRIENDS_REQUESTS = "/friends/requests";
     private static final String ROUTE_FRIENDS_REQUESTS_INCOMING = "/friends/requests/incoming";
     private static final String ROUTE_FRIENDS_REQUESTS_OUTGOING = "/friends/requests/outgoing";
-    private static final String ROUTE_PRESENCE = "/presence";
+    private static final String ROUTE_USER_STATUS = "/users/status";
+    private static final String ROUTE_ACTIVITY = "/users/activity";
     private static final String ROUTE_USERS = "/users";
     private static final String ROUTE_CHANNELS = "/channels";
 
@@ -241,15 +244,12 @@ public class Alumite {
         return http.postObject(ROUTE_CHANNELS + "/dm", new OpenDmBodyDTO(recipientUserId), ChannelDetailDTO.class, "open dm", "Failed to open direct message.");
     }
 
-    public void updatePreferredPresence(Presence presence) throws AlumiteApiException {
-        if (presence == null) {
-            throw new IllegalArgumentException("Preferred presence is required.");
-        }
-        if (presence == Presence.OFFLINE) {
-            throw new IllegalArgumentException("Preferred presence cannot be offline.");
-        }
-        http.sendAuthorizedChecked("PATCH", ROUTE_PRESENCE, Constants.GSON.toJson(new UpdatePresenceBodyDTO(presence)), "update preferred presence", "Failed to update preferred presence.");
-        users().selfUser().preferredPresence(presence);
+    public void sendUpdateUserStatus(UserStatus userStatus) throws AlumiteApiException {
+        http.sendAuthorizedChecked("PATCH", ROUTE_USER_STATUS, Constants.GSON.toJson(new UpdateUserStatusBodyDTO(userStatus)), "update preferred user status", "Failed to update preferred user status.");
+    }
+
+    public void sendUpdateActivity(Activity activity) throws AlumiteApiException {
+        http.sendAuthorizedChecked("PATCH", ROUTE_ACTIVITY, Constants.GSON.toJson(new UpdateActivityBodyDTO(activity)), "update activity", "Failed to update activity.");
     }
 
     public PendingFriendRequest sendFriendRequest(String targetUsername) throws AlumiteApiException {

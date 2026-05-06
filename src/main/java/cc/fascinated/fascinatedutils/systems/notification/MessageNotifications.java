@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.notification;
 
 import cc.fascinated.fascinatedutils.api.Alumite;
-import cc.fascinated.fascinatedutils.api.user.Presence;
+import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.event.impl.social.ChannelMessageCreateEvent;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendAddEvent;
@@ -14,7 +14,7 @@ import java.util.Objects;
 public class MessageNotifications {
     @EventHandler
     public void onMessageCreate(ChannelMessageCreateEvent event) {
-        if (Alumite.INSTANCE.users().selfUser().preferredPresence() == Presence.DO_NOT_DISTURB) {
+        if (Alumite.INSTANCE.users().selfUser().preferredUserStatus() == UserStatus.DO_NOT_DISTURB) {
             return;
         }
         String authorId = event.message().authorId();
