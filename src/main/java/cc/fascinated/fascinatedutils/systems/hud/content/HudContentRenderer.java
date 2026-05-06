@@ -173,17 +173,17 @@ public class HudContentRenderer {
     private static float itemRowIconBandWidth(HudContent.ItemRow row, float itemGapPx) {
         float width = 0f;
         boolean hasPreviousStack = false;
-        for (net.minecraft.world.item.ItemStack leadingStack : row.leadingStacks()) {
+        for (HudContent.HudItemSpec leadingSpec : row.leadingSpecs()) {
             if (hasPreviousStack) {
                 width += itemGapPx;
             }
-            width += itemStackBandWidth(leadingStack);
+            width += itemStackBandWidth(leadingSpec.toStack());
             hasPreviousStack = true;
         }
         if (hasPreviousStack) {
             width += itemGapPx;
         }
-        return width + itemStackBandWidth(row.stack());
+        return width + itemStackBandWidth(row.spec().toStack());
     }
 
     private static float itemStackBandWidth(net.minecraft.world.item.ItemStack stack) {
@@ -193,17 +193,17 @@ public class HudContentRenderer {
     private static void drawItemRowIcons(GuiRenderer glRenderer, Minecraft minecraftClient, HudContent.ItemRow row, float bandLeft, float iconY, float itemGapPx) {
         float cursorX = bandLeft;
         boolean hasPreviousStack = false;
-        for (net.minecraft.world.item.ItemStack leadingStack : row.leadingStacks()) {
+        for (HudContent.HudItemSpec leadingSpec : row.leadingSpecs()) {
             if (hasPreviousStack) {
                 cursorX += itemGapPx;
             }
-            cursorX = drawItemRowIcon(glRenderer, minecraftClient, leadingStack, cursorX, iconY);
+            cursorX = drawItemRowIcon(glRenderer, minecraftClient, leadingSpec.toStack(), cursorX, iconY);
             hasPreviousStack = true;
         }
         if (hasPreviousStack) {
             cursorX += itemGapPx;
         }
-        drawItemRowIcon(glRenderer, minecraftClient, row.stack(), cursorX, iconY);
+        drawItemRowIcon(glRenderer, minecraftClient, row.spec().toStack(), cursorX, iconY);
     }
 
     private static float drawItemRowIcon(GuiRenderer glRenderer, Minecraft minecraftClient, net.minecraft.world.item.ItemStack stack, float bandLeft, float iconY) {

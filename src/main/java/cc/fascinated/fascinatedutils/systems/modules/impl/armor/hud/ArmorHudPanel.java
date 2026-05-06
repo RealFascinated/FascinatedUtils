@@ -1,11 +1,10 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.armor.hud;
 
-import cc.fascinated.fascinatedutils.caches.ItemStackSizeCache;
-import cc.fascinated.fascinatedutils.common.ByteFormatterUtil;
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.TpsColors;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
+import cc.fascinated.fascinatedutils.systems.hud.content.HudContent.HudItemSpec;
 import cc.fascinated.fascinatedutils.systems.modules.impl.armor.ArmorModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
@@ -31,15 +30,15 @@ public class ArmorHudPanel extends HudPanel {
         this.armorModule = armorModule;
     }
 
-    private static ItemStack editorPreviewStackForRow(int rowIndex) {
+    private static HudItemSpec editorPreviewSpecForRow(int rowIndex) {
         return switch (rowIndex) {
-            case 0 -> new ItemStack(Items.DIAMOND_HELMET);
-            case 1 -> new ItemStack(Items.DIAMOND_CHESTPLATE);
-            case 2 -> new ItemStack(Items.DIAMOND_LEGGINGS);
-            case 3 -> new ItemStack(Items.DIAMOND_BOOTS);
-            case 4 -> new ItemStack(Items.SHIELD);
-            case 5 -> new ItemStack(Items.DIAMOND_SWORD);
-            default -> ItemStack.EMPTY;
+            case 0 -> new HudItemSpec.Preview(Items.DIAMOND_HELMET);
+            case 1 -> new HudItemSpec.Preview(Items.DIAMOND_CHESTPLATE);
+            case 2 -> new HudItemSpec.Preview(Items.DIAMOND_LEGGINGS);
+            case 3 -> new HudItemSpec.Preview(Items.DIAMOND_BOOTS);
+            case 4 -> new HudItemSpec.Preview(Items.SHIELD);
+            case 5 -> new HudItemSpec.Preview(Items.DIAMOND_SWORD);
+            default -> new HudItemSpec.Real(ItemStack.EMPTY);
         };
     }
 
@@ -73,25 +72,29 @@ public class ArmorHudPanel extends HudPanel {
                 continue;
             }
 
-            ItemStack sourceStack = contentStackForRow(player, showEditorPreview, rowIndex);
-            if (sourceStack.isEmpty()) {
+            HudItemSpec sourceSpec = contentSpecForRow(player, showEditorPreview, rowIndex);
+            if (sourceSpec.isEmpty()) {
                 continue;
             }
 
-            ItemStack displayStack = showEditorPreview ? sourceStack : resolvedRowStack(sourceStack, player);
+            HudItemSpec displaySpec = showEditorPreview ? sourceSpec : resolvedRowSpec(sourceSpec, player);
             if (combineHandRows && rowIndex == MAIN_HAND_ROW_INDEX) {
-                ItemStack offHandSourceStack = contentStackForRow(player, showEditorPreview, OFF_HAND_ROW_INDEX);
-                ItemStack offHandDisplayStack = showEditorPreview ? offHandSourceStack : resolvedRowStack(offHandSourceStack, player);
-                rows.add(new HudContent.ItemRow(List.of(offHandDisplayStack), displayStack, combinedHandDurabilityText(offHandSourceStack, sourceStack)));
+                HudItemSpec offHandSourceSpec = contentSpecForRow(player, showEditorPreview, OFF_HAND_ROW_INDEX);
+                HudItemSpec offHandDisplaySpec = showEditorPreview ? offHandSourceSpec : resolvedRowSpec(offHandSourceSpec, player);
+                rows.add(new HudContent.ItemRow(List.of(offHandDisplaySpec), displaySpec, combinedHandDurabilityText(offHandSourceSpec.toStack(), sourceSpec.toStack())));
                 continue;
             }
 
-            rows.add(new HudContent.ItemRow(displayStack, durabilityOnlyText(sourceStack, shouldColorRow(rowIndex))));
+            rows.add(new HudContent.ItemRow(displaySpec, durabilityOnlyText(sourceSpec.toStack(), shouldColorRow(rowIndex))));
         }
         return rows.isEmpty() ? null : new HudContent.ItemRows(rows);
     }
 
-    private ItemStack resolvedRowStack(ItemStack stack, Player player) {
+    private HudItemSpec resolvedRowSpec(HudItemSpec spec, Player player) {
+        if (!(spec instanceof HudItemSpec.Real real)) {
+            return spec;
+        }
+        ItemStack stack = real.stack();
         if (armorModule.armorHudShowTotalInventoryCount() && stack.getMaxDamage() <= 0 && stack.getMaxStackSize() > 1) {
             int count = 0;
             var inventory = player.getInventory();
@@ -102,10 +105,10 @@ public class ArmorHudPanel extends HudPanel {
                 }
             }
             if (count > 0) {
-                return stack.copyWithCount(count);
+                return new HudItemSpec.Real(stack.copyWithCount(count));
             }
         }
-        return stack;
+        return spec;
     }
 
     private boolean shouldColorRow(int rowIndex) {
@@ -130,50 +133,31 @@ public class ArmorHudPanel extends HudPanel {
         return offHandText + " <white>|</white> " + mainHandText;
     }
 
-    private ItemStack contentStackForRow(Player player, boolean editorPreview, int rowIndex) {
-        return editorPreview ? editorPreviewStackForRow(rowIndex) : stackForRow(player, rowIndex);
+    private HudItemSpec contentSpecForRow(Player player, boolean editorPreview, int rowIndex) {
+        return editorPreview ? editorPreviewSpecForRow(rowIndex) : new HudItemSpec.Real(stackForRow(player, rowIndex));
     }
 
     private boolean shouldCombineHandRows(Player player, boolean editorPreview) {
         if (!armorModule.armorHudShowOffHandBesideMainHand() || !isSlotRowShown(OFF_HAND_ROW_INDEX) || !isSlotRowShown(MAIN_HAND_ROW_INDEX)) {
             return false;
         }
-        return !contentStackForRow(player, editorPreview, OFF_HAND_ROW_INDEX).isEmpty() && !contentStackForRow(player, editorPreview, MAIN_HAND_ROW_INDEX).isEmpty();
+        return !contentSpecForRow(player, editorPreview, OFF_HAND_ROW_INDEX).isEmpty() && !contentSpecForRow(player, editorPreview, MAIN_HAND_ROW_INDEX).isEmpty();
     }
 
     private String durabilityOnlyText(ItemStack stack, boolean useColor) {
-        if (stack.isEmpty()) {
-            return sizeText(stack);
-        }
-        String sizeAppend = sizeText(stack);
-        if (stack.getMaxDamage() <= 0) {
-            return sizeAppend;
+        if (stack.isEmpty() || stack.getMaxDamage() <= 0) {
+            return "";
         }
         if (armorModule.armorHudHideUnbreakableDurability() && stack.has(DataComponents.UNBREAKABLE)) {
-            return sizeAppend;
+            return "";
         }
         int durability = stack.getMaxDamage() - stack.getDamageValue();
-        String durabilityText;
         if (useColor) {
             float percent = (float) durability / stack.getMaxDamage();
             String colorHex = Colors.rgbHex(TpsColors.getTpsColor(percent * 20f));
-            durabilityText = "<color:" + colorHex + ">" + durability + "</color>";
+            return "<color:" + colorHex + ">" + durability + "</color>";
         }
-        else {
-            durabilityText = "<white>" + durability + "</white>";
-        }
-        return sizeAppend.isBlank() ? durabilityText : durabilityText + " " + sizeAppend;
-    }
-
-    private String sizeText(ItemStack stack) {
-        if (!armorModule.armorHudShowItemStackSizeBytes() || stack.isEmpty()) {
-            return "";
-        }
-        long bytes = ItemStackSizeCache.getStackSize(stack);
-        if (bytes <= 0) {
-            return "";
-        }
-        return "<color:#AAAAAA>" + ByteFormatterUtil.formatBytes(bytes, 2) + "</color>";
+        return "<white>" + durability + "</white>";
     }
 
     private boolean isSlotRowShown(int rowIndex) {

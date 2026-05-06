@@ -39,6 +39,10 @@ public class ScoreboardHudPanel extends HudPanel {
     public @Nullable Runnable prepareAndDraw(GuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null) {
+            if (editorMode) {
+                float lineHeight = glRenderer.getFontHeight();
+                return buildScoreboardDraw(glRenderer, lineHeight, PREVIEW_TITLE, PREVIEW_ROWS, editorMode);
+            }
             return null;
         }
 

@@ -19,8 +19,6 @@ public class ArmorModule extends HudHostModule {
 
     private final BooleanSetting[] slotRowVisibility = {BooleanSetting.builder().id("show_head").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_chest").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_legs").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_feet").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_off_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build(), BooleanSetting.builder().id("show_main_hand").defaultValue(true).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build()};
 
-    private final BooleanSetting showItemStackSizeBytes = BooleanSetting.builder().id("show_item_stack_size_bytes").defaultValue(false).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-
     private final BooleanSetting showOffHandNextToMainHand = BooleanSetting.builder().id("show_off_hand_next_to_main_hand").defaultValue(false).categoryDisplayKey(SLOTS_CATEGORY_DISPLAY_KEY).build();
 
     private final BooleanSetting hideUnbreakableDurability = BooleanSetting.builder().id("hide_unbreakable_durability").defaultValue(false).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY).build();
@@ -66,7 +64,6 @@ public class ArmorModule extends HudHostModule {
         addSetting(colorArmorDurability);
         addSetting(colorMainHandDurability);
         addSetting(colorOffHandDurability);
-        addSetting(showItemStackSizeBytes);
         slotRowVisibility[offHandSlotIndex].addSubSetting(showOffHandNextToMainHand);
         addSetting(padding);
         addSetting(textShadow);
@@ -101,7 +98,4 @@ public class ArmorModule extends HudHostModule {
         return colorOffHandDurability.isEnabled();
     }
 
-    public boolean armorHudShowItemStackSizeBytes() {
-        return showItemStackSizeBytes.isEnabled();
-    }
 }
