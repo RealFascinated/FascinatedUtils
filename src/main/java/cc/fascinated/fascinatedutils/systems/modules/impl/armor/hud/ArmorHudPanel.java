@@ -8,12 +8,9 @@ import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.armor.ArmorModule;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jspecify.annotations.Nullable;
@@ -34,21 +31,14 @@ public class ArmorHudPanel extends HudPanel {
         this.armorModule = armorModule;
     }
 
-    private static ItemStack previewStack(Item item, int maxDamage) {
-        DataComponentMap components = DataComponentMap.builder()
-                .set(DataComponents.MAX_DAMAGE, maxDamage)
-                .build();
-        return new ItemStack(Holder.direct(item, components), 1);
-    }
-
     private static ItemStack editorPreviewStackForRow(int rowIndex) {
         return switch (rowIndex) {
-            case 0 -> previewStack(Items.DIAMOND_HELMET, 363);
-            case 1 -> previewStack(Items.DIAMOND_CHESTPLATE, 528);
-            case 2 -> previewStack(Items.DIAMOND_LEGGINGS, 495);
-            case 3 -> previewStack(Items.DIAMOND_BOOTS, 429);
-            case 4 -> previewStack(Items.SHIELD, 336);
-            case 5 -> previewStack(Items.DIAMOND_SWORD, 1561);
+            case 0 -> new ItemStack(Items.DIAMOND_HELMET);
+            case 1 -> new ItemStack(Items.DIAMOND_CHESTPLATE);
+            case 2 -> new ItemStack(Items.DIAMOND_LEGGINGS);
+            case 3 -> new ItemStack(Items.DIAMOND_BOOTS);
+            case 4 -> new ItemStack(Items.SHIELD);
+            case 5 -> new ItemStack(Items.DIAMOND_SWORD);
             default -> ItemStack.EMPTY;
         };
     }

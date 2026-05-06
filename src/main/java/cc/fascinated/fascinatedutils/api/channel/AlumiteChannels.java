@@ -4,8 +4,6 @@ import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.json.ChannelDetailDTO;
 import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessageDTO;
-import cc.fascinated.fascinatedutils.api.channel.json.OpenDmBodyDTO;
-import cc.fascinated.fascinatedutils.api.internal.AlumiteHttpClient;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteModelMapper;
 import cc.fascinated.fascinatedutils.api.user.AlumiteUsers;
 import cc.fascinated.fascinatedutils.api.user.User;
@@ -18,19 +16,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AlumiteChannels {
 
-    private static final String ROUTE_CHANNELS = "/channels";
-
     private final Alumite alumite;
-    private final AlumiteHttpClient http;
     private final AlumiteUsers users;
     private final Map<String, Channel> channelsById = new ConcurrentHashMap<>();
     private final Map<String, List<ChannelMessage>> messagesByChannel = new ConcurrentHashMap<>();
     private final Map<String, Boolean> hasMoreByChannel = new ConcurrentHashMap<>();
     private volatile List<Channel> channels = List.of();
 
-    public AlumiteChannels(Alumite alumite, AlumiteHttpClient http, AlumiteUsers users) {
+    public AlumiteChannels(Alumite alumite, AlumiteUsers users) {
         this.alumite = alumite;
-        this.http = http;
         this.users = users;
     }
 
@@ -73,6 +67,10 @@ public class AlumiteChannels {
         return Boolean.TRUE.equals(hasMoreByChannel.get(channelId));
     }
 
+    public void refreshFromNetwork() throws AlumiteApiException {
+        replaceChannelsFromNetwork(alumite.fetchChannels());
+    }
+
     public void replaceChannelsFromNetwork(List<ChannelDetailDTO> dtoList) {
         if (dtoList == null) {
             dtoList = List.of();
@@ -94,8 +92,7 @@ public class AlumiteChannels {
     }
 
     public DmChannel openDmAndCache(String recipientUserId) throws AlumiteApiException {
-        ChannelDetailDTO dto = http.postObject(ROUTE_CHANNELS + "/dm", new OpenDmBodyDTO(recipientUserId), ChannelDetailDTO.class, "open dm", "Failed to open direct message.");
-        return afterOpenDm(dto);
+        return afterOpenDm(alumite.openDm(recipientUserId));
     }
 
     void cacheReadState(String channelId, String lastReadMessageId) {

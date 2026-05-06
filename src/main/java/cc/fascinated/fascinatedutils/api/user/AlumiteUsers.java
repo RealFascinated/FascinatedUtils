@@ -6,7 +6,6 @@ import cc.fascinated.fascinatedutils.api.friend.Friend;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
 import cc.fascinated.fascinatedutils.api.friend.json.FriendEntryDTO;
 import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestDTO;
-import cc.fascinated.fascinatedutils.api.internal.AlumiteHttpClient;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteModelMapper;
 import cc.fascinated.fascinatedutils.api.user.json.PublicUserDTO;
 import cc.fascinated.fascinatedutils.api.user.json.UserDTO;
@@ -28,10 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Accessors(fluent = true)
 public class AlumiteUsers {
 
-    private static final String ROUTE_USERS = "/users";
-
     private final Alumite alumite;
-    private final AlumiteHttpClient http;
 
     private final Map<String, User> usersById = new ConcurrentHashMap<>();
 
@@ -56,15 +52,9 @@ public class AlumiteUsers {
     }
 
     public void setSelfUser(UserDTO dto) {
-        selfUser = new SelfUser(alumite, AlumiteModelMapper.toUser(new PublicUserDTO(
-                dto.id(),
-                dto.minecraftUuid(),
-                dto.minecraftName(),
-                dto.role(),
-                dto.banned(),
-                dto.presence(),
-                dto.lastSeen())
-        ), dto.preferredPresence());
+        User user = AlumiteModelMapper.toUser(new PublicUserDTO(dto.id(), dto.minecraftUuid(), dto.minecraftName(), dto.role(), dto.banned(), dto.presence(), dto.lastSeen()));
+        selfUser = new SelfUser(alumite, user, dto.preferredPresence());
+        usersById.put(dto.id(), user);
     }
 
     public User cachedUser(String userId) {
@@ -84,32 +74,30 @@ public class AlumiteUsers {
     }
 
     private User fetchUser(String userId) throws AlumiteApiException {
-        PublicUserDTO dto = http.getObject(ROUTE_USERS + "/" + userId, PublicUserDTO.class, "get user", "Failed to load user.");
-        return upsertUser(dto);
+        return upsertUser(alumite.fetchUser(userId));
+    }
+
+    public void refreshFromNetwork() throws AlumiteApiException {
+        replaceSocialFromNetwork(alumite.fetchFriends(), alumite.fetchIncomingFriendRequests(), alumite.fetchOutgoingFriendRequests());
     }
 
     public void replaceSocialFromNetwork(List<FriendEntryDTO> friendsDto, List<PendingFriendRequestDTO> incomingDto, List<PendingFriendRequestDTO> outgoingDto) {
         usersById.clear();
+        SelfUser self = selfUser;
+        if (self != null) {
+            usersById.put(self.user().id(), self.user());
+        }
         friends = friendsDto == null ? List.of() : friendsDto.stream().map(this::toFriend).toList();
         incomingFriendRequests = incomingDto == null ? List.of() : incomingDto.stream().map(this::toPendingFriendRequest).toList();
         outgoingFriendRequests = outgoingDto == null ? List.of() : outgoingDto.stream().map(this::toPendingFriendRequest).toList();
     }
 
     public User upsertUser(PublicUserDTO dto) {
-        return upsertUser(AlumiteModelMapper.toUser(dto));
+        return usersById.put(dto.id(), AlumiteModelMapper.toUser(dto));
     }
 
-    public User upsertUser(User incomingUser) {
-        if (incomingUser == null) {
-            return null;
-        }
-        return usersById.compute(incomingUser.id(), (_, existingUser) -> {
-            if (existingUser == null) {
-                return incomingUser;
-            }
-            existingUser.mergeFrom(incomingUser);
-            return existingUser;
-        });
+    public User upsertUser(User user) {
+        return usersById.put(user.id(), user);
     }
 
     public void onFriendAdd(FriendEntryDTO entry) {

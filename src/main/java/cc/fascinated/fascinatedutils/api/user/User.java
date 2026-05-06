@@ -32,37 +32,4 @@ public class User {
         this.lastSeen = lastSeen;
         this.resolved = true;
     }
-
-    private static String mergeString(String existingValue, String incomingValue) {
-        if (incomingValue == null || incomingValue.isBlank()) {
-            return existingValue;
-        }
-        return incomingValue;
-    }
-
-    void mergeFrom(User incomingUser) {
-        if (incomingUser == null) {
-            return;
-        }
-        if (!incomingUser.id().equals(id)) {
-            throw new IllegalArgumentException("Cannot merge user data with a different id.");
-        }
-        minecraftUuid = mergeString(minecraftUuid, incomingUser.minecraftUuid());
-        minecraftName = mergeString(minecraftName, incomingUser.minecraftName());
-        role = mergeString(role, incomingUser.role());
-        if (incomingUser.resolved()) {
-            banned = incomingUser.banned();
-        }
-        if (incomingUser.presence() != null) {
-            presence = incomingUser.presence();
-        }
-        if (incomingUser.lastSeen() != null) {
-            lastSeen = incomingUser.lastSeen();
-        }
-        resolved = resolved || incomingUser.resolved();
-    }
-
-    void setPresence(Presence presence) {
-        this.presence = presence;
-    }
 }

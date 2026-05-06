@@ -89,8 +89,12 @@ public class FWidgetHost {
             focusedId = externalFocusSource.getAsInt();
         }
         GuiFocusState.setFocusedId(focusedId);
-        boolean handled = inputDispatcher.dispatch(root, event, focusedId, id -> focusedId = id, () -> focusedId);
-        GuiFocusState.setFocusedId(focusedId);
+        boolean handled = inputDispatcher.dispatch(root, event, focusedId, id -> {
+            focusedId = id;
+            GuiFocusState.setFocusedId(id);
+        }, () -> focusedId);
+        // Pick up any out-of-band focus changes made directly via GuiFocusState during dispatch
+        focusedId = GuiFocusState.getFocusedId();
         if (externalFocusSink != null) {
             externalFocusSink.accept(focusedId);
         }

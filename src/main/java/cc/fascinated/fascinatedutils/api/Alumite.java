@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.api.auth.json.*;
 import cc.fascinated.fascinatedutils.api.channel.AlumiteChannels;
 import cc.fascinated.fascinatedutils.api.channel.json.ChannelDetailDTO;
+import cc.fascinated.fascinatedutils.api.channel.json.OpenDmBodyDTO;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
 import cc.fascinated.fascinatedutils.api.friend.json.FriendEntryDTO;
 import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestDTO;
@@ -12,6 +13,7 @@ import cc.fascinated.fascinatedutils.api.friend.json.SendFriendRequestBodyDTO;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteHttpClient;
 import cc.fascinated.fascinatedutils.api.user.AlumiteUsers;
 import cc.fascinated.fascinatedutils.api.user.Presence;
+import cc.fascinated.fascinatedutils.api.user.json.PublicUserDTO;
 import cc.fascinated.fascinatedutils.api.user.json.UpdatePresenceBodyDTO;
 import cc.fascinated.fascinatedutils.api.user.json.UserDTO;
 import cc.fascinated.fascinatedutils.client.Client;
@@ -49,6 +51,7 @@ public class Alumite {
     private final AlumiteHttpClient http;
     private final AlumiteTokenStore tokenStore = new AlumiteTokenStore();
     private final AlumiteGateway gateway;
+    
     @Getter
     private final AlumiteUsers users;
     @Getter
@@ -64,8 +67,8 @@ public class Alumite {
     private Alumite() {
         this.http = new AlumiteHttpClient(httpClient, Constants.GSON, () -> activeAccessToken, this::refreshActiveToken);
         this.gateway = new AlumiteGateway(httpClient, () -> activeRefreshToken, this::onGatewayAuthExpired, Constants.GSON);
-        this.users = new AlumiteUsers(this, http);
-        this.channels = new AlumiteChannels(this, http, users);
+        this.users = new AlumiteUsers(this);
+        this.channels = new AlumiteChannels(this, users);
     }
 
     private void authenticate(Minecraft minecraftClient) {
@@ -214,18 +217,28 @@ public class Alumite {
         tokenStore.save(accountKey, newRefreshToken, newAccessToken, newAccessExpiresAt);
     }
 
-    private void refreshSocialCaches() {
-        Client.LOG.info("[Alumite] Fetching channels and social data...");
-        try {
-            List<ChannelDetailDTO> channelDto = http.getList(ROUTE_CHANNELS, ChannelDetailDTO.class, "get channels", "Failed to load channels.");
-            channels.replaceChannelsFromNetwork(channelDto);
-            users.replaceSocialFromNetwork(http.getList(ROUTE_FRIENDS, FriendEntryDTO.class, "get friends", "Failed to load friends."), http.getList(ROUTE_FRIENDS_REQUESTS_INCOMING, PendingFriendRequestDTO.class, "get incoming friend requests", "Failed to load incoming requests."), http.getList(ROUTE_FRIENDS_REQUESTS_OUTGOING, PendingFriendRequestDTO.class, "get outgoing friend requests", "Failed to load outgoing requests."));
-            Client.LOG.info("[Alumite] Loaded {} channels", channels.all().size());
-        } catch (AlumiteApiException exception) {
-            users.clearSessionCaches();
-            channels.clearSessionCaches();
-            Client.LOG.warn("[Alumite] Failed to fetch social data: {}", exception.getDisplayText());
-        }
+    public PublicUserDTO fetchUser(String userId) throws AlumiteApiException {
+        return http.getObject(ROUTE_USERS + "/" + userId, PublicUserDTO.class, "get user", "Failed to load user.");
+    }
+
+    public List<FriendEntryDTO> fetchFriends() throws AlumiteApiException {
+        return http.getList(ROUTE_FRIENDS, FriendEntryDTO.class, "get friends", "Failed to load friends.");
+    }
+
+    public List<PendingFriendRequestDTO> fetchIncomingFriendRequests() throws AlumiteApiException {
+        return http.getList(ROUTE_FRIENDS_REQUESTS_INCOMING, PendingFriendRequestDTO.class, "get incoming friend requests", "Failed to load incoming requests.");
+    }
+
+    public List<PendingFriendRequestDTO> fetchOutgoingFriendRequests() throws AlumiteApiException {
+        return http.getList(ROUTE_FRIENDS_REQUESTS_OUTGOING, PendingFriendRequestDTO.class, "get outgoing friend requests", "Failed to load outgoing requests.");
+    }
+
+    public List<ChannelDetailDTO> fetchChannels() throws AlumiteApiException {
+        return http.getList(ROUTE_CHANNELS, ChannelDetailDTO.class, "get channels", "Failed to load channels.");
+    }
+
+    public ChannelDetailDTO openDm(String recipientUserId) throws AlumiteApiException {
+        return http.postObject(ROUTE_CHANNELS + "/dm", new OpenDmBodyDTO(recipientUserId), ChannelDetailDTO.class, "open dm", "Failed to open direct message.");
     }
 
     public void updatePreferredPresence(Presence presence) throws AlumiteApiException {
@@ -274,6 +287,17 @@ public class Alumite {
 
     @EventHandler
     private void alumite$onAuthenticated(AlumiteAuthenticatedEvent event) {
-        AlumiteMod.SCHEDULED_POOL.execute(this::refreshSocialCaches);
+        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+            Client.LOG.info("[Alumite] Fetching channels and social data...");
+            try {
+                channels.refreshFromNetwork();
+                users.refreshFromNetwork();
+                Client.LOG.info("[Alumite] Loaded {} channels", channels.all().size());
+            } catch (AlumiteApiException exception) {
+                users.clearSessionCaches();
+                channels.clearSessionCaches();
+                Client.LOG.warn("[Alumite] Failed to fetch social data: {}", exception.getDisplayText());
+            }
+        });
     }
 }
