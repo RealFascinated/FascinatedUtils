@@ -5,7 +5,6 @@ import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
-import cc.fascinated.fascinatedutils.api.friend.Friend;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
@@ -53,7 +52,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
     private FState<String> selectedFriendUserId;
     private FState<Boolean> searchOpen;
     private FState<Boolean> sendMessagePending;
-    private FState<Friend> pendingRemoveFriend;
+    private FState<User> pendingRemoveFriend;
     private FState<PendingFriendRequest> pendingCancelRequest;
     private FState<Boolean> preferredUserStatusMenuOpen;
     private FState<Boolean> preferredUserStatusUpdatePending;
@@ -167,10 +166,10 @@ public class SocialMainWorkspaceComponent extends FWidget {
                 rightDock.layout(measure, lx + leftWidth + SPLIT_GAP, ly, rightWidth, lh);
 
                 if (pendingRemoveFriend.get() != null) {
-                    Friend friend = pendingRemoveFriend.get();
+                    User friend = pendingRemoveFriend.get();
                     FWidget overlay = SocialDestructiveFullscreenConfirmOverlay.create(new SocialDestructiveFullscreenConfirmOverlay.Props(
                             Component.translatable("alumite.social.confirm_remove_friend.title").getString(),
-                            Component.translatable("alumite.social.confirm_remove_friend.message", friend.user().minecraftName()).getString(),
+                            Component.translatable("alumite.social.confirm_remove_friend.message", friend.minecraftName()).getString(),
                             Component.translatable("alumite.social.confirm_remove_friend.confirm").getString(),
                             Component.translatable("alumite.social.confirm_remove_friend.deny").getString(),
                             () -> pendingRemoveFriend.set(null),
@@ -178,7 +177,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
                                 pendingRemoveFriend.set(null);
                                 AlumiteMod.SCHEDULED_POOL.execute(() -> {
                                     try {
-                                        Alumite.INSTANCE.removeFriend(friend.user().id());
+                                        Alumite.INSTANCE.removeFriend(friend.id());
                                     } catch (AlumiteApiException exception) {
                                         Toast.show().message(SocialErrors.message(exception)).error();
                                     } catch (Exception exception) {
@@ -312,7 +311,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
     }
 
     private FWidget buildTabs() {
-        final int friendCount = Alumite.INSTANCE.users().friends().size();
+        final int friendCount = Alumite.INSTANCE.users().getFriends().size();
         final String chatLabel = Component.translatable("alumite.social.tab_chat").getString();
         final String friendsLabel = Component.translatable("alumite.social.tab_friends", String.valueOf(friendCount)).getString();
         return SocialModeTabsWidget.build(new SocialModeTabsWidget.Props(chatLabel, friendsLabel, Alumite.INSTANCE.users().incomingFriendRequests().size(), () -> activeTab.get() == Tab.CHAT, () -> {
@@ -337,7 +336,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
             List<Channel> channels = Alumite.INSTANCE.channels().all().stream().filter(channel -> searchQuery.isEmpty() || ChannelUtils.title(channel).toLowerCase().contains(searchQuery)).toList();
             return SocialChatListWidget.build(new SocialChatListWidget.Props(channels, scrollY, scrollYRef::set, channel -> buildChatChannelRow(channel, innerW), () -> new SocialEmptyStateWidget(Component.translatable("alumite.social.dm.no_chats").getString())));
         }
-        return SocialFriendsListWidget.build(new SocialFriendsListWidget.Props(Alumite.INSTANCE.users().friends(), Alumite.INSTANCE.users().incomingFriendRequests(), Alumite.INSTANCE.users().outgoingFriendRequests(), scrollY, scrollYRef::set, friend -> buildFriendRow(friend, innerW), request -> SocialFriendRequestRowWidget.build(request, innerW, ROW_H), request -> SocialOutgoingRequestRowWidget.build(request, innerW, ROW_H, () -> pendingCancelRequest.set(request)), SocialSectionLabelWidget::new, Component.translatable("alumite.social.requests_incoming").getString(), Component.translatable("alumite.social.requests_outgoing").getString(), () -> new SocialEmptyStateWidget(Component.translatable("alumite.social.no_friends").getString()), () -> new SocialEmptyStateWidget(Component.translatable("alumite.social.no_friends").getString())));
+        return SocialFriendsListWidget.build(new SocialFriendsListWidget.Props(Alumite.INSTANCE.users().getFriends(), Alumite.INSTANCE.users().incomingFriendRequests(), Alumite.INSTANCE.users().outgoingFriendRequests(), scrollY, scrollYRef::set, friend -> buildFriendRow(friend, innerW), request -> SocialFriendRequestRowWidget.build(request, innerW, ROW_H), request -> SocialOutgoingRequestRowWidget.build(request, innerW, ROW_H, () -> pendingCancelRequest.set(request)), SocialSectionLabelWidget::new, Component.translatable("alumite.social.requests_incoming").getString(), Component.translatable("alumite.social.requests_outgoing").getString(), () -> new SocialEmptyStateWidget(Component.translatable("alumite.social.no_friends").getString()), () -> new SocialEmptyStateWidget(Component.translatable("alumite.social.no_friends").getString())));
     }
 
     private FWidget buildChatChannelRow(Channel channel, float innerW) {
@@ -351,10 +350,9 @@ public class SocialMainWorkspaceComponent extends FWidget {
         return SocialChatRowWidget.build(new SocialChatRowWidget.Props(channel, Objects.equals(selectedChannelId.get(), channel.id()), ChannelUtils.hasUnread(channel), () -> selectChannel(channel.id(), false), dmChannel != null ? () -> closeDmChannel(channel.id()) : null, onContextMenu), innerW, ROW_H);
     }
 
-    private FWidget buildFriendRow(Friend friend, float innerW) {
-        User friendUser = friend.user();
-        return SocialFriendRowWidget.build(new SocialFriendRowWidget.Props(friendUser, UserUtils.statusLine(friendUser), Objects.equals(selectedFriendUserId.get(), friend.user().id()), () -> selectedFriendUserId.set(friend.user().id()), () -> pendingRemoveFriend.set(friend), friendUser != null ? (mx, my) -> {
-            userContextMenuUser.set(friendUser);
+    private FWidget buildFriendRow(User friend, float innerW) {
+        return SocialFriendRowWidget.build(new SocialFriendRowWidget.Props(friend, UserUtils.statusLine(friend), Objects.equals(selectedFriendUserId.get(), friend.id()), () -> selectedFriendUserId.set(friend.id()), () -> pendingRemoveFriend.set(friend), friend != null ? (mx, my) -> {
+            userContextMenuUser.set(friend);
             userContextMenuX.set(mx);
             userContextMenuY.set(my);
         } : null), innerW, ROW_H);
@@ -364,9 +362,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
         User user = userContextMenuUser.get();
         float menuX = userContextMenuX.get();
         float menuY = userContextMenuY.get();
-        Friend friend = Alumite.INSTANCE.users().friends().stream()
-                .filter(f -> Objects.equals(f.user().id(), user.id())).findFirst().orElse(null);
-        Runnable onRemove = friend != null ? () -> pendingRemoveFriend.set(friend) : null;
+        Runnable onRemove = Alumite.INSTANCE.users().isFriend(user.id()) ? () -> pendingRemoveFriend.set(user) : null;
         FWidget menu = UserContextMenuWidget.build(menuX, menuY, user, () -> userContextMenuUser.set(null), onRemove);
         return new FWidget() {
             {
@@ -422,22 +418,18 @@ public class SocialMainWorkspaceComponent extends FWidget {
     }
 
     private FWidget buildFriendsProfilePane() {
-        Friend selectedFriend = selectedFriend();
+        User selectedFriend = selectedFriend();
         if (selectedFriend == null) {
             return new SocialEmptyStateWidget(Component.translatable("alumite.social.dm.pick_friend").getString());
         }
-        User selectedFriendUser = selectedFriend.user();
-        if (selectedFriendUser == null) {
-            return new SocialEmptyStateWidget(Component.translatable("alumite.social.error.generic").getString());
-        }
-        return SocialFriendProfilePaneWidget.build(new SocialFriendProfilePaneWidget.Props(selectedFriendUser, () -> openDmForFriend(selectedFriend), () -> pendingRemoveFriend.set(selectedFriend)));
+        return SocialFriendProfilePaneWidget.build(new SocialFriendProfilePaneWidget.Props(selectedFriend, () -> openDmForFriend(selectedFriend), () -> pendingRemoveFriend.set(selectedFriend)));
     }
 
-    private Friend selectedFriend() {
+    private User selectedFriend() {
         if (selectedFriendUserId.get() == null) {
             return null;
         }
-        return Alumite.INSTANCE.users().friends().stream().filter(friend -> Objects.equals(friend.user().id(), selectedFriendUserId.get())).findFirst().orElse(null);
+        return Alumite.INSTANCE.users().getUser(selectedFriendUserId.get());
     }
 
     private FWidget buildChatFooter() {
@@ -525,13 +517,13 @@ public class SocialMainWorkspaceComponent extends FWidget {
         GuiFocusState.setFocusedId(addFriendInput.focusId());
     }
 
-    private void openDmForFriend(Friend friend) {
+    private void openDmForFriend(User friend) {
         if (friend == null) {
             return;
         }
         AlumiteMod.SCHEDULED_POOL.execute(() -> {
             try {
-                DmChannel channel = Alumite.INSTANCE.channels().openDmAndCache(friend.user().id());
+                DmChannel channel = Alumite.INSTANCE.channels().openDmAndCache(friend.id());
                 if (channel == null) {
                     return;
                 }

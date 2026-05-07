@@ -3,7 +3,6 @@ package cc.fascinated.fascinatedutils.gui.social.components;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
-import cc.fascinated.fascinatedutils.api.friend.Friend;
 import cc.fascinated.fascinatedutils.api.user.Activity;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
@@ -22,11 +21,11 @@ public class SocialChatHeaderWidget extends FWidget {
     private static final float AVATAR_SIZE = 22f;
 
     private final BooleanSupplier isFriendsTab;
-    private final Supplier<Friend> selectedFriend;
+    private final Supplier<User> selectedFriend;
     private final Supplier<String> selectedChannelId;
     private final SocialPlayerAvatarWidget avatar;
 
-    public SocialChatHeaderWidget(BooleanSupplier isFriendsTab, Supplier<Friend> selectedFriend,
+    public SocialChatHeaderWidget(BooleanSupplier isFriendsTab, Supplier<User> selectedFriend,
                                   Supplier<String> selectedChannelId) {
         this.isFriendsTab = isFriendsTab;
         this.selectedFriend = selectedFriend;
@@ -60,12 +59,11 @@ public class SocialChatHeaderWidget extends FWidget {
         float capHeight = graphics.getFontCapHeight();
 
         if (isFriendsTab.getAsBoolean()) {
-            Friend friend = selectedFriend.get();
+            User friend = selectedFriend.get();
             if (friend == null) {
                 graphics.drawText(Component.translatable("alumite.social.tab_friends").getString(), x(), titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
             } else {
-                User friendUser = friend.user();
-                Activity friendActivity = friendUser != null ? friendUser.activity() : null;
+                Activity friendActivity = friend.activity();
                 if (friendActivity != null) {
                     float blockY = y() + (h() - capHeight * 2 - 3f) / 2f;
                     graphics.drawText("Friend Profile", x(), blockY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);

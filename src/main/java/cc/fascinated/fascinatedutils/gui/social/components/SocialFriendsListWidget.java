@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.social.components;
 
-import cc.fascinated.fascinatedutils.api.friend.Friend;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
+import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.gui.widgets.FColumnWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FScrollColumnWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FTheme;
@@ -16,7 +16,7 @@ public class SocialFriendsListWidget {
 
     public static FScrollColumnWidget build(Props props) {
         FColumnWidget body = new FColumnWidget(4f, cc.fascinated.fascinatedutils.gui.core.Align.START);
-        List<Friend> friends = props.friends();
+        List<User> friends = props.friends();
         List<PendingFriendRequest> incoming = props.incomingRequests();
         List<PendingFriendRequest> outgoing = props.outgoingRequests();
 
@@ -29,7 +29,7 @@ public class SocialFriendsListWidget {
         }
         else {
             if (hasFriends) {
-                for (Friend friend : friends) {
+                for (User friend : friends) {
                     body.addChild(props.friendRowFactory().apply(friend));
                 }
             }
@@ -56,9 +56,9 @@ public class SocialFriendsListWidget {
         return scroll;
     }
 
-    public record Props(List<Friend> friends, List<PendingFriendRequest> incomingRequests,
+    public record Props(List<User> friends, List<PendingFriendRequest> incomingRequests,
                         List<PendingFriendRequest> outgoingRequests, float scrollY, Consumer<Float> scrollYSink,
-                        Function<Friend, FWidget> friendRowFactory,
+                        Function<User, FWidget> friendRowFactory,
                         Function<PendingFriendRequest, FWidget> incomingRowFactory,
                         Function<PendingFriendRequest, FWidget> outgoingRowFactory,
                         Function<String, FWidget> sectionLabelFactory, String incomingLabel, String outgoingLabel,

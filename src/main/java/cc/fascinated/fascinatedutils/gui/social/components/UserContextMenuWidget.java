@@ -33,8 +33,7 @@ class UserContextMenuWidget {
                     onClose.run();
                 }));
 
-        boolean isFriend = Alumite.INSTANCE.users().friends().stream()
-                .anyMatch(friend -> friend.user().id().equals(user.id()));
+        boolean isFriend = Alumite.INSTANCE.users().isFriend(user.id());
         if (isFriend && onRemoveFriend != null) {
             items.add(new FContextMenuWidget.Item(
                     () -> Component.translatable("alumite.social.user_context_menu.remove_friend").getString(),

@@ -33,4 +33,14 @@ public class User {
         this.activity = activity;
         this.lastSeen = lastSeen;
     }
+
+    public void update(String minecraftUuid, String minecraftName, String role, boolean banned, UserStatus userStatus, @Nullable Activity activity, Date lastSeen) {
+        this.minecraftUuid = minecraftUuid;
+        this.minecraftName = minecraftName;
+        this.role = role;
+        this.banned = banned;
+        this.userStatus = userStatus;
+        this.activity = activity;
+        this.lastSeen = lastSeen;
+    }
 }

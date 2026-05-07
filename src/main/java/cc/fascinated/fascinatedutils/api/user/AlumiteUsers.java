@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.api.user;
 
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
-import cc.fascinated.fascinatedutils.api.friend.Friend;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
 import cc.fascinated.fascinatedutils.api.friend.json.FriendEntryDTO;
 import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestDTO;
@@ -21,6 +20,7 @@ import lombok.experimental.Accessors;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 @RequiredArgsConstructor
@@ -31,8 +31,7 @@ public class AlumiteUsers {
 
     private final Map<String, User> usersById = new ConcurrentHashMap<>();
 
-    @Getter
-    private volatile List<Friend> friends = List.of();
+    private volatile List<String> friendIds = List.of();
 
     @Getter
     private volatile List<PendingFriendRequest> incomingFriendRequests = List.of();
@@ -45,7 +44,7 @@ public class AlumiteUsers {
 
     public void clearSessionCaches() {
         usersById.clear();
-        friends = List.of();
+        friendIds = List.of();
         incomingFriendRequests = List.of();
         outgoingFriendRequests = List.of();
         selfUser = null;
@@ -63,6 +62,14 @@ public class AlumiteUsers {
         return usersById.get(userId);
     }
 
+    public List<User> getFriends() {
+        return friendIds.stream().map(usersById::get).filter(Objects::nonNull).toList();
+    }
+
+    public boolean isFriend(String userId) {
+        return friendIds.contains(userId);
+    }
+
     public User resolveUser(String userId) throws AlumiteApiException {
         User cached = getUser(userId);
         if (cached != null) {
@@ -76,12 +83,20 @@ public class AlumiteUsers {
     }
 
     public void replaceSocialFromNetwork(List<FriendEntryDTO> friendsDto, List<PendingFriendRequestDTO> incomingDto, List<PendingFriendRequestDTO> outgoingDto) {
-        friends = friendsDto == null ? List.of() : friendsDto.stream().map(this::toFriend).toList();
+        if (friendsDto != null) {
+            friendsDto.forEach(entry -> upsertUser(entry.user()));
+        }
+        friendIds = friendsDto == null ? List.of() : friendsDto.stream().map(entry -> entry.user().id()).toList();
         incomingFriendRequests = incomingDto == null ? List.of() : incomingDto.stream().map(this::toPendingFriendRequest).toList();
         outgoingFriendRequests = outgoingDto == null ? List.of() : outgoingDto.stream().map(this::toPendingFriendRequest).toList();
     }
 
     public User upsertUser(PublicUserDTO dto) {
+        User existing = usersById.get(dto.id());
+        if (existing != null) {
+            existing.update(dto.minecraftUuid(), dto.minecraftName(), dto.role(), dto.banned(), dto.userStatus(), dto.activity(), dto.lastSeen());
+            return existing;
+        }
         User user = AlumiteModelMapper.toUser(dto);
         usersById.put(dto.id(), user);
         return user;
@@ -95,16 +110,16 @@ public class AlumiteUsers {
     public void onFriendAdd(FriendEntryDTO entry) {
         User user = upsertUser(entry.user());
         boolean wasOutgoing = outgoingFriendRequests.stream().anyMatch(request -> request.user().id().equals(user.id()));
-        List<Friend> updatedFriends = new ArrayList<>(friends);
-        updatedFriends.add(new Friend(user, entry.since()));
-        friends = List.copyOf(updatedFriends);
+        List<String> updatedFriendIds = new ArrayList<>(friendIds);
+        updatedFriendIds.add(user.id());
+        friendIds = List.copyOf(updatedFriendIds);
         outgoingFriendRequests = outgoingFriendRequests.stream().filter(request -> !request.user().id().equals(user.id())).toList();
         incomingFriendRequests = incomingFriendRequests.stream().filter(request -> !request.user().id().equals(user.id())).toList();
-        FascinatedEventBus.INSTANCE.post(new FriendAddEvent(user, entry.since(), wasOutgoing));
+        FascinatedEventBus.INSTANCE.post(new FriendAddEvent(user, wasOutgoing));
     }
 
     public void onFriendRemove(String userId) {
-        friends = friends.stream().filter(entry -> !entry.user().id().equals(userId)).toList();
+        friendIds = friendIds.stream().filter(id -> !id.equals(userId)).toList();
         FascinatedEventBus.INSTANCE.post(new FriendRemoveEvent(userId));
     }
 
@@ -128,10 +143,6 @@ public class AlumiteUsers {
         updated.add(pending);
         outgoingFriendRequests = List.copyOf(updated);
         return pending;
-    }
-
-    private Friend toFriend(FriendEntryDTO entry) {
-        return new Friend(upsertUser(entry.user()), entry.since());
     }
 
     private PendingFriendRequest toPendingFriendRequest(PendingFriendRequestDTO request) {
