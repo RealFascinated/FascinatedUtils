@@ -403,6 +403,7 @@
   "alumite.setting.category.flight_speed": "Flight Speed",
   "alumite.setting.category.general": "General",
   "alumite.setting.category.performance": "Performance",
+  "alumite.setting.category.notifications": "Notifications",
   "alumite.setting.lock_reason.requires_mac_os": "This Setting Requires macOS",
 
   "alumite.module.itemtooltip.item_size": "Size: %s",
