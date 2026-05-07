@@ -46,6 +46,7 @@ public class Settings implements GsonSerializable<Settings> {
         addSetting(reduceMacOSResolution);
         addSetting(turboEntities);
         addSetting(turboParticles);
+        addSetting(socialNotifications);
 
         // ensure it's only enabled on macOS
         if (!ClientUtils.isMacOS() && reduceMacOSResolution.isEnabled()) {
