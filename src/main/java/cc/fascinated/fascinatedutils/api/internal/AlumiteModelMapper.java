@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.api.internal;
 
 import cc.fascinated.fascinatedutils.api.channel.ChannelKind;
-import cc.fascinated.fascinatedutils.api.channel.ChannelMessage;
+import cc.fascinated.fascinatedutils.api.channel.Message;
 import cc.fascinated.fascinatedutils.api.channel.GroupMember;
 import cc.fascinated.fascinatedutils.api.channel.LastMessagePreview;
 import cc.fascinated.fascinatedutils.api.channel.json.ChannelKindDTO;
@@ -10,6 +10,8 @@ import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessageDTO;
 import cc.fascinated.fascinatedutils.api.channel.json.LastMessagePreviewDTO;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.json.PublicUserDTO;
+
+import java.util.List;
 
 public class AlumiteModelMapper {
 
@@ -34,14 +36,15 @@ public class AlumiteModelMapper {
         if (dto == null) {
             return null;
         }
-        return new LastMessagePreview(dto.messageId(), dto.content(), dto.authorName());
+        return new LastMessagePreview(dto.messageId(), dto.content(), dto.authorName(), dto.attachments());
     }
 
-    public static ChannelMessage toChannelMessage(ChannelMessageDTO dto) {
+    public static Message toChannelMessage(ChannelMessageDTO dto) {
         if (dto == null) {
             return null;
         }
-        return new ChannelMessage(dto.id(), dto.channelId(), dto.authorId(), dto.content(), dto.createdAt(), dto.editedAt());
+        return new Message(dto.id(), dto.channelId(), dto.authorId(), dto.content(), dto.createdAt(), dto.editedAt(),
+                dto.attachments() != null ? dto.attachments() : List.of());
     }
 
     public static GroupMember toGroupMember(ChannelMemberDTO dto) {

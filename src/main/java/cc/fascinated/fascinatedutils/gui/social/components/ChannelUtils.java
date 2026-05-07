@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
 import cc.fascinated.fascinatedutils.api.channel.GroupChannel;
 import cc.fascinated.fascinatedutils.api.channel.LastMessagePreview;
+import cc.fascinated.fascinatedutils.api.channel.json.AttachmentDTO;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
@@ -38,10 +39,13 @@ public class ChannelUtils {
     public static String previewSnippet(Channel channel) {
         LastMessagePreview preview = channel.lastMessagePreview();
         if (preview == null || preview.content() == null || preview.content().isBlank()) {
+            if (preview != null) {
+                AttachmentDTO attachment = preview.attachments().getFirst();
+                if (attachment != null) {
+                    return attachment.name();
+                }
+            }
             return "";
-        }
-        if (preview.authorName() != null && !preview.authorName().isBlank()) {
-            return preview.authorName() + ": " + preview.content();
         }
         return preview.content();
     }

@@ -1,3 +1,7 @@
 package cc.fascinated.fascinatedutils.api.channel.json;
 
-public record SendChannelMessageBodyDTO(String content) {}
+import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
+
+public record SendChannelMessageBodyDTO(@Nullable String content, List<String> attachmentIds) {}

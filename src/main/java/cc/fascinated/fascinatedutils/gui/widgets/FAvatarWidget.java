@@ -1,10 +1,11 @@
 package cc.fascinated.fascinatedutils.gui.widgets;
 
-import cc.fascinated.fascinatedutils.gui.AvatarTextureCache;
+import cc.fascinated.fascinatedutils.caches.UrlTextureCache;
 import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import lombok.Setter;
 import net.minecraft.resources.Identifier;
 
 import java.util.function.IntSupplier;
@@ -24,10 +25,13 @@ public class FAvatarWidget extends FWidget {
     private final float cornerRadius;
     private final Supplier<String> minecraftUuidSupplier;
     private final Supplier<String> displayNameSupplier;
+    @Setter
     private int fallbackColor = 0xFF3B445A;
+    @Setter
     private int textureBackgroundArgb = 0xFF000000;
     private Integer borderArgb = null;
     private float borderThickness = 1f;
+    @Setter
     private IntSupplier userStatusDotColorSupplier = null;
 
     /**
@@ -46,24 +50,6 @@ public class FAvatarWidget extends FWidget {
     }
 
     /**
-     * Sets the background color used when no texture is available. Defaults to {@code 0xFF3B445A}.
-     *
-     * @param color packed ARGB fallback color
-     */
-    public void setFallbackColor(int color) {
-        this.fallbackColor = color;
-    }
-
-    /**
-     * Sets the background drawn behind the texture when a skin is available. Defaults to {@code 0xFF000000}.
-     *
-     * @param color packed ARGB background color
-     */
-    public void setTextureBackgroundArgb(int color) {
-        this.textureBackgroundArgb = color;
-    }
-
-    /**
      * Enables a bordered frame drawn around the full avatar area (e.g. for profile cards).
      * When set, the texture and fallback are both inset by {@code borderThickness}.
      *
@@ -73,15 +59,6 @@ public class FAvatarWidget extends FWidget {
     public void setBorderArgb(int borderArgb, float borderThickness) {
         this.borderArgb = borderArgb;
         this.borderThickness = borderThickness;
-    }
-
-    /**
-     * Enables the user status dot indicator rendered in the bottom-right quadrant of the avatar.
-     *
-     * @param supplier supplies the packed ARGB user status color each frame; pass {@code null} to hide the dot
-     */
-    public void setUserStatusDotColorSupplier(IntSupplier supplier) {
-        this.userStatusDotColorSupplier = supplier;
     }
 
     @Override
@@ -103,7 +80,7 @@ public class FAvatarWidget extends FWidget {
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
         String uuid = minecraftUuidSupplier.get();
         Identifier texture = uuid != null && !uuid.isBlank()
-                ? AvatarTextureCache.INSTANCE.get(uuid, () -> {})
+                ? UrlTextureCache.INSTANCE.get(uuid, "https://mc.fascinated.cc/api/skins/%s/face.png".formatted(uuid), () -> {})
                 : null;
         float inset = borderArgb != null ? borderThickness : 0f;
         if (borderArgb != null) {

@@ -1,9 +1,14 @@
 package cc.fascinated.fascinatedutils.gui.social.components;
 
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.api.Alumite;
-import cc.fascinated.fascinatedutils.api.channel.ChannelMessage;
+import cc.fascinated.fascinatedutils.api.channel.Message;
+import cc.fascinated.fascinatedutils.api.channel.json.AttachmentDTO;
 import cc.fascinated.fascinatedutils.api.user.User;
+import cc.fascinated.fascinatedutils.caches.UrlTextureCache;
+import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
+import net.minecraft.resources.Identifier;
 import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -13,8 +18,12 @@ import cc.fascinated.fascinatedutils.gui.widgets.FAvatarWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FIconButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
+
+import java.net.URI;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -32,6 +41,8 @@ public class SocialMessageBubbleWidget {
     private static final float LINE_GAP = 2f;
     private static final float MENU_BTN_SIZE = 16f;
     private static final float MENU_BTN_RIGHT_MARGIN = 2f;
+    private static final float ATTACHMENT_GAP = 4f;
+    private static final float MAX_ATTACHMENT_DISPLAY_HEIGHT = 200f;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("M/d/yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm a");
@@ -39,17 +50,17 @@ public class SocialMessageBubbleWidget {
     public static FWidget build(Props props, float width) {
         FAvatarWidget avatarWidget = new FAvatarWidget(AVATAR_SIZE, 4f,
                 () -> {
-                    User author = Alumite.INSTANCE.users().cachedUser(props.message().authorId());
+                    User author = Alumite.INSTANCE.users().getUser(props.message().authorId());
                     return author != null ? author.minecraftUuid() : null;
                 },
                 () -> {
-                    User author = Alumite.INSTANCE.users().cachedUser(props.message().authorId());
+                    User author = Alumite.INSTANCE.users().getUser(props.message().authorId());
                     return author != null && author.minecraftName() != null
                             ? author.minecraftName()
                             : "#" + props.message().authorId();
                 });
 
-        FIconButtonWidget menuBtn = props.onContextMenu() != null ? new FIconButtonWidget(MENU_BTN_SIZE, 3f, () -> "\u22EE") {
+        FIconButtonWidget menuBtn = props.onContextMenu() != null ? new FIconButtonWidget(MENU_BTN_SIZE, 3f, 3f, ModUiTextures.MORE_VERT::getId, true) {
             @Override
             protected int resolveButtonFillArgb(boolean hovered) {
                 return hovered ? 0x55FFFFFF : 0x33FFFFFF;
@@ -79,6 +90,9 @@ public class SocialMessageBubbleWidget {
         }
 
         return new FWidget() {
+            private float[][] lastAttachmentRects = new float[0][];
+            private String[] lastAttachmentUrls = new String[0];
+
             {
                 addChild(avatarWidget);
                 if (menuBtn != null) {
@@ -97,8 +111,15 @@ public class SocialMessageBubbleWidget {
                     float textBlockH = capH + NAME_CONTENT_GAP + inputH + 4f + capH;
                     return Math.max(AVATAR_SIZE, textBlockH) + VERT_PAD * 2f;
                 }
-                int lines = Math.max(1, countLines(props.message().content()));
+                String contentForHeight = props.message().content();
+                int lines = (contentForHeight == null || contentForHeight.isEmpty()) ? 0 : Math.max(1, countLines(contentForHeight));
                 float textBlockH = capH + NAME_CONTENT_GAP + lines * (capH + LINE_GAP);
+                float availableWidth = widthBudget - AVATAR_SIZE - AVATAR_GAP;
+                for (AttachmentDTO attachment : props.message().attachments()) {
+                    if (attachment.mimeType() != null && attachment.mimeType().startsWith("image/")) {
+                        textBlockH += ATTACHMENT_GAP + attachmentDisplaySize(attachment, availableWidth)[1];
+                    }
+                }
                 return Math.max(AVATAR_SIZE, textBlockH) + VERT_PAD * 2f;
             }
 
@@ -125,7 +146,29 @@ public class SocialMessageBubbleWidget {
 
             @Override
             public UiPointerCursor pointerCursor(float pointerX, float pointerY) {
+                for (float[] rect : lastAttachmentRects) {
+                    if (pointerX >= rect[0] && pointerX < rect[0] + rect[2] && pointerY >= rect[1] && pointerY < rect[1] + rect[3]) {
+                        return UiPointerCursor.HAND;
+                    }
+                }
                 return UiPointerCursor.DEFAULT;
+            }
+
+            @Override
+            public boolean click(float pointerX, float pointerY, int button) {
+                if (button == 0) {
+                    for (int attachIdx = 0; attachIdx < lastAttachmentRects.length; attachIdx++) {
+                        float[] rect = lastAttachmentRects[attachIdx];
+                        if (pointerX >= rect[0] && pointerX < rect[0] + rect[2] && pointerY >= rect[1] && pointerY < rect[1] + rect[3]) {
+                            String url = lastAttachmentUrls[attachIdx];
+                            try {
+                                Util.getPlatform().openUri(URI.create(url));
+                            } catch (IllegalArgumentException ignored) {}
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
 
             @Override
@@ -163,8 +206,8 @@ public class SocialMessageBubbleWidget {
                     graphics.drawRect(x(), y(), w(), h(), 0x14FFFFFF);
                 }
 
-                ChannelMessage message = props.message();
-                User author = Alumite.INSTANCE.users().cachedUser(message.authorId());
+                Message message = props.message();
+                User author = Alumite.INSTANCE.users().getUser(message.authorId());
                 String displayName = author != null && author.minecraftName() != null
                         ? author.minecraftName()
                         : "#" + message.authorId();
@@ -187,13 +230,46 @@ public class SocialMessageBubbleWidget {
                 } else {
                     float textY = nameY + graphics.getFontCapHeight() + NAME_CONTENT_GAP;
                     String displayContent = message.content();
-                    if (message.editedAt() != null && !message.editedAt().isBlank()) {
+                    if (displayContent != null && message.editedAt() != null && !message.editedAt().isBlank()) {
                         displayContent += " (edited)";
                     }
-                    for (String line : splitLines(displayContent)) {
-                        graphics.drawText(line, contentX, textY, 0xFFFFFFFF, false, false);
-                        textY += graphics.getFontCapHeight() + LINE_GAP;
+                    if (displayContent != null && !displayContent.isEmpty()) {
+                        for (String line : splitLines(displayContent)) {
+                            graphics.drawText(line, contentX, textY, 0xFFFFFFFF, false, false);
+                            textY += graphics.getFontCapHeight() + LINE_GAP;
+                        }
                     }
+                    float availableWidth = w() - AVATAR_SIZE - AVATAR_GAP;
+                    int imageCount = 0;
+                    for (AttachmentDTO att : message.attachments()) {
+                        if (att.mimeType() != null && att.mimeType().startsWith("image/")) imageCount++;
+                    }
+                    float[][] attachRects = new float[imageCount][4];
+                    String[] attachUrls = new String[imageCount];
+                    int attachIdx = 0;
+                    for (AttachmentDTO attachment : message.attachments()) {
+                        if (attachment.mimeType() == null || !attachment.mimeType().startsWith("image/")) {
+                            continue;
+                        }
+                        float[] size = attachmentDisplaySize(attachment, availableWidth);
+                        float attachW = size[0];
+                        float attachH = size[1];
+                        attachRects[attachIdx][0] = contentX;
+                        attachRects[attachIdx][1] = textY;
+                        attachRects[attachIdx][2] = attachW;
+                        attachRects[attachIdx][3] = attachH;
+                        attachUrls[attachIdx] = attachment.url();
+                        attachIdx++;
+                        Identifier texture = UrlTextureCache.INSTANCE.get(attachment.id(), attachment.url(), null);
+                        if (texture != null) {
+                            graphics.drawTexture(texture, contentX, textY, attachW, attachH, 0xFFFFFFFF);
+                        } else {
+                            graphics.drawRect(contentX, textY, attachW, attachH, 0x33FFFFFF);
+                        }
+                        textY += attachH + ATTACHMENT_GAP;
+                    }
+                    lastAttachmentRects = attachRects;
+                    lastAttachmentUrls = attachUrls;
                 }
 
                 if (menuBtn != null) {
@@ -229,6 +305,24 @@ public class SocialMessageBubbleWidget {
         return splitLines(value).length;
     }
 
+    private static float[] attachmentDisplaySize(AttachmentDTO attachment, float availableWidth) {
+        if (attachment.width() != null && attachment.height() != null && attachment.width() > 0 && attachment.height() > 0) {
+            float scale = UIScale.uiWidth() / Math.max(1f, Minecraft.getInstance().getWindow().getWidth());
+            float dispW = attachment.width() * scale;
+            float dispH = attachment.height() * scale;
+            if (dispH > MAX_ATTACHMENT_DISPLAY_HEIGHT) {
+                dispW = MAX_ATTACHMENT_DISPLAY_HEIGHT * attachment.width() / attachment.height();
+                dispH = MAX_ATTACHMENT_DISPLAY_HEIGHT;
+            }
+            if (dispW > availableWidth) {
+                dispH = availableWidth * dispH / dispW;
+                dispW = availableWidth;
+            }
+            return new float[]{dispW, dispH};
+        }
+        return new float[]{Math.min(availableWidth, 200f), 100f};
+    }
+
     private static String[] splitLines(String value) {
         if (value == null || value.isEmpty()) {
             return new String[]{""};
@@ -236,9 +330,9 @@ public class SocialMessageBubbleWidget {
         return value.split("\\R", -1);
     }
 
-    public record Props(ChannelMessage message, boolean ownMessage, BiConsumer<Float, Float> onContextMenu,
-                         FOutlinedTextInputWidget editInput, Runnable onSaveEdit, Runnable onCancelEdit) {
-        public Props(ChannelMessage message, boolean ownMessage, BiConsumer<Float, Float> onContextMenu) {
+    public record Props(Message message, boolean ownMessage, BiConsumer<Float, Float> onContextMenu,
+                        FOutlinedTextInputWidget editInput, Runnable onSaveEdit, Runnable onCancelEdit) {
+        public Props(Message message, boolean ownMessage, BiConsumer<Float, Float> onContextMenu) {
             this(message, ownMessage, onContextMenu, null, null, null);
         }
     }

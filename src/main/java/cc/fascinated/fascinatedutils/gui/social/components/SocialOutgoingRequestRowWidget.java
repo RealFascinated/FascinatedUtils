@@ -8,6 +8,7 @@ import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FAvatarWidget;
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.widgets.FIconButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
@@ -37,7 +38,7 @@ public class SocialOutgoingRequestRowWidget {
                 () -> request.user().minecraftName());
         avatar.setFallbackColor(badgeColor);
 
-        FIconButtonWidget cancelBtn = new FIconButtonWidget(BTN_W, 4f, () -> "\u2715") {
+        FIconButtonWidget cancelBtn = new FIconButtonWidget(BTN_W, 3f, 4f, ModUiTextures.CLOSE::getId, true) {
             @Override
             protected int resolveButtonFillArgb(boolean hovered) {
                 return hovered ? 0xAA5C1F1F : 0x22FFFFFF;

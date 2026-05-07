@@ -32,7 +32,7 @@ public class SocialHeaderWidget {
             }
 
             FIconButtonWidget createAddFriendBtn() {
-                FIconButtonWidget btn = new FIconButtonWidget(BUTTON_SIZE, 4f, () -> "+") {
+                FIconButtonWidget btn = new FIconButtonWidget(BUTTON_SIZE, SPRITE_INSET, 4f, ModUiTextures.ADD::getId, true) {
                     @Override
                     protected int resolveButtonFillArgb(boolean hovered) {
                         return hovered ? UITheme.COLOR_ACCENT_HOVER : UITheme.COLOR_ACCENT;

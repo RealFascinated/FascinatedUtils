@@ -19,7 +19,7 @@ public class AlumiteChannels {
     private final Alumite alumite;
     private final AlumiteUsers users;
     private final Map<String, Channel> channelsById = new ConcurrentHashMap<>();
-    private final Map<String, List<ChannelMessage>> messagesByChannel = new ConcurrentHashMap<>();
+    private final Map<String, List<Message>> messagesByChannel = new ConcurrentHashMap<>();
     private final Map<String, Boolean> hasMoreByChannel = new ConcurrentHashMap<>();
     private volatile List<Channel> channels = List.of();
 
@@ -54,12 +54,12 @@ public class AlumiteChannels {
         return channelsById.get(channelId);
     }
 
-    public List<ChannelMessage> messagesOrNull(String channelId) {
+    public List<Message> messagesOrNull(String channelId) {
         return messagesByChannel.get(channelId);
     }
 
-    public List<ChannelMessage> messages(String channelId) {
-        List<ChannelMessage> list = messagesByChannel.get(channelId);
+    public List<Message> messages(String channelId) {
+        List<Message> list = messagesByChannel.get(channelId);
         return list == null ? List.of() : list;
     }
 
@@ -102,7 +102,7 @@ public class AlumiteChannels {
         }
     }
 
-    void storeMessages(String channelId, List<ChannelMessage> messages) {
+    void storeMessages(String channelId, List<Message> messages) {
         messagesByChannel.put(channelId, List.copyOf(messages));
     }
 
@@ -130,7 +130,7 @@ public class AlumiteChannels {
         }
     }
 
-    void cacheSentMessage(String channelId, ChannelMessage message) {
+    void cacheSentMessage(String channelId, Message message) {
         upsertChannelMessageFromSend(channelId, message);
     }
 
@@ -158,18 +158,18 @@ public class AlumiteChannels {
     }
 
     public void onMessageCreate(String channelId, ChannelMessageDTO messageDto) {
-        ChannelMessage message = AlumiteModelMapper.toChannelMessage(messageDto);
+        Message message = AlumiteModelMapper.toChannelMessage(messageDto);
         upsertChannelMessage(channelId, message);
         FascinatedEventBus.INSTANCE.post(new ChannelMessageCreateEvent(channelId, message));
         Channel channel = get(channelId);
         if (channel != null) {
-            String authorName = users.previewAuthorName(message.authorId());
-            applyChannelLastMessage(channel, message.createdAt(), new LastMessagePreview(message.id(), message.content(), authorName));
+            String authorName = message.user().minecraftName();
+            applyChannelLastMessage(channel, message.createdAt(), new LastMessagePreview(message.id(), message.content(), authorName, message.attachments()));
         }
     }
 
     public void onMessageUpdate(String channelId, ChannelMessageDTO messageDto) {
-        ChannelMessage message = AlumiteModelMapper.toChannelMessage(messageDto);
+        Message message = AlumiteModelMapper.toChannelMessage(messageDto);
         upsertChannelMessage(channelId, message);
         FascinatedEventBus.INSTANCE.post(new ChannelMessageUpdateEvent(channelId, message));
         Channel channel = get(channelId);
@@ -178,12 +178,12 @@ public class AlumiteChannels {
         }
         LastMessagePreview existingPreview = channel.lastMessagePreview();
         if (existingPreview != null && existingPreview.messageId().equals(message.id())) {
-            applyChannelLastMessage(channel, channel.lastMessageAt(), new LastMessagePreview(existingPreview.messageId(), message.content(), existingPreview.authorName()));
+            applyChannelLastMessage(channel, channel.lastMessageAt(), new LastMessagePreview(existingPreview.messageId(), message.content(), existingPreview.authorName(), existingPreview.attachments()));
         }
     }
 
     public void onMessageDelete(String channelId, String messageId) {
-        List<ChannelMessage> existingMessages = messagesByChannel.get(channelId);
+        List<Message> existingMessages = messagesByChannel.get(channelId);
         if (existingMessages != null) {
             messagesByChannel.put(channelId, existingMessages.stream().filter(message -> !message.id().equals(messageId)).toList());
         }
@@ -196,12 +196,12 @@ public class AlumiteChannels {
         if (preview == null || !preview.messageId().equals(messageId)) {
             return;
         }
-        List<ChannelMessage> remaining = messagesByChannel.getOrDefault(channelId, List.of());
+        List<Message> remaining = messagesByChannel.getOrDefault(channelId, List.of());
         if (remaining.isEmpty()) {
             applyChannelLastMessage(channel, null, null);
         } else {
-            ChannelMessage last = remaining.get(remaining.size() - 1);
-            applyChannelLastMessage(channel, last.createdAt(), new LastMessagePreview(last.id(), last.content(), users.previewAuthorName(last.authorId())));
+            Message last = remaining.get(remaining.size() - 1);
+            applyChannelLastMessage(channel, last.createdAt(), new LastMessagePreview(last.id(), last.content(), last.user().minecraftName(), last.attachments()));
         }
     }
 
@@ -233,20 +233,20 @@ public class AlumiteChannels {
         channels = List.copyOf(resortChannels(new ArrayList<>(channels)));
     }
 
-    private void upsertChannelMessageFromSend(String channelId, ChannelMessage message) {
+    private void upsertChannelMessageFromSend(String channelId, Message message) {
         upsertChannelMessage(channelId, message);
         Channel channel = get(channelId);
         if (channel != null) {
-            String authorName = users.previewAuthorName(message.authorId());
-            applyChannelLastMessage(channel, message.createdAt(), new LastMessagePreview(message.id(), message.content(), authorName));
+            String authorName = message.user().minecraftName();
+            applyChannelLastMessage(channel, message.createdAt(), new LastMessagePreview(message.id(), message.content(), authorName, message.attachments()));
         }
     }
 
-    private void upsertChannelMessage(String channelId, ChannelMessage message) {
-        List<ChannelMessage> existingMessages = messagesByChannel.getOrDefault(channelId, List.of());
-        List<ChannelMessage> updatedMessages = new ArrayList<>();
+    private void upsertChannelMessage(String channelId, Message message) {
+        List<Message> existingMessages = messagesByChannel.getOrDefault(channelId, List.of());
+        List<Message> updatedMessages = new ArrayList<>();
         boolean replaced = false;
-        for (ChannelMessage existingMessage : existingMessages) {
+        for (Message existingMessage : existingMessages) {
             if (existingMessage.id().equals(message.id())) {
                 updatedMessages.add(message);
                 replaced = true;
@@ -257,7 +257,7 @@ public class AlumiteChannels {
         if (!replaced) {
             updatedMessages.add(message);
         }
-        updatedMessages.sort(Comparator.comparing(ChannelMessage::id));
+        updatedMessages.sort(Comparator.comparing(Message::createdAt));
         messagesByChannel.put(channelId, List.copyOf(updatedMessages));
     }
 

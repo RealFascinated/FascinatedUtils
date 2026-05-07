@@ -1,8 +1,10 @@
 package cc.fascinated.fascinatedutils.gui.toast;
 
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,12 +74,12 @@ public class ToastManager {
         return lines;
     }
 
-    private static String icon(Toast.Type type) {
+    private static Identifier iconSprite(Toast.Type type) {
         return switch (type) {
-            case SUCCESS -> "\u2713"; // ✓
-            case ERROR -> "\u2715"; // ✕
-            case WARNING -> "\u26A0"; // ⚠
-            case INFO -> "\u2139"; // ℹ
+            case SUCCESS -> ModUiTextures.CHECK.getId();
+            case ERROR -> ModUiTextures.CLOSE.getId();
+            case WARNING -> ModUiTextures.WARNING.getId();
+            case INFO -> null;
         };
     }
 
@@ -222,7 +224,12 @@ public class ToastManager {
         // Icon — vertically centered in the full usable height (above progress bar)
         float iconCenterX = renderX + ACCENT_W + ICON_SLOT_W / 2f;
         float iconY = renderY + (effectiveH - PROGRESS_H - capH) / 2f;
-        renderer.drawCenteredText(icon(entry.toast.type()), iconCenterX, iconY, accentColor, false, true);
+        Identifier iconSprite = iconSprite(entry.toast.type());
+        if (iconSprite != null) {
+            renderer.drawSprite(iconSprite, iconCenterX - capH / 2f, iconY, capH, capH, accentColor);
+        } else {
+            renderer.drawCenteredText("\u2139", iconCenterX, iconY, accentColor, false, true);
+        }
 
         // Title (bold, accent-colored)
         renderer.pushClip(textStartX, renderY, textClipW, effectiveH);

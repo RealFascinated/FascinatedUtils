@@ -32,7 +32,7 @@ public class SocialScreen extends WidgetScreen {
         addFriendInput = new FOutlinedTextInputWidget(32, 22f, () -> Component.translatable("alumite.social.add_friend_placeholder").getString());
         dmMessageInput = new FOutlinedTextInputWidget(512, 22f, () -> Component.translatable("alumite.social.dm.input_placeholder").getString());
 
-        socialMainWorkspace = new SocialMainWorkspaceComponent(addFriendInput, dmMessageInput, () -> Minecraft.getInstance().setScreen(null));
+        socialMainWorkspace = new SocialMainWorkspaceComponent(addFriendInput, dmMessageInput);
         host.setRoot(socialMainWorkspace);
     }
 

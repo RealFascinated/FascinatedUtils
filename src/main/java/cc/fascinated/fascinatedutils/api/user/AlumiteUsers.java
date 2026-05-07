@@ -51,29 +51,23 @@ public class AlumiteUsers {
         selfUser = null;
     }
 
-    public void setSelfUser(UserDTO dto) {
+    public void updateSelfUser() {
+        UserDTO dto = alumite.getSelfUser();
+
         User user = AlumiteModelMapper.toUser(dto);
         selfUser = new SelfUser(alumite, user, dto.preferredUserStatus(), null);
         usersById.put(dto.id(), user);
     }
 
-    public User cachedUser(String userId) {
+    public User getUser(String userId) {
         return usersById.get(userId);
     }
 
-    public User user(String userId) {
-        return usersById.computeIfAbsent(userId, User::new);
-    }
-
     public User resolveUser(String userId) throws AlumiteApiException {
-        User cached = cachedUser(userId);
+        User cached = getUser(userId);
         if (cached != null) {
             return cached;
         }
-        return fetchUser(userId);
-    }
-
-    private User fetchUser(String userId) throws AlumiteApiException {
         return upsertUser(alumite.fetchUser(userId));
     }
 
@@ -134,14 +128,6 @@ public class AlumiteUsers {
         updated.add(pending);
         outgoingFriendRequests = List.copyOf(updated);
         return pending;
-    }
-
-    public String previewAuthorName(String authorId) {
-        User user = cachedUser(authorId);
-        if (user != null && user.minecraftName() != null && !user.minecraftName().isBlank()) {
-            return user.minecraftName();
-        }
-        return "";
     }
 
     private Friend toFriend(FriendEntryDTO entry) {

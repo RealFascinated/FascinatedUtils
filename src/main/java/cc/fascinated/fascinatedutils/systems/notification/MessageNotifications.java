@@ -21,7 +21,7 @@ public class MessageNotifications {
         if (Objects.equals(Alumite.INSTANCE.users().selfUser().user().id(), authorId)) {
             return;
         }
-        User user = Alumite.INSTANCE.users().cachedUser(authorId);
+        User user = Alumite.INSTANCE.users().getUser(authorId);
         String title = user != null ? user.minecraftName() : "User " + authorId;
 
         Toast.show().title(title).message(event.message().content()).info();

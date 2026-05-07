@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.social.components;
 
+import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
@@ -10,21 +11,23 @@ import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FBadgeWidget;
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.widgets.FIconButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
+import net.minecraft.network.chat.Component;
 
 import java.util.function.BiConsumer;
 
 public class SocialChatRowWidget {
-    private static final float AVATAR_SIZE = 32f;
-    private static final float CLOSE_BTN_SIZE = 20f;
+    private static final float AVATAR_SIZE = 24f;
+    private static final float CLOSE_BTN_SIZE = 16f;
 
     public static FWidget build(Props props, float width, float rowHeight) {
         return new FWidget() {
             final SocialPlayerAvatarWidget avatar = new SocialPlayerAvatarWidget(AVATAR_SIZE,
-                    () -> props.avatarMinecraftUuid(),
-                    () -> props.displayName(),
-                    () -> props.userStatusColor());
+                    () -> ChannelUtils.dmAvatarMinecraftUuid(props.channel()),
+                    () -> ChannelUtils.title(props.channel()),
+                    () -> ChannelUtils.dmUserStatusColor(props.channel()));
             {
                 addChild(avatar);
             }
@@ -35,7 +38,7 @@ public class SocialChatRowWidget {
                 addChild(unreadBadge);
             }
 
-            final FIconButtonWidget closeBtn = new FIconButtonWidget(CLOSE_BTN_SIZE, 4f, () -> "\u2715") {
+            final FIconButtonWidget closeBtn = new FIconButtonWidget(CLOSE_BTN_SIZE, 3f, 4f, ModUiTextures.CLOSE::getId, true) {
                 @Override
                 protected int resolveButtonFillArgb(boolean hovered) {
                     return hovered ? 0xAA5C1F1F : 0x22FFFFFF;
@@ -100,13 +103,14 @@ public class SocialChatRowWidget {
                 }
                 float maxLineWidth = Math.max(0f, x() + w() - textX - reservedRight);
                 float titleY = y() + 8f;
-                String title = props.displayName() == null || props.displayName().isBlank() ? "Direct Message" : props.displayName();
+
+                String channelTitle = ChannelUtils.title(props.channel());
+                String title = channelTitle == null || channelTitle.isBlank() ? Component.translatable("alumite.social.dm.unknown_user").getString() : channelTitle;
                 String titleDraw = TextLineLayout.ellipsize(title, maxLineWidth, segment -> graphics.measureTextWidth(segment, true));
                 graphics.drawText(titleDraw, textX, titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
-                String previewDraw = TextLineLayout.ellipsize(normalizeSnippet(props.snippet()), maxLineWidth, segment -> graphics.measureTextWidth(segment, false));
+
+                String previewDraw = TextLineLayout.ellipsize(normalizeSnippet(ChannelUtils.previewSnippet(props.channel())), maxLineWidth, segment -> graphics.measureTextWidth(segment, false));
                 graphics.drawText(previewDraw, textX, titleY + graphics.getFontCapHeight() + 3f, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
-
-
             }
 
             private String normalizeSnippet(String value) {
@@ -148,7 +152,6 @@ public class SocialChatRowWidget {
         };
     }
 
-    public record Props(String displayName, String avatarMinecraftUuid, String snippet, int userStatusColor,
-                        boolean selected, boolean showUnreadBadge, Runnable onSelect, Runnable onCloseChannel,
-                        BiConsumer<Float, Float> onContextMenu) {}
+    public record Props(Channel channel, boolean selected, boolean showUnreadBadge, Runnable onSelect,
+                        Runnable onCloseChannel, BiConsumer<Float, Float> onContextMenu) {}
 }

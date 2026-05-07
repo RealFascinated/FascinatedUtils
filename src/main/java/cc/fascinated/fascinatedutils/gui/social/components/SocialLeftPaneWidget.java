@@ -41,7 +41,7 @@ public class SocialLeftPaneWidget {
                 }
 
                 float profileFooterH = 36f;
-                float profileFooterY = ly + lh - 6f - profileFooterH;
+                float profileFooterY = (float) Math.floor(ly + lh - profileFooterH);
                 float listHeight = Math.max(0f, profileFooterY - 8f - cursorY);
                 props.list().layout(measure, lx + props.padding(), cursorY, lw - 2f * props.padding(), listHeight);
                 props.userProfileFooter().layout(measure, lx + props.padding(), profileFooterY, lw - 2f * props.padding(), profileFooterH);

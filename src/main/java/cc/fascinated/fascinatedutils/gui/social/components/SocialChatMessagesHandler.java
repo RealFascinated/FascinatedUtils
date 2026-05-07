@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
-import cc.fascinated.fascinatedutils.api.channel.ChannelMessage;
+import cc.fascinated.fascinatedutils.api.channel.Message;
 import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessagePageDTO;
 import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -37,11 +37,11 @@ class SocialChatMessagesHandler {
 
     private String loadingMessagesChannelId;
     private String loadingOlderMessagesChannelId;
-    private ChannelMessage contextMenuMessage;
+    private Message contextMenuMessage;
     private float contextMenuX;
     private float contextMenuY;
-    private ChannelMessage pendingDeleteMessage;
-    private ChannelMessage editingMessage;
+    private Message pendingDeleteMessage;
+    private Message editingMessage;
     private final FOutlinedTextInputWidget editMessageInput = new FOutlinedTextInputWidget(4000, 20f, () -> "");
     private boolean editMessagePending;
 
@@ -63,7 +63,7 @@ class SocialChatMessagesHandler {
             result.add(buildContextMenuOverlay());
         }
         if (pendingDeleteMessage != null) {
-            ChannelMessage toDelete = pendingDeleteMessage;
+            Message toDelete = pendingDeleteMessage;
             result.add(SocialDestructiveFullscreenConfirmOverlay.create(new SocialDestructiveFullscreenConfirmOverlay.Props(
                     Component.translatable("alumite.social.delete_message.title").getString(),
                     Component.translatable("alumite.social.delete_message.message").getString(),
@@ -90,7 +90,7 @@ class SocialChatMessagesHandler {
             return buildEmpty(Component.translatable("alumite.social.loading").getString());
         }
         Channel channel = Alumite.INSTANCE.channels().get(selectedChannelId);
-        List<ChannelMessage> messages = channel == null ? null : channel.messagesOrNull();
+        List<Message> messages = channel == null ? null : channel.messagesOrNull();
         if (messages == null) {
             triggerLoadMessages(selectedChannelId);
             return buildEmpty(Component.translatable("alumite.social.loading").getString());
@@ -98,7 +98,7 @@ class SocialChatMessagesHandler {
 
         float messageWidth = panelWidth - 2f * PAD;
         FColumnWidget body = new FColumnWidget(5f, Align.START);
-        for (ChannelMessage message : messages) {
+        for (Message message : messages) {
                 body.addChild(buildMessageRow(message, messageWidth, selectedChannelId));
             }
 
@@ -127,7 +127,7 @@ class SocialChatMessagesHandler {
         return maxOffset <= MESSAGE_SCROLL_EDGE_EPSILON || offset >= maxOffset - MESSAGE_SCROLL_EDGE_EPSILON;
     }
 
-    private FWidget buildMessageRow(ChannelMessage message, float width, String selectedChannelId) {
+    private FWidget buildMessageRow(Message message, float width, String selectedChannelId) {
         boolean own = Objects.equals(Alumite.INSTANCE.users().selfUser().user().id(), message.authorId());
         boolean isEditing = editingMessage != null && editingMessage.id().equals(message.id());
         BiConsumer<Float, Float> onContextMenu = own && !isEditing ? (mx, my) -> {
@@ -146,7 +146,7 @@ class SocialChatMessagesHandler {
                 new FContextMenuWidget.Item(
                         () -> Component.translatable("alumite.social.edit_message.action").getString(),
                         () -> {
-                            ChannelMessage target = contextMenuMessage;
+                            Message target = contextMenuMessage;
                             contextMenuMessage = null;
                             if (target != null) {
                                 editingMessage = target;
@@ -158,7 +158,7 @@ class SocialChatMessagesHandler {
                         () -> Component.translatable("alumite.social.delete_message.action").getString(),
                         0xFFFF5555,
                         () -> {
-                            ChannelMessage target = contextMenuMessage;
+                            Message target = contextMenuMessage;
                             contextMenuMessage = null;
                             if (target != null) {
                                 pendingDeleteMessage = target;
@@ -202,7 +202,7 @@ class SocialChatMessagesHandler {
     }
 
     private void submitEdit(String selectedChannelId) {
-        ChannelMessage target = editingMessage;
+        Message target = editingMessage;
         if (target == null || editMessagePending) {
             return;
         }
@@ -232,7 +232,7 @@ class SocialChatMessagesHandler {
         });
     }
 
-    private void submitDelete(ChannelMessage message, String selectedChannelId) {
+    private void submitDelete(Message message, String selectedChannelId) {
         Channel channel = selectedChannelId != null ? Alumite.INSTANCE.channels().get(selectedChannelId) : null;
         if (channel == null) {
             return;
@@ -278,7 +278,7 @@ class SocialChatMessagesHandler {
         if (!channel.hasMoreMessages()) {
             return;
         }
-        List<ChannelMessage> existingMessages = channel.messagesOrNull();
+        List<Message> existingMessages = channel.messagesOrNull();
         if (existingMessages == null || existingMessages.isEmpty()) {
             return;
         }
@@ -299,7 +299,7 @@ class SocialChatMessagesHandler {
         if (channel == null) {
             return;
         }
-        List<ChannelMessage> messages = channel.messagesOrNull();
+        List<Message> messages = channel.messagesOrNull();
         if (messages == null || messages.isEmpty()) {
             return;
         }
@@ -324,13 +324,13 @@ class SocialChatMessagesHandler {
         if (channel == null) {
             return;
         }
-        List<ChannelMessage> messages = channel.messagesOrNull();
+        List<Message> messages = channel.messagesOrNull();
         if (messages == null || messages.isEmpty()) {
             return;
         }
         String selfId = Alumite.INSTANCE.users().selfUser().user().id();
         for (int i = messages.size() - 1; i >= 0; i--) {
-            ChannelMessage message = messages.get(i);
+            Message message = messages.get(i);
             if (Objects.equals(selfId, message.authorId())) {
                 editingMessage = message;
                 editMessageInput.setValue(message.content());

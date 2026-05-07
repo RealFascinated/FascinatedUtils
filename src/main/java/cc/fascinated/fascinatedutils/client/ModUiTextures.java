@@ -22,6 +22,9 @@ public enum ModUiTextures {
     SEARCH("ui/search"),
     GROUP("ui/group"),
     SUNNY("ui/sunny"),
+    ADD("ui/add"),
+    WARNING("ui/warning"),
+    MORE_VERT("ui/more_vert"),
     ;
 
     private final Identifier id;

@@ -1,5 +1,5 @@
 package cc.fascinated.fascinatedutils.event.impl.social;
 
-import cc.fascinated.fascinatedutils.api.channel.ChannelMessage;
+import cc.fascinated.fascinatedutils.api.channel.Message;
 
-public record ChannelMessageUpdateEvent(String channelId, ChannelMessage message) {}
+public record ChannelMessageUpdateEvent(String channelId, Message message) {}

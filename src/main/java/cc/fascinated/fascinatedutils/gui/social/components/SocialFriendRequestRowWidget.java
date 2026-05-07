@@ -12,6 +12,7 @@ import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.toast.Toast;
 import cc.fascinated.fascinatedutils.gui.widgets.FAvatarWidget;
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.widgets.FIconButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
@@ -42,7 +43,7 @@ public class SocialFriendRequestRowWidget {
                 () -> request.user().minecraftName());
         avatar.setFallbackColor(badgeColor);
 
-        FIconButtonWidget acceptBtn = new FIconButtonWidget(BTN_W, 4f, () -> "\u2713") {
+        FIconButtonWidget acceptBtn = new FIconButtonWidget(BTN_W, 3f, 4f, ModUiTextures.CHECK::getId, true) {
             @Override
             protected int resolveButtonFillArgb(boolean hovered) {
                 return hovered ? 0xAA1F5C1F : 0x22FFFFFF;
@@ -72,7 +73,7 @@ public class SocialFriendRequestRowWidget {
             }
         }));
 
-        FIconButtonWidget declineBtn = new FIconButtonWidget(BTN_W, 4f, () -> "\u2715") {
+        FIconButtonWidget declineBtn = new FIconButtonWidget(BTN_W, 3f, 4f, ModUiTextures.CLOSE::getId, true) {
             @Override
             protected int resolveButtonFillArgb(boolean hovered) {
                 return hovered ? 0xAA5C1F1F : 0x22FFFFFF;

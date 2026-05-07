@@ -9,6 +9,7 @@ import cc.fascinated.fascinatedutils.api.friend.Friend;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.api.user.User;
+import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
@@ -18,6 +19,7 @@ import cc.fascinated.fascinatedutils.gui.widgets.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -26,7 +28,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
     private static final float LEFT_PANEL_WIDTH = 250f;
     private static final float SPLIT_GAP = 10f;
     private static final float PAD = 10f;
-    private static final float ROW_H = 44f;
+    private static final float ROW_H = 36f;
     private static final float TAB_H = 26f;
     private static final float USER_STATUS_PICKER_H = 24f;
 
@@ -38,9 +40,9 @@ public class SocialMainWorkspaceComponent extends FWidget {
     // Retained widgets (created once, identity preserved across re-renders)
     private final FOutlinedTextInputWidget addFriendInput;
     private final FOutlinedTextInputWidget dmMessageInput;
-    private final Runnable onCloseScreen;
     private final FOutlinedTextInputWidget chatSearchInput = new FOutlinedTextInputWidget(40, 20f, () -> Component.translatable("alumite.social.search_placeholder").getString());
     private final SocialChatMessagesHandler chatMessages = new SocialChatMessagesHandler();
+    private final SocialAttachButtonWidget attachButton = new SocialAttachButtonWidget();
 
     // FState fields — null until first render, then stable for lifetime of this component
     private FState<Tab> activeTab;
@@ -63,10 +65,9 @@ public class SocialMainWorkspaceComponent extends FWidget {
     private FState<Float> userContextMenuX;
     private FState<Float> userContextMenuY;
 
-    public SocialMainWorkspaceComponent(FOutlinedTextInputWidget addFriendInput, FOutlinedTextInputWidget dmMessageInput, Runnable onCloseScreen) {
+    public SocialMainWorkspaceComponent(FOutlinedTextInputWidget addFriendInput, FOutlinedTextInputWidget dmMessageInput) {
         this.addFriendInput = addFriendInput;
         this.dmMessageInput = dmMessageInput;
-        this.onCloseScreen = onCloseScreen;
         this.root = new FNodeWidget(nodes.get("social-main", this::buildRootWidget));
         addChild(root);
     }
@@ -344,7 +345,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
             userContextMenuX.set(mx);
             userContextMenuY.set(my);
         } : null;
-        return SocialChatRowWidget.build(new SocialChatRowWidget.Props(ChannelUtils.title(channel), ChannelUtils.dmAvatarMinecraftUuid(channel), ChannelUtils.previewSnippet(channel), ChannelUtils.dmUserStatusColor(channel), Objects.equals(selectedChannelId.get(), channel.id()), ChannelUtils.hasUnread(channel), () -> selectChannel(channel.id(), false), dmChannel != null ? () -> closeDmChannel(channel.id()) : null, onContextMenu), innerW, ROW_H);
+        return SocialChatRowWidget.build(new SocialChatRowWidget.Props(channel, Objects.equals(selectedChannelId.get(), channel.id()), ChannelUtils.hasUnread(channel), () -> selectChannel(channel.id(), false), dmChannel != null ? () -> closeDmChannel(channel.id()) : null, onContextMenu), innerW, ROW_H);
     }
 
     private FWidget buildFriendRow(Friend friend, float innerW) {
@@ -441,7 +442,11 @@ public class SocialMainWorkspaceComponent extends FWidget {
             Channel footerChannel = selectedChannelId.get() == null ? null : Alumite.INSTANCE.channels().get(selectedChannelId.get());
             return "Message " + ChannelUtils.title(footerChannel);
         });
-        return SocialChatComposerWidget.build(new SocialChatComposerWidget.Props(dmMessageInput, this::sendSelectedMessage, () -> chatMessages.startEditLastOwnMessage(selectedChannelId.get(), this::anchorMessageScrollToBottom)));
+        return SocialChatComposerWidget.build(new SocialChatComposerWidget.Props(
+                dmMessageInput,
+                this::sendSelectedMessage,
+                () -> chatMessages.startEditLastOwnMessage(selectedChannelId.get(), this::anchorMessageScrollToBottom),
+                attachButton));
     }
 
     private void anchorMessageScrollToBottom() {
@@ -452,6 +457,7 @@ public class SocialMainWorkspaceComponent extends FWidget {
         selectedChannelId.set(channelId);
         lastOpenedChannelId = channelId;
         anchorMessageScrollToBottom();
+        attachButton.clear();
         if (switchToChat && activeTab.get() != Tab.CHAT) {
             activeTab.set(Tab.CHAT);
             scrollYRef.set(0f);
@@ -463,11 +469,13 @@ public class SocialMainWorkspaceComponent extends FWidget {
             return;
         }
         String content = dmMessageInput.value().trim();
-        if (content.isEmpty()) {
+        Path attachment = attachButton.pendingPath();
+        if (content.isEmpty() && attachment == null) {
             return;
         }
         sendMessagePending.set(true);
         dmMessageInput.setValue("");
+        attachButton.clear();
         Channel channel = Alumite.INSTANCE.channels().get(selectedChannelId.get());
         if (channel == null) {
             sendMessagePending.set(false);
@@ -476,9 +484,18 @@ public class SocialMainWorkspaceComponent extends FWidget {
         AlumiteMod.SCHEDULED_POOL.execute(() -> {
             boolean sent;
             try {
-                channel.sendMessage(content);
+                if (attachment != null) {
+                    channel.sendMessage(content, attachment);
+                } else {
+                    channel.sendMessage(content);
+                }
                 sent = true;
+            } catch (AlumiteApiException exception) {
+                Client.LOG.warn("[Social] send message failed: {}", exception.getMessage());
+                Toast.show().message(SocialErrors.message(exception)).error();
+                sent = false;
             } catch (Exception exception) {
+                Client.LOG.warn("[Social] send message unexpected error", exception);
                 Toast.show().message(Component.translatable("alumite.social.error.generic").getString()).error();
                 sent = false;
             }

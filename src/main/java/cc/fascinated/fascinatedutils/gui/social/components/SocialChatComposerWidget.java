@@ -2,28 +2,34 @@ package cc.fascinated.fascinatedutils.gui.social.components;
 
 import cc.fascinated.fascinatedutils.gui.core.GuiFocusState;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
-import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import org.lwjgl.glfw.GLFW;
 
 public class SocialChatComposerWidget {
     public static FWidget build(Props props) {
-        FButtonWidget sendButton = new FButtonWidget(props.onSend(), () -> ">", 26f, 1, 1f, 4f, 1f, 4f, 3f);
+        SocialAttachButtonWidget attachButton = props.attachButton();
         return new FWidget() {
             {
+                if (attachButton != null) {
+                    addChild(attachButton);
+                }
                 addChild(props.input());
-                addChild(sendButton);
             }
 
             @Override
             public void layout(UIRenderer measure, float lx, float ly, float lw, float lh) {
                 setBounds(lx, ly, lw, lh);
-                float inputW = lw - 30f;
+                float attachW = attachButton != null ? 24f : 0f;
+                float inputW = lw - attachW;
                 float inputH = props.input().intrinsicHeightForColumn(measure, inputW);
                 float inputY = ly + (lh - inputH) / 2f;
-                props.input().layout(measure, lx, inputY, inputW, inputH);
-                sendButton.layout(measure, lx + inputW + 4f, ly + (lh - 20f) / 2f, 26f, 20f);
+                float cursorX = lx;
+                if (attachButton != null) {
+                    attachButton.layout(measure, cursorX, inputY, 20f, inputH);
+                    cursorX += attachW;
+                }
+                props.input().layout(measure, cursorX, inputY, inputW, inputH);
             }
 
             @Override
@@ -47,5 +53,10 @@ public class SocialChatComposerWidget {
         };
     }
 
-    public record Props(FOutlinedTextInputWidget input, Runnable onSend, Runnable onUpArrow) {}
+    public record Props(FOutlinedTextInputWidget input, Runnable onSend, Runnable onUpArrow,
+                         SocialAttachButtonWidget attachButton) {
+        public Props(FOutlinedTextInputWidget input, Runnable onSend, Runnable onUpArrow) {
+            this(input, onSend, onUpArrow, null);
+        }
+    }
 }

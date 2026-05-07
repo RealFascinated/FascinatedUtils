@@ -10,6 +10,7 @@ import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.widgets.FIconButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 
@@ -30,7 +31,7 @@ public class SocialFriendRowWidget {
                 addChild(avatar);
             }
 
-            final FIconButtonWidget removeBtn = new FIconButtonWidget(BTN_SIZE, 4f, () -> "✕") {
+            final FIconButtonWidget removeBtn = new FIconButtonWidget(BTN_SIZE, 3f, 4f, ModUiTextures.CLOSE::getId, true) {
                 @Override
                 protected int resolveButtonFillArgb(boolean hovered) {
                     return hovered ? 0xAA5C1F1F : 0x22FFFFFF;
