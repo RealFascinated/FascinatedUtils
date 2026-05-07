@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.social.components;
 
+import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
 import cc.fascinated.fascinatedutils.api.channel.GroupChannel;
@@ -47,7 +48,13 @@ public class ChannelUtils {
             }
             return "";
         }
-        return preview.content();
+
+        // Who sent the message
+        String authorName = preview.authorName();
+        boolean isSelf = authorName != null && authorName.equals(Alumite.INSTANCE.users().selfUser().user().minecraftName());
+        String authorPart = (isSelf ? Component.translatable("alumite.social.dm.preview.you").getString() : authorName) + ": ";
+
+        return authorPart + preview.content();
     }
 
     public static boolean hasUnread(Channel channel) {
