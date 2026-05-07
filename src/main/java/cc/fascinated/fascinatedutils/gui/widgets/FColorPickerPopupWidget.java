@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+package cc.fascinated.fascinatedutils.gui.widgets;
 
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
@@ -8,10 +8,7 @@ import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
-import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FIconCheckboxWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
-import cc.fascinated.fascinatedutils.gui.widgets.FPopupWidget;
+
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Locale;

@@ -16,7 +16,7 @@ import cc.fascinated.fascinatedutils.event.impl.JoinMultiplayerServerEvent;
 import cc.fascinated.fascinatedutils.event.impl.SingleplayerWorldLoadEvent;
 import cc.fascinated.fascinatedutils.systems.activity.ActivityHandler;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.notification.MessageNotifications;
+import cc.fascinated.fascinatedutils.systems.notification.Notifications;
 import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
 import cc.fascinated.fascinatedutils.systems.turboparticles.TurboParticles;
 import cc.fascinated.fascinatedutils.updater.Updater;
@@ -43,7 +43,7 @@ public class Client implements ClientModInitializer {
         eventBus.subscribe(Alumite.INSTANCE);
         eventBus.subscribe(TURBO_PARTICLES);
         eventBus.subscribe(TURBO_ENTITIES);
-        eventBus.subscribe(new MessageNotifications());
+        eventBus.subscribe(new Notifications());
         eventBus.subscribe(ActivityHandler.INSTANCE);
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> eventBus.post(new ClientStartedEvent(client)));

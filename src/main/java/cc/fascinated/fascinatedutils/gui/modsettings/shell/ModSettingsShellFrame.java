@@ -1,9 +1,10 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+package cc.fascinated.fascinatedutils.gui.modsettings.shell;
 
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.core.InputEvent;
 import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.input.MouseButtons;
+import cc.fascinated.fascinatedutils.gui.modsettings.FHudLayoutEditorChipWidget;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.theme.Icons;

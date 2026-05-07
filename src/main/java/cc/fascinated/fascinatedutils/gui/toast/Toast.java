@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
@@ -14,6 +15,10 @@ public class Toast {
     private final String message;
     private final Type type;
     private final float durationSeconds;
+    @Nullable private final String imageId;
+    @Nullable private final String imageUrl;
+    @Nullable private final Integer imageWidth;
+    @Nullable private final Integer imageHeight;
 
     public static Builder show() {
         return new Builder();
@@ -28,6 +33,10 @@ public class Toast {
         private String title = null;
         private String message = "";
         private int durationMs = 3000;
+        private String imageId = null;
+        private String imageUrl = null;
+        private Integer imageWidth = null;
+        private Integer imageHeight = null;
 
         private static String defaultTitle(Type type) {
             return switch (type) {
@@ -53,6 +62,26 @@ public class Toast {
             return this;
         }
 
+        public Builder imageId(String imageId) {
+            this.imageId = imageId;
+            return this;
+        }
+
+        public Builder imageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+            return this;
+        }
+
+        public Builder imageWidth(Integer imageWidth) {
+            this.imageWidth = imageWidth;
+            return this;
+        }
+
+        public Builder imageHeight(Integer imageHeight) {
+            this.imageHeight = imageHeight;
+            return this;
+        }
+
         public void success() {
             commit(Type.SUCCESS);
         }
@@ -71,7 +100,7 @@ public class Toast {
 
         private void commit(Type type) {
             String resolvedTitle = title != null ? title : defaultTitle(type);
-            ToastManager.INSTANCE.add(new Toast(resolvedTitle, message, type, durationMs / 1000f));
+            ToastManager.INSTANCE.add(new Toast(resolvedTitle, message, type, durationMs / 1000f, imageId, imageUrl, imageWidth, imageHeight));
         }
     }
 }

@@ -1,50 +1,53 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+package cc.fascinated.fascinatedutils.gui.modsettings.profile;
 
 import cc.fascinated.fascinatedutils.gui.core.Align;
-import cc.fascinated.fascinatedutils.gui.core.FState;
 import cc.fascinated.fascinatedutils.gui.core.TextOverflow;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
+import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.widgets.*;
+import cc.fascinated.fascinatedutils.gui.widgets.FButtonWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FLabelWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
+import cc.fascinated.fascinatedutils.gui.widgets.FPopupWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import net.minecraft.network.chat.Component;
 
-public class FProfileCreatePopupWidget extends FPopupWidget {
-    private final FState<String> profileNameRef;
-    private final FState<Boolean> copyDefaultProfileSettingsRef;
+public class FProfileRenamePopupWidget extends FPopupWidget {
+    private final String currentProfileName;
     private final Runnable onCancel;
-    private final SubmitProfileCallback onSubmit;
+    private final SubmitRenameCallback onSubmit;
     private final FLabelWidget titleLabel;
     private final FLabelWidget descriptionLabel;
     private final FOutlinedTextInputWidget profileNameInput;
     private final FLabelWidget validationLabel;
-    private final FIconCheckboxWidget copyDefaultToggleCheckbox;
     private final FButtonWidget cancelButton;
-    private final FButtonWidget createButton;
+    private final FButtonWidget renameButton;
+    private String newName;
     private String validationMessage = "";
 
-    public FProfileCreatePopupWidget(FState<String> profileNameRef, FState<Boolean> copyDefaultProfileSettingsRef, Runnable onCancel, SubmitProfileCallback onSubmit) {
+    public FProfileRenamePopupWidget(String currentName, Runnable onCancel, SubmitRenameCallback onSubmit) {
         super(onCancel);
-        this.profileNameRef = profileNameRef;
-        this.copyDefaultProfileSettingsRef = copyDefaultProfileSettingsRef;
+        this.currentProfileName = currentName;
         this.onCancel = onCancel;
         this.onSubmit = onSubmit;
+        this.newName = currentName;
 
         titleLabel = new FLabelWidget();
-        titleLabel.setText(Component.translatable("alumite.setting.shell.profile_popup_title").getString());
+        titleLabel.setText(Component.translatable("alumite.setting.shell.profile_rename_popup_title").getString());
         titleLabel.setAlignX(Align.START);
+        titleLabel.setOverflow(TextOverflow.WRAP);
         titleLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textPrimary());
 
         descriptionLabel = new FLabelWidget();
-        descriptionLabel.setText(Component.translatable("alumite.setting.shell.profile_popup_description").getString());
+        descriptionLabel.setText(Component.translatable("alumite.setting.shell.profile_rename_popup_description").getString());
         descriptionLabel.setAlignX(Align.START);
         descriptionLabel.setOverflow(TextOverflow.WRAP);
         descriptionLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textMuted());
 
-        profileNameInput = new FOutlinedTextInputWidget(45, 17f, () -> Component.translatable("alumite.setting.shell.profile_name_placeholder").getString());
-        profileNameInput.setValue(profileNameRef.get() == null ? "" : profileNameRef.get());
+        profileNameInput = new FOutlinedTextInputWidget(64, 24f, () -> "");
+        profileNameInput.setValue(currentName);
         profileNameInput.setOnChange(value -> {
-            profileNameRef.setQuiet(value);
+            newName = value;
             refreshValidationState();
         });
 
@@ -53,10 +56,8 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
         validationLabel.setOverflow(TextOverflow.WRAP);
         validationLabel.setColorArgb(FascinatedGuiTheme.INSTANCE.textAccent());
 
-        copyDefaultToggleCheckbox = new FIconCheckboxWidget(Boolean.TRUE.equals(copyDefaultProfileSettingsRef.get()), checked -> copyDefaultProfileSettingsRef.setQuiet(checked), () -> Boolean.TRUE.equals(copyDefaultProfileSettingsRef.get()) ? Component.translatable("alumite.setting.shell.profile_popup_copy_default_on").getString() : Component.translatable("alumite.setting.shell.profile_popup_copy_default_off").getString(), 154f);
-
-        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("alumite.setting.shell.profile_popup_cancel").getString(), 70f, 1, 1f, 6f, 1f, 6f);
-        createButton = new FButtonWidget(this::submit, () -> Component.translatable("alumite.setting.shell.profile_popup_create").getString(), 70f, 1, 1f, 6f, 1f, 6f) {
+        cancelButton = new FButtonWidget(onCancel, () -> Component.translatable("alumite.setting.shell.profile_popup_cancel").getString(), 100f, 1, 2f, 8f, 1f, 8f);
+        renameButton = new FButtonWidget(this::submit, () -> Component.translatable("alumite.setting.shell.profile_rename_popup_confirm").getString(), 100f, 1, 2f, 8f, 1f, 8f) {
             @Override
             protected int resolveButtonBorderColorArgb(boolean hovered) {
                 if (!isInputValid()) {
@@ -70,30 +71,18 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
         addChild(descriptionLabel);
         addChild(profileNameInput);
         addChild(validationLabel);
-        addChild(copyDefaultToggleCheckbox);
         addChild(cancelButton);
-        addChild(createButton);
+        addChild(renameButton);
 
         refreshValidationState();
     }
 
-    private static String resolveValidationMessage(String requestedName) {
-        String normalizedName = requestedName == null ? "" : requestedName.trim();
-        if (normalizedName.isEmpty()) {
-            return Component.translatable("alumite.setting.shell.profile_name_error_empty").getString();
-        }
-        if (ModConfig.profiles().profileNameExists(normalizedName)) {
-            return Component.translatable("alumite.setting.shell.profile_name_error_duplicate_create").getString();
-        }
-        return "";
-    }
-
     @Override
     public void layout(UIRenderer measure, float layoutX, float layoutY, float layoutWidth, float layoutHeight) {
-        float popupWidth = Math.min(Math.max(168f, layoutWidth * 0.45f), 252f);
-        float horizontalPadding = 7f;
-        float verticalPadding = 7f;
-        float rowGap = 3f;
+        float popupWidth = Math.min(Math.max(240f, layoutWidth * 0.45f), 360f);
+        float horizontalPadding = UITheme.PADDING_MD;
+        float verticalPadding = UITheme.PADDING_MD;
+        float rowGap = UITheme.GAP_SM;
         float bodyWidth = Math.max(0f, popupWidth - 2f * horizontalPadding);
         float titleHeight = titleLabel.intrinsicHeightForColumn(measure, bodyWidth);
         float descriptionHeight = descriptionLabel.intrinsicHeightForColumn(measure, bodyWidth);
@@ -103,11 +92,10 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
         if (hasValidationMessage) {
             validationHeight = validationLabel.intrinsicHeightForColumn(measure, bodyWidth);
         }
-        float toggleHeight = copyDefaultToggleCheckbox.intrinsicHeightForColumn(measure, bodyWidth);
         float actionsHeight = cancelButton.intrinsicHeightForColumn(measure, bodyWidth);
 
-        float computedDialogHeight = verticalPadding + titleHeight + rowGap + descriptionHeight + rowGap + inputHeight + (hasValidationMessage ? rowGap + validationHeight : 0f) + rowGap + toggleHeight + rowGap + actionsHeight + verticalPadding;
-        float popupHeight = Math.max(130f, computedDialogHeight);
+        float computedDialogHeight = verticalPadding + titleHeight + rowGap + descriptionHeight + rowGap + inputHeight + (hasValidationMessage ? rowGap + validationHeight : 0f) + rowGap + actionsHeight + verticalPadding;
+        float popupHeight = Math.max(136f, computedDialogHeight);
         setDialogBounds(layoutX, layoutY, layoutWidth, layoutHeight, popupWidth, popupHeight);
 
         float cursorY = dialogY() + verticalPadding;
@@ -123,28 +111,20 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
         if (hasValidationMessage) {
             cursorY += rowGap;
             validationLabel.layout(measure, dialogX() + horizontalPadding, cursorY, bodyWidth, validationHeight);
-            cursorY += validationHeight;
         }
 
-        cursorY += rowGap;
-
-        copyDefaultToggleCheckbox.setChecked(Boolean.TRUE.equals(copyDefaultProfileSettingsRef.get()));
-        copyDefaultToggleCheckbox.setOuterWidth(bodyWidth);
-        copyDefaultToggleCheckbox.layout(measure, dialogX() + horizontalPadding, cursorY, bodyWidth, toggleHeight);
-
         float actionsY = dialogY() + dialogHeight() - verticalPadding - actionsHeight;
-        float actionGap = 3f;
+        float actionGap = UITheme.GAP_SM;
         float actionWidth = Math.max(0f, (bodyWidth - actionGap) * 0.5f);
         cancelButton.layout(measure, dialogX() + horizontalPadding, actionsY, actionWidth, cancelButton.intrinsicHeightForColumn(measure, actionWidth));
-        createButton.layout(measure, dialogX() + horizontalPadding + actionWidth + actionGap, actionsY, actionWidth, createButton.intrinsicHeightForColumn(measure, actionWidth));
+        renameButton.layout(measure, dialogX() + horizontalPadding + actionWidth + actionGap, actionsY, actionWidth, renameButton.intrinsicHeightForColumn(measure, actionWidth));
     }
 
     private void submit() {
         if (!isInputValid()) {
             return;
         }
-        String requestedName = profileNameRef.get();
-        onSubmit.createProfile(requestedName.trim(), Boolean.TRUE.equals(copyDefaultProfileSettingsRef.get()));
+        onSubmit.renameProfile(newName.trim());
     }
 
     private boolean isInputValid() {
@@ -152,12 +132,27 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
     }
 
     private void refreshValidationState() {
-        validationMessage = resolveValidationMessage(profileNameRef.get());
+        validationMessage = resolveValidationMessage(newName);
         validationLabel.setText(validationMessage);
     }
 
+    private String resolveValidationMessage(String requestedName) {
+        String normalizedName = requestedName == null ? "" : requestedName.trim();
+        if (normalizedName.isEmpty()) {
+            return Component.translatable("alumite.setting.shell.profile_name_error_empty").getString();
+        }
+        String normalizedCurrentName = currentProfileName == null ? "" : currentProfileName.trim();
+        if (normalizedName.equalsIgnoreCase(normalizedCurrentName)) {
+            return "";
+        }
+        if (ModConfig.profiles().profileNameExists(normalizedName)) {
+            return Component.translatable("alumite.setting.shell.profile_name_error_duplicate_rename").getString();
+        }
+        return "";
+    }
+
     @FunctionalInterface
-    public interface SubmitProfileCallback {
-        void createProfile(String profileName, boolean copyDefaultProfileSettings);
+    public interface SubmitRenameCallback {
+        void renameProfile(String newName);
     }
 }

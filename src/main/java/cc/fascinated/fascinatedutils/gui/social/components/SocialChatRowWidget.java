@@ -56,7 +56,7 @@ public class SocialChatRowWidget {
             };
             {
                 closeBtn.setDrawBorder(false);
-                closeBtn.setVisible(props.onCloseChannel() != null);
+                closeBtn.setVisible(false);
                 if (props.onCloseChannel() != null) {
                     closeBtn.setOnClick(props.onCloseChannel());
                 }
@@ -74,7 +74,7 @@ public class SocialChatRowWidget {
                 float avatarY = ly + (lh - AVATAR_SIZE) / 2f;
                 avatar.layout(measure, lx + 4f, avatarY, AVATAR_SIZE, AVATAR_SIZE);
                 if (props.showUnreadBadge()) {
-                    unreadBadge.layout(measure, lx + width - 14f, ly + 3f, 10f, 10f);
+                    unreadBadge.layout(measure, lx + width - 14f, ly + (lh - 10f) / 2f, 10f, 10f);
                 }
                 if (props.onCloseChannel() != null) {
                     float closeBtnX = lx + width - 4f - CLOSE_BTN_SIZE;
@@ -90,12 +90,15 @@ public class SocialChatRowWidget {
                 float mouseX = frame.pointerX();
                 float mouseY = frame.pointerY();
                 boolean rowHovered = containsPoint(mouseX, mouseY);
+                closeBtn.setVisible(props.onCloseChannel() != null && rowHovered);
                 int fill = props.selected() ? 0x334960C8 : rowHovered ? 0x22FFFFFF : UITheme.COLOR_BACKGROUND;
                 graphics.fillRoundedRect(x(), y(), w(), h(), UITheme.CORNER_RADIUS_SM, fill, RectCornerRoundMask.ALL);
 
+                boolean unread = props.showUnreadBadge();
+
                 float textX = avatar.x() + AVATAR_SIZE + 6f;
                 float reservedRight = 6f;
-                if (props.showUnreadBadge()) {
+                if (unread) {
                     reservedRight += 18f;
                 }
                 if (props.onCloseChannel() != null) {
@@ -106,11 +109,13 @@ public class SocialChatRowWidget {
 
                 String channelTitle = ChannelUtils.title(props.channel());
                 String title = channelTitle == null || channelTitle.isBlank() ? Component.translatable("alumite.social.dm.unknown_user").getString() : channelTitle;
-                String titleDraw = TextLineLayout.ellipsize(title, maxLineWidth, segment -> graphics.measureTextWidth(segment, true));
-                graphics.drawText(titleDraw, textX, titleY, FascinatedGuiTheme.INSTANCE.textPrimary(), true, false);
+                String titleDraw = TextLineLayout.ellipsize(title, maxLineWidth, segment -> graphics.measureTextWidth(segment, unread));
+                int titleColor = unread || props.selected() ? FascinatedGuiTheme.INSTANCE.textPrimary() : FascinatedGuiTheme.INSTANCE.textMuted();
+                graphics.drawText(titleDraw, textX, titleY, titleColor, unread, false);
 
+                int previewColor = FascinatedGuiTheme.INSTANCE.textPrimary();
                 String previewDraw = TextLineLayout.ellipsize(normalizeSnippet(ChannelUtils.previewSnippet(props.channel())), maxLineWidth, segment -> graphics.measureTextWidth(segment, false));
-                graphics.drawText(previewDraw, textX, titleY + graphics.getFontCapHeight() + 3f, FascinatedGuiTheme.INSTANCE.textMuted(), false, false);
+                graphics.drawText(previewDraw, textX, titleY + graphics.getFontCapHeight() + 3f, previewColor, false, false);
             }
 
             private String normalizeSnippet(String value) {

@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+package cc.fascinated.fascinatedutils.gui.modsettings.shell;
 
 /**
  * Snapshot of shell regions in layout space for hit-testing between frames.

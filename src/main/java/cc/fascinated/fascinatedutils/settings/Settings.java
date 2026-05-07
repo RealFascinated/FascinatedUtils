@@ -35,6 +35,8 @@ public class Settings implements GsonSerializable<Settings> {
 
     private final BooleanSetting turboParticles = BooleanSetting.builder().id("turbo_particles").defaultValue(true).categoryDisplayKey("alumite.setting.category.performance").build();
 
+    private final BooleanSetting socialNotifications = BooleanSetting.builder().id("social_notifications").defaultValue(true).categoryDisplayKey("alumite.setting.category.notifications").build();
+
     public Settings() {
         addSetting(shellOpenKeybind);
         addSetting(socialKeybind);

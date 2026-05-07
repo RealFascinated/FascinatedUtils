@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+package cc.fascinated.fascinatedutils.gui.modsettings.shell;
 
 /**
  * Outcome of a mod settings shell paint pass.

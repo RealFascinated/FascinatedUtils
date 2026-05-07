@@ -1,7 +1,10 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+package cc.fascinated.fascinatedutils.gui.modsettings.module;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.gui.core.*;
+import cc.fascinated.fascinatedutils.gui.modsettings.profile.FProfileCreatePopupWidget;
+import cc.fascinated.fascinatedutils.gui.modsettings.profile.ModSettingsProfilesTabBuilder;
+import cc.fascinated.fascinatedutils.gui.modsettings.profile.ProfilePopupController;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;

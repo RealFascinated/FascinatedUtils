@@ -1,5 +1,6 @@
-package cc.fascinated.fascinatedutils.gui.modsettings;
+package cc.fascinated.fascinatedutils.gui.modsettings.profile;
 
+import cc.fascinated.fascinatedutils.gui.modsettings.module.FModulesTabElement;
 import cc.fascinated.fascinatedutils.gui.widgets.FAbsoluteStackWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FContextMenuWidget;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;

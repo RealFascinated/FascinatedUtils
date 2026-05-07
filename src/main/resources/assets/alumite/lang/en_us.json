@@ -159,6 +159,8 @@
   "alumite.setting.turbo_entities.description": "Improves performance by skipping rendering of entities outside your view.",
   "alumite.setting.turbo_particles.display_name": "Turbo Particles",
   "alumite.setting.turbo_particles.description": "Improves performance by skipping rendering of particles outside your view.",
+  "alumite.setting.social_notifications.display_name": "Social Notifications",
+  "alumite.setting.social_notifications.description": "Disables pop-up notifications for social features.",
   "alumite.module.hud_background_color.display_name": "Background Color",
   "alumite.module.hud_background_color.description": "The background color of HUD panels.",
   "alumite.module.hud_border_color.display_name": "Border Color",

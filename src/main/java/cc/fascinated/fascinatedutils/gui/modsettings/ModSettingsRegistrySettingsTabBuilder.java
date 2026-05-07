@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
 import cc.fascinated.fascinatedutils.common.setting.Setting;
-import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
@@ -22,15 +21,12 @@ import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import lombok.experimental.UtilityClass;
 import net.minecraft.network.chat.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @UtilityClass
 public class ModSettingsRegistrySettingsTabBuilder {
 
-    private static final String PERFORMANCE_CATEGORY_DISPLAY_KEY = "alumite.setting.category.performance";
-
-    public static FWidget buildSettingsTab(float paneWidth, float paneHeight, FState<Float> scrollYRef, RegistrySettingsSubTab subTab) {
+    public static FWidget buildSettingsTab(float paneWidth, float paneHeight, FState<Float> scrollYRef) {
         float settingsContentWidth = Math.max(28f, paneWidth);
         float settingsInnerWidth = Math.max(14f, settingsContentWidth - 2f * ModSettingsTheme.SIDEBAR_SEPARATOR_PAD_X);
         float gap = 3f;
@@ -46,9 +42,10 @@ public class ModSettingsRegistrySettingsTabBuilder {
             scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 4f));
             return wrapScrollClip(scrollBody, gap, scrollYRef);
         }
-        List<Setting<?>> topLevelSettings = new ArrayList<>();
-        List<ModSettingsCategoryRows.CategoryBlock> categoryBlocks = new ArrayList<>();
-        partitionRegistrySettingsForSubTab(allSettings, subTab, topLevelSettings, categoryBlocks);
+        List<Setting<?>> topLevelSettings = SettingCategoryGrouper.topLevelInRegistrationOrder(allSettings);
+        List<ModSettingsCategoryRows.CategoryBlock> categoryBlocks = SettingCategoryGrouper.categoriesInRegistrationOrder(allSettings).stream()
+                .map(category -> new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), category.settings()))
+                .toList();
         if (topLevelSettings.isEmpty() && categoryBlocks.isEmpty()) {
             FLabelWidget empty = new FLabelWidget();
             empty.setText(Component.translatable("alumite.setting.shell.settings_empty").getString());
@@ -61,25 +58,6 @@ public class ModSettingsRegistrySettingsTabBuilder {
         ModSettingsCategoryRows.appendTopLevelThenCategories(scrollBody, settingsContentWidth, settingsInnerWidth, categoryBlocks, topLevelSettings, (setting, innerWidth, sliderStartX) -> editorForRegistrySetting(setting, innerWidth, sliderStartX));
         scrollBody.addChild(new FSpacerWidget(settingsContentWidth, ModSettingsCategoryRows.SETTINGS_SCROLL_BOTTOM_INSET));
         return wrapScrollClip(scrollBody, gap, scrollYRef);
-    }
-
-    private static void partitionRegistrySettingsForSubTab(List<Setting<?>> allSettings, RegistrySettingsSubTab subTab, List<Setting<?>> topLevelOut, List<ModSettingsCategoryRows.CategoryBlock> categoryBlocksOut) {
-        List<Setting<?>> topLevelAll = SettingCategoryGrouper.topLevelInRegistrationOrder(allSettings);
-        List<SettingCategory> categories = SettingCategoryGrouper.categoriesInRegistrationOrder(allSettings);
-        if (subTab == RegistrySettingsSubTab.GENERAL) {
-            topLevelOut.addAll(topLevelAll);
-            for (SettingCategory category : categories) {
-                if (!PERFORMANCE_CATEGORY_DISPLAY_KEY.equals(category.displayNameKey())) {
-                    categoryBlocksOut.add(new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), category.settings()));
-                }
-            }
-            return;
-        }
-        for (SettingCategory category : categories) {
-            if (PERFORMANCE_CATEGORY_DISPLAY_KEY.equals(category.displayNameKey())) {
-                categoryBlocksOut.add(new ModSettingsCategoryRows.CategoryBlock(category.displayNameKey(), category.settings()));
-            }
-        }
     }
 
     private static FWidget editorForRegistrySetting(Setting<?> setting, float settingsInnerWidth, float sliderValueColumnStartX) {
@@ -112,12 +90,5 @@ public class ModSettingsRegistrySettingsTabBuilder {
             clip.setScrollOffsetChangeListener(scrollYRef::setQuiet);
         }
         return clip;
-    }
-
-    /**
-     * Sub-panes for the registry Settings tab: general options versus performance-related options.
-     */
-    public enum RegistrySettingsSubTab {
-        GENERAL, PERFORMANCE
     }
 }

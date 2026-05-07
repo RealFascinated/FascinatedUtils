@@ -28,6 +28,7 @@ public class FVisibilityCardWidget<T> extends FWidget implements FAnimatable {
     private final Supplier<Boolean> enabledSupplier;
     private final Callback<Boolean> onEnabledChange;
     private final AnimHandle toggleStripProgressAnim;
+    
     public FVisibilityCardWidget(float layoutWidth, float layoutHeight, Supplier<String> titleSupplier, Supplier<Boolean> settingsAvailableSupplier, Runnable onOpenSettings, Supplier<Boolean> enabledSupplier, Callback<Boolean> onEnabledChange) {
         this.cardWidthLogical = Math.max(0f, layoutWidth);
         this.cardHeightLogical = Math.max(0f, layoutHeight);

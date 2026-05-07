@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
+import cc.fascinated.fascinatedutils.caches.UrlTextureCache;
 import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
@@ -31,6 +32,8 @@ public class ToastManager {
     private static final int MAX_TOASTS = 5;
     private static final float LINE_GAP = 2f;
     private static final int MAX_LINES = 4;
+    private static final float IMAGE_MAX_H = 80f;
+    private static final float IMAGE_GAP = 6f;
 
     private final ConcurrentLinkedQueue<Toast> pending = new ConcurrentLinkedQueue<>();
     private final List<Entry> entries = new ArrayList<>();
@@ -68,9 +71,6 @@ public class ToastManager {
         if (!current.isEmpty()) {
             lines.add(current.toString());
         }
-        if (lines.isEmpty()) {
-            lines.add(text);
-        }
         return lines;
     }
 
@@ -81,6 +81,27 @@ public class ToastManager {
             case WARNING -> ModUiTextures.WARNING.getId();
             case INFO -> null;
         };
+    }
+
+    private static float imageDrawH(Toast toast, float maxW) {
+        Integer w = toast.imageWidth();
+        Integer h = toast.imageHeight();
+        if (w == null || h == null || w <= 0 || h <= 0) {
+            return IMAGE_MAX_H;
+        }
+        float aspect = (float) w / h;
+        float heightIfFitWidth = maxW / aspect;
+        return Math.min(heightIfFitWidth, IMAGE_MAX_H);
+    }
+
+    private static float imageDrawW(Toast toast, float drawH) {
+        Integer w = toast.imageWidth();
+        Integer h = toast.imageHeight();
+        if (w == null || h == null || w <= 0 || h <= 0) {
+            return TOAST_W - ACCENT_W - ICON_SLOT_W - 8f;
+        }
+        float aspect = (float) w / h;
+        return drawH * aspect;
     }
 
     /**
@@ -196,9 +217,15 @@ public class ToastManager {
             float capH = renderer.getFontCapHeight();
             float lineH = renderer.getFontHeight();
             int lineCount = entry.wrappedLines.size();
-            float msgH = lineCount * lineH + Math.max(0, lineCount - 1) * LINE_GAP;
-            float padV = (TOAST_H - PROGRESS_H - capH - TITLE_GAP - lineH) / 2f;
-            entry.effectiveHeight = Math.max(TOAST_H, padV * 2f + capH + TITLE_GAP + msgH + PROGRESS_H);
+            float msgH = lineCount > 0 ? lineCount * lineH + (lineCount - 1) * LINE_GAP + TITLE_GAP : 0f;
+            float padV = (TOAST_H - PROGRESS_H - capH - (lineCount > 0 ? TITLE_GAP + lineH : 0f)) / 2f;
+            float imgExtra = 0f;
+            if (entry.toast.imageId() != null) {
+                entry.imageDrawH = imageDrawH(entry.toast, textClipW);
+                imgExtra = IMAGE_GAP + entry.imageDrawH;
+            }
+            float padBottom = imgExtra > 0f ? 4f : padV;
+            entry.effectiveHeight = Math.max(TOAST_H, padV + capH + msgH + imgExtra + padBottom + PROGRESS_H);
         }
         float effectiveH = entry.effectiveHeight;
 
@@ -240,6 +267,22 @@ public class ToastManager {
             float lineY = msgY + lineIdx * (lineH + LINE_GAP);
             renderer.drawText(entry.wrappedLines.get(lineIdx), textStartX, lineY, 0xFFCCCCCC, false, false);
         }
+
+        // Image below message text
+        if (entry.toast.imageId() != null) {
+            int lineCount = entry.wrappedLines.size();
+            float imgY = lineCount > 0
+                    ? msgY + lineCount * lineH + (lineCount - 1) * LINE_GAP + IMAGE_GAP
+                    : titleY + capH + IMAGE_GAP;
+            float imgDrawH = entry.imageDrawH > 0f ? entry.imageDrawH : imageDrawH(entry.toast, textClipW);
+            float imgDrawW = imageDrawW(entry.toast, imgDrawH);
+            Identifier texture = UrlTextureCache.INSTANCE.get(entry.toast.imageId(), entry.toast.imageUrl(), null);
+            if (texture != null) {
+                renderer.drawTexture(texture, textStartX, imgY, imgDrawW, imgDrawH, 0xFFFFFFFF);
+            } else {
+                renderer.drawRect(textStartX, imgY, imgDrawW, imgDrawH, 0x20FFFFFF);
+            }
+        }
         renderer.popClip();
 
         // Progress bar — track across the bottom, fill depletes from the right
@@ -266,6 +309,7 @@ public class ToastManager {
         boolean dismissing;
         List<String> wrappedLines;
         float effectiveHeight = TOAST_H;
+        float imageDrawH = 0f;
 
         Entry(Toast toast) {
             this.toast = toast;

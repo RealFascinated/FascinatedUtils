@@ -46,19 +46,20 @@ public abstract class GameRendererMixin implements IGameRenderer {
     private void alumite$onRenderGui(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo callbackInfo) {
         FrameCounter.getInstance().onFrame();
 
-        if (!(minecraft.screen instanceof WidgetScreen widgetScreen)) {
-            return;
-        }
-        gameRenderState.guiRenderState.reset();
-        int mouseX = (int) minecraft.mouseHandler.getScaledXPos(minecraft.getWindow());
-        int mouseY = (int) minecraft.mouseHandler.getScaledYPos(minecraft.getWindow());
-        GuiGraphicsExtractor drawContext = new GuiGraphicsExtractor(minecraft, gameRenderState.guiRenderState, mouseX, mouseY);
-        int scale = minecraft.getWindow().getGuiScale();
-        widgetScreen.renderCustom(drawContext, mouseX * scale, mouseY * scale, deltaTracker.getGameTimeDeltaTicks());
-        // Render toasts on top of every screen
         float uiWidth = UIScale.uiWidth();
         float uiHeight = UIScale.uiHeight();
         float deltaSeconds = deltaTracker.getGameTimeDeltaTicks() / 20f;
+        int mouseX = (int) minecraft.mouseHandler.getScaledXPos(minecraft.getWindow());
+        int mouseY = (int) minecraft.mouseHandler.getScaledYPos(minecraft.getWindow());
+
+        gameRenderState.guiRenderState.reset();
+        GuiGraphicsExtractor drawContext = new GuiGraphicsExtractor(minecraft, gameRenderState.guiRenderState, mouseX, mouseY);
+
+        if (minecraft.screen instanceof WidgetScreen widgetScreen) {
+            int scale = minecraft.getWindow().getGuiScale();
+            widgetScreen.renderCustom(drawContext, mouseX * scale, mouseY * scale, deltaTracker.getGameTimeDeltaTicks());
+        }
+
         cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer toastRenderer = new cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer(drawContext, FascinatedGuiTheme.INSTANCE);
         toastRenderer.begin(uiWidth, uiHeight);
         ToastManager.INSTANCE.render(toastRenderer, uiWidth, uiHeight, UIScale.uiPointerX(), UIScale.uiPointerY(), deltaSeconds);
