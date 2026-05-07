@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.client;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.client.command.ClientCommandBootstrap;
 import cc.fascinated.fascinatedutils.client.keybind.Keybinds;
@@ -8,12 +9,12 @@ import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
+import cc.fascinated.fascinatedutils.event.impl.JoinMultiplayerServerEvent;
+import cc.fascinated.fascinatedutils.event.impl.SingleplayerWorldLoadEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.gui.ModUiClientEntry;
 import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
-import cc.fascinated.fascinatedutils.event.impl.JoinMultiplayerServerEvent;
-import cc.fascinated.fascinatedutils.event.impl.SingleplayerWorldLoadEvent;
 import cc.fascinated.fascinatedutils.systems.activity.ActivityHandler;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.notification.Notifications;
@@ -25,7 +26,6 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +38,8 @@ public class Client implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        new Alumite(); // Init the api and auth system
+
         FascinatedEventBus eventBus = FascinatedEventBus.INSTANCE;
         eventBus.ensureSetup();
         eventBus.subscribe(Alumite.INSTANCE);
@@ -65,7 +67,7 @@ public class Client implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> FascinatedEventBus.INSTANCE.post(new ClientTickEvent(client)));
 
         // Register updater shutdown hook; check and download will run on game exit
-        if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
+        if (!Constants.DEBUG_MODE) {
             Updater.INSTANCE.start();
         }
     }

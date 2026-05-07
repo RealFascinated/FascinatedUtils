@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.config;
 
-import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.systems.config.impl.config.ConfigRepository;

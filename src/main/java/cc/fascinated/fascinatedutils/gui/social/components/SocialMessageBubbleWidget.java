@@ -1,14 +1,13 @@
 package cc.fascinated.fascinatedutils.gui.social.components;
 
-import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.channel.Message;
 import cc.fascinated.fascinatedutils.api.channel.json.AttachmentDTO;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.caches.UrlTextureCache;
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.UIScale;
 import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
-import net.minecraft.resources.Identifier;
 import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.gui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
@@ -20,11 +19,11 @@ import cc.fascinated.fascinatedutils.gui.widgets.FOutlinedTextInputWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 
 import java.net.URI;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;

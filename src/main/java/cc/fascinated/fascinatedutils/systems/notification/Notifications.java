@@ -2,8 +2,8 @@ package cc.fascinated.fascinatedutils.systems.notification;
 
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.channel.json.AttachmentDTO;
-import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.api.user.User;
+import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.event.impl.social.ChannelMessageCreateEvent;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendAddEvent;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendRequestIncomingEvent;

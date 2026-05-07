@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.api;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.ws.GatewayHandler;
 import cc.fascinated.fascinatedutils.api.ws.GatewayOpcode;
 import cc.fascinated.fascinatedutils.api.ws.OutboundMessage;
@@ -151,6 +152,10 @@ class AlumiteGateway implements WebSocket.Listener {
             }
             JsonElement data = obj.has("data") ? obj.get("data") : JsonNull.INSTANCE;
             handler.handle(this::send, data);
+
+            if (Constants.DEBUG_MODE) {
+                Client.LOG.info("[AlumiteGateway] Received opcode {} with data: {}", opcode, data);
+            }
         } catch (Exception exception) {
             Client.LOG.warn("[AlumiteGateway] Failed to dispatch message: {}", exception.getMessage());
         }

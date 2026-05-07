@@ -1,8 +1,11 @@
 package cc.fascinated.fascinatedutils.gui.modsettings;
 
-import cc.fascinated.fascinatedutils.gui.core.*;
+import cc.fascinated.fascinatedutils.gui.core.FNodeRegistry;
+import cc.fascinated.fascinatedutils.gui.core.FNodeWidget;
+import cc.fascinated.fascinatedutils.gui.core.FState;
+import cc.fascinated.fascinatedutils.gui.core.FWidgetNode;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
-import cc.fascinated.fascinatedutils.gui.widgets.*;
+import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 
 public class FSettingsTabElement extends FWidget {
 

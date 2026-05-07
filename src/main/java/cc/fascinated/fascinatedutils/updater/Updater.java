@@ -70,19 +70,19 @@ public class Updater {
 
             HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
             if (res.statusCode() != 200) {
-                LOG.debug("Updater API returned non-OK status: {}", res.statusCode());
+                LOG.info("Updater API returned non-OK status: {}", res.statusCode());
                 return;
             }
 
             UpdateCheckResult result = Constants.GSON.fromJson(res.body(), UpdateCheckResult.class);
             if (result == null || result.isUpToDate()) {
-                LOG.debug("Already on latest version");
+                LOG.info("Already on latest version");
                 return;
             }
 
             String downloadUrl = result.getDownloadUrl();
             if (downloadUrl == null || downloadUrl.isBlank()) {
-                LOG.debug("No download URL provided in update check result");
+                LOG.info("No download URL provided in update check result");
                 return;
             }
 
@@ -124,7 +124,7 @@ public class Updater {
                     }
                 });
             } catch (IOException exception) {
-                LOG.debug("Could not clean old staged files", exception);
+                LOG.info("Could not clean old staged files", exception);
             }
 
             Path staged = modsDir.resolve("FascinatedUtils-update-" + tagName + "-" + System.currentTimeMillis() + ".jar");

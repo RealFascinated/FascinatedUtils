@@ -13,4 +13,6 @@ public class Constants {
 
     @NonNull public static final String MOD_VERSION = FabricLoader.getInstance().getModContainer(AlumiteMod.MOD_ID).map(container -> container.getMetadata().getVersion().getFriendlyString()).orElse("?");
     @NonNull public static final String GAME_VERSION = FabricLoader.getInstance().getModContainer("minecraft").map(container -> container.getMetadata().getVersion().getFriendlyString()).orElse("?");
+
+    public static final boolean DEBUG_MODE = FabricLoader.getInstance().isDevelopmentEnvironment();
 }

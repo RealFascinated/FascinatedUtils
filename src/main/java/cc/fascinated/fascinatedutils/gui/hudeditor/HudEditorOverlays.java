@@ -3,10 +3,10 @@ package cc.fascinated.fascinatedutils.gui.hudeditor;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.updater.Updater;
 import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
+import cc.fascinated.fascinatedutils.updater.Updater;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 

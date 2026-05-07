@@ -2,40 +2,28 @@ package cc.fascinated.fascinatedutils.api;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.Constants;
-import cc.fascinated.fascinatedutils.api.auth.json.ChallengeResponseDTO;
-import cc.fascinated.fascinatedutils.api.auth.json.RefreshRequestDTO;
-import cc.fascinated.fascinatedutils.api.auth.json.RefreshResponseDTO;
-import cc.fascinated.fascinatedutils.api.auth.json.VerifyRequestDTO;
-import cc.fascinated.fascinatedutils.api.auth.json.VerifyResponseDTO;
+import cc.fascinated.fascinatedutils.api.auth.json.*;
 import cc.fascinated.fascinatedutils.api.channel.AlumiteChannels;
-import cc.fascinated.fascinatedutils.api.channel.json.AttachmentDTO;
-import cc.fascinated.fascinatedutils.api.channel.json.ChannelDetailDTO;
-import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessageDTO;
-import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessagePageDTO;
-import cc.fascinated.fascinatedutils.api.channel.json.EditChannelMessageBodyDTO;
-import cc.fascinated.fascinatedutils.api.channel.json.OpenDmBodyDTO;
-import cc.fascinated.fascinatedutils.api.channel.json.SendChannelMessageBodyDTO;
-import cc.fascinated.fascinatedutils.api.channel.json.UpdateReadStateBodyDTO;
+import cc.fascinated.fascinatedutils.api.channel.json.*;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
 import cc.fascinated.fascinatedutils.api.friend.json.FriendEntryDTO;
 import cc.fascinated.fascinatedutils.api.friend.json.PendingFriendRequestDTO;
 import cc.fascinated.fascinatedutils.api.friend.json.SendFriendRequestBodyDTO;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteHttpClient;
-import cc.fascinated.fascinatedutils.api.user.AlumiteUsers;
 import cc.fascinated.fascinatedutils.api.user.Activity;
+import cc.fascinated.fascinatedutils.api.user.AlumiteUsers;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.api.user.json.PublicUserDTO;
 import cc.fascinated.fascinatedutils.api.user.json.UpdateActivityBodyDTO;
 import cc.fascinated.fascinatedutils.api.user.json.UpdateUserStatusBodyDTO;
 import cc.fascinated.fascinatedutils.api.user.json.UserDTO;
 import cc.fascinated.fascinatedutils.client.Client;
+import cc.fascinated.fascinatedutils.common.UrlUtils;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.AlumiteAuthenticatedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import cc.fascinated.fascinatedutils.common.UrlUtils;
-
 import meteordevelopment.orbit.EventHandler;
 
 import java.net.http.HttpClient;
@@ -46,7 +34,7 @@ import java.util.Map;
 @Accessors(fluent = true)
 public class Alumite {
 
-    public static final Alumite INSTANCE = new Alumite();
+    public static Alumite INSTANCE;
 
     private interface Routes {
         String FRIENDS = "/friends";
@@ -69,7 +57,8 @@ public class Alumite {
     @Getter
     private final AlumiteChannels channels;
 
-    private Alumite() {
+    public Alumite() {
+        INSTANCE = this;
         AlumiteAuthManager auth = new AlumiteAuthManager(new AlumiteTokenStore());
         this.http = new AlumiteHttpClient(httpClient, Constants.GSON, auth::accessToken, auth::tryRefreshActive);
         this.gateway = new AlumiteGateway(httpClient, auth::refreshToken, auth::onGatewayAuthExpired, Constants.GSON);
@@ -183,7 +172,8 @@ public class Alumite {
 
     @EventHandler
     private void alumite$onClientStarted(ClientStartedEvent event) {
-        AlumiteMod.SCHEDULED_POOL.execute(() -> authManager.authenticate(event.minecraftClient()));
+        // Block until authentication is done, to avoid racing ahead and trying to fetch data before we're authenticated
+        authManager.authenticate(event.minecraftClient());
     }
 
     @EventHandler

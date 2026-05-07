@@ -6,8 +6,8 @@ import cc.fascinated.fascinatedutils.gui.modsettings.profile.FProfileCreatePopup
 import cc.fascinated.fascinatedutils.gui.modsettings.profile.ModSettingsProfilesTabBuilder;
 import cc.fascinated.fascinatedutils.gui.modsettings.profile.ProfilePopupController;
 import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
-import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.theme.SettingsUiMetrics;
+import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.*;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;

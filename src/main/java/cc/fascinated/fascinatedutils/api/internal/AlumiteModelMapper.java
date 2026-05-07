@@ -1,9 +1,9 @@
 package cc.fascinated.fascinatedutils.api.internal;
 
 import cc.fascinated.fascinatedutils.api.channel.ChannelKind;
-import cc.fascinated.fascinatedutils.api.channel.Message;
 import cc.fascinated.fascinatedutils.api.channel.GroupMember;
 import cc.fascinated.fascinatedutils.api.channel.LastMessagePreview;
+import cc.fascinated.fascinatedutils.api.channel.Message;
 import cc.fascinated.fascinatedutils.api.channel.json.ChannelKindDTO;
 import cc.fascinated.fascinatedutils.api.channel.json.ChannelMemberDTO;
 import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessageDTO;

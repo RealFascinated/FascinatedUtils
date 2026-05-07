@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.api.internal;
 
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.Errors;
-import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
 import cc.fascinated.fascinatedutils.common.JsonUtils;
 import com.google.gson.Gson;

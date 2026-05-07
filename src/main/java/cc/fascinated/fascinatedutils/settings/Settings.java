@@ -3,7 +3,6 @@ package cc.fascinated.fascinatedutils.settings;
 import cc.fascinated.fascinatedutils.client.keybind.Keybinds;
 import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
-import net.minecraft.client.resources.language.I18n;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
@@ -11,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.Getter;
+import net.minecraft.client.resources.language.I18n;
 
 import java.util.ArrayList;
 import java.util.List;

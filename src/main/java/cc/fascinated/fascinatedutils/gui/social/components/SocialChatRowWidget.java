@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.social.components;
 
 import cc.fascinated.fascinatedutils.api.channel.Channel;
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.core.PointerHitKind;
 import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui.core.UiFrameContext;
@@ -11,7 +12,6 @@ import cc.fascinated.fascinatedutils.gui.renderer.UIRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UITheme;
 import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.gui.widgets.FBadgeWidget;
-import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.widgets.FIconButtonWidget;
 import cc.fascinated.fascinatedutils.gui.widgets.FWidget;
 import net.minecraft.network.chat.Component;
