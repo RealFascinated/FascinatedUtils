@@ -15,7 +15,6 @@ public class PublicUserDTO {
     private String minecraftUuid;
     private String minecraftName;
     private String role;
-    private boolean banned;
     private UserStatus userStatus;
     @Nullable private Activity activity;
     private Date lastSeen;

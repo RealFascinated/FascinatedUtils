@@ -94,7 +94,7 @@ public class AlumiteUsers {
     public User upsertUser(PublicUserDTO dto) {
         User existing = usersById.get(dto.id());
         if (existing != null) {
-            existing.update(dto.minecraftUuid(), dto.minecraftName(), dto.role(), dto.banned(), dto.userStatus(), dto.activity(), dto.lastSeen());
+            existing.update(dto.minecraftUuid(), dto.minecraftName(), dto.role(), dto.userStatus(), dto.activity(), dto.lastSeen());
             return existing;
         }
         User user = AlumiteModelMapper.toUser(dto);
