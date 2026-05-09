@@ -3,18 +3,12 @@ package cc.fascinated.fascinatedutils.gui2.node.social.player;
 import cc.fascinated.fascinatedutils.caches.UrlTextureCache;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
+import cc.fascinated.fascinatedutils.gui2.render.UiText;
 import net.minecraft.resources.Identifier;
 
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-/**
- * Square avatar node that renders a Minecraft player skin face (via URL cache) with a rounded
- * status-dot indicator in the bottom-right corner.
- *
- * <p>When the skin texture is not yet available the node renders a solid colored tile with the
- * player's initial letter as fallback.
- */
 public class PlayerAvatarNode extends PositionedNode {
 
     private static final int CORNER_RADIUS = 4;
@@ -46,7 +40,7 @@ public class PlayerAvatarNode extends PositionedNode {
 
         String uuid = minecraftUuidSupplier.get();
         Identifier texture = uuid != null && !uuid.isBlank()
-                ? UrlTextureCache.INSTANCE.get(uuid, "https://mc.fascinated.cc/api/skins/%s/face.png".formatted(uuid), () -> {})
+                ? UrlTextureCache.INSTANCE.get("https://mc.fascinated.cc/api/skins/%s/face.png".formatted(uuid), () -> {})
                 : null;
 
         int circleRadius = side / 2;
@@ -57,10 +51,10 @@ public class PlayerAvatarNode extends PositionedNode {
             String name = displayNameSupplier.get();
             String initial = name == null || name.isBlank() ? "?" : String.valueOf(Character.toUpperCase(name.charAt(0)));
             renderFrame.drawRoundedRect(posX, posY, side, side, CORNER_RADIUS, renderFrame.theme().avatarFallbackFill());
-            int textWidth = renderFrame.measureTextWidth(initial, true);
-            int textX = posX + (side - textWidth) / 2;
+            UiText initialText = UiText.of(initial).color(renderFrame.theme().textPrimary()).bold();
+            int textX = posX + (side - initialText.width(renderFrame)) / 2;
             int textY = posY + (side - renderFrame.fontHeight()) / 2;
-            renderFrame.drawText(initial, textX, textY, renderFrame.theme().textPrimary(), false, true);
+            initialText.draw(renderFrame, textX, textY);
         }
 
         if (showStatusDot) {

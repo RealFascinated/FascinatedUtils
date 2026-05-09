@@ -80,7 +80,7 @@ public class FAvatarWidget extends FWidget {
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
         String uuid = minecraftUuidSupplier.get();
         Identifier texture = uuid != null && !uuid.isBlank()
-                ? UrlTextureCache.INSTANCE.get(uuid, "https://mc.fascinated.cc/api/skins/%s/face.png".formatted(uuid), () -> {})
+                ? UrlTextureCache.INSTANCE.get("https://mc.fascinated.cc/api/skins/%s/face.png".formatted(uuid), () -> {})
                 : null;
         float inset = borderArgb != null ? borderThickness : 0f;
         if (borderArgb != null) {

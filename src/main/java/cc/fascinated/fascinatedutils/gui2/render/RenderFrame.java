@@ -3,11 +3,6 @@ package cc.fascinated.fascinatedutils.gui2.render;
 import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 import net.minecraft.resources.Identifier;
 
-/**
- * Per-frame renderer contract used by the new gui2 scene graph.
- *
- * <p>Implementations are responsible for clip stack safety, batching strategy, and text flush ordering.
- */
 public interface RenderFrame {
 
     UiTheme theme();

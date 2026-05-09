@@ -4,26 +4,29 @@ import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiNode;
+import cc.fascinated.fascinatedutils.gui2.node.RectNode;
+import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
+import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
+import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-/**
- * A fixed-height list row showing a player avatar, display name, and optional status/activity text.
- *
- * <p>An optional action node (e.g. a remove button) is placed on the trailing edge and made
- * visible only on hover. Callers provide the action node and control its dimensions.
- */
 public class PlayerRowNode extends PositionedNode {
 
     private static final int AVATAR_SIZE = 24;
     private static final int AVATAR_PADDING = 6;
     private static final int ROW_HEIGHT = 36;
+    private static final int BG_CORNER_RADIUS = 4;
 
+    private final RectNode bg;
     private final PlayerAvatarNode avatar;
-    private final Supplier<String> displayNameSupplier;
+    private final TextNode nameText;
+    private final TextNode subtextNode;
     private final Supplier<String> subtextSupplier;
+    private int avatarSize = AVATAR_SIZE;
+    private float textScale = 1.0f;
     private UiNode trailingAction;
     private int trailingActionSize;
     private Runnable onPrimaryClick = () -> {};
@@ -39,12 +42,13 @@ public class PlayerRowNode extends PositionedNode {
      * @param subtextSupplier supplier of a secondary line of text shown below the name; null = no subtext
      */
     public PlayerRowNode(Supplier<User> user, Supplier<String> subtextSupplier) {
-        this.displayNameSupplier = () -> {
+        Supplier<String> displayNameSupplier = () -> {
             User resolved = user.get();
             return resolved != null ? resolved.minecraftName() : "";
         };
         this.subtextSupplier = subtextSupplier;
-        this.avatar = new PlayerAvatarNode(AVATAR_SIZE, () -> {
+
+        avatar = new PlayerAvatarNode(AVATAR_SIZE, () -> {
             User resolved = user.get();
             return resolved != null ? resolved.minecraftUuid() : null;
         }, displayNameSupplier, () -> {
@@ -52,12 +56,48 @@ public class PlayerRowNode extends PositionedNode {
             UserStatus status = resolved != null ? resolved.userStatus() : null;
             return status != null ? status.color() : UserStatus.OFFLINE.color();
         });
+
+        bg = new RectNode();
+        bg.full();
+        bg.setCornerRadius(BG_CORNER_RADIUS);
+        bg.setFillSupplier(() -> {
+            UiTheme theme = UiThemeRepository.get();
+            return selected ? theme.rowSelectedFill() : hovered ? theme.rowHoverFill() : 0;
+        });
+
+        nameText = new TextNode(displayNameSupplier)
+                .setColorResolver(UiTheme::textPrimary)
+                .setTextAlign(0f, 0.5f);
+
+        subtextNode = new TextNode(subtextSupplier != null ? subtextSupplier : () -> "")
+                .setColorResolver(UiTheme::textMuted)
+                .setTextAlign(0f, 0.5f);
+
         height(ROW_HEIGHT).fullWidth();
+        addChild(bg);
         addChild(avatar);
+        addChild(nameText);
+        addChild(subtextNode);
     }
 
     public PlayerRowNode setSelected(boolean selected) {
         this.selected = selected;
+        return this;
+    }
+
+    public PlayerRowNode setAvatarSize(int avatarSize) {
+        this.avatarSize = avatarSize;
+        avatar.size(avatarSize);
+        return this;
+    }
+
+    public PlayerRowNode setRowHeight(int rowHeight) {
+        height(rowHeight);
+        return this;
+    }
+
+    public PlayerRowNode setTextScale(float textScale) {
+        this.textScale = textScale;
         return this;
     }
 
@@ -126,8 +166,29 @@ public class PlayerRowNode extends PositionedNode {
         int width = bounds().width();
         int height = bounds().height();
 
-        int avatarY = posY + (height - AVATAR_SIZE) / 2;
-        avatar.layout(renderFrame, posX + AVATAR_PADDING, avatarY, AVATAR_SIZE, AVATAR_SIZE);
+        int avatarY = posY + (height - avatarSize) / 2;
+        avatar.layout(renderFrame, posX + AVATAR_PADDING, avatarY, avatarSize, avatarSize);
+
+        int trailingReserved = trailingAction != null ? AVATAR_PADDING + trailingActionSize : AVATAR_PADDING;
+        int textX = posX + AVATAR_PADDING + avatarSize + 8;
+        int textW = Math.max(0, width - textX + posX - trailingReserved);
+
+        nameText.setScale(textScale);
+        subtextNode.setScale(textScale);
+
+        String subtext = subtextSupplier != null ? subtextSupplier.get() : null;
+        boolean hasSubtext = subtext != null && !subtext.isBlank();
+        subtextNode.setVisible(hasSubtext);
+
+        int lineH = Math.round(renderFrame.fontHeight() * textScale);
+        if (hasSubtext) {
+            int blockH = lineH * 2 + 3;
+            int nameY = posY + (height - blockH) / 2;
+            nameText.layout(renderFrame, textX, nameY, textW, lineH);
+            subtextNode.layout(renderFrame, textX, nameY + lineH + 3, textW, lineH);
+        } else {
+            nameText.layout(renderFrame, textX, posY, textW, height);
+        }
 
         if (trailingAction != null) {
             int actionY = posY + (height - trailingActionSize) / 2;
@@ -135,35 +196,5 @@ public class PlayerRowNode extends PositionedNode {
             trailingAction.setVisible(hovered);
         }
     }
-
-    @Override
-    protected void renderSelf(RenderFrame renderFrame, float deltaSeconds) {
-        int posX = bounds().positionX();
-        int posY = bounds().positionY();
-        int width = bounds().width();
-        int height = bounds().height();
-
-        int fill = selected ? renderFrame.theme().rowSelectedFill() : hovered ? renderFrame.theme().rowHoverFill() : 0;
-        if (fill != 0) {
-            renderFrame.drawRoundedRect(posX, posY, width, height, 4, fill);
-        }
-
-        int textX = posX + AVATAR_PADDING + AVATAR_SIZE + 8;
-        String name = displayNameSupplier.get();
-        String subtext = subtextSupplier != null ? subtextSupplier.get() : null;
-
-        int primaryColor = renderFrame.theme().textPrimary();
-        int mutedColor = renderFrame.theme().textMuted();
-
-        if (subtext != null && !subtext.isBlank()) {
-            int lineH = renderFrame.fontHeight();
-            int blockH = lineH * 2 + 3;
-            int nameY = posY + (height - blockH) / 2;
-            renderFrame.drawText(name, textX, nameY, primaryColor, false, false);
-            renderFrame.drawText(subtext, textX, nameY + lineH + 3, mutedColor, false, false);
-        } else {
-            int nameY = posY + (height - renderFrame.fontHeight()) / 2;
-            renderFrame.drawText(name, textX, nameY, primaryColor, false, false);
-        }
-    }
 }
+

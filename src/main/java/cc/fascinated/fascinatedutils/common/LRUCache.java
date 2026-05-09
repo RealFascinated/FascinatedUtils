@@ -2,16 +2,27 @@ package cc.fascinated.fascinatedutils.common;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 public class LRUCache<K, V> {
 
     private final Map<K, V> map;
 
     public LRUCache(int maxSize) {
-        this.map = new LinkedHashMap<>(maxSize, 0.75f, true) {
+        this(maxSize, null);
+    }
+
+    public LRUCache(int maxSize, BiConsumer<K, V> onEvict) {
+        this.map = new LinkedHashMap<>(16, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-                return size() > maxSize;
+                if (size() > maxSize) {
+                    if (onEvict != null) {
+                        onEvict.accept(eldest.getKey(), eldest.getValue());
+                    }
+                    return true;
+                }
+                return false;
             }
         };
     }

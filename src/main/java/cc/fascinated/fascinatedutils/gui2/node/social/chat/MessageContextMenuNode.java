@@ -9,12 +9,6 @@ import cc.fascinated.fascinatedutils.gui2.node.ContextMenuNode;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Context menu shown when a user right-clicks a chat message.
- *
- * <p>Reads all required state from the provided store. Edit and Delete
- * are shown only for messages authored by the local player.
- */
 public class MessageContextMenuNode extends ContextMenuNode {
 
     public MessageContextMenuNode(UiStateStore stateStore) {

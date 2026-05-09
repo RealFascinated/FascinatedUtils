@@ -276,7 +276,7 @@ public class ToastManager {
                     : titleY + capH + IMAGE_GAP;
             float imgDrawH = entry.imageDrawH > 0f ? entry.imageDrawH : imageDrawH(entry.toast, textClipW);
             float imgDrawW = imageDrawW(entry.toast, imgDrawH);
-            Identifier texture = UrlTextureCache.INSTANCE.get(entry.toast.imageId(), entry.toast.imageUrl(), null);
+            Identifier texture = UrlTextureCache.INSTANCE.get(entry.toast.imageUrl(), null);
             if (texture != null) {
                 renderer.drawTexture(texture, textStartX, imgY, imgDrawW, imgDrawH, 0xFFFFFFFF);
             } else {

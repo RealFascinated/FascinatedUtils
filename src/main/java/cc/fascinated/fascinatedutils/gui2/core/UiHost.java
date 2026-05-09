@@ -2,9 +2,6 @@ package cc.fascinated.fascinatedutils.gui2.core;
 
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
-/**
- * High-level host for one gui2 tree.
- */
 public class UiHost {
     private final UiInputRouter inputRouter = new UiInputRouter();
     private final UiStateStore stateStore = new UiStateStore(() -> {});

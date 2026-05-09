@@ -164,4 +164,14 @@ public class DefaultUiTheme implements UiTheme {
     public int popupBackdropFill() {
         return 0x80000000;
     }
+
+    @Override
+    public int contextMenuFill() {
+        return 0xFF1C1F26;
+    }
+
+    @Override
+    public int contextMenuBorder() {
+        return 0xFF3E4453;
+    }
 }

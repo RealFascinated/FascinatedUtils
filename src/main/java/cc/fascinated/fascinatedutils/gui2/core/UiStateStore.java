@@ -3,9 +3,6 @@ package cc.fascinated.fascinatedutils.gui2.core;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Keyed local state registry used by a composed gui2 tree.
- */
 public class UiStateStore {
     private final Map<String, UiState<?>> states = new HashMap<>();
     private final Runnable invalidate;

@@ -3,9 +3,6 @@ package cc.fascinated.fascinatedutils.gui2.core;
 import cc.fascinated.fascinatedutils.gui2.layout.BoxLayoutSpec;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
-/**
- * Node with fluent size and position builders inspired by the old UI ergonomics.
- */
 public class PositionedNode extends UiNode {
     private final BoxLayoutSpec boxLayout = new BoxLayoutSpec();
 

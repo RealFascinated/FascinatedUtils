@@ -7,12 +7,6 @@ import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Full-area backdrop overlay with a centered, fixed-size popup panel.
- *
- * <p>Clicking outside the panel calls {@link #onDismiss}. Children added via
- * {@link #addPopupChild} are positioned inside the panel area.</p>
- */
 public class PopupNode extends PositionedNode {
 
     private static final int DEFAULT_POPUP_WIDTH = 220;
@@ -26,8 +20,16 @@ public class PopupNode extends PositionedNode {
     private int popupX;
     private int popupY;
 
+    private final RectNode backdropNode = new RectNode();
+    private final CardNode panelNode = new CardNode();
+
     public PopupNode() {
         full();
+        backdropNode.full();
+        backdropNode.setFillResolver(theme -> theme.popupBackdropFill());
+        addChild(backdropNode);
+        panelNode.full();
+        addChild(panelNode);
     }
 
     public PopupNode setPopupWidth(int popupWidth) {
@@ -75,17 +77,12 @@ public class PopupNode extends PositionedNode {
         popupX = parentX + (parentWidth - popupWidth) / 2;
         popupY = parentY + (parentHeight - popupHeight) / 2;
 
+        backdropNode.layout(renderFrame, parentX, parentY, parentWidth, parentHeight);
+        panelNode.layout(renderFrame, popupX, popupY, popupWidth, popupHeight);
+
         for (UiNode child : popupChildren) {
             child.layout(renderFrame, popupX, popupY, popupWidth, popupHeight);
         }
-    }
-
-    @Override
-    protected void renderSelf(RenderFrame renderFrame, float deltaSeconds) {
-        // Backdrop
-        renderFrame.drawRect(bounds().positionX(), bounds().positionY(), bounds().width(), bounds().height(), renderFrame.theme().popupBackdropFill());
-        // Panel
-        renderFrame.drawRoundedRectFrame(popupX, popupY, popupWidth, popupHeight, 6, renderFrame.theme().panelBorder(), renderFrame.theme().panelFill(), 1);
     }
 
     protected int popupX() {

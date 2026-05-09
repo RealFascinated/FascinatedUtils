@@ -1,8 +1,5 @@
 package cc.fascinated.fascinatedutils.gui2.core;
 
-/**
- * Pointer and keyboard input events routed through the gui2 input router.
- */
 public interface UiEvent {
 
     class PointerMove implements UiEvent {

@@ -1,14 +1,14 @@
 package cc.fascinated.fascinatedutils.gui2.node.social;
 
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui2.node.BadgeNode;
+import cc.fascinated.fascinatedutils.gui2.node.RectNode;
+import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
+import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
+import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
+import net.minecraft.network.chat.Component;
 
-/**
- * Two-segment tab bar for switching between Chat and Friends views.
- *
- * <p>Renders a pill-style active segment highlight and an accent underline on the active tab.
- * An optional badge count is drawn on the Friends tab for pending incoming friend requests.
- */
 public class SocialTabBarNode extends PositionedNode {
 
     public enum Tab {
@@ -22,13 +22,55 @@ public class SocialTabBarNode extends PositionedNode {
     private Runnable onChatSelected = () -> {};
     private Runnable onFriendsSelected = () -> {};
     private int incomingRequestBadgeCount;
-    private boolean chatHovered;
-    private boolean friendsHovered;
-    private String chatLabel = "Chats";
-    private String friendsLabel = "Friends";
+    private String chatLabel = Component.translatable("alumite.social.tab_chats").getString();
+    private String friendsLabel = Component.translatable("alumite.social.friends_heading").getString();
+    private final RectNode chatBg;
+    private final RectNode friendsBg;
+    private final RectNode underline;
+    private final TextNode chatTab;
+    private final TextNode friendsTab;
+    private final BadgeNode badge;
+    private final TabSegmentNode chatSegment;
+    private final TabSegmentNode friendsSegment;
 
     public SocialTabBarNode() {
         height(30).fullWidth();
+
+        chatSegment = new TabSegmentNode(() -> onChatSelected.run());
+        friendsSegment = new TabSegmentNode(() -> onFriendsSelected.run());
+
+        chatBg = new RectNode();
+        chatBg.setFillSupplier(() -> {
+            UiTheme theme = UiThemeRepository.get();
+            return activeTab == Tab.CHAT ? theme.tabActiveFill() : chatSegment.isHovered() ? theme.tabHoverFill() : 0;
+        });
+        addChild(chatBg);
+
+        friendsBg = new RectNode();
+        friendsBg.setFillSupplier(() -> {
+            UiTheme theme = UiThemeRepository.get();
+            return activeTab != Tab.CHAT ? theme.tabActiveFill() : friendsSegment.isHovered() ? theme.tabHoverFill() : 0;
+        });
+        addChild(friendsBg);
+
+        underline = new RectNode();
+        underline.setFillResolver(UiTheme::accent);
+        underline.setCornerRadius(UNDERLINE_H / 2);
+        addChild(underline);
+
+        chatTab = new TextNode(() -> chatLabel).setTextAlign(0.5f, 0.5f);
+        addChild(chatTab);
+
+        friendsTab = new TextNode(() -> friendsLabel).setTextAlign(0.5f, 0.5f);
+        addChild(friendsTab);
+
+        badge = new BadgeNode(() -> incomingRequestBadgeCount);
+        badge.right(4).top(2);
+        addChild(badge);
+
+        // Segments are added last so they sit on top in hit-test order.
+        addChild(chatSegment);
+        addChild(friendsSegment);
     }
 
     public SocialTabBarNode setActiveTab(Tab activeTab) {
@@ -67,79 +109,77 @@ public class SocialTabBarNode extends PositionedNode {
     }
 
     @Override
-    public boolean onPointerMove(float pointerX, float pointerY) {
-        float midX = bounds().positionX() + bounds().width() / 2f;
-        chatHovered = pointerX < midX;
-        friendsHovered = pointerX >= midX;
-        return false;
-    }
-
-    @Override
-    public boolean onPointerLeave(float pointerX, float pointerY) {
-        chatHovered = false;
-        friendsHovered = false;
-        return false;
-    }
-
-    @Override
-    public boolean onClick(float pointerX, float pointerY, int button) {
-        if (button != 0) {
-            return false;
-        }
-        float midX = bounds().positionX() + bounds().width() / 2f;
-        if (pointerX < midX) {
-            onChatSelected.run();
-        } else {
-            onFriendsSelected.run();
-        }
-        return true;
-    }
-
-    @Override
-    protected void renderSelf(RenderFrame renderFrame, float deltaSeconds) {
+    public void layout(RenderFrame renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
+        super.layout(renderFrame, parentX, parentY, parentWidth, parentHeight);
         int posX = bounds().positionX();
         int posY = bounds().positionY();
         int width = bounds().width();
         int height = bounds().height();
         int halfW = width / 2;
 
+        chatBg.layout(renderFrame, posX, posY, halfW, height);
+        friendsBg.layout(renderFrame, posX + halfW, posY, halfW, height);
+
         boolean chatActive = activeTab == Tab.CHAT;
-        int chatFill = chatActive ? renderFrame.theme().tabActiveFill() : chatHovered ? renderFrame.theme().tabHoverFill() : 0;
-        int friendsFill = !chatActive ? renderFrame.theme().tabActiveFill() : friendsHovered ? renderFrame.theme().tabHoverFill() : 0;
-
-        if (chatFill != 0) {
-            renderFrame.drawRect(posX, posY, halfW, height, chatFill);
-        }
-        if (friendsFill != 0) {
-            renderFrame.drawRect(posX + halfW, posY, halfW, height, friendsFill);
-        }
-
-        int accent = renderFrame.theme().accent();
         int underlineY = posY + height - UNDERLINE_H;
         if (chatActive) {
-            renderFrame.drawRoundedRect(posX + UNDERLINE_INSET, underlineY, halfW - UNDERLINE_INSET * 2, UNDERLINE_H, UNDERLINE_H / 2, accent);
+            underline.layout(renderFrame, posX + UNDERLINE_INSET, underlineY, halfW - UNDERLINE_INSET * 2, UNDERLINE_H);
         } else {
-            renderFrame.drawRoundedRect(posX + halfW + UNDERLINE_INSET, underlineY, halfW - UNDERLINE_INSET * 2, UNDERLINE_H, UNDERLINE_H / 2, accent);
+            underline.layout(renderFrame, posX + halfW + UNDERLINE_INSET, underlineY, halfW - UNDERLINE_INSET * 2, UNDERLINE_H);
         }
 
-        int chatColor = chatActive ? renderFrame.theme().textPrimary() : renderFrame.theme().textMuted();
-        int friendsColor = chatActive ? renderFrame.theme().textMuted() : renderFrame.theme().textPrimary();
-        int textY = posY + (height - renderFrame.fontHeight()) / 2;
+        chatTab.setColorArgb(chatActive ? UiThemeRepository.get().textPrimary() : UiThemeRepository.get().textMuted());
+        chatTab.layout(renderFrame, posX, posY, halfW, height);
 
-        int chatLabelWidth = renderFrame.measureTextWidth(chatLabel, false);
-        renderFrame.drawText(chatLabel, posX + (halfW - chatLabelWidth) / 2, textY, chatColor, false, false);
+        friendsTab.setColorArgb(!chatActive ? UiThemeRepository.get().textPrimary() : UiThemeRepository.get().textMuted());
+        friendsTab.layout(renderFrame, posX + halfW, posY, halfW, height);
 
-        int friendsLabelWidth = renderFrame.measureTextWidth(friendsLabel, false);
-        renderFrame.drawText(friendsLabel, posX + halfW + (halfW - friendsLabelWidth) / 2, textY, friendsColor, false, false);
+        chatSegment.layout(renderFrame, posX, posY, halfW, height);
+        friendsSegment.layout(renderFrame, posX + halfW, posY, halfW, height);
+    }
 
-        if (incomingRequestBadgeCount > 0) {
-            String badgeText = incomingRequestBadgeCount > 9 ? "9+" : String.valueOf(incomingRequestBadgeCount);
-            int badgeW = renderFrame.measureTextWidth(badgeText, true) + 4;
-            int badgeH = renderFrame.fontHeight() + 2;
-            int badgeX = posX + width - badgeW - 4;
-            int badgeY = posY + 2;
-            renderFrame.drawRoundedRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2, renderFrame.theme().danger());
-            renderFrame.drawText(badgeText, badgeX + 2, badgeY + 1, renderFrame.theme().onDanger(), false, true);
+    private static class TabSegmentNode extends PositionedNode {
+
+        private final Runnable onPress;
+        private boolean hovered;
+
+        TabSegmentNode(Runnable onPress) {
+            this.onPress = onPress;
+        }
+
+        boolean isHovered() {
+            return hovered;
+        }
+
+        @Override
+        public boolean blocksHitWhenEmpty() {
+            return true;
+        }
+
+        @Override
+        public boolean onPointerEnter(float pointerX, float pointerY) {
+            hovered = true;
+            return false;
+        }
+
+        @Override
+        public boolean onPointerLeave(float pointerX, float pointerY) {
+            hovered = false;
+            return false;
+        }
+
+        @Override
+        public boolean onClick(float pointerX, float pointerY, int button) {
+            if (button != 0) {
+                return false;
+            }
+            onPress.run();
+            return true;
+        }
+
+        @Override
+        public void layout(RenderFrame renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
+            bounds().set(parentX, parentY, parentWidth, parentHeight);
         }
     }
 }

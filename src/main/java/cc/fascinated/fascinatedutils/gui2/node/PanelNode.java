@@ -3,9 +3,6 @@ package cc.fascinated.fascinatedutils.gui2.node;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
-/**
- * Simple rectangular panel with fill and border.
- */
 public class PanelNode extends PositionedNode {
     private int borderThickness = 1;
     private Integer fillColorOverrideArgb;

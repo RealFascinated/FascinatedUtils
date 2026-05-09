@@ -2,9 +2,6 @@ package cc.fascinated.fascinatedutils.gui2.node;
 
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 
-/**
- * Transparent full-size overlay node that captures left-clicks.
- */
 public class ClickOverlayNode extends PositionedNode {
     private Runnable onPrimaryClick = () -> {};
 

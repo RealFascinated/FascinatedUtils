@@ -17,6 +17,7 @@ import cc.fascinated.fascinatedutils.oldgui.themes.FascinatedGuiTheme;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 
 public class ActionsOverlayScreen {
 
@@ -40,14 +41,14 @@ public class ActionsOverlayScreen {
         PositionedNode rootNode = new PositionedNode().full();
         rootNode.setNodeId("title-root");
 
-        ButtonNode settingsButton = new ButtonNode("HUD Editor");
+        ButtonNode settingsButton = new ButtonNode(Component.translatable("alumite.setting.hud_editor.title").getString());
         settingsButton.setNodeId("title-hud-editor");
         settingsButton.size(BUTTON_WIDTH, BUTTON_HEIGHT);
         settingsButton.right(RIGHT_MARGIN).topRel(0.5f, GROUP_TOP_OFFSET, 0f);
         settingsButton.setLeftIcon(ModUiTextures.SETTINGS.getId());
         settingsButton.setOnPress(() -> Minecraft.getInstance().setScreen(new HUDEditorScreen()));
 
-        ButtonNode socialButton = new ButtonNode("Social");
+        ButtonNode socialButton = new ButtonNode(Component.translatable("alumite.social.title").getString());
         socialButton.setNodeId("title-social");
         socialButton.size(BUTTON_WIDTH, BUTTON_HEIGHT);
         socialButton.right(RIGHT_MARGIN).topRel(0.5f, GROUP_TOP_OFFSET + BUTTON_HEIGHT + BUTTON_GAP, 0f);
@@ -63,7 +64,7 @@ public class ActionsOverlayScreen {
             if (minecraftName == null || minecraftName.isBlank()) {
                 return "";
             }
-            return "Alumite logged in as " + minecraftName;
+            return String.format(Component.translatable("alumite.title_screen.logged_in_as").getString(), minecraftName);
         });
         loginTextNode.setNodeId("alumite-username");
         loginTextNode.pos(LOGIN_TEXT_X, LOGIN_TEXT_Y);

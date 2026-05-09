@@ -67,10 +67,6 @@ public class FWidgetNode {
         return key;
     }
 
-    // -------------------------------------------------------------------------
-    // RenderContext — the "hooks" surface
-    // -------------------------------------------------------------------------
-
     /**
      * Passed to the render function once per resolve. Provides hook primitives.
      */

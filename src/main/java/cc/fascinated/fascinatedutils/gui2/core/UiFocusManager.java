@@ -3,9 +3,6 @@ package cc.fascinated.fascinatedutils.gui2.core;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Focus ownership and traversal policy for gui2.
- */
 public class UiFocusManager {
     private UiNode focusedNode;
 

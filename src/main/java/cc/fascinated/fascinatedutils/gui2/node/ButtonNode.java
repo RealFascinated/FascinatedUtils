@@ -2,41 +2,54 @@ package cc.fascinated.fascinatedutils.gui2.node;
 
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
+import cc.fascinated.fascinatedutils.gui2.render.UiText;
+import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
-/**
- * Basic clickable button widget with hover feedback.
- */
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 public class ButtonNode extends PositionedNode {
+
+    public enum ButtonVariant {
+        DEFAULT, GHOST, DANGER
+    }
+
     private static final int ICON_SIZE = 12;
     private static final int ICON_PADDING = 4;
     private static final int ICON_TEXT_GAP = 6;
     private static final int CORNER_RADIUS = 4;
-    private String label;
+    private Supplier<String> labelSupplier;
     private Runnable onPress = () -> {};
     private boolean hovered;
     private boolean focused;
     private boolean rounded;
-    private boolean ghost;
+    private Supplier<ButtonVariant> variantSupplier = () -> ButtonVariant.DEFAULT;
     private boolean leftAlignLabel;
     private Integer labelColorArgb;
+    private Function<UiTheme, Integer> labelColorResolver;
     private Identifier leftIcon;
     private Identifier rightIcon;
     private Integer iconTintArgb;
 
     public ButtonNode(String label) {
-        this.label = label == null ? "" : label;
+        this.labelSupplier = label == null ? () -> "" : () -> label;
         size(120, 20);
     }
 
     public ButtonNode setLabel(String label) {
-        this.label = label == null ? "" : label;
+        this.labelSupplier = label == null ? () -> "" : () -> label;
+        return this;
+    }
+
+    public ButtonNode setLabel(Supplier<String> labelSupplier) {
+        this.labelSupplier = labelSupplier == null ? () -> "" : labelSupplier;
         return this;
     }
 
     public String label() {
-        return label;
+        return labelSupplier.get();
     }
 
     public ButtonNode setOnPress(Runnable onPress) {
@@ -61,6 +74,13 @@ public class ButtonNode extends PositionedNode {
 
     public ButtonNode setLabelColorArgb(Integer labelColorArgb) {
         this.labelColorArgb = labelColorArgb;
+        this.labelColorResolver = null;
+        return this;
+    }
+
+    public ButtonNode setLabelColorResolver(Function<UiTheme, Integer> labelColorResolver) {
+        this.labelColorResolver = labelColorResolver;
+        this.labelColorArgb = null;
         return this;
     }
 
@@ -69,8 +89,13 @@ public class ButtonNode extends PositionedNode {
         return this;
     }
 
-    public ButtonNode setGhost(boolean ghost) {
-        this.ghost = ghost;
+    public ButtonNode setVariant(ButtonVariant variant) {
+        this.variantSupplier = () -> variant == null ? ButtonVariant.DEFAULT : variant;
+        return this;
+    }
+
+    public ButtonNode setVariant(Supplier<ButtonVariant> variantSupplier) {
+        this.variantSupplier = variantSupplier == null ? () -> ButtonVariant.DEFAULT : variantSupplier;
         return this;
     }
 
@@ -80,7 +105,7 @@ public class ButtonNode extends PositionedNode {
     }
 
     public float minimumWidth(RenderFrame renderFrame) {
-        int textWidth = renderFrame.measureTextWidth(label, false);
+        int textWidth = renderFrame.measureTextWidth(label(), false);
         int leftWidth = leftIcon != null ? ICON_PADDING + ICON_SIZE + ICON_TEXT_GAP : ICON_PADDING;
         int rightWidth = rightIcon != null ? ICON_TEXT_GAP + ICON_SIZE + ICON_PADDING : ICON_PADDING;
         return textWidth + leftWidth + rightWidth;
@@ -142,21 +167,30 @@ public class ButtonNode extends PositionedNode {
         int by = bounds().positionY();
         int bw = bounds().width();
         int bh = bounds().height();
-        int textColor = labelColorArgb != null ? labelColorArgb : renderFrame.theme().textPrimary();
+        int textColor = labelColorArgb != null ? labelColorArgb
+                : labelColorResolver != null ? labelColorResolver.apply(renderFrame.theme())
+                : renderFrame.theme().textPrimary();
+        ButtonVariant resolvedVariant = variantSupplier.get();
 
-        if (ghost) {
+        if (resolvedVariant == ButtonVariant.GHOST) {
             if (hovered || focused) {
                 renderFrame.drawRoundedRect(bx, by, bw, bh, CORNER_RADIUS, renderFrame.theme().buttonFillHover());
             }
         } else {
-            int fillColor = hovered ? renderFrame.theme().buttonFillHover() : renderFrame.theme().buttonFill();
+            int fillColor;
             int borderColor;
-            if (focused) {
-                borderColor = renderFrame.theme().buttonBorderFocus();
-            } else if (hovered) {
-                borderColor = renderFrame.theme().buttonBorderHover();
+            if (resolvedVariant == ButtonVariant.DANGER) {
+                fillColor = hovered ? renderFrame.theme().dangerFillHover() : renderFrame.theme().dangerFill();
+                borderColor = hovered ? renderFrame.theme().buttonBorderHover() : renderFrame.theme().buttonBorder();
             } else {
-                borderColor = renderFrame.theme().buttonBorder();
+                fillColor = hovered ? renderFrame.theme().buttonFillHover() : renderFrame.theme().buttonFill();
+                if (focused) {
+                    borderColor = renderFrame.theme().buttonBorderFocus();
+                } else if (hovered) {
+                    borderColor = renderFrame.theme().buttonBorderHover();
+                } else {
+                    borderColor = renderFrame.theme().buttonBorder();
+                }
             }
             if (rounded) {
                 renderFrame.drawRoundedRect(bx, by, bw, bh, CORNER_RADIUS, fillColor);
@@ -167,7 +201,8 @@ public class ButtonNode extends PositionedNode {
             }
         }
 
-        int textWidth = renderFrame.measureTextWidth(label, false);
+        UiText labelText = UiText.of(label()).color(textColor);
+        int textWidth = labelText.width(renderFrame);
         int iconY = by + (bh - ICON_SIZE) / 2;
         if (leftIcon != null) {
             int iconTint = iconTintArgb != null ? iconTintArgb : renderFrame.theme().textPrimary();
@@ -179,7 +214,7 @@ public class ButtonNode extends PositionedNode {
         int textAreaWidth = Math.max(0, bw - leftTextInset);
         int textX = leftAlignLabel ? textAreaX + ICON_PADDING : textAreaX + (textAreaWidth - textWidth) / 2;
         int textY = by + (bh - renderFrame.fontHeight()) / 2;
-        renderFrame.drawText(label, textX, textY, textColor, false, false);
+        labelText.draw(renderFrame, textX, textY);
 
         if (rightIcon != null) {
             int iconTint = iconTintArgb != null ? iconTintArgb : renderFrame.theme().textPrimary();

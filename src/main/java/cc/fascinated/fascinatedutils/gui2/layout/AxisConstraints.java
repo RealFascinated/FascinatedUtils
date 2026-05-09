@@ -1,10 +1,5 @@
 package cc.fascinated.fascinatedutils.gui2.layout;
 
-/**
- * Constraint set for one axis with start, end, and size properties.
- *
- * <p>At most two properties should be set at once. When all three are set, size is dropped.
- */
 public class AxisConstraints {
     private LayoutValue start;
     private LayoutValue end;

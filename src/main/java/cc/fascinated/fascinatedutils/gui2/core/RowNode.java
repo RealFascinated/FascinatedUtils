@@ -2,9 +2,6 @@ package cc.fascinated.fascinatedutils.gui2.core;
 
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
-/**
- * Horizontal container that divides available width across visible children.
- */
 public class RowNode extends UiNode {
     private int gap;
 

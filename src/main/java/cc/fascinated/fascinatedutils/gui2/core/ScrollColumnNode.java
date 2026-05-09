@@ -4,12 +4,6 @@ import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
 import java.util.function.Consumer;
 
-/**
- * Simple scrollable vertical container that stacks visible children by their resolved height.
- *
- * <p>A scrollbar is drawn on the right edge when content overflows. The scrollbar strip is
- * excluded from children's layout width so that no child intercepts pointer events in that area.
- */
 public class ScrollColumnNode extends UiNode {
     private static final int SCROLLBAR_WIDTH = 3;
     private static final int SCROLLBAR_RIGHT_MARGIN = 2;

@@ -2,9 +2,6 @@ package cc.fascinated.fascinatedutils.gui2.core;
 
 import cc.fascinated.fascinatedutils.gui2.render.ClipRegion;
 
-/**
- * Mutable rectangular bounds in logical UI coordinates.
- */
 public class UiBounds {
     private int positionX;
     private int positionY;

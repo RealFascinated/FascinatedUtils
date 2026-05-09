@@ -43,7 +43,7 @@ public class RoundedRectCornerRadiiTexture {
         image.setPixel(1, 0, 0xFF000000 | (topRight << 16) | (topRight << 8) | topRight);
         image.setPixel(2, 0, 0xFF000000 | (bottomRight << 16) | (bottomRight << 8) | bottomRight);
         image.setPixel(3, 0, 0xFF000000 | (bottomLeft << 16) | (bottomLeft << 8) | bottomLeft);
-        int strokeByte = Math.max(0, Math.min(255, Math.round(lutRingStrokePx)));
+        int strokeByte = lutRingStrokePx > 0f ? Math.max(1, Math.min(255, Math.round(lutRingStrokePx))) : 0;
         image.setPixel(4, 0, 0xFF000000 | (strokeByte << 16) | (strokeByte << 8) | strokeByte);
     }
 

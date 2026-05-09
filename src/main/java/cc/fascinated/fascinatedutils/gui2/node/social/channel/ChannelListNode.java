@@ -18,12 +18,13 @@ import java.util.function.Consumer;
 
 public class ChannelListNode extends ScrollColumnNode {
 
-    public ChannelListNode(String selectedChannelId, Consumer<String> onSelectChannel, PlayerContextMenuHandler contextMenuHandler) {
+    public ChannelListNode(String selectedChannelId, Consumer<String> onSelectChannel,
+                           PlayerContextMenuHandler contextMenuHandler) {
         setGap(2);
 
         List<Channel> channels = Alumite.INSTANCE != null ? Alumite.INSTANCE.channels().all() : List.of();
         if (channels.isEmpty()) {
-            TextNode emptyLabel = new TextNode("No conversations yet")
+            TextNode emptyLabel = new TextNode(Component.translatable("alumite.social.dm.no_conversations").getString())
                     .setColorArgb(UiThemeRepository.get().textSubtle())
                     .setTextAlign(0f, 0.5f);
             emptyLabel.fullWidth().height(40);
@@ -37,7 +38,10 @@ public class ChannelListNode extends ScrollColumnNode {
                 continue;
             }
             User recipient = dmChannel.recipient();
-            PlayerRowNode row = new PlayerRowNode(() -> recipient, () -> previewSnippet(channel));
+            PlayerRowNode row = new PlayerRowNode(() -> recipient, () -> previewSnippet(channel))
+                    .setAvatarSize(18)
+                    .setRowHeight(28)
+                    .setTextScale(0.85f);
             row.setSelected(channel.id().equals(selectedChannelId));
             row.setOnPrimaryClick(() -> {
                 if (onSelectChannel != null) {
@@ -49,6 +53,7 @@ public class ChannelListNode extends ScrollColumnNode {
                     contextMenuHandler.open(recipient, pointerX, pointerY);
                 }
             });
+            row.setTrailingAction(new CloseChannelNode(dmChannel), CloseChannelNode.SIZE);
             addChild(row);
         }
     }
@@ -58,7 +63,7 @@ public class ChannelListNode extends ScrollColumnNode {
         if (preview == null || preview.content() == null || preview.content().isBlank()) {
             if (preview != null) {
                 List<AttachmentDTO> attachments = preview.attachments();
-                if (attachments != null && !attachments.isEmpty() && attachments.get(0) != null) {
+                if (!attachments.isEmpty() && attachments.get(0) != null) {
                     return attachments.get(0).name();
                 }
             }

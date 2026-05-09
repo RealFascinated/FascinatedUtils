@@ -2,9 +2,6 @@ package cc.fascinated.fascinatedutils.gui2.core;
 
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
-/**
- * Vertical container that divides available height across visible children.
- */
 public class ColumnNode extends UiNode {
     private int gap;
 

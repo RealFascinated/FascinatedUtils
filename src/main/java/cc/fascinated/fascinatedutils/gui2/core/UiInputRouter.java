@@ -6,9 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Input router with front-to-back hit testing and capture/bubble dispatch.
- */
 public class UiInputRouter {
     private UiNode hoverLeaf;
     private UiNode pressedLeaf;

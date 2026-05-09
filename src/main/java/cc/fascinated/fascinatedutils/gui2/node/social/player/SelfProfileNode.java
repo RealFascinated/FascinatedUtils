@@ -6,33 +6,45 @@ import cc.fascinated.fascinatedutils.api.user.SelfUser;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui2.node.DividerNode;
+import cc.fascinated.fascinatedutils.gui2.node.CardNode;
+import cc.fascinated.fascinatedutils.gui2.node.RectNode;
+import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
+import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 
 import java.util.function.BiConsumer;
 
-/**
- * Bottom-left footer strip showing the local player's avatar, display name, and current activity.
- *
- * <p>Reads directly from {@link Alumite#INSTANCE} each frame so it always reflects live data
- * without requiring any explicit state wiring from the parent screen.
- */
 public class SelfProfileNode extends PositionedNode {
 
-    private static final int AVATAR_SIZE = 24;
-    private static final int PADDING = 6;
+    private static final int CARD_INSET_H = 8;
+    private static final int CARD_INSET_V = 6;
+    private static final int CARD_CORNER = 6;
+    private static final int CARD_PAD = 8;
+    private static final int AVATAR_SIZE = 28;
+    private static final int AVATAR_TEXT_GAP = 8;
     private static final int HOVER_TINT = 0x15FFFFFF;
 
-    private final DividerNode divider;
+    private final CardNode card;
+    private final RectNode hoverOverlay;
     private final PlayerAvatarNode avatar;
+    private final TextNode nameText;
+    private final TextNode activityText;
+
     private BiConsumer<Float, Float> onStatusClick;
     private boolean hovered;
 
     public SelfProfileNode() {
-        height(36).fullWidth();
-        divider = new DividerNode();
-        divider.top(0).fullWidth();
-        addChild(divider);
+        height(52).fullWidth();
+
+        card = new CardNode().setCornerRadius(CARD_CORNER);
+        card.left(CARD_INSET_H).right(CARD_INSET_H).top(CARD_INSET_V).bottom(CARD_INSET_V);
+        addChild(card);
+
+        hoverOverlay = new RectNode();
+        hoverOverlay.left(CARD_INSET_H).right(CARD_INSET_H).top(CARD_INSET_V).bottom(CARD_INSET_V);
+        hoverOverlay.setCornerRadius(CARD_CORNER);
+        hoverOverlay.setFillSupplier(() -> hovered && onStatusClick != null ? HOVER_TINT : 0);
+        addChild(hoverOverlay);
 
         avatar = new PlayerAvatarNode(AVATAR_SIZE,
                 () -> selfUser() != null && selfUser().user() != null ? selfUser().user().minecraftUuid() : null,
@@ -45,6 +57,20 @@ public class SelfProfileNode extends PositionedNode {
                     return status != null ? status.color() : UserStatus.OFFLINE.color();
                 });
         addChild(avatar);
+
+        nameText = new TextNode(() -> {
+            SelfUser self = selfUser();
+            User user = self != null ? self.user() : null;
+            return user != null && user.minecraftName() != null ? user.minecraftName() : "";
+        }).setColorResolver(UiTheme::textPrimary).setTextAlign(0f, 0.5f);
+        addChild(nameText);
+
+        activityText = new TextNode(() -> {
+            SelfUser self = selfUser();
+            Activity activity = self != null ? self.activity() : null;
+            return activity != null ? activity.label() : "";
+        }).setColorResolver(UiTheme::textMuted).setTextAlign(0f, 0.5f);
+        addChild(activityText);
     }
 
     private SelfUser selfUser() {
@@ -83,42 +109,30 @@ public class SelfProfileNode extends PositionedNode {
 
     @Override
     public void layout(RenderFrame renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
-        divider.height(renderFrame.theme().separatorThickness());
         super.layout(renderFrame, parentX, parentY, parentWidth, parentHeight);
-        int posX = bounds().positionX();
-        int posY = bounds().positionY();
-        int height = bounds().height();
-        avatar.layout(renderFrame, posX + PADDING, posY + (height - AVATAR_SIZE) / 2, AVATAR_SIZE, AVATAR_SIZE);
-    }
 
-    @Override
-    protected void renderSelf(RenderFrame renderFrame, float deltaSeconds) {
-        int posX = bounds().positionX();
-        int posY = bounds().positionY();
-        int width = bounds().width();
-        int height = bounds().height();
+        int cardX = bounds().positionX() + CARD_INSET_H;
+        int cardY = bounds().positionY() + CARD_INSET_V;
+        int cardW = bounds().width() - CARD_INSET_H * 2;
+        int cardH = bounds().height() - CARD_INSET_V * 2;
 
-        if (hovered && onStatusClick != null) {
-            renderFrame.drawRect(posX, posY, width, height, HOVER_TINT);
-        }
+        int avatarY = cardY + (cardH - AVATAR_SIZE) / 2;
+        avatar.layout(renderFrame, cardX + CARD_PAD, avatarY, AVATAR_SIZE, AVATAR_SIZE);
 
-        SelfUser self = selfUser();
-        User user = self != null ? self.user() : null;
-        String name = user != null && user.minecraftName() != null ? user.minecraftName() : "";
+        int textX = cardX + CARD_PAD + AVATAR_SIZE + AVATAR_TEXT_GAP;
+        int textW = Math.max(0, cardW - CARD_PAD - AVATAR_SIZE - AVATAR_TEXT_GAP - CARD_PAD);
 
-        int textX = posX + PADDING + AVATAR_SIZE + 8;
-        Activity activity = self != null ? self.activity() : null;
-        int primaryColor = renderFrame.theme().textPrimary();
-        int mutedColor = renderFrame.theme().textMuted();
+        Activity activity = selfUser() != null ? selfUser().activity() : null;
+        activityText.setVisible(activity != null);
 
+        int lineH = renderFrame.fontHeight();
         if (activity != null) {
-            int lineH = renderFrame.fontHeight();
             int blockH = lineH * 2 + 3;
-            int nameY = posY + (height - blockH) / 2;
-            renderFrame.drawText(name, textX, nameY, primaryColor, false, false);
-            renderFrame.drawText(activity.label(), textX, nameY + lineH + 3, mutedColor, false, false);
+            int nameY = cardY + (cardH - blockH) / 2;
+            nameText.layout(renderFrame, textX, nameY, textW, lineH);
+            activityText.layout(renderFrame, textX, nameY + lineH + 3, textW, lineH);
         } else {
-            renderFrame.drawText(name, textX, posY + (height - renderFrame.fontHeight()) / 2, primaryColor, false, false);
+            nameText.layout(renderFrame, textX, cardY, textW, cardH);
         }
     }
 }

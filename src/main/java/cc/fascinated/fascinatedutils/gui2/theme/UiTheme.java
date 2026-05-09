@@ -1,8 +1,5 @@
 package cc.fascinated.fascinatedutils.gui2.theme;
 
-/**
- * Theme tokens used by gui2 widgets.
- */
 public interface UiTheme {
     int panelFill();
 
@@ -67,4 +64,8 @@ public interface UiTheme {
     int attachmentPlaceholderFill();
 
     int popupBackdropFill();
+
+    int contextMenuFill();
+
+    int contextMenuBorder();
 }

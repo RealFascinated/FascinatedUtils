@@ -18,9 +18,6 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
-/**
- * gui2 GPU renderer implementing the RenderFrame contract with explicit frame, clip, and text flush lifecycle.
- */
 public class GuiRenderer implements RenderFrame {
     private final GuiGraphicsExtractor drawContext;
     private final Minecraft minecraftClient;
@@ -161,7 +158,10 @@ public class GuiRenderer implements RenderFrame {
 
     @Override
     public void drawRoundedRectFrame(int positionX, int positionY, int width, int height, int cornerRadius, int borderArgbColor, int fillArgbColor, int borderThickness) {
-        backend.fillRoundedRectFrame(positionX, positionY, width, height, cornerRadius, borderArgbColor, fillArgbColor, borderThickness, borderThickness, RectCornerRoundMask.ALL);
+        if (fillArgbColor != 0) {
+            backend.fillRoundedRect(positionX, positionY, width, height, cornerRadius, fillArgbColor, RectCornerRoundMask.ALL);
+        }
+        backend.fillRoundedRectBorderRing(positionX, positionY, width, height, cornerRadius, borderThickness, borderArgbColor, RectCornerRoundMask.ALL);
     }
 
     @Override

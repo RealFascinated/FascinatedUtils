@@ -6,11 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Base scene-graph node for gui2.
- *
- * <p>The lifecycle is measure/layout, then render, then input dispatch through capture and bubble hooks.
- */
 public abstract class UiNode {
     private final List<UiNode> children = new ArrayList<>();
     private final UiBounds bounds = new UiBounds(0, 0, 0, 0);

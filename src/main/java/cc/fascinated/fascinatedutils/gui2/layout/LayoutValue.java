@@ -1,8 +1,5 @@
 package cc.fascinated.fascinatedutils.gui2.layout;
 
-/**
- * Single layout value with measure mode.
- */
 public class LayoutValue {
     private final float value;
     private final Measure measure;

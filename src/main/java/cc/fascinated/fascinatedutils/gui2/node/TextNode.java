@@ -5,16 +5,18 @@ import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiNode;
 import cc.fascinated.fascinatedutils.gui2.layout.AxisConstraints;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
+import cc.fascinated.fascinatedutils.gui2.render.UiText;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 
-/**
- * Simple text node that centers text inside its bounds.
- */
 public class TextNode extends PositionedNode {
     private Supplier<String> textSupplier;
     private Integer colorOverrideArgb;
+    private Function<UiTheme, Integer> colorResolver;
+    private float scale = 1.0f;
     private boolean shadow;
     private boolean bold;
     private float horizontalAlign = 0.5f;
@@ -41,6 +43,18 @@ public class TextNode extends PositionedNode {
 
     public TextNode setColorArgb(int colorArgb) {
         this.colorOverrideArgb = colorArgb;
+        this.colorResolver = null;
+        return this;
+    }
+
+    public TextNode setColorResolver(Function<UiTheme, Integer> colorResolver) {
+        this.colorResolver = colorResolver;
+        this.colorOverrideArgb = null;
+        return this;
+    }
+
+    public TextNode setScale(float scale) {
+        this.scale = scale;
         return this;
     }
 
@@ -91,23 +105,25 @@ public class TextNode extends PositionedNode {
     @Override
     protected void renderSelf(RenderFrame renderFrame, float deltaSeconds) {
         String text = currentText();
-        int textColor = colorOverrideArgb != null ? colorOverrideArgb : renderFrame.theme().textPrimary();
+        int textColor = colorResolver != null ? colorResolver.apply(renderFrame.theme())
+                : colorOverrideArgb != null ? colorOverrideArgb
+                : renderFrame.theme().textPrimary();
         if (wrap) {
             List<String> lines = TextLineLayout.wrapLines(text, bounds().width(), segment -> renderFrame.measureTextWidth(segment, bold));
-            int lineHeight = renderFrame.fontHeight();
+            int lineHeight = Math.round(renderFrame.fontHeight() * scale);
             int totalHeight = lines.size() * lineHeight;
             int cursorY = bounds().positionY() + Math.round((bounds().height() - totalHeight) * verticalAlign);
             for (String line : lines) {
-                int lineWidth = renderFrame.measureTextWidth(line, bold);
+                int lineWidth = Math.round(renderFrame.measureTextWidth(line, bold) * scale);
                 int lineX = bounds().positionX() + Math.round((bounds().width() - lineWidth) * horizontalAlign);
-                renderFrame.drawText(line, lineX, cursorY, textColor, shadow, bold);
+                UiText.of(line).color(textColor).shadow(shadow).bold(bold).scale(scale).draw(renderFrame, lineX, cursorY);
                 cursorY += lineHeight;
             }
         } else {
-            int textWidth = renderFrame.measureTextWidth(text, bold);
+            int textWidth = Math.round(renderFrame.measureTextWidth(text, bold) * scale);
             int textPositionX = bounds().positionX() + Math.round((bounds().width() - textWidth) * horizontalAlign);
-            int textPositionY = bounds().positionY() + Math.round((bounds().height() - renderFrame.fontHeight()) * verticalAlign);
-            renderFrame.drawText(text, textPositionX, textPositionY, textColor, shadow, bold);
+            int textPositionY = bounds().positionY() + Math.round((bounds().height() - renderFrame.fontHeight() * scale) * verticalAlign);
+            UiText.of(text).color(textColor).shadow(shadow).bold(bold).scale(scale).draw(renderFrame, textPositionX, textPositionY);
         }
     }
 

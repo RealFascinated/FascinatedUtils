@@ -2,9 +2,6 @@ package cc.fascinated.fascinatedutils.gui2.core;
 
 import java.util.Objects;
 
-/**
- * Mutable local state handle that invalidates the owning host on updates.
- */
 public class UiState<T> {
     private T value;
     private final Runnable invalidate;

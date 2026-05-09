@@ -24,7 +24,8 @@ public class ContextMenuNode extends PositionedNode {
 
     private final List<ButtonNode> buttons = new ArrayList<>();
     private final List<RowEntry> rows = new ArrayList<>();
-    private int[] separatorYPositions = new int[0];
+    private final List<RectNode> separatorRects = new ArrayList<>();
+    private final CardNode background;
     private int preferredPositionX;
     private int preferredPositionY;
     private int menuPositionX;
@@ -37,6 +38,11 @@ public class ContextMenuNode extends PositionedNode {
 
     public ContextMenuNode() {
         full();
+        background = new CardNode()
+                .setCornerRadius(MENU_CORNER_RADIUS)
+                .setFillResolver(UiTheme::contextMenuFill)
+                .setBorderResolver(UiTheme::contextMenuBorder);
+        addChild(background);
     }
 
     public ContextMenuNode setPreferredPosition(float preferredPositionX, float preferredPositionY) {
@@ -61,9 +67,15 @@ public class ContextMenuNode extends PositionedNode {
     }
 
     public ContextMenuNode setItems(List<Item> items) {
-        clearChildren();
+        for (ButtonNode button : buttons) {
+            removeChild(button);
+        }
+        for (RectNode separatorRect : separatorRects) {
+            removeChild(separatorRect);
+        }
         buttons.clear();
         rows.clear();
+        separatorRects.clear();
         if (items == null || items.isEmpty()) {
             return this;
         }
@@ -73,10 +85,13 @@ public class ContextMenuNode extends PositionedNode {
             }
             if (item.isSeparator()) {
                 rows.add(new SeparatorEntry());
+                RectNode separatorRect = new RectNode().setFillResolver(UiTheme::divider);
+                separatorRects.add(separatorRect);
+                addChild(separatorRect);
                 continue;
             }
             ButtonNode button = new ButtonNode(item.label())
-                    .setGhost(true)
+                    .setVariant(ButtonNode.ButtonVariant.GHOST)
                     .setLeftAlignLabel(true)
                     .setRightIcon(item.icon())
                     .setLabelColorArgb(item.labelColor() != null ? item.labelColor().apply(UiThemeRepository.get()) : null)
@@ -136,44 +151,35 @@ public class ContextMenuNode extends PositionedNode {
         menuPositionX = Math.min(Math.max(preferredPositionX, positionX), maxMenuPositionX);
         menuPositionY = Math.min(Math.max(preferredPositionY, positionY), maxMenuPositionY);
 
+        background.setVisible(!rows.isEmpty());
+        if (!rows.isEmpty()) {
+            background.size(menuWidth, menuHeight);
+            background.layout(renderFrame, menuPositionX, menuPositionY, menuWidth, menuHeight);
+        }
+
         int rowY = menuPositionY + MENU_PADDING;
         int buttonWidth = Math.max(0, menuWidth - (MENU_PADDING * 2));
-        List<Integer> separatorYList = new ArrayList<>();
+        int separatorIndex = 0;
         boolean firstLayoutRow = true;
         for (RowEntry row : rows) {
             if (!firstLayoutRow) {
                 rowY += BUTTON_GAP;
             }
-            if (row instanceof ButtonEntry buttonEntry) {
-                ButtonNode button = buttonEntry.button();
+            if (row instanceof ButtonEntry(ButtonNode button)) {
                 button.width(buttonWidth);
                 button.height(buttonHeight);
                 button.layout(renderFrame, menuPositionX + MENU_PADDING, rowY, buttonWidth, buttonHeight);
                 rowY += buttonHeight;
             } else {
-                separatorYList.add(rowY + (SEPARATOR_HEIGHT - SEPARATOR_LINE_HEIGHT) / 2);
+                int separatorRectY = rowY + (SEPARATOR_HEIGHT - SEPARATOR_LINE_HEIGHT) / 2;
+                separatorRects.get(separatorIndex).layout(renderFrame, menuPositionX + MENU_PADDING, separatorRectY, buttonWidth, SEPARATOR_LINE_HEIGHT);
+                separatorIndex++;
                 rowY += SEPARATOR_HEIGHT;
             }
             firstLayoutRow = false;
         }
-        separatorYPositions = new int[separatorYList.size()];
-        for (int separatorIndex = 0; separatorIndex < separatorYList.size(); separatorIndex++) {
-            separatorYPositions[separatorIndex] = separatorYList.get(separatorIndex);
-        }
     }
 
-    @Override
-    protected void renderSelf(RenderFrame renderFrame, float deltaSeconds) {
-        if (rows.isEmpty()) {
-            return;
-        }
-        renderFrame.drawRoundedRectFrame(menuPositionX, menuPositionY, menuWidth, menuHeight, MENU_CORNER_RADIUS, renderFrame.theme().panelBorder(), renderFrame.theme().panelFill(), 1);
-        int separatorX = menuPositionX + MENU_PADDING;
-        int separatorWidth = menuWidth - (MENU_PADDING * 2);
-        for (int separatorY : separatorYPositions) {
-            renderFrame.drawRect(separatorX, separatorY, separatorWidth, SEPARATOR_LINE_HEIGHT, renderFrame.theme().divider());
-        }
-    }
 
     private float measureButtonWidth(RenderFrame renderFrame, ButtonNode button) {
         return button.minimumWidth(renderFrame);

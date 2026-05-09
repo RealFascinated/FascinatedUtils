@@ -8,7 +8,7 @@ import cc.fascinated.fascinatedutils.api.channel.Message;
 import cc.fascinated.fascinatedutils.gui2.core.ScrollColumnNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.core.UiStateStore;
-import cc.fascinated.fascinatedutils.gui2.node.TextInputNode;
+import cc.fascinated.fascinatedutils.gui2.node.TextboxInputNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 import cc.fascinated.fascinatedutils.oldgui.toast.Toast;
@@ -18,6 +18,10 @@ import net.minecraft.network.chat.Component;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerContextMenuHandler;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +33,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
 
     private final Channel channel;
     private final PlayerContextMenuHandler playerContextMenuHandler;
+    private final UiStateStore stateStore;
     private final UiState<String> loadingMessagesChannelId;
     private final UiState<Map<String, Integer>> messageScrollByChannel;
     private final UiState<String> editingMessageId;
@@ -41,6 +46,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
     public ChatMessagesNode(Channel channel, UiStateStore stateStore, PlayerContextMenuHandler playerContextMenuHandler) {
         this.channel = channel;
         this.playerContextMenuHandler = playerContextMenuHandler;
+        this.stateStore = stateStore;
         this.loadingMessagesChannelId = stateStore.state("social.loadingMessagesChannel", null);
         this.messageScrollByChannel = stateStore.state("social.messageScrollByChannel", new HashMap<>());
         this.editingMessageId = stateStore.state("social.chat.editing.messageId", null);
@@ -85,12 +91,18 @@ public class ChatMessagesNode extends ScrollColumnNode {
             return;
         }
         boolean editingFound = false;
+        LocalDate lastSeenDate = null;
         for (Message message : messages) {
+            LocalDate messageDate = parseDateOrNull(message.createdAt());
+            if (messageDate != null && !messageDate.equals(lastSeenDate)) {
+                addChild(new ChatDaySeparatorNode(messageDate));
+                lastSeenDate = messageDate;
+            }
             ChatMessageNode messageNode = new ChatMessageNode(message);
             boolean isEditing = Objects.equals(editingMessageId.get(), message.id());
             if (isEditing) {
                 editingFound = true;
-                TextInputNode editInput = buildEditInput(message);
+                TextboxInputNode editInput = buildEditInput(message);
                 messageNode.setEditInput(editInput);
             } else {
                 boolean own = isOwnMessage(message);
@@ -116,14 +128,20 @@ public class ChatMessagesNode extends ScrollColumnNode {
         }
     }
 
-    private TextInputNode buildEditInput(Message message) {
+    private TextboxInputNode buildEditInput(Message message) {
         String draft = editingDraft.get();
         if (draft == null || draft.isEmpty()) {
             draft = message.content() != null ? message.content() : "";
         }
-        TextInputNode editInput = new TextInputNode();
+        UiState<Integer> editCaret = stateStore.state("social.chat.edit-input.caret", Integer.MAX_VALUE);
+        UiState<Integer> editSelection = stateStore.state("social.chat.edit-input.selection", -1);
+        UiState<Boolean> editDrag = stateStore.state("social.chat.edit-input.drag", false);
+        TextboxInputNode editInput = new TextboxInputNode();
         editInput.setNodeId("social.chat.edit-input");
         editInput.setValue(draft);
+        editInput.bindCaretState(editCaret);
+        editInput.bindSelectionState(editSelection);
+        editInput.bindDragState(editDrag);
         editInput.setOnChange(editingDraft::set);
         String initialContent = message.content() != null ? message.content() : "";
         editInput.setOnSubmit(text -> submitEdit(message, text.trim(), initialContent));
@@ -142,6 +160,17 @@ public class ChatMessagesNode extends ScrollColumnNode {
                 ? Alumite.INSTANCE.users().selfUser().user().id()
                 : null;
         return selfId != null && selfId.equals(message.authorId());
+    }
+
+    private LocalDate parseDateOrNull(String createdAt) {
+        if (createdAt == null) {
+            return null;
+        }
+        try {
+            return Instant.parse(createdAt).atZone(ZoneId.systemDefault()).toLocalDate();
+        } catch (DateTimeParseException ignored) {
+            return null;
+        }
     }
 
     private void submitEdit(Message message, String newContent, String originalContent) {

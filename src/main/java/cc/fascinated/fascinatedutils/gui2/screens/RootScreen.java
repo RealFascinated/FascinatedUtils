@@ -20,9 +20,6 @@ import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
-/**
- * Centralized gui2 screen root that owns rendering and input override plumbing.
- */
 public abstract class RootScreen extends WidgetScreen {
     private final UiHost host = new UiHost();
     private boolean initialized;

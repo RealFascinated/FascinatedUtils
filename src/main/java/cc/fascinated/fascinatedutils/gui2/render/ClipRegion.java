@@ -1,8 +1,5 @@
 package cc.fascinated.fascinatedutils.gui2.render;
 
-/**
- * Axis-aligned clipping region in logical UI coordinates.
- */
 public class ClipRegion {
     private final int positionX;
     private final int positionY;
