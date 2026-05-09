@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.renderer;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
-import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
+import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -113,6 +113,27 @@ public class MeshRenderer {
         int y1 = Mth.ceil(positionY + height);
         TextureSetup textureSetup = TextureSetup.singleTexture(texture.getTextureView(), texture.getSampler());
         pendingTextured.add(new AxisTexColorQuadRenderState(FascinatedUiPipelines.AXIS_TEX_COLOR, textureSetup, pose, x0, y0, x1, y1, color, color, color, color, scissor));
+    }
+
+    /**
+     * Queue an axis-aligned textured quad with rounded corners, using the LUT rounded-rect pipeline.
+     * Sampler0 = the image texture; Sampler1 = the corner-radii LUT.
+     */
+    public void enqueueRoundedTexturedQuad(@NonNull GuiGraphicsExtractor drawContext, @Nullable ScreenRectangle scissor, @NonNull DynamicTexture texture, float positionX, float positionY, float width, float height, float cornerRadius, int tintArgb) {
+        if (width < 1e-3f || height < 1e-3f) {
+            return;
+        }
+        Matrix3x2f pose = new Matrix3x2f(drawContext.pose());
+        int x0 = Mth.floor(positionX);
+        int y0 = Mth.floor(positionY);
+        int x1 = Mth.ceil(positionX + width);
+        int y1 = Mth.ceil(positionY + height);
+        float halfMinPixelSide = Math.min(x1 - x0, y1 - y0) * 0.5f;
+        int packedCornerRadii = RectCornerRoundMask.packedCornerRadiiBytes(cornerRadius, RectCornerRoundMask.ALL, halfMinPixelSide);
+        DynamicTexture cornerRadiiLut = RoundedRectCornerRadiiTexture.createDisposableRadiiLut(packedCornerRadii, 0f);
+        disposableCornerRadiiLuts.add(cornerRadiiLut);
+        TextureSetup textureSetup = TextureSetup.doubleTexture(texture.getTextureView(), texture.getSampler(), cornerRadiiLut.getTextureView(), cornerRadiiLut.getSampler());
+        pendingTextured.add(new RoundedRectTexRenderState(FascinatedUiPipelines.ROUNDED_RECT_TEX_LUT, textureSetup, pose, x0, y0, x1, y1, tintArgb, tintArgb, tintArgb, tintArgb, scissor, packedCornerRadii, 0f));
     }
 
     /**

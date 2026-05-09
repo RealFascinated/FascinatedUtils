@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.mixin.titlemenu;
 
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.TitleScreenLoadEvent;
-import cc.fascinated.fascinatedutils.systems.titlescreen.TitleScreenAddon;
+import cc.fascinated.fascinatedutils.gui2.screens.impl.ActionsOverlayScreen;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -23,12 +23,12 @@ public class TitleScreenMixin {
 
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void alumite$drawTitleMenuOverlay(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
-        TitleScreenAddon.INSTANCE.render(graphics);
+        ActionsOverlayScreen.INSTANCE.render(graphics);
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void alumite$onTitleMenuButtonClicked(MouseButtonEvent event, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
-        if (TitleScreenAddon.INSTANCE.mouseClicked(event)) {
+        if (ActionsOverlayScreen.INSTANCE.mouseClicked(event)) {
             cir.setReturnValue(true);
         }
     }

@@ -1,8 +1,10 @@
 package cc.fascinated.fascinatedutils.mixin;
 
+import cc.fascinated.fascinatedutils.gui2.screens.impl.ActionsOverlayScreen;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.layouts.GridLayout;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -23,4 +25,10 @@ public abstract class GameMenuScreenMixin {
             helper.addChild(Button.builder(Component.translatable("alumite.setting.pause_menu.server_list"), button -> client.setScreen(new JoinMultiplayerScreen(self))).width(204).build(), 2);
         }
     }
+
+    @Inject(method = "extractRenderState", at = @At("TAIL"))
+    private void alumite$drawPauseMenuOverlay(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+        ActionsOverlayScreen.INSTANCE.render(graphics);
+    }
+
 }

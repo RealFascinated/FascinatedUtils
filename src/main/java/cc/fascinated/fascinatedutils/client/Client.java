@@ -13,7 +13,7 @@ import cc.fascinated.fascinatedutils.event.impl.JoinMultiplayerServerEvent;
 import cc.fascinated.fascinatedutils.event.impl.SingleplayerWorldLoadEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
-import cc.fascinated.fascinatedutils.gui.ModUiClientEntry;
+import cc.fascinated.fascinatedutils.oldgui.ModUiClientEntry;
 import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
 import cc.fascinated.fascinatedutils.systems.activity.ActivityHandler;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;

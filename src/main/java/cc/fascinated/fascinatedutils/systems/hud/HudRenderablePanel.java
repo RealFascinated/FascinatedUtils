@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import org.jspecify.annotations.Nullable;
 
@@ -21,7 +21,7 @@ public interface HudRenderablePanel {
     HudHostModule hudHostModule();
 
     /**
-     * Navigation target opened from the HUD editor ({@link cc.fascinated.fascinatedutils.gui.screens.ModSettingsScreen}).
+     * Navigation target opened from the HUD editor ({@link cc.fascinated.fascinatedutils.oldgui.screens.ModSettingsScreen}).
      *
      * @return the concrete {@link Module} row to drill into — usually {@link #hudHostModule()}
      */

@@ -1,0 +1,40 @@
+package cc.fascinated.fascinatedutils.oldgui.theme;
+
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
+import cc.fascinated.fascinatedutils.oldgui.renderer.UIRenderer;
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
+public class Icons {
+
+    public static void paintSettingResetCharacter(UIRenderer renderer, float positionX, float positionY, float width, float height, int tintArgb) {
+        paintSquareChromeIcon(renderer, ModUiTextures.RESET, positionX, positionY, width, height, tintArgb);
+    }
+
+    public static void paintModSettingsCloseIcon(UIRenderer renderer, float positionX, float positionY, float width, float height, int tintArgb) {
+        paintSquareChromeIcon(renderer, ModUiTextures.CLOSE, positionX, positionY, width, height, tintArgb);
+    }
+
+    public static void paintModSettingsBackIcon(UIRenderer renderer, float positionX, float positionY, float width, float height, int tintArgb) {
+        paintSquareChromeIcon(renderer, ModUiTextures.BACK, positionX, positionY, width, height, tintArgb);
+    }
+
+    public static void paintTrashIcon(UIRenderer renderer, float positionX, float positionY, float width, float height, int tintArgb) {
+        paintSquareChromeIcon(renderer, ModUiTextures.TRASH, positionX, positionY, width, height, tintArgb);
+    }
+
+    public static void paintSubSettingsChevron(UIRenderer renderer, float positionX, float positionY, float width, float height, int tintArgb, boolean expanded) {
+        paintSquareChromeIcon(renderer, expanded ? ModUiTextures.CHEVRON_DOWN : ModUiTextures.CHEVRON_RIGHT, positionX, positionY, width, height, tintArgb);
+    }
+
+    private static void paintSquareChromeIcon(UIRenderer renderer, ModUiTextures chrome, float positionX, float positionY, float width, float height, int tintArgb) {
+        float box = Math.min(width, height);
+        if (box < 2f) {
+            return;
+        }
+        float snappedBox = Math.max(1f, (float) Math.round(box));
+        float drawX = (float) Math.floor(positionX + (width - snappedBox) * 0.5f);
+        float drawY = (float) Math.floor(positionY + (height - snappedBox) * 0.5f);
+        renderer.drawTexture(chrome.getId(), drawX, drawY, snappedBox, snappedBox, tintArgb);
+    }
+}

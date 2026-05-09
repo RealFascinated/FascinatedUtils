@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.client.keybind;
 
-import cc.fascinated.fascinatedutils.gui.screens.SocialScreen;
+import cc.fascinated.fascinatedutils.gui2.screens.impl.SocialScreen;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;

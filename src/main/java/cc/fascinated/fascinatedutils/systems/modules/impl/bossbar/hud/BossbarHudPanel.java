@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.bossbar.hud;
 
-import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.mixin.bossbar.BossHealthOverlayEventsAccessor;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;

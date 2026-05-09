@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.hud;
 
 import cc.fascinated.fascinatedutils.common.DateUtils;
-import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;

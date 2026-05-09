@@ -54,6 +54,15 @@ public class FascinatedEventBus {
     }
 
     /**
+     * Unregister all {@link meteordevelopment.orbit.EventHandler} listener methods on an instance.
+     *
+     * @param subscriber object to unsubscribe
+     */
+    public void unsubscribe(Object subscriber) {
+        bus.unsubscribe(subscriber);
+    }
+
+    /**
      * Post a non-cancellable event to all subscribed listeners.
      *
      * @param event event instance to deliver

@@ -5,17 +5,21 @@ import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.resources.language.I18n;
 
 @AllArgsConstructor @Getter
 @Accessors(fluent = true)
 public enum UserStatus {
-    @SerializedName("online") ONLINE(0xFF3BA55C, Component.translatable("alumite.social.user_status.online").getString()),
-    @SerializedName("offline") OFFLINE(0xFF747F8D, Component.translatable("alumite.social.user_status.offline").getString()),
-    @SerializedName("away") AWAY(0xFFF0B232, Component.translatable("alumite.social.user_status.away").getString()),
-    @SerializedName("do_not_disturb") DO_NOT_DISTURB(0xFFF23F43, Component.translatable("alumite.social.user_status.do_not_disturb").getString()),
-    @SerializedName("invisible") INVISIBLE(0xFF747F8D, Component.translatable("alumite.social.user_status.invisible").getString());
+    @SerializedName("online") ONLINE(0xFF3BA55C, "alumite.social.user_status.online"),
+    @SerializedName("offline") OFFLINE(0xFF747F8D, "alumite.social.user_status.offline"),
+    @SerializedName("away") AWAY(0xFFF0B232, "alumite.social.user_status.away"),
+    @SerializedName("do_not_disturb") DO_NOT_DISTURB(0xFFF23F43, "alumite.social.user_status.do_not_disturb"),
+    @SerializedName("invisible") INVISIBLE(0xFF747F8D, "alumite.social.user_status.invisible");
 
     private final int color;
-    private final String label;
+    private final String labelId;
+
+    public String label() {
+        return I18n.get(labelId);
+    }
 }

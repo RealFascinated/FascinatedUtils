@@ -3,9 +3,9 @@ package cc.fascinated.fascinatedutils.renderer;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.common.LRUCache;
-import cc.fascinated.fascinatedutils.gui.GuiTheme;
-import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
+import cc.fascinated.fascinatedutils.oldgui.GuiTheme;
+import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.renderer.text.TextRenderer;
 import net.kyori.adventure.platform.modcommon.MinecraftClientAudiences;
 import net.kyori.adventure.text.Component;
@@ -342,11 +342,25 @@ public class Renderer2D {
             return;
         }
         flushMeshSegmentBeforeImmediateDraw();
-        int drawX = Math.round(positionX);
-        int drawY = Math.round(positionY);
         int drawWidth = Math.max(1, Math.round(width));
         int drawHeight = Math.max(1, Math.round(height));
-        ModUiTextures.drawTinted(graphics, texture, drawX, drawY, drawWidth, drawHeight, withAlpha(tintArgb));
+        Matrix3x2fStack matrices = graphics.pose();
+        matrices.pushMatrix();
+        matrices.translate(positionX, positionY);
+        ModUiTextures.drawTinted(graphics, texture, 0, 0, drawWidth, drawHeight, withAlpha(tintArgb));
+        matrices.popMatrix();
+    }
+
+    public void drawRoundedTexture(Identifier texture, float positionX, float positionY, float width, float height, float cornerRadius, int tintArgb) {
+        if (width < 1e-3f || height < 1e-3f) {
+            return;
+        }
+        Object raw = Minecraft.getInstance().getTextureManager().getTexture(texture);
+        if (raw instanceof DynamicTexture dynamicTexture) {
+            MeshRenderer.INSTANCE.enqueueRoundedTexturedQuad(graphics, currentScissor(), dynamicTexture, positionX, positionY, width, height, cornerRadius, withAlpha(tintArgb));
+            return;
+        }
+        drawTexture(texture, positionX, positionY, width, height, tintArgb);
     }
 
     public void drawSprite(Identifier spriteId, float positionX, float positionY, float width, float height, int tintArgb) {
@@ -354,11 +368,13 @@ public class Renderer2D {
             return;
         }
         flushMeshSegmentBeforeImmediateDraw();
-        int drawX = Math.round(positionX);
-        int drawY = Math.round(positionY);
         int drawWidth = Math.max(1, Math.round(width));
         int drawHeight = Math.max(1, Math.round(height));
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, drawX, drawY, drawWidth, drawHeight, withAlpha(tintArgb));
+        Matrix3x2fStack matrices = graphics.pose();
+        matrices.pushMatrix();
+        matrices.translate(positionX, positionY);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, 0, 0, drawWidth, drawHeight, withAlpha(tintArgb));
+        matrices.popMatrix();
     }
 
     public void drawSprite(Identifier spriteId, int textureWidth, int textureHeight, int sourceX, int sourceY, float positionX, float positionY, float width, float height) {
@@ -366,11 +382,13 @@ public class Renderer2D {
             return;
         }
         flushMeshSegmentBeforeImmediateDraw();
-        int drawX = Math.round(positionX);
-        int drawY = Math.round(positionY);
         int drawWidth = Math.max(1, Math.round(width));
         int drawHeight = Math.max(1, Math.round(height));
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, textureWidth, textureHeight, sourceX, sourceY, drawX, drawY, drawWidth, drawHeight);
+        Matrix3x2fStack matrices = graphics.pose();
+        matrices.pushMatrix();
+        matrices.translate(positionX, positionY);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, textureWidth, textureHeight, sourceX, sourceY, 0, 0, drawWidth, drawHeight);
+        matrices.popMatrix();
     }
 
     public void pushTranslate(float offsetX, float offsetY) {

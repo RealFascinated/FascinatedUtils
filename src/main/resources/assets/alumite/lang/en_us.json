@@ -4,6 +4,7 @@
   "key.alumite.zoom": "Hold to Zoom",
   "key.alumite.freelook": "Hold to Freelook",
   "key.alumite.open_social": "Toggle Social Panel",
+  "key.alumite.open_gui2_test": "Toggle GUI2 Test Screen",
   "key.alumite.open_waypoints": "Open Waypoints",
   "key.alumite.create_waypoint": "Create Waypoint at Position",
   "alumite.confirm_disconnect": "Click again to disconnect",
@@ -434,8 +435,8 @@
   "alumite.wawla.sweet_berry.some": "Berries: Some",
   "alumite.wawla.sweet_berry.full": "Berries: Full",
   "alumite.wawla.target.signal": "Signal: %s/15",
-  "alumite.social.user_status.in_singleplayer": "Playing Singleplayer",
-  "alumite.social.user_status.in_server": "Playing Multiplayer",
-  "alumite.social.user_status.in_main_menu": "In Main Menu",
+  "alumite.social.activity.in_singleplayer": "Playing Singleplayer",
+  "alumite.social.activity.in_server": "Playing Multiplayer",
+  "alumite.social.activity.in_main_menu": "In Main Menu",
   "alumite.social.dm.preview.you": "You"
 }

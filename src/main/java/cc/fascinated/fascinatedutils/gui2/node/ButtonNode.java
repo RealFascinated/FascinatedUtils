@@ -1,0 +1,189 @@
+package cc.fascinated.fascinatedutils.gui2.node;
+
+import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
+import net.minecraft.resources.Identifier;
+import org.lwjgl.glfw.GLFW;
+
+/**
+ * Basic clickable button widget with hover feedback.
+ */
+public class ButtonNode extends PositionedNode {
+    private static final int ICON_SIZE = 12;
+    private static final int ICON_PADDING = 4;
+    private static final int ICON_TEXT_GAP = 6;
+    private static final int CORNER_RADIUS = 4;
+    private String label;
+    private Runnable onPress = () -> {};
+    private boolean hovered;
+    private boolean focused;
+    private boolean rounded;
+    private boolean ghost;
+    private boolean leftAlignLabel;
+    private Integer labelColorArgb;
+    private Identifier leftIcon;
+    private Identifier rightIcon;
+    private Integer iconTintArgb;
+
+    public ButtonNode(String label) {
+        this.label = label == null ? "" : label;
+        size(120, 20);
+    }
+
+    public ButtonNode setLabel(String label) {
+        this.label = label == null ? "" : label;
+        return this;
+    }
+
+    public String label() {
+        return label;
+    }
+
+    public ButtonNode setOnPress(Runnable onPress) {
+        this.onPress = onPress == null ? () -> {} : onPress;
+        return this;
+    }
+
+    public ButtonNode setLeftIcon(Identifier leftIcon) {
+        this.leftIcon = leftIcon;
+        return this;
+    }
+
+    public ButtonNode setRightIcon(Identifier rightIcon) {
+        this.rightIcon = rightIcon;
+        return this;
+    }
+
+    public ButtonNode setIconTintArgb(int iconTintArgb) {
+        this.iconTintArgb = iconTintArgb;
+        return this;
+    }
+
+    public ButtonNode setLabelColorArgb(Integer labelColorArgb) {
+        this.labelColorArgb = labelColorArgb;
+        return this;
+    }
+
+    public ButtonNode setRounded(boolean rounded) {
+        this.rounded = rounded;
+        return this;
+    }
+
+    public ButtonNode setGhost(boolean ghost) {
+        this.ghost = ghost;
+        return this;
+    }
+
+    public ButtonNode setLeftAlignLabel(boolean leftAlignLabel) {
+        this.leftAlignLabel = leftAlignLabel;
+        return this;
+    }
+
+    public float minimumWidth(RenderFrame renderFrame) {
+        int textWidth = renderFrame.measureTextWidth(label, false);
+        int leftWidth = leftIcon != null ? ICON_PADDING + ICON_SIZE + ICON_TEXT_GAP : ICON_PADDING;
+        int rightWidth = rightIcon != null ? ICON_TEXT_GAP + ICON_SIZE + ICON_PADDING : ICON_PADDING;
+        return textWidth + leftWidth + rightWidth;
+    }
+
+    @Override
+    public boolean blocksHitWhenEmpty() {
+        return true;
+    }
+
+    @Override
+    public boolean focusable() {
+        return true;
+    }
+
+    @Override
+    public void onFocusGained() {
+        focused = true;
+    }
+
+    @Override
+    public void onFocusLost() {
+        focused = false;
+    }
+
+    @Override
+    public boolean onPointerEnter(float pointerX, float pointerY) {
+        hovered = true;
+        return false;
+    }
+
+    @Override
+    public boolean onPointerLeave(float pointerX, float pointerY) {
+        hovered = false;
+        return false;
+    }
+
+    @Override
+    public boolean onClick(float pointerX, float pointerY, int button) {
+        if (button != 0) {
+            return false;
+        }
+        onPress.run();
+        return true;
+    }
+
+    @Override
+    public boolean onKeyPress(int keyCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_SPACE) {
+            onPress.run();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    protected void renderSelf(RenderFrame renderFrame, float deltaSeconds) {
+        int bx = bounds().positionX();
+        int by = bounds().positionY();
+        int bw = bounds().width();
+        int bh = bounds().height();
+        int textColor = labelColorArgb != null ? labelColorArgb : renderFrame.theme().textPrimary();
+
+        if (ghost) {
+            if (hovered || focused) {
+                renderFrame.drawRoundedRect(bx, by, bw, bh, CORNER_RADIUS, renderFrame.theme().buttonFillHover());
+            }
+        } else {
+            int fillColor = hovered ? renderFrame.theme().buttonFillHover() : renderFrame.theme().buttonFill();
+            int borderColor;
+            if (focused) {
+                borderColor = renderFrame.theme().buttonBorderFocus();
+            } else if (hovered) {
+                borderColor = renderFrame.theme().buttonBorderHover();
+            } else {
+                borderColor = renderFrame.theme().buttonBorder();
+            }
+            if (rounded) {
+                renderFrame.drawRoundedRect(bx, by, bw, bh, CORNER_RADIUS, fillColor);
+                renderFrame.drawRoundedRectFrame(bx, by, bw, bh, CORNER_RADIUS, borderColor, 0, 1);
+            } else {
+                renderFrame.drawRect(bx, by, bw, bh, fillColor);
+                renderFrame.drawBorder(bx, by, bw, bh, 1, borderColor);
+            }
+        }
+
+        int textWidth = renderFrame.measureTextWidth(label, false);
+        int iconY = by + (bh - ICON_SIZE) / 2;
+        if (leftIcon != null) {
+            int iconTint = iconTintArgb != null ? iconTintArgb : renderFrame.theme().textPrimary();
+            renderFrame.drawTexture(leftIcon, bx + ICON_PADDING, iconY, ICON_SIZE, ICON_SIZE, iconTint);
+        }
+
+        int leftTextInset = leftIcon != null ? ICON_PADDING + ICON_SIZE + ICON_TEXT_GAP : 0;
+        int textAreaX = bx + leftTextInset;
+        int textAreaWidth = Math.max(0, bw - leftTextInset);
+        int textX = leftAlignLabel ? textAreaX + ICON_PADDING : textAreaX + (textAreaWidth - textWidth) / 2;
+        int textY = by + (bh - renderFrame.fontHeight()) / 2;
+        renderFrame.drawText(label, textX, textY, textColor, false, false);
+
+        if (rightIcon != null) {
+            int iconTint = iconTintArgb != null ? iconTintArgb : renderFrame.theme().textPrimary();
+            renderFrame.drawTexture(rightIcon, bx + bw - ICON_PADDING - ICON_SIZE, iconY, ICON_SIZE, ICON_SIZE, iconTint);
+        }
+    }
+}

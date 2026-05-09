@@ -1,10 +1,10 @@
 package cc.fascinated.fascinatedutils.mixin;
 
 import cc.fascinated.fascinatedutils.common.FrameCounter;
-import cc.fascinated.fascinatedutils.gui.UIScale;
-import cc.fascinated.fascinatedutils.gui.screens.WidgetScreen;
-import cc.fascinated.fascinatedutils.gui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.gui.toast.ToastManager;
+import cc.fascinated.fascinatedutils.gui2.core.UIScale;
+import cc.fascinated.fascinatedutils.oldgui.screens.WidgetScreen;
+import cc.fascinated.fascinatedutils.oldgui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.oldgui.toast.ToastManager;
 import cc.fascinated.fascinatedutils.mixininterface.IGameRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.DeltaTracker;
@@ -60,7 +60,7 @@ public abstract class GameRendererMixin implements IGameRenderer {
             widgetScreen.renderCustom(drawContext, mouseX * scale, mouseY * scale, deltaTracker.getGameTimeDeltaTicks());
         }
 
-        cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer toastRenderer = new cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer(drawContext, FascinatedGuiTheme.INSTANCE);
+        cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer toastRenderer = new cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer(drawContext, FascinatedGuiTheme.INSTANCE);
         toastRenderer.begin(uiWidth, uiHeight);
         ToastManager.INSTANCE.render(toastRenderer, uiWidth, uiHeight, UIScale.uiPointerX(), UIScale.uiPointerY(), deltaSeconds);
         toastRenderer.end();

@@ -53,7 +53,7 @@ void main() {
     if (coverage <= 0.001) {
         discard;
     }
-    vec3 tintRgb = vertexColor.rgb;
+    vec3 tintRgb = texSample.rgb * vertexColor.rgb;
     float outAlpha = texSample.a * vertexColor.a * coverage * ColorModulator.a;
     fragColor = vec4(tintRgb * ColorModulator.rgb, outAlpha);
 }

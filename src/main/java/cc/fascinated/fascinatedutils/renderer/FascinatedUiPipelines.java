@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.renderer;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
-import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
+import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;

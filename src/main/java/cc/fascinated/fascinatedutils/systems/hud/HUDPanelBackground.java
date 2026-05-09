@@ -1,8 +1,8 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import cc.fascinated.fascinatedutils.gui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.gui.renderer.RectCornerRoundMask;
-import cc.fascinated.fascinatedutils.gui.theme.UITheme;
+import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
+import cc.fascinated.fascinatedutils.oldgui.theme.UITheme;
 
 public class HUDPanelBackground {
 
