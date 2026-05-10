@@ -13,9 +13,6 @@ import net.minecraft.util.FormattedCharSequence;
 public class VanillaTextRenderer implements TextRenderer {
     public static final VanillaTextRenderer INSTANCE = new VanillaTextRenderer();
 
-    private VanillaTextRenderer() {
-    }
-
     @Override
     public double getWidth(String text, int length, boolean shadow) {
         if (text.isEmpty()) {
@@ -38,22 +35,22 @@ public class VanillaTextRenderer implements TextRenderer {
 
     @Override
     public double getHeight(boolean shadow) {
-        return font().lineHeight - 1;
+        return font().lineHeight;
     }
 
     @Override
     public void drawString(GuiGraphicsExtractor drawContext, String text, int originX, int originY, int colorArgb, boolean shadow) {
-        drawContext.text(font(), FormattedCharSequence.forward(text, Style.EMPTY), originX, originY, colorArgb, shadow);
+        drawContext.text(font(), FormattedCharSequence.forward(text, Style.EMPTY), originX, originY + 1, colorArgb, shadow);
     }
 
     @Override
     public void drawText(GuiGraphicsExtractor drawContext, FormattedCharSequence text, int originX, int originY, int colorArgb, boolean shadow) {
-        drawContext.text(font(), text, originX, originY, colorArgb, shadow);
+        drawContext.text(font(), text, originX, originY + 1, colorArgb, shadow);
     }
 
     @Override
     public void drawText(GuiGraphicsExtractor drawContext, Component text, int originX, int originY, int colorArgb, boolean shadow) {
-        drawContext.text(font(), text, originX, originY, colorArgb, shadow);
+        drawContext.text(font(), text, originX, originY + 1, colorArgb, shadow);
     }
 
     private Font font() {
