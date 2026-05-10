@@ -41,13 +41,12 @@ public class Updater {
     }
 
     public void start() {
-        try (ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "FascinatedUtils-Updater");
             thread.setDaemon(true);
             return thread;
-        })) {
-            scheduler.scheduleAtFixedRate(this::check, 0, 30, TimeUnit.MINUTES);
-        }
+        });
+        scheduler.scheduleAtFixedRate(this::check, 0, 30, TimeUnit.MINUTES);
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::applyStaged, "FascinatedUtils-Update-Apply"));
     }
