@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.node.social.player;
 
 import cc.fascinated.fascinatedutils.api.user.User;
-import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiNode;
 import cc.fascinated.fascinatedutils.gui2.node.RectNode;
@@ -48,14 +47,7 @@ public class PlayerRowNode extends PositionedNode {
         };
         this.subtextSupplier = subtextSupplier;
 
-        avatar = new PlayerAvatarNode(AVATAR_SIZE, () -> {
-            User resolved = user.get();
-            return resolved != null ? resolved.minecraftUuid() : null;
-        }, displayNameSupplier, () -> {
-            User resolved = user.get();
-            UserStatus status = resolved != null ? resolved.userStatus() : null;
-            return status != null ? status.color() : UserStatus.OFFLINE.color();
-        });
+        avatar = new PlayerAvatarNode(AVATAR_SIZE, user);
 
         bg = new RectNode();
         bg.full();

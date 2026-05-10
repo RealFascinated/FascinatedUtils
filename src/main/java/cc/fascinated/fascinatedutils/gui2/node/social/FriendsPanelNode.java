@@ -8,7 +8,7 @@ import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.ScrollColumnNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerContextMenuHandler;
-import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerRowNode;
+import cc.fascinated.fascinatedutils.gui2.node.social.player.FriendRowNode;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 import net.minecraft.network.chat.Component;
 
@@ -92,11 +92,10 @@ public class FriendsPanelNode extends PositionedNode {
                 }
                 list.addChild(new SocialSectionLabelNode(String.format(Component.translatable("alumite.social.status_section_fmt").getString(), status.label(), group.size())));
                 for (User friend : group) {
-                    String subtext = status.label();
-                    PlayerRowNode row = new PlayerRowNode(() -> friend, () -> subtext)
-                            .setAvatarSize(18)
-                            .setRowHeight(28)
-                            .setTextScale(0.85f);
+                    FriendRowNode row = new FriendRowNode(friend, status.label());
+                    row.setAvatarSize(18);
+                    row.setRowHeight(28);
+                    row.setTextScale(0.85f);
                     row.setOnPrimaryClick(() -> {
                         if (onOpenDm != null) {
                             onOpenDm.accept(friend);
@@ -116,10 +115,10 @@ public class FriendsPanelNode extends PositionedNode {
             list.addChild(new SocialSectionLabelNode(String.format(Component.translatable("alumite.social.requests_pending_fmt").getString(), incoming.size())));
             for (PendingFriendRequest request : incoming) {
                 User requestUser = request.user();
-                PlayerRowNode row = new PlayerRowNode(() -> requestUser, () -> Component.translatable("alumite.social.request_status_incoming").getString())
-                        .setAvatarSize(18)
-                        .setRowHeight(28)
-                        .setTextScale(0.85f);
+                FriendRowNode row = new FriendRowNode(requestUser, Component.translatable("alumite.social.request_status_incoming").getString());
+                row.setAvatarSize(18);
+                row.setRowHeight(28);
+                row.setTextScale(0.85f);
                 row.setOnSecondaryClick((pointerX, pointerY) -> {
                     if (contextMenuHandler != null) {
                         contextMenuHandler.open(requestUser, pointerX, pointerY);
@@ -133,10 +132,10 @@ public class FriendsPanelNode extends PositionedNode {
             list.addChild(new SocialSectionLabelNode(String.format(Component.translatable("alumite.social.requests_sent_fmt").getString(), outgoing.size())));
             for (PendingFriendRequest request : outgoing) {
                 User requestUser = request.user();
-                PlayerRowNode row = new PlayerRowNode(() -> requestUser, () -> Component.translatable("alumite.social.request_status_outgoing").getString())
-                        .setAvatarSize(18)
-                        .setRowHeight(28)
-                        .setTextScale(0.85f);
+                FriendRowNode row = new FriendRowNode(requestUser, Component.translatable("alumite.social.request_status_outgoing").getString());
+                row.setAvatarSize(18);
+                row.setRowHeight(28);
+                row.setTextScale(0.85f);
                 row.setOnSecondaryClick((pointerX, pointerY) -> {
                     if (contextMenuHandler != null) {
                         contextMenuHandler.open(requestUser, pointerX, pointerY);

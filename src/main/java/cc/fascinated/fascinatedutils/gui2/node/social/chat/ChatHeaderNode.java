@@ -3,7 +3,6 @@ package cc.fascinated.fascinatedutils.gui2.node.social.chat;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
 import cc.fascinated.fascinatedutils.api.user.User;
-import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.SocialPanelHeaderNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerAvatarNode;
@@ -30,19 +29,7 @@ public class ChatHeaderNode extends SocialPanelHeaderNode {
         avatar = new PlayerAvatarNode(AVATAR_SIZE, () -> {
             Channel channel = channelSupplier.get();
             DmChannel dm = channel == null ? null : channel.asDmChannel();
-            return dm != null && dm.recipient() != null ? dm.recipient().minecraftUuid() : null;
-        }, () -> {
-            Channel channel = channelSupplier.get();
-            DmChannel dm = channel == null ? null : channel.asDmChannel();
-            return dm != null && dm.recipient() != null ? dm.recipient().minecraftName() : null;
-        }, () -> {
-            Channel channel = channelSupplier.get();
-            DmChannel dm = channel == null ? null : channel.asDmChannel();
-            if (dm == null || dm.recipient() == null) {
-                return UserStatus.OFFLINE.color();
-            }
-            UserStatus status = dm.recipient().userStatus();
-            return (status != null ? status : UserStatus.OFFLINE).color();
+            return dm != null ? dm.recipient() : null;
         });
         avatar.left(PADDING).alignY(0.5f);
         addChild(avatar);

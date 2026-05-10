@@ -33,6 +33,7 @@ public class ButtonNode extends PositionedNode {
     private Identifier rightIcon;
     private Identifier centerIcon;
     private Integer iconTintArgb;
+    private int iconSize = ICON_SIZE;
 
     public ButtonNode(String label) {
         this.labelSupplier = label == null ? () -> "" : () -> label;
@@ -110,10 +111,15 @@ public class ButtonNode extends PositionedNode {
         return this;
     }
 
+    public ButtonNode setIconSize(int iconSize) {
+        this.iconSize = Math.max(1, iconSize);
+        return this;
+    }
+
     public float minimumWidth(RenderFrame renderFrame) {
         int textWidth = renderFrame.measureTextWidth(label(), false);
-        int leftWidth = leftIcon != null ? ICON_PADDING + ICON_SIZE + ICON_TEXT_GAP : ICON_PADDING;
-        int rightWidth = rightIcon != null ? ICON_TEXT_GAP + ICON_SIZE + ICON_PADDING : ICON_PADDING;
+        int leftWidth = leftIcon != null ? ICON_PADDING + iconSize + ICON_TEXT_GAP : ICON_PADDING;
+        int rightWidth = rightIcon != null ? ICON_TEXT_GAP + iconSize + ICON_PADDING : ICON_PADDING;
         return textWidth + leftWidth + rightWidth;
     }
 
@@ -209,14 +215,14 @@ public class ButtonNode extends PositionedNode {
 
         UiText labelText = UiText.of(label()).color(textColor);
         int textWidth = labelText.width(renderFrame);
-        int iconY = by + (bh - ICON_SIZE) / 2;
+        int iconY = by + (bh - iconSize) / 2;
         if (centerIcon != null) {
             int iconTint = iconTintArgb != null ? iconTintArgb : renderFrame.theme().textPrimary();
-            renderFrame.drawTexture(centerIcon, bx + (bw - ICON_SIZE) / 2, iconY, ICON_SIZE, ICON_SIZE, iconTint);
+            renderFrame.drawTexture(centerIcon, bx + (bw - iconSize) / 2, iconY, iconSize, iconSize, iconTint);
         }
         if (leftIcon != null) {
             int iconTint = iconTintArgb != null ? iconTintArgb : renderFrame.theme().textPrimary();
-            renderFrame.drawTexture(leftIcon, bx + ICON_PADDING, iconY, ICON_SIZE, ICON_SIZE, iconTint);
+            renderFrame.drawTexture(leftIcon, bx + ICON_PADDING, iconY, iconSize, iconSize, iconTint);
         }
 
         int leftTextInset = leftIcon != null ? ICON_PADDING + ICON_SIZE + ICON_TEXT_GAP : 0;
@@ -228,7 +234,7 @@ public class ButtonNode extends PositionedNode {
 
         if (rightIcon != null) {
             int iconTint = iconTintArgb != null ? iconTintArgb : renderFrame.theme().textPrimary();
-            renderFrame.drawTexture(rightIcon, bx + bw - ICON_PADDING - ICON_SIZE, iconY, ICON_SIZE, ICON_SIZE, iconTint);
+            renderFrame.drawTexture(rightIcon, bx + bw - ICON_PADDING - iconSize, iconY, iconSize, iconSize, iconTint);
         }
     }
 }

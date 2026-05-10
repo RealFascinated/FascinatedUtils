@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.gui2.node.social.player;
 
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.user.User;
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.gui2.node.ContextMenuNode;
 import net.minecraft.network.chat.Component;
@@ -21,6 +22,7 @@ public class PlayerContextMenuNode extends ContextMenuNode {
 
         items.add(new Item(
                 Component.translatable("alumite.social.user_context_menu.copy_name").getString(),
+                ModUiTextures.COPY.getId(),
                 () -> {
                     if (user != null && user.minecraftName() != null) {
                         ClientUtils.copyToClipboard(user.minecraftName());
@@ -30,6 +32,7 @@ public class PlayerContextMenuNode extends ContextMenuNode {
 
         items.add(new Item(
                 Component.translatable("alumite.social.user_context_menu.copy_uuid").getString(),
+                ModUiTextures.COPY.getId(),
                 () -> {
                     if (user != null && user.minecraftUuid() != null) {
                         ClientUtils.copyToClipboard(user.minecraftUuid());
@@ -41,6 +44,7 @@ public class PlayerContextMenuNode extends ContextMenuNode {
             items.add(Item.separator());
             items.add(new Item(
                     Component.translatable("alumite.social.user_context_menu.remove_friend").getString(),
+                    ModUiTextures.TRASH.getId(),
                     () -> {
                         onClose.run();
                         onRemoveFriend.run();

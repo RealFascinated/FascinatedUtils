@@ -25,6 +25,8 @@ public class StatusMenuNode extends ContextMenuNode {
                 .map(status -> new Item(
                         status.label(),
                         theme -> status.color(),
+                        status.icon(),
+                        6,
                         () -> {
                             onClose.run();
                             submitUpdate(status);
@@ -36,8 +38,6 @@ public class StatusMenuNode extends ContextMenuNode {
         AlumiteMod.SCHEDULED_POOL.execute(() -> {
             try {
                 Alumite.INSTANCE.users().selfUser().updatePreferredUserStatus(status);
-            } catch (AlumiteApiException exception) {
-                Toast.show().message(Component.translatable("alumite.social.error.generic").getString()).error();
             } catch (Exception exception) {
                 Toast.show().message(Component.translatable("alumite.social.error.generic").getString()).error();
             }

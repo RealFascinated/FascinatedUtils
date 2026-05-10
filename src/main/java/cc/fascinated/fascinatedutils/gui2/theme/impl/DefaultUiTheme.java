@@ -32,7 +32,7 @@ public class DefaultUiTheme implements UiTheme {
 
     @Override
     public int danger() {
-        return 0xFFCC2222;
+        return 0xFFE05555;
     }
 
     @Override
@@ -142,12 +142,12 @@ public class DefaultUiTheme implements UiTheme {
 
     @Override
     public int dangerFill() {
-        return 0x44CC2222;
+        return 0x44E05555;
     }
 
     @Override
     public int dangerFillHover() {
-        return 0x66CC2222;
+        return 0x66E05555;
     }
 
     @Override

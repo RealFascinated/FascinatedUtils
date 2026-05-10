@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.gui2.node.social.chat;
 
 import cc.fascinated.fascinatedutils.api.channel.Message;
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.node.ContextMenuNode;
@@ -35,15 +36,15 @@ public class MessageContextMenuNode extends ContextMenuNode {
 
         List<Item> items = new ArrayList<>();
         if (isOwn) {
-            items.add(new Item("Edit Message", onEdit));
+            items.add(new Item("Edit Message", ModUiTextures.EDIT.getId(), onEdit));
         }
-        items.add(new Item("Copy Text", () -> {
+        items.add(new Item("Copy Text", ModUiTextures.COPY.getId(), () -> {
             ClientUtils.copyToClipboard(message.content());
             onClose.run();
         }));
         if (isOwn) {
             items.add(Item.separator());
-            items.add(new Item("Delete Message", theme -> theme.danger(), () -> {
+            items.add(new Item("Delete Message", theme -> theme.danger(), ModUiTextures.TRASH.getId(), () -> {
                 onClose.run();
                 msgPendingDelete.set(message);
             }));

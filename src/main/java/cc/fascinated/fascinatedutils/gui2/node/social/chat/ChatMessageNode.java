@@ -4,7 +4,6 @@ import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.channel.Message;
 import cc.fascinated.fascinatedutils.api.channel.json.AttachmentDTO;
 import cc.fascinated.fascinatedutils.api.user.User;
-import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.caches.UrlTextureCache;
 import cc.fascinated.fascinatedutils.gui2.core.PixelSize;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
@@ -72,16 +71,7 @@ public class ChatMessageNode extends PositionedNode {
         hoverBg.full();
         addChild(hoverBg);
 
-        avatar = new PlayerAvatarNode(AVATAR_SIZE,
-                () -> {
-                    User author = resolveAuthor();
-                    return author != null ? author.minecraftUuid() : null;
-                },
-                () -> {
-                    User author = resolveAuthor();
-                    return author != null ? author.minecraftName() : "#" + message.authorId();
-                },
-                () -> UserStatus.OFFLINE.color());
+        avatar = new PlayerAvatarNode(AVATAR_SIZE, this::resolveAuthor);
         avatar.setShowStatusDot(false);
         addChild(avatar);
 

@@ -94,6 +94,7 @@ public class ContextMenuNode extends PositionedNode {
                     .setVariant(ButtonNode.ButtonVariant.GHOST)
                     .setLeftAlignLabel(true)
                     .setRightIcon(item.icon())
+                    .setIconSize(item.iconSize())
                     .setLabelColorArgb(item.labelColor() != null ? item.labelColor().apply(UiThemeRepository.get()) : null)
                     .setOnPress(() -> {
                         item.onPress().run();
@@ -193,8 +194,8 @@ public class ContextMenuNode extends PositionedNode {
                 && pointerY <= menuPositionY + menuHeight;
     }
 
-    public record Item(String label, Function<UiTheme, Integer> labelColor, Identifier icon, Runnable onPress) {
-        private static final Item SEPARATOR = new Item("", null, null, () -> {});
+    public record Item(String label, Function<UiTheme, Integer> labelColor, Identifier icon, int iconSize, Runnable onPress) {
+        private static final Item SEPARATOR = new Item("", null, null, 12, () -> {});
 
         public static Item separator() {
             return SEPARATOR;
@@ -204,16 +205,12 @@ public class ContextMenuNode extends PositionedNode {
             return this == SEPARATOR;
         }
 
-        public Item(String label, Function<UiTheme, Integer> labelColor, Runnable onPress) {
-            this(label, labelColor, null, onPress);
+        public Item(String label, Function<UiTheme, Integer> labelColor, Identifier icon, Runnable onPress) {
+            this(label, labelColor, icon, 12, onPress);
         }
 
         public Item(String label, Identifier icon, Runnable onPress) {
-            this(label, null, icon, onPress);
-        }
-
-        public Item(String label, Runnable onPress) {
-            this(label, null, null, onPress);
+            this(label, null, icon, 12, onPress);
         }
 
         public Item {

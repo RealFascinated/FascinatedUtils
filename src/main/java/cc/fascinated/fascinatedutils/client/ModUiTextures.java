@@ -25,6 +25,11 @@ public enum ModUiTextures {
     ADD("ui/add"),
     WARNING("ui/warning"),
     MORE_VERT("ui/more_vert"),
+    COPY("ui/copy"),
+    STATUS_ONLINE("ui/user_status/online"),
+    STATUS_AWAY("ui/user_status/idle"),
+    STATUS_DO_NOT_DISTURB("ui/user_status/do_not_disturb"),
+    STATUS_INVISIBLE("ui/user_status/invisible"),
     ;
 
     private final Identifier id;

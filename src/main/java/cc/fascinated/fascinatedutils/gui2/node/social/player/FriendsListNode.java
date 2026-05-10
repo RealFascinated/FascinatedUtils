@@ -3,7 +3,6 @@ package cc.fascinated.fascinatedutils.gui2.node.social.player;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
 import cc.fascinated.fascinatedutils.api.user.User;
-import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.gui2.core.ScrollColumnNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.SocialSectionLabelNode;
@@ -38,8 +37,7 @@ public class FriendsListNode extends ScrollColumnNode {
 
         if (hasFriends) {
             for (User friend : friends) {
-                String statusLabel = friend.userStatus() != null ? friend.userStatus().label() : UserStatus.OFFLINE.label();
-                PlayerRowNode row = new PlayerRowNode(() -> friend, () -> statusLabel);
+                FriendRowNode row = new FriendRowNode(friend);
                 row.setOnSecondaryClick((pointerX, pointerY) -> {
                     if (contextMenuHandler != null) {
                         contextMenuHandler.open(friend, pointerX, pointerY);
@@ -53,7 +51,7 @@ public class FriendsListNode extends ScrollColumnNode {
             addChild(new SocialSectionLabelNode(Component.translatable("alumite.social.requests_incoming_heading").getString()));
             for (PendingFriendRequest request : incoming) {
                 User requestUser = request.user();
-                PlayerRowNode row = new PlayerRowNode(() -> requestUser, () -> Component.translatable("alumite.social.request_status_incoming").getString());
+                FriendRowNode row = new FriendRowNode(requestUser, Component.translatable("alumite.social.request_status_incoming").getString());
                 row.setOnSecondaryClick((pointerX, pointerY) -> {
                     if (contextMenuHandler != null) {
                         contextMenuHandler.open(requestUser, pointerX, pointerY);
@@ -67,7 +65,7 @@ public class FriendsListNode extends ScrollColumnNode {
             addChild(new SocialSectionLabelNode(Component.translatable("alumite.social.requests_sent_heading").getString()));
             for (PendingFriendRequest request : outgoing) {
                 User requestUser = request.user();
-                PlayerRowNode row = new PlayerRowNode(() -> requestUser, () -> Component.translatable("alumite.social.request_status_outgoing").getString());
+                FriendRowNode row = new FriendRowNode(requestUser, Component.translatable("alumite.social.request_status_outgoing").getString());
                 row.setOnSecondaryClick((pointerX, pointerY) -> {
                     if (contextMenuHandler != null) {
                         contextMenuHandler.open(requestUser, pointerX, pointerY);

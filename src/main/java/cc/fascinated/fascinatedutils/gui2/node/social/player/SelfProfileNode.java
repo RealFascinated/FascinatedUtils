@@ -47,15 +47,7 @@ public class SelfProfileNode extends PositionedNode {
         addChild(hoverOverlay);
 
         avatar = new PlayerAvatarNode(AVATAR_SIZE,
-                () -> selfUser() != null && selfUser().user() != null ? selfUser().user().minecraftUuid() : null,
-                () -> selfUser() != null && selfUser().user() != null ? selfUser().user().minecraftName() : null,
-                () -> {
-                    if (selfUser() == null) {
-                        return UserStatus.OFFLINE.color();
-                    }
-                    UserStatus status = selfUser().preferredUserStatus();
-                    return status != null ? status.color() : UserStatus.OFFLINE.color();
-                });
+                () -> selfUser() != null ? selfUser().user() : null);
         avatar.left(CARD_INSET_H + CARD_PAD).alignY(0.5f);
         addChild(avatar);
 
