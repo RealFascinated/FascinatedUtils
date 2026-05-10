@@ -7,6 +7,7 @@ import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
 import cc.fascinated.fascinatedutils.api.user.User;
+import cc.fascinated.fascinatedutils.gui2.core.GlobalContextMenu;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
@@ -38,11 +39,8 @@ public class SocialScreen extends RootScreen {
     }
 
     @Override
-    protected UiNode composeRoot(UiStateStore stateStore) {
+    protected UiNode composeContent(UiStateStore stateStore) {
         UiState<String> selectedChannelId = stateStore.state("social.channel", null);
-        UiState<User> contextMenuUser = stateStore.state("social.playerContextMenu.user", null);
-        UiState<Float> contextMenuPositionX = stateStore.state("social.playerContextMenu.positionX", 0f);
-        UiState<Float> contextMenuPositionY = stateStore.state("social.playerContextMenu.positionY", 0f);
         UiState<Boolean> statusMenuOpen = stateStore.state("social.statusMenu.open", false);
         UiState<Float> statusMenuPositionX = stateStore.state("social.statusMenu.x", 0f);
         UiState<Float> statusMenuPositionY = stateStore.state("social.statusMenu.y", 0f);
@@ -53,8 +51,16 @@ public class SocialScreen extends RootScreen {
                 : null;
         boolean friendsActive = activeChannel == null;
 
-        PlayerContextMenuHandler contextMenuHandler = (user, pointerX, pointerY) ->
-                openPlayerContextMenu(user, pointerX, pointerY, contextMenuUser, contextMenuPositionX, contextMenuPositionY);
+        PlayerContextMenuHandler contextMenuHandler = (user, pointerX, pointerY) -> {
+            if (user != null) {
+                GlobalContextMenu.open(() -> {
+                    PlayerContextMenuNode menu = new PlayerContextMenuNode(
+                            user, GlobalContextMenu::close, () -> removeFriend(user));
+                    menu.setPreferredPosition(pointerX, pointerY);
+                    return menu;
+                });
+            }
+        };
 
         PositionedNode root = new PositionedNode().full();
 
@@ -90,15 +96,6 @@ public class SocialScreen extends RootScreen {
             StatusMenuNode statusMenu = new StatusMenuNode(() -> statusMenuOpen.set(false));
             statusMenu.setPreferredPosition(statusMenuPositionX.get(), statusMenuPositionY.get());
             root.addChild(statusMenu);
-        }
-
-        if (contextMenuUser.get() != null) {
-            PlayerContextMenuNode menu = new PlayerContextMenuNode(
-                    contextMenuUser.get(),
-                    () -> closePlayerContextMenu(contextMenuUser),
-                    () -> removeFriend(contextMenuUser.get()));
-            menu.setPreferredPosition(contextMenuPositionX.get(), contextMenuPositionY.get());
-            root.addChild(menu);
         }
 
         return root;
@@ -162,21 +159,6 @@ public class SocialScreen extends RootScreen {
             } catch (AlumiteApiException ignored) {
             }
         });
-    }
-
-    private void openPlayerContextMenu(User user, float pointerX, float pointerY,
-                                       UiState<User> contextMenuUser, UiState<Float> contextMenuPositionX,
-                                       UiState<Float> contextMenuPositionY) {
-        if (user == null) {
-            return;
-        }
-        contextMenuUser.set(user);
-        contextMenuPositionX.set(pointerX);
-        contextMenuPositionY.set(pointerY);
-    }
-
-    private void closePlayerContextMenu(UiState<User> contextMenuUser) {
-        contextMenuUser.set(null);
     }
 
     private void removeFriend(User user) {

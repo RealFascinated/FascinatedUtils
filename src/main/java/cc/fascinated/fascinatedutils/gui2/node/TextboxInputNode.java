@@ -79,6 +79,14 @@ public class TextboxInputNode extends PositionedNode {
         return this;
     }
 
+    public void submit() {
+        handler.submit();
+    }
+
+    public void cancel() {
+        handler.cancel();
+    }
+
     public TextboxInputNode setValue(String value) {
         handler.setValue(value);
         invalidateLineCache();

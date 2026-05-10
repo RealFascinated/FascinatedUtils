@@ -50,11 +50,6 @@ public class ChatPanelNode extends PositionedNode {
         composer = new ChatComposerNode(channel, stateStore, composerPlaceholder(channel));
         addChild(composer);
 
-        UiState<Message> msgContextMenuMessage = stateStore.state("social.chat.contextMenu.message", null);
-        if (msgContextMenuMessage.get() != null) {
-            addChild(new MessageContextMenuNode(stateStore));
-        }
-
         UiState<Message> msgPendingDelete = stateStore.state("social.chat.delete.message", null);
         Message deleteMsg = msgPendingDelete.get();
         if (deleteMsg != null) {

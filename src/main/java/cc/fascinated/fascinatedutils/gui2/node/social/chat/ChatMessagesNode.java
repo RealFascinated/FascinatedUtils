@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.Message;
+import cc.fascinated.fascinatedutils.gui2.core.GlobalContextMenu;
 import cc.fascinated.fascinatedutils.gui2.core.ScrollColumnNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.core.UiStateStore;
@@ -38,10 +39,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
     private final UiState<Map<String, Integer>> messageScrollByChannel;
     private final UiState<String> editingMessageId;
     private final UiState<String> editingDraft;
-    private final UiState<Message> contextMenuMessage;
-    private final UiState<Float> contextMenuX;
-    private final UiState<Float> contextMenuY;
-    private final UiState<Boolean> contextMenuIsOwn;
+    private final UiState<Message> msgPendingDelete;
 
     public ChatMessagesNode(Channel channel, UiStateStore stateStore, PlayerContextMenuHandler playerContextMenuHandler) {
         this.channel = channel;
@@ -51,10 +49,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
         this.messageScrollByChannel = stateStore.state("social.messageScrollByChannel", new HashMap<>());
         this.editingMessageId = stateStore.state("social.chat.editing.messageId", null);
         this.editingDraft = stateStore.state("social.chat.editing.draft", "");
-        this.contextMenuMessage = stateStore.state("social.chat.contextMenu.message", null);
-        this.contextMenuX = stateStore.state("social.chat.contextMenu.x", 0f);
-        this.contextMenuY = stateStore.state("social.chat.contextMenu.y", 0f);
-        this.contextMenuIsOwn = stateStore.state("social.chat.contextMenu.isOwn", false);
+        this.msgPendingDelete = stateStore.state("social.chat.delete.message", null);
         setGap(2);
 
         configureScrollState();
@@ -105,12 +100,20 @@ public class ChatMessagesNode extends ScrollColumnNode {
                 TextboxInputNode editInput = buildEditInput(message);
                 messageNode.setEditInput(editInput);
             } else {
-                boolean own = isOwnMessage(message);
                 messageNode.setOnContextMenu((pointerX, pointerY) -> {
-                    contextMenuMessage.set(message);
-                    contextMenuX.set(pointerX);
-                    contextMenuY.set(pointerY);
-                    contextMenuIsOwn.set(own);
+                    boolean own = isOwnMessage(message);
+                    GlobalContextMenu.open(() -> {
+                        Runnable onEdit = () -> {
+                            GlobalContextMenu.close();
+                            editingDraft.set(message.content() != null ? message.content() : "");
+                            editingMessageId.set(message.id());
+                            stateStore.requestFocus("social.chat.edit-input");
+                        };
+                        MessageContextMenuNode menu = new MessageContextMenuNode(
+                                message, own, GlobalContextMenu::close, onEdit, msgPendingDelete);
+                        menu.setPreferredPosition(pointerX, pointerY);
+                        return menu;
+                    });
                 });
             }
             if (playerContextMenuHandler != null) {

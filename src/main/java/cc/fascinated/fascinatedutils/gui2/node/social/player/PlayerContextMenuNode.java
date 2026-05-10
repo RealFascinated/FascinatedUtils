@@ -38,6 +38,7 @@ public class PlayerContextMenuNode extends ContextMenuNode {
                 }));
 
         if (user != null && Alumite.INSTANCE != null && Alumite.INSTANCE.users().isFriend(user.id()) && onRemoveFriend != null) {
+            items.add(Item.separator());
             items.add(new Item(
                     Component.translatable("alumite.social.user_context_menu.remove_friend").getString(),
                     () -> {

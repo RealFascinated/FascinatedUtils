@@ -129,11 +129,7 @@ public class ChatMessageNode extends PositionedNode {
         if (editInput != null) {
             addChild(editInput);
         }
-        boolean editing = editInput != null;
-        contentNode.setVisible(!editing);
-        for (ClickableNode attachmentNode : attachmentNodes) {
-            attachmentNode.setVisible(!editing);
-        }
+        contentNode.setVisible(editInput == null);
         return this;
     }
 
@@ -213,7 +209,25 @@ public class ChatMessageNode extends PositionedNode {
             int editInputY = nameY + nameH + EDIT_INPUT_GAP;
             editInput.layout(renderFrame, textX, editInputY, availableWidth, editInputHeight);
             editHintY = editInputY + editInputHeight + EDIT_HINT_GAP;
-            totalH = PAD_V + nameH + EDIT_INPUT_GAP + editInputHeight + EDIT_HINT_GAP + renderFrame.fontHeight() + PAD_V;
+            int hintH = renderFrame.fontHeight();
+            totalH = PAD_V + nameH + EDIT_INPUT_GAP + editInputHeight + EDIT_HINT_GAP + hintH;
+
+            int cursorY = editHintY + hintH + ATTACHMENT_GAP;
+            int attachmentIndex = 0;
+            List<AttachmentDTO> attachments = message.attachments();
+            if (attachments != null) {
+                for (AttachmentDTO attachment : attachments) {
+                    if (!isImageAttachment(attachment)) {
+                        continue;
+                    }
+                    int[] size = attachmentDisplaySize(attachment, attachment.url(), availableWidth);
+                    totalH += ATTACHMENT_GAP + size[1];
+                    attachmentNodes.get(attachmentIndex).layout(renderFrame, textX, cursorY, size[0], size[1]);
+                    cursorY += size[1] + ATTACHMENT_GAP;
+                    attachmentIndex++;
+                }
+            }
+            totalH += PAD_V;
         } else {
             editHintY = -1;
             UiText contentText = buildContentText(renderFrame);
@@ -255,9 +269,13 @@ public class ChatMessageNode extends PositionedNode {
         }
         int hintX = bounds().positionX() + 4 + AVATAR_SIZE + AVATAR_GAP;
         UiText.of("escape to ").color(renderFrame.theme().textPrimary())
-                .append(UiText.of("cancel").color(renderFrame.theme().textMuted()))
+                .append(UiText.of("cancel").color(renderFrame.theme().textMuted())
+                        .hoverColor(renderFrame.theme().textPrimary())
+                        .onClick(editInput::cancel))
                 .append(UiText.of(" \u2022 enter to ").color(renderFrame.theme().textPrimary()))
-                .append(UiText.of("save").color(renderFrame.theme().textMuted()))
+                .append(UiText.of("save").color(renderFrame.theme().textMuted())
+                        .hoverColor(renderFrame.theme().textPrimary())
+                        .onClick(editInput::submit))
                 .draw(renderFrame, hintX, editHintY);
     }
 

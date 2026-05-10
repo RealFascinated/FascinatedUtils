@@ -9,20 +9,18 @@ import net.minecraft.client.Minecraft;
 
 public class SocialPanelHeaderNode extends PositionedNode {
 
-    private static final int CLOSE_BUTTON_SIZE = 18;
-
     private final DividerNode divider;
     private final ButtonNode closeButton;
 
     public SocialPanelHeaderNode() {
-        height(32).fullWidth();
+        height(40).fullWidth();
 
         divider = new DividerNode();
         divider.bottom(0).fullWidth();
         addChild(divider);
 
         closeButton = new ButtonNode("");
-        closeButton.size(CLOSE_BUTTON_SIZE, CLOSE_BUTTON_SIZE).right(6);
+        closeButton.size(20, 20).right(6);
         closeButton.setLeftIcon(ModUiTextures.CLOSE.getId());
         closeButton.setRounded(true);
         closeButton.setOnPress(() -> Minecraft.getInstance().setScreen(null));
@@ -36,8 +34,8 @@ public class SocialPanelHeaderNode extends PositionedNode {
         super.layout(renderFrame, parentX, parentY, parentWidth, parentHeight);
         int height = bounds().height() - separatorHeight;
         closeButton.layout(renderFrame,
-                bounds().positionX() + bounds().width() - CLOSE_BUTTON_SIZE - 6,
-                bounds().positionY() + (height - CLOSE_BUTTON_SIZE) / 2,
-                CLOSE_BUTTON_SIZE, CLOSE_BUTTON_SIZE);
+                bounds().positionX() + bounds().width() - 20 - 6,
+                bounds().positionY() + (height - 20) / 2,
+                20, 20);
     }
 }

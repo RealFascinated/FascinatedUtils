@@ -449,6 +449,13 @@ public class TextInputHandler {
         onSubmit.accept(buffer.toString());
     }
 
+    /**
+     * Fires the cancel callback.
+     */
+    public void cancel() {
+        onCancel.run();
+    }
+
     private void fireChange() {
         onBufferMutated.run();
         onChange.accept(buffer.toString());

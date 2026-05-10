@@ -19,6 +19,9 @@ import java.util.Deque;
 import java.util.List;
 
 public class GuiRenderer implements RenderFrame {
+    private static final List<ClickRegion> FRAME_CLICK_REGIONS = new ArrayList<>();
+    private static ClickRegion pressedClickRegion = null;
+
     private final GuiGraphicsExtractor drawContext;
     private final Minecraft minecraftClient;
     private final UiTheme uiTheme;
@@ -28,6 +31,8 @@ public class GuiRenderer implements RenderFrame {
     private final List<QueuedTextDraw> queuedTextDraws = new ArrayList<>();
     private float logicalToVanillaScaleX = 1f;
     private float logicalToVanillaScaleY = 1f;
+    private float pointerX = Float.NaN;
+    private float pointerY = Float.NaN;
 
     public GuiRenderer(GuiGraphicsExtractor drawContext, GuiTheme guiTheme, UiTheme uiTheme) {
         this.drawContext = drawContext;
@@ -43,6 +48,9 @@ public class GuiRenderer implements RenderFrame {
 
     @Override
     public void beginFrame(float logicalWidth, float logicalHeight) {
+        pointerX = Float.NaN;
+        pointerY = Float.NaN;
+        FRAME_CLICK_REGIONS.clear();
         float vanillaWidth = (float) minecraftClient.getWindow().getGuiScaledWidth();
         float vanillaHeight = (float) minecraftClient.getWindow().getGuiScaledHeight();
         logicalToVanillaScaleX = vanillaWidth / Math.max(1f, logicalWidth);
@@ -207,6 +215,76 @@ public class GuiRenderer implements RenderFrame {
     public void drawRoundedTexture(Identifier textureId, int positionX, int positionY, int width, int height, int cornerRadius, int tintArgb) {
         backend.drawRoundedTexture(textureId, positionX, positionY, width, height, cornerRadius, tintArgb);
     }
+
+    public void setPointer(float x, float y) {
+        pointerX = x;
+        pointerY = y;
+    }
+
+    @Override
+    public float pointerX() {
+        return pointerX;
+    }
+
+    @Override
+    public float pointerY() {
+        return pointerY;
+    }
+
+    @Override
+    public void addClickRegion(int x, int y, int w, int h, Runnable callback) {
+        FRAME_CLICK_REGIONS.add(new ClickRegion(x, y, w, h, callback));
+    }
+
+    /**
+     * Records whichever click region from the most recent frame is under the pointer at press
+     * time, without firing its callback. Call this during {@code mouseClicked} (press).
+     *
+     * @param pointerX logical X of the press
+     * @param pointerY logical Y of the press
+     * @param button   GLFW mouse button; only button {@code 0} (primary) is checked
+     *
+     * @return {@code true} if a region was found under the pointer
+     */
+    public static boolean recordPressedRegion(float pointerX, float pointerY, int button) {
+        if (button != 0) {
+            return false;
+        }
+        for (ClickRegion region : FRAME_CLICK_REGIONS) {
+            if (pointerX >= region.x && pointerX < region.x + region.w
+                    && pointerY >= region.y && pointerY < region.y + region.h) {
+                pressedClickRegion = region;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Fires the callback of the region recorded by {@link #recordPressedRegion} if the release
+     * pointer is still within that region's bounds, then clears the record. Call this during
+     * {@code mouseReleased} (release).
+     *
+     * @param pointerX logical X of the release
+     * @param pointerY logical Y of the release
+     *
+     * @return {@code true} if a region was fired
+     */
+    public static boolean fireAndClearPressedRegion(float pointerX, float pointerY) {
+        ClickRegion pressed = pressedClickRegion;
+        pressedClickRegion = null;
+        if (pressed == null) {
+            return false;
+        }
+        if (pointerX >= pressed.x && pointerX < pressed.x + pressed.w
+                && pointerY >= pressed.y && pointerY < pressed.y + pressed.h) {
+            pressed.callback().run();
+            return true;
+        }
+        return false;
+    }
+
+    private record ClickRegion(int x, int y, int w, int h, Runnable callback) {}
 
     private void flushCurrentSegment() {
         MeshBuilder.INSTANCE.endSegment(drawContext);

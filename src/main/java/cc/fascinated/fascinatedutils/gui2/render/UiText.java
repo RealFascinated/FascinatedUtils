@@ -15,7 +15,8 @@ public class UiText {
     /**
      * A single styled text run: a plain string together with its rendering attributes.
      */
-    private record Segment(String text, int colorArgb, boolean shadow, boolean bold, float scale) {
+    private record Segment(String text, int colorArgb, boolean shadow, boolean bold, float scale,
+                           Integer hoverColorArgb, Runnable onClick) {
 
         int width(RenderFrame frame) {
             return widthOf(frame, text);
@@ -46,20 +47,45 @@ public class UiText {
             }
         }
 
+        void drawInteractive(RenderFrame frame, int positionX, int positionY, int w, int h) {
+            drawInteractive(frame, text, positionX, positionY, w, h);
+        }
+
+        void drawInteractive(RenderFrame frame, String str, int positionX, int positionY, int w, int h) {
+            boolean hovered = hoverColorArgb != null && isPointerOver(frame, positionX, positionY, w, h);
+            Segment effective = hovered ? withColor(hoverColorArgb) : this;
+            effective.draw(frame, str, positionX, positionY);
+            if (onClick != null) {
+                frame.addClickRegion(positionX, positionY, w, h, onClick);
+            }
+        }
+
+        boolean isInteractive() {
+            return hoverColorArgb != null || onClick != null;
+        }
+
         Segment withColor(int argb) {
-            return new Segment(text, argb, shadow, bold, scale);
+            return new Segment(text, argb, shadow, bold, scale, hoverColorArgb, onClick);
         }
 
         Segment withShadow(boolean shadow) {
-            return new Segment(text, colorArgb, shadow, bold, scale);
+            return new Segment(text, colorArgb, shadow, bold, scale, hoverColorArgb, onClick);
         }
 
         Segment withBold(boolean bold) {
-            return new Segment(text, colorArgb, shadow, bold, scale);
+            return new Segment(text, colorArgb, shadow, bold, scale, hoverColorArgb, onClick);
         }
 
         Segment withScale(float scale) {
-            return new Segment(text, colorArgb, shadow, bold, scale);
+            return new Segment(text, colorArgb, shadow, bold, scale, hoverColorArgb, onClick);
+        }
+
+        Segment withHoverColor(Integer argb) {
+            return new Segment(text, colorArgb, shadow, bold, scale, argb, onClick);
+        }
+
+        Segment withOnClick(Runnable callback) {
+            return new Segment(text, colorArgb, shadow, bold, scale, hoverColorArgb, callback);
         }
     }
 
@@ -180,6 +206,45 @@ public class UiText {
     }
 
     /**
+     * Returns a copy that switches the root segment's color to the given ARGB value when the
+     * pointer is within the text's drawn bounds.
+     *
+     * @param argb
+     *         the ARGB color to use on hover
+     *
+     * @return a new {@code UiText} with the hover color set
+     */
+    public UiText hoverColor(int argb) {
+        return mapRoot(root -> root.withHoverColor(argb));
+    }
+
+    /**
+     * Returns a copy that switches the root segment's color to a theme-resolved value when the
+     * pointer is within the text's drawn bounds.
+     *
+     * @param resolver
+     *         a function that picks a color from a {@link UiTheme}
+     *
+     * @return a new {@code UiText} with the hover color set
+     */
+    public UiText hoverColor(Function<UiTheme, Integer> resolver) {
+        return hoverColor(resolver.apply(UiThemeRepository.get()));
+    }
+
+    /**
+     * Returns a copy that invokes {@code callback} when the user clicks within the text's drawn
+     * bounds with the primary mouse button.
+     *
+     * @param callback
+     *         action to invoke on primary click
+     *
+     * @return a new {@code UiText} with the click handler set
+     */
+    public UiText onClick(Runnable callback) {
+        return mapRoot(root -> root.withOnClick(callback));
+    }
+
+    /**
      * Returns a new {@code UiText} with the segments of {@code other} appended after this
      * instance's segments.
      *
@@ -241,10 +306,16 @@ public class UiText {
      *         the top edge in logical pixels
      */
     public void draw(RenderFrame frame, int positionX, int positionY) {
+        int lineHeight = height(frame);
         int cursorX = positionX;
         for (Segment segment : segments) {
-            segment.draw(frame, cursorX, positionY);
-            cursorX += segment.width(frame);
+            int segWidth = segment.width(frame);
+            if (segment.isInteractive()) {
+                segment.drawInteractive(frame, cursorX, positionY, segWidth, lineHeight);
+            } else {
+                segment.draw(frame, cursorX, positionY);
+            }
+            cursorX += segWidth;
         }
     }
 
@@ -284,14 +355,22 @@ public class UiText {
             int cursorX = x;
             Segment prevSegment = null;
             for (WordToken token : line) {
+                Segment seg = token.segment();
                 if (prevSegment != null) {
                     int spaceWidth = prevSegment.widthOf(frame, " ");
-                    prevSegment.draw(frame, " ", cursorX, cursorY + (lineHeight - prevSegment.height(frame)) / 2);
+                    int spaceY = cursorY + (lineHeight - prevSegment.height(frame)) / 2;
+                    prevSegment.draw(frame, " ", cursorX, spaceY);
                     cursorX += spaceWidth;
                 }
-                token.segment().draw(frame, token.word(), cursorX, cursorY + (lineHeight - token.segment().height(frame)) / 2);
-                cursorX += token.segment().widthOf(frame, token.word());
-                prevSegment = token.segment();
+                int wordWidth = seg.widthOf(frame, token.word());
+                int wordY = cursorY + (lineHeight - seg.height(frame)) / 2;
+                if (seg.isInteractive()) {
+                    seg.drawInteractive(frame, token.word(), cursorX, wordY, wordWidth, seg.height(frame));
+                } else {
+                    seg.draw(frame, token.word(), cursorX, wordY);
+                }
+                cursorX += wordWidth;
+                prevSegment = seg;
             }
             cursorY += lineHeight;
             if (lineIndex < lines.size() - 1) {
@@ -428,7 +507,7 @@ public class UiText {
 
     private static UiText single(String text) {
         List<Segment> list = new ArrayList<>(1);
-        list.add(new Segment(text, DEFAULT_COLOR, false, false, 1.0f));
+        list.add(new Segment(text, DEFAULT_COLOR, false, false, 1.0f, null, null));
         return new UiText(list);
     }
 
@@ -439,5 +518,11 @@ public class UiText {
         List<Segment> updated = new ArrayList<>(segments);
         updated.set(0, transform.apply(updated.get(0)));
         return new UiText(updated);
+    }
+
+    private static boolean isPointerOver(RenderFrame frame, int x, int y, int w, int h) {
+        float px = frame.pointerX();
+        float py = frame.pointerY();
+        return !Float.isNaN(px) && !Float.isNaN(py) && px >= x && px < x + w && py >= y && py < y + h;
     }
 }

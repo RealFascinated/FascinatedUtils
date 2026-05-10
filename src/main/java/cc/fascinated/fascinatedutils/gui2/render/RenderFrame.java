@@ -68,4 +68,10 @@ public interface RenderFrame {
     void drawTexture(Identifier textureId, int positionX, int positionY, int width, int height, int tintArgb);
 
     void drawRoundedTexture(Identifier textureId, int positionX, int positionY, int width, int height, int cornerRadius, int tintArgb);
+
+    default float pointerX() { return Float.NaN; }
+
+    default float pointerY() { return Float.NaN; }
+
+    default void addClickRegion(int x, int y, int w, int h, Runnable callback) {}
 }
