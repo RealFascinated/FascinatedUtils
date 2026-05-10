@@ -1,10 +1,19 @@
 package cc.fascinated.fascinatedutils.client;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
+import com.mojang.blaze3d.platform.NativeImage;
 import lombok.Getter;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 @Getter
 public enum ModUiTextures {
@@ -32,10 +41,42 @@ public enum ModUiTextures {
     STATUS_INVISIBLE("ui/user_status/invisible"),
     ;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ModUiTextures.class);
+
     private final Identifier id;
 
     ModUiTextures(String spritePath) {
         this.id = Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, spritePath);
+    }
+
+    /**
+     * Pre-load every UI sprite as a standalone {@link DynamicTexture} registered in the
+     * {@link net.minecraft.client.renderer.texture.TextureManager} under its sprite identifier.
+     *
+     * <p>Must be called on the Minecraft main thread after the render device is initialised
+     * (e.g. from the {@code CLIENT_STARTED} lifecycle event). Once registered,
+     * {@code Renderer2D.drawTexture} finds the texture via {@code TextureManager.getTexture} and
+     * routes it through the linear-sampled mesh path instead of the nearest-filtered atlas path.
+     *
+     * @param mc the active Minecraft instance
+     */
+    public static void loadTextures(Minecraft mc) {
+        for (ModUiTextures sprite : values()) {
+            Identifier resourceId = Identifier.fromNamespaceAndPath(
+                    AlumiteMod.MOD_ID, "textures/gui/sprites/" + sprite.id.getPath() + ".png");
+            try {
+                Resource resource = mc.getResourceManager().getResourceOrThrow(resourceId);
+                try (InputStream stream = resource.open()) {
+                    NativeImage image = NativeImage.read(stream);
+                    DynamicTexture texture = new DynamicTexture(sprite.id::toString, image);
+                    texture.upload();
+                    image.close();
+                    mc.getTextureManager().register(sprite.id, texture);
+                }
+            } catch (IOException exception) {
+                LOGGER.error("Failed to load UI sprite {}", sprite.id, exception);
+            }
+        }
     }
 
     /**

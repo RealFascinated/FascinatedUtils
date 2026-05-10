@@ -49,6 +49,7 @@ public class Client implements ClientModInitializer {
         eventBus.subscribe(ActivityHandler.INSTANCE);
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> eventBus.post(new ClientStartedEvent(client)));
+        ClientLifecycleEvents.CLIENT_STARTED.register(ModUiTextures::loadTextures);
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             if (client.isSingleplayer()) {
                 eventBus.post(new SingleplayerWorldLoadEvent());

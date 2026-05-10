@@ -4,9 +4,13 @@ import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.textures.AddressMode;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuSampler;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.Mth;
@@ -16,6 +20,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalDouble;
 
 /**
  * Batched 2D GUI mesh: records {@link GuiElementRenderState} quads for custom {@link FascinatedUiPipelines} and
@@ -28,6 +33,7 @@ public class MeshRenderer {
     private final List<DynamicTexture> disposableCornerRadiiLuts = new ArrayList<>();
     private DynamicTexture whiteDot;
     private TextureSetup whiteTextureSetup;
+    private GpuSampler linearSampler;
 
     private MeshRenderer() {
     }
@@ -111,7 +117,7 @@ public class MeshRenderer {
         int y0 = Mth.floor(positionY);
         int x1 = Mth.ceil(positionX + width);
         int y1 = Mth.ceil(positionY + height);
-        TextureSetup textureSetup = TextureSetup.singleTexture(texture.getTextureView(), texture.getSampler());
+        TextureSetup textureSetup = TextureSetup.singleTexture(texture.getTextureView(), linearSampler());
         pendingTextured.add(new AxisTexColorQuadRenderState(FascinatedUiPipelines.AXIS_TEX_COLOR, textureSetup, pose, x0, y0, x1, y1, color, color, color, color, scissor));
     }
 
@@ -132,7 +138,7 @@ public class MeshRenderer {
         int packedCornerRadii = RectCornerRoundMask.packedCornerRadiiBytes(cornerRadius, RectCornerRoundMask.ALL, halfMinPixelSide);
         DynamicTexture cornerRadiiLut = RoundedRectCornerRadiiTexture.createDisposableRadiiLut(packedCornerRadii, 0f);
         disposableCornerRadiiLuts.add(cornerRadiiLut);
-        TextureSetup textureSetup = TextureSetup.doubleTexture(texture.getTextureView(), texture.getSampler(), cornerRadiiLut.getTextureView(), cornerRadiiLut.getSampler());
+        TextureSetup textureSetup = TextureSetup.doubleTexture(texture.getTextureView(), linearSampler(), cornerRadiiLut.getTextureView(), cornerRadiiLut.getSampler());
         pendingTextured.add(new RoundedRectTexRenderState(FascinatedUiPipelines.ROUNDED_RECT_TEX_LUT, textureSetup, pose, x0, y0, x1, y1, tintArgb, tintArgb, tintArgb, tintArgb, scissor, packedCornerRadii, 0f));
     }
 
@@ -230,6 +236,17 @@ public class MeshRenderer {
         }
         whiteTextureSetup = TextureSetup.singleTexture(whiteDot.getTextureView(), whiteDot.getSampler());
         return whiteTextureSetup;
+    }
+
+    private GpuSampler linearSampler() {
+        if (linearSampler == null) {
+            linearSampler = RenderSystem.getDevice().createSampler(
+                AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE,
+                FilterMode.LINEAR, FilterMode.LINEAR,
+                1, OptionalDouble.empty()
+            );
+        }
+        return linearSampler;
     }
 
 }
