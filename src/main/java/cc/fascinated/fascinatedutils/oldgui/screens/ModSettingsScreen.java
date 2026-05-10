@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.oldgui.screens;
 
+import cc.fascinated.fascinatedutils.common.sound.Sounds;
 import cc.fascinated.fascinatedutils.gui2.core.UIScale;
-import cc.fascinated.fascinatedutils.oldgui.UiSounds;
 import cc.fascinated.fascinatedutils.oldgui.core.InputEvent;
 import cc.fascinated.fascinatedutils.oldgui.core.UiPointerCursor;
 import cc.fascinated.fascinatedutils.oldgui.input.UiCursorController;
@@ -185,7 +185,7 @@ public class ModSettingsScreen extends WidgetScreen {
         float layoutX = pointer.layoutPositionX();
         float layoutY = pointer.layoutPositionY();
         if (shellHitRegions.close().contains(layoutX, layoutY) && event.button() == 0) {
-            UiSounds.playButtonClick();
+            Sounds.UI_CLICK.play();
             closeModSettingsShell();
             return true;
         }

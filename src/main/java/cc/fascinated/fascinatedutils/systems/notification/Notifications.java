@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.channel.json.AttachmentDTO;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
+import cc.fascinated.fascinatedutils.common.sound.Sounds;
 import cc.fascinated.fascinatedutils.event.impl.social.ChannelMessageCreateEvent;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendAddEvent;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendRequestIncomingEvent;
@@ -41,6 +42,9 @@ public class Notifications {
                     .imageWidth(firstImage.width()).imageHeight(firstImage.height());
         }
         builder.info();
+        if (shouldPlaySounds()) {
+            Sounds.NOTIFICATION.play();
+        }
     }
 
     @EventHandler
@@ -51,6 +55,9 @@ public class Notifications {
 
         if (event.fromOutgoingRequest() && event.user() != null && event.user().minecraftName() != null) {
             Toast.show().message(event.user().minecraftName() + " accepted your friend request!").success();
+            if (shouldPlaySounds()) {
+                Sounds.NOTIFICATION.play();
+            }
         }
     }
 
@@ -62,11 +69,20 @@ public class Notifications {
 
         if (event.user() != null && event.user().minecraftName() != null) {
             Toast.show().message(event.user().minecraftName() + " sent you a friend request!").info();
+            if (shouldPlaySounds()) {
+                Sounds.NOTIFICATION.play();
+            }
         }
     }
 
     public boolean shouldToast() {
-        return !SettingsRegistry.INSTANCE.getSettings().getSocialNotifications().isDisabled() &&
+        return SettingsRegistry.INSTANCE.getSettings().getSocialNotifications().isEnabled() &&
+                Alumite.INSTANCE.users().selfUser().preferredUserStatus() != UserStatus.DO_NOT_DISTURB &&
+                !(Minecraft.getInstance().screen instanceof SocialScreen);
+    }
+
+    public boolean shouldPlaySounds() {
+        return SettingsRegistry.INSTANCE.getSettings().getSocialSounds().isEnabled() &&
                 Alumite.INSTANCE.users().selfUser().preferredUserStatus() != UserStatus.DO_NOT_DISTURB &&
                 !(Minecraft.getInstance().screen instanceof SocialScreen);
     }

@@ -23,19 +23,46 @@ public class Settings implements GsonSerializable<Settings> {
     private final KeybindSetting shellOpenKeybind = new KeybindSetting("shell_open_keybind", Keybinds::openMenuKeybind);
     private final KeybindSetting socialKeybind = new KeybindSetting("social_keybind", Keybinds::socialKeybind);
 
-    private final BooleanSetting showSelfNameplate = BooleanSetting.builder().id("show_self_nameplate").defaultValue(true).categoryDisplayKey("alumite.setting.category.general").build();
+    private final BooleanSetting showSelfNameplate = BooleanSetting.builder().id("show_self_nameplate")
+            .defaultValue(true)
+            .categoryDisplayKey("alumite.setting.category.general")
+            .build();
 
-    private final BooleanSetting showServerListInPauseMenu = BooleanSetting.builder().id("show_server_list_in_pause_menu").defaultValue(true).categoryDisplayKey("alumite.setting.category.general").build();
+    private final BooleanSetting showServerListInPauseMenu = BooleanSetting.builder().id("show_server_list_in_pause_menu")
+            .defaultValue(true)
+            .categoryDisplayKey("alumite.setting.category.general")
+            .build();
 
-    private final BooleanSetting confirmDisconnect = BooleanSetting.builder().id("confirm_disconnect").defaultValue(false).categoryDisplayKey("alumite.setting.category.general").build();
+    private final BooleanSetting confirmDisconnect = BooleanSetting.builder().id("confirm_disconnect")
+            .defaultValue(false)
+            .categoryDisplayKey("alumite.setting.category.general")
+            .build();
 
-    private final BooleanSetting reduceMacOSResolution = BooleanSetting.builder().id("reduce_mac_os_resolution").defaultValue(false).locked(() -> !ClientUtils.isMacOS()).lockedReason(() -> I18n.get("alumite.setting.lock_reason.requires_mac_os")).categoryDisplayKey("alumite.setting.category.performance").build();
+    private final BooleanSetting reduceMacOSResolution = BooleanSetting.builder().id("reduce_mac_os_resolution")
+            .defaultValue(false)
+            .locked(() -> !ClientUtils.isMacOS())
+            .lockedReason(() -> I18n.get("alumite.setting.lock_reason.requires_mac_os"))
+            .categoryDisplayKey("alumite.setting.category.performance")
+            .build();
 
-    private final BooleanSetting turboEntities = BooleanSetting.builder().id("turbo_entities").defaultValue(true).categoryDisplayKey("alumite.setting.category.performance").build();
+    private final BooleanSetting turboEntities = BooleanSetting.builder().id("turbo_entities")
+            .defaultValue(true)
+            .categoryDisplayKey("alumite.setting.category.performance")
+            .build();
 
-    private final BooleanSetting turboParticles = BooleanSetting.builder().id("turbo_particles").defaultValue(true).categoryDisplayKey("alumite.setting.category.performance").build();
+    private final BooleanSetting turboParticles = BooleanSetting.builder().id("turbo_particles")
+            .defaultValue(true)
+            .categoryDisplayKey("alumite.setting.category.performance")
+            .build();
 
-    private final BooleanSetting socialNotifications = BooleanSetting.builder().id("social_notifications").defaultValue(true).categoryDisplayKey("alumite.setting.category.notifications").build();
+    private final BooleanSetting socialNotifications = BooleanSetting.builder().id("social_notifications")
+            .defaultValue(true)
+            .categoryDisplayKey("alumite.setting.category.social")
+            .build();
+    private final BooleanSetting socialSounds = BooleanSetting.builder().id("social_sounds")
+            .defaultValue(true)
+            .categoryDisplayKey("alumite.setting.category.social")
+            .build();
 
     public Settings() {
         addSetting(shellOpenKeybind);
@@ -46,7 +73,9 @@ public class Settings implements GsonSerializable<Settings> {
         addSetting(reduceMacOSResolution);
         addSetting(turboEntities);
         addSetting(turboParticles);
+
         addSetting(socialNotifications);
+        addSetting(socialSounds);
 
         // ensure it's only enabled on macOS
         if (!ClientUtils.isMacOS() && reduceMacOSResolution.isEnabled()) {

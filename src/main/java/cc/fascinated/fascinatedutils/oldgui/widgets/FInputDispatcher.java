@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.oldgui.widgets;
 
-import cc.fascinated.fascinatedutils.oldgui.UiSounds;
+import cc.fascinated.fascinatedutils.common.sound.Sounds;
 import cc.fascinated.fascinatedutils.oldgui.core.InputEvent;
 import cc.fascinated.fascinatedutils.oldgui.core.PointerHitTraversal;
 import cc.fascinated.fascinatedutils.oldgui.core.UiFocusIds;
@@ -217,7 +217,7 @@ public class FInputDispatcher {
         setFocusedId.accept(focusId);
         boolean mouseDownConsumed = walkMouseDown(leaf, pointerX, pointerY, button);
         if (button == 0 && mouseDownConsumed) {
-            UiSounds.playButtonClick();
+            Sounds.UI_CLICK.play();
             clickSoundPlayedOnPress = true;
         }
         return mouseDownConsumed;
@@ -237,7 +237,7 @@ public class FInputDispatcher {
             boolean clickConsumed = walkClick(clickTarget, pointerX, pointerY, button);
             consumed |= clickConsumed;
             if (clickConsumed && !clickSoundPlayedOnPress) {
-                UiSounds.playButtonClick();
+                Sounds.UI_CLICK.play();
             }
         }
         pressedOn = null;
