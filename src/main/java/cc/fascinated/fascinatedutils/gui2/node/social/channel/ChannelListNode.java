@@ -18,15 +18,14 @@ import java.util.function.Consumer;
 
 public class ChannelListNode extends ScrollColumnNode {
 
-    public ChannelListNode(String selectedChannelId, Consumer<String> onSelectChannel,
-                           PlayerContextMenuHandler contextMenuHandler) {
+    public ChannelListNode(String selectedChannelId, Consumer<String> onSelectChannel, PlayerContextMenuHandler contextMenuHandler) {
         setGap(2);
 
         List<Channel> channels = Alumite.INSTANCE != null ? Alumite.INSTANCE.channels().all() : List.of();
         if (channels.isEmpty()) {
             TextNode emptyLabel = new TextNode(Component.translatable("alumite.social.dm.no_conversations").getString())
                     .setColorArgb(UiThemeRepository.get().textSubtle())
-                    .setTextAlign(0f, 0.5f);
+                    .setTextAlign(0.5f, 0.5f);
             emptyLabel.fullWidth().height(40);
             addChild(emptyLabel);
             return;

@@ -244,7 +244,6 @@ public class TextInputNode extends PositionedNode {
         }
 
         UiText.of(text).color(renderFrame.theme().textPrimary()).draw(renderFrame, textAreaX - scrollOffset, textY);
-        renderFrame.flushText();
         renderFrame.popClip();
 
         if (handler.isFocused() && !handler.hasSelection() && (System.currentTimeMillis() / CARET_BLINK_HALF_PERIOD_MS & 1L) == 0L) {

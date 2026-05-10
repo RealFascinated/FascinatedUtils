@@ -22,6 +22,8 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import net.minecraft.client.Minecraft;
+
 class AlumiteGateway implements WebSocket.Listener {
 
     private static final int CLOSE_AUTH_FAILURE = 4001;
@@ -151,11 +153,12 @@ class AlumiteGateway implements WebSocket.Listener {
                 return;
             }
             JsonElement data = obj.has("data") ? obj.get("data") : JsonNull.INSTANCE;
-            handler.handle(this::send, data);
-
-            if (Constants.DEBUG_MODE) {
-                Client.LOG.info("[AlumiteGateway] Received opcode {} with data: {}", opcode, data);
-            }
+            Minecraft.getInstance().execute(() -> {
+                handler.handle(this::send, data);
+                if (Constants.DEBUG_MODE) {
+                    Client.LOG.info("[AlumiteGateway] Received opcode {} with data: {}", opcode, data);
+                }
+            });
         } catch (Exception exception) {
             Client.LOG.warn("[AlumiteGateway] Failed to dispatch message: {}", exception.getMessage());
         }

@@ -25,12 +25,15 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class SocialScreen extends RootScreen {
 
     private static final int LEFT_PANE_WIDTH = 170;
     private static final int DIVIDER_WIDTH = 1;
     private static final int PROFILE_PANE_HEIGHT = 52;
+
+    private static String lastChannelId = null;
 
     private UiStateStore stateStore;
 
@@ -41,7 +44,8 @@ public class SocialScreen extends RootScreen {
     @Override
     protected UiNode composeContent(UiStateStore stateStore) {
         this.stateStore = stateStore;
-        UiState<String> selectedChannelId = stateStore.state("social.channel", null);
+        UiState<String> selectedChannelId = stateStore.state("social.channel", lastChannelId);
+        Consumer<String> selectChannel = id -> { lastChannelId = id; selectedChannelId.set(id); };
         UiState<Boolean> statusMenuOpen = stateStore.state("social.statusMenu.open", false);
         UiState<Float> statusMenuPositionX = stateStore.state("social.statusMenu.x", 0f);
         UiState<Float> statusMenuPositionY = stateStore.state("social.statusMenu.y", 0f);
@@ -85,13 +89,13 @@ public class SocialScreen extends RootScreen {
                 .fullHeight();
         layoutRow.addChild(rightPane);
 
-        buildLeftPane(leftPane, selectedChannelId, contextMenuHandler, friendsActive,
+        buildLeftPane(leftPane, selectChannel, contextMenuHandler, friendsActive,
                 (pointerX, pointerY) -> {
                     statusMenuPositionX.set(pointerX);
                     statusMenuPositionY.set(pointerY);
                     statusMenuOpen.set(!statusMenuOpen.get());
                 });
-        buildRightPane(rightPane, stateStore, activeChannel, contextMenuHandler, selectedChannelId);
+        buildRightPane(rightPane, stateStore, activeChannel, contextMenuHandler, selectChannel);
 
         if (statusMenuOpen.get()) {
             StatusMenuNode statusMenu = new StatusMenuNode(() -> statusMenuOpen.set(false));
@@ -102,7 +106,7 @@ public class SocialScreen extends RootScreen {
         return root;
     }
 
-    private void buildLeftPane(PositionedNode leftPane, UiState<String> selectedChannelId,
+    private void buildLeftPane(PositionedNode leftPane, Consumer<String> selectChannel,
                                 PlayerContextMenuHandler contextMenuHandler, boolean friendsActive,
                                 BiConsumer<Float, Float> onStatusClick) {
         PositionedNode navArea = new PositionedNode()
@@ -111,10 +115,10 @@ public class SocialScreen extends RootScreen {
                 .bottom(PROFILE_PANE_HEIGHT);
         SocialNavNode navNode = new SocialNavNode(
                 friendsActive,
-                selectedChannelId.get(),
+                lastChannelId,
                 incomingRequestCount(),
-                () -> selectedChannelId.set(null),
-                selectedChannelId::set,
+                () -> selectChannel.accept(null),
+                selectChannel,
                 contextMenuHandler);
         navArea.addChild(navNode);
         leftPane.addChild(navArea);
@@ -129,12 +133,12 @@ public class SocialScreen extends RootScreen {
 
     private void buildRightPane(PositionedNode rightPane, UiStateStore stateStore,
                                  Channel activeChannel, PlayerContextMenuHandler contextMenuHandler,
-                                 UiState<String> selectedChannelId) {
+                                 Consumer<String> selectChannel) {
         if (activeChannel != null) {
             rightPane.addChild(new ChatPanelNode(activeChannel, stateStore, contextMenuHandler));
         } else {
             rightPane.addChild(new FriendsPanelNode(contextMenuHandler,
-                    user -> openDmWithUser(user, selectedChannelId)));
+                    user -> openDmWithUser(user, selectChannel)));
         }
     }
 
@@ -188,7 +192,7 @@ public class SocialScreen extends RootScreen {
         return true;
     }
 
-    private void openDmWithUser(User user, UiState<String> selectedChannelId) {
+    private void openDmWithUser(User user, Consumer<String> selectChannel) {
         if (user == null || Alumite.INSTANCE == null) {
             return;
         }
@@ -200,13 +204,13 @@ public class SocialScreen extends RootScreen {
                 .findFirst()
                 .orElse(null);
         if (existing != null) {
-            selectedChannelId.set(existing.id());
+            selectChannel.accept(existing.id());
             return;
         }
         AlumiteMod.SCHEDULED_POOL.execute(() -> {
             try {
                 DmChannel dm = Alumite.INSTANCE.channels().openDmAndCache(user.id());
-                selectedChannelId.set(dm.id());
+                selectChannel.accept(dm.id());
             } catch (AlumiteApiException ignored) {
             }
         });

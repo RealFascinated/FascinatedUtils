@@ -5,14 +5,12 @@ import cc.fascinated.fascinatedutils.api.channel.DmChannel;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.node.ImageNode;
-import cc.fascinated.fascinatedutils.gui2.node.RectNode;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 
 public class CloseChannelNode extends PositionedNode {
 
     static final int SIZE = 14;
     private static final int ICON_INSET = 2;
-    private static final int CORNER_RADIUS = 3;
 
     private final DmChannel channel;
     private boolean hovered;
@@ -20,11 +18,6 @@ public class CloseChannelNode extends PositionedNode {
     public CloseChannelNode(DmChannel channel) {
         this.channel = channel;
         size(SIZE);
-
-        addChild(new RectNode()
-                .setFillSupplier(() -> hovered ? UiThemeRepository.get().rowHoverFill() : 0)
-                .setCornerRadius(CORNER_RADIUS)
-                .full());
 
         addChild(new ImageNode()
                 .setTextureSupplier(() -> ModUiTextures.CLOSE.getId())
