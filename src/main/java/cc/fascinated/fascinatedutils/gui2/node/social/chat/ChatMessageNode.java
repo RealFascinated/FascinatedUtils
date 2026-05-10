@@ -211,22 +211,7 @@ public class ChatMessageNode extends PositionedNode {
             editHintY = editInputY + editInputHeight + EDIT_HINT_GAP;
             int hintH = renderFrame.fontHeight();
             totalH = PAD_V + nameH + EDIT_INPUT_GAP + editInputHeight + EDIT_HINT_GAP + hintH;
-
-            int cursorY = editHintY + hintH + ATTACHMENT_GAP;
-            int attachmentIndex = 0;
-            List<AttachmentDTO> attachments = message.attachments();
-            if (attachments != null) {
-                for (AttachmentDTO attachment : attachments) {
-                    if (!isImageAttachment(attachment)) {
-                        continue;
-                    }
-                    int[] size = attachmentDisplaySize(attachment, attachment.url(), availableWidth);
-                    totalH += ATTACHMENT_GAP + size[1];
-                    attachmentNodes.get(attachmentIndex).layout(renderFrame, textX, cursorY, size[0], size[1]);
-                    cursorY += size[1] + ATTACHMENT_GAP;
-                    attachmentIndex++;
-                }
-            }
+            totalH += layoutAttachmentNodes(renderFrame, textX, editHintY + hintH, availableWidth);
             totalH += PAD_V;
         } else {
             editHintY = -1;
@@ -234,25 +219,8 @@ public class ChatMessageNode extends PositionedNode {
             int contentHeight = contentText.wrappedHeight(renderFrame, availableWidth, LINE_GAP);
             int contentY = nameY + nameH;
             totalH = PAD_V + nameH + contentHeight;
-
             contentNode.layout(renderFrame, textX, contentY, availableWidth, contentHeight);
-
-            int cursorY = contentY + contentHeight;
-            int attachmentIndex = 0;
-            List<AttachmentDTO> attachments = message.attachments();
-            if (attachments != null) {
-                for (AttachmentDTO attachment : attachments) {
-                    if (!isImageAttachment(attachment)) {
-                        continue;
-                    }
-                    cursorY += ATTACHMENT_GAP;
-                    int[] size = attachmentDisplaySize(attachment, attachment.url(), availableWidth);
-                    totalH += ATTACHMENT_GAP + size[1];
-                    attachmentNodes.get(attachmentIndex).layout(renderFrame, textX, cursorY, size[0], size[1]);
-                    cursorY += size[1];
-                    attachmentIndex++;
-                }
-            }
+            totalH += layoutAttachmentNodes(renderFrame, textX, contentY + contentHeight, availableWidth);
             totalH += PAD_V;
         }
 
@@ -281,11 +249,35 @@ public class ChatMessageNode extends PositionedNode {
 
     private UiText buildContentText(RenderFrame frame) {
         String content = message.content() != null ? message.content() : "";
-        UiText text = UiText.of(content).color(frame.theme().textPrimary());
-        if (message.editedAt() != null && !message.editedAt().isBlank()) {
+        int textColor = message.pending() ? frame.theme().textSubtle() : frame.theme().textPrimary();
+        UiText text = UiText.of(content).color(textColor);
+        if (!message.pending() && message.editedAt() != null && !message.editedAt().isBlank()) {
             text = text.append(UiText.of(" (edited)").color(frame.theme().textMuted()).scale(EDITED_SCALE));
         }
         return text;
+    }
+
+    private int layoutAttachmentNodes(RenderFrame renderFrame, int textX, int startY, int availableWidth) {
+        List<AttachmentDTO> attachments = message.attachments();
+        if (attachments == null || attachmentNodes.isEmpty()) {
+            return 0;
+        }
+        int cursorY = startY;
+        int addedHeight = 0;
+        int attachmentIndex = 0;
+        for (AttachmentDTO attachment : attachments) {
+            if (!isImageAttachment(attachment)) {
+                continue;
+            }
+            cursorY += ATTACHMENT_GAP;
+            addedHeight += ATTACHMENT_GAP;
+            int[] size = attachmentDisplaySize(attachment, attachment.url(), availableWidth);
+            attachmentNodes.get(attachmentIndex).layout(renderFrame, textX, cursorY, size[0], size[1]);
+            cursorY += size[1];
+            addedHeight += size[1];
+            attachmentIndex++;
+        }
+        return addedHeight;
     }
 
     private static boolean isImageAttachment(AttachmentDTO attachment) {
@@ -331,11 +323,6 @@ public class ChatMessageNode extends PositionedNode {
     private class AuthorRowNode extends UiNode {
 
         @Override
-        public void layout(RenderFrame renderFrame, int positionX, int positionY, int width, int height) {
-            bounds().set(positionX, positionY, width, height);
-        }
-
-        @Override
         protected void renderSelf(RenderFrame frame, float deltaSeconds) {
             String authorName = resolveAuthorName();
             String timestamp = formatTimestamp();
@@ -365,11 +352,6 @@ public class ChatMessageNode extends PositionedNode {
     }
 
     private class ContentNode extends UiNode {
-
-        @Override
-        public void layout(RenderFrame renderFrame, int positionX, int positionY, int width, int height) {
-            bounds().set(positionX, positionY, width, height);
-        }
 
         @Override
         protected void renderSelf(RenderFrame frame, float deltaSeconds) {

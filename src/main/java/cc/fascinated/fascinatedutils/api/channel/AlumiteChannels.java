@@ -21,6 +21,7 @@ public class AlumiteChannels {
     private final Map<String, Channel> channelsById = new ConcurrentHashMap<>();
     private final Map<String, List<Message>> messagesByChannel = new ConcurrentHashMap<>();
     private final Map<String, Boolean> hasMoreByChannel = new ConcurrentHashMap<>();
+    private final Map<String, Message> pendingByNonce = new ConcurrentHashMap<>();
     private volatile List<Channel> channels = List.of();
 
     public AlumiteChannels(Alumite alumite, AlumiteUsers users) {
@@ -44,6 +45,7 @@ public class AlumiteChannels {
         channelsById.clear();
         messagesByChannel.clear();
         hasMoreByChannel.clear();
+        pendingByNonce.clear();
     }
 
     public List<Channel> all() {
@@ -130,8 +132,63 @@ public class AlumiteChannels {
         }
     }
 
-    void cacheSentMessage(String channelId, Message message) {
-        upsertChannelMessageFromSend(channelId, message);
+    void addOptimisticMessage(String channelId, String nonce, Message optimistic) {
+        if (!messagesByChannel.containsKey(channelId)) {
+            return;
+        }
+        List<Message> existing = messagesByChannel.get(channelId);
+        List<Message> updated = new ArrayList<>(existing);
+        updated.add(optimistic);
+        updated.sort(Comparator.comparing(Message::createdAt));
+        messagesByChannel.put(channelId, List.copyOf(updated));
+        pendingByNonce.put(nonce, optimistic);
+    }
+
+    void confirmOptimisticSend(String channelId, String nonce, Message realMessage) {
+        Message optimistic = pendingByNonce.remove(nonce);
+        if (optimistic == null) {
+            return;
+        }
+        List<Message> existing = messagesByChannel.get(channelId);
+        if (existing == null) {
+            return;
+        }
+        boolean wsAlreadyDelivered = existing.stream()
+                .anyMatch(message -> message.id().equals(realMessage.id()) && !message.pending());
+        List<Message> withoutTemp = new ArrayList<>(existing.stream()
+                .filter(message -> !message.id().equals(optimistic.id()))
+                .toList());
+        if (!wsAlreadyDelivered) {
+            realMessage.markPending();
+            withoutTemp.add(realMessage);
+        }
+        withoutTemp.sort(Comparator.comparing(Message::createdAt));
+        messagesByChannel.put(channelId, List.copyOf(withoutTemp));
+        Channel channel = get(channelId);
+        if (channel != null) {
+            User author = realMessage.user();
+            String authorName = author != null ? author.minecraftName() : null;
+            applyChannelLastMessage(channel, realMessage.createdAt(),
+                    new LastMessagePreview(realMessage.id(), realMessage.content(), authorName, realMessage.attachments()));
+        }
+    }
+
+    void removeOptimisticMessage(String channelId, String nonce) {
+        Message optimistic = pendingByNonce.remove(nonce);
+        if (optimistic == null) {
+            return;
+        }
+        List<Message> existing = messagesByChannel.get(channelId);
+        if (existing == null) {
+            return;
+        }
+        String tempId = optimistic.id();
+        List<Message> updated = existing.stream()
+                .filter(message -> !message.id().equals(tempId))
+                .toList();
+        if (updated.size() != existing.size()) {
+            messagesByChannel.put(channelId, updated);
+        }
     }
 
     public void onChannelCreate(ChannelDetailDTO dto) {
@@ -159,6 +216,18 @@ public class AlumiteChannels {
 
     public void onMessageCreate(String channelId, ChannelMessageDTO messageDto) {
         Message message = AlumiteModelMapper.toChannelMessage(messageDto);
+        // If this is a WS echo confirming our own pending-sent message, confirm in place without replacing.
+        List<Message> existing = messagesByChannel.get(channelId);
+        if (existing != null) {
+            for (Message candidate : existing) {
+                if (candidate.id().equals(message.id()) && candidate.pending()) {
+                    candidate.confirm();
+                    FascinatedEventBus.INSTANCE.post(new ChannelMessageCreateEvent(channelId, candidate));
+                    return;
+                }
+            }
+        }
+        // Normal path: another user's message, or WS arrived before HTTP returned.
         upsertChannelMessage(channelId, message);
         FascinatedEventBus.INSTANCE.post(new ChannelMessageCreateEvent(channelId, message));
         Channel channel = get(channelId);
@@ -231,15 +300,6 @@ public class AlumiteChannels {
         channel.applyLastMessageAt(lastMessageAt);
         channel.applyLastMessagePreview(preview);
         channels = List.copyOf(resortChannels(new ArrayList<>(channels)));
-    }
-
-    private void upsertChannelMessageFromSend(String channelId, Message message) {
-        upsertChannelMessage(channelId, message);
-        Channel channel = get(channelId);
-        if (channel != null) {
-            String authorName = message.user().minecraftName();
-            applyChannelLastMessage(channel, message.createdAt(), new LastMessagePreview(message.id(), message.content(), authorName, message.attachments()));
-        }
     }
 
     private void upsertChannelMessage(String channelId, Message message) {

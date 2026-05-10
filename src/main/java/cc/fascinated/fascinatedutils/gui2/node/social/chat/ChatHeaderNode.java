@@ -44,6 +44,7 @@ public class ChatHeaderNode extends SocialPanelHeaderNode {
             UserStatus status = dm.recipient().userStatus();
             return (status != null ? status : UserStatus.OFFLINE).color();
         });
+        avatar.left(PADDING).alignY(0.5f);
         addChild(avatar);
 
         nameText = new TextNode(() -> {
@@ -85,12 +86,10 @@ public class ChatHeaderNode extends SocialPanelHeaderNode {
     @Override
     public void layout(RenderFrame renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
         super.layout(renderFrame, parentX, parentY, parentWidth, parentHeight);
-        int separatorHeight = renderFrame.theme().separatorThickness();
         int posX = bounds().positionX();
         int posY = bounds().positionY();
         int width = bounds().width();
-        int height = bounds().height() - separatorHeight;
-        avatar.layout(renderFrame, posX + PADDING, posY + (height - AVATAR_SIZE) / 2, AVATAR_SIZE, AVATAR_SIZE);
+        int height = bounds().height() - renderFrame.theme().separatorThickness();
 
         Channel channel = channelSupplier.get();
         DmChannel dm = channel == null ? null : channel.asDmChannel();

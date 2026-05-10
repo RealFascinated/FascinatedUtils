@@ -56,6 +56,7 @@ public class SelfProfileNode extends PositionedNode {
                     UserStatus status = selfUser().preferredUserStatus();
                     return status != null ? status.color() : UserStatus.OFFLINE.color();
                 });
+        avatar.left(CARD_INSET_H + CARD_PAD).alignY(0.5f);
         addChild(avatar);
 
         nameText = new TextNode(() -> {
@@ -115,9 +116,6 @@ public class SelfProfileNode extends PositionedNode {
         int cardY = bounds().positionY() + CARD_INSET_V;
         int cardW = bounds().width() - CARD_INSET_H * 2;
         int cardH = bounds().height() - CARD_INSET_V * 2;
-
-        int avatarY = cardY + (cardH - AVATAR_SIZE) / 2;
-        avatar.layout(renderFrame, cardX + CARD_PAD, avatarY, AVATAR_SIZE, AVATAR_SIZE);
 
         int textX = cardX + CARD_PAD + AVATAR_SIZE + AVATAR_TEXT_GAP;
         int textW = Math.max(0, cardW - CARD_PAD - AVATAR_SIZE - AVATAR_TEXT_GAP - CARD_PAD);

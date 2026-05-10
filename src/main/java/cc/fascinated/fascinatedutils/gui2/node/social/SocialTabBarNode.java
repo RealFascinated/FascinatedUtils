@@ -44,6 +44,7 @@ public class SocialTabBarNode extends PositionedNode {
             UiTheme theme = UiThemeRepository.get();
             return activeTab == Tab.CHAT ? theme.tabActiveFill() : chatSegment.isHovered() ? theme.tabHoverFill() : 0;
         });
+        chatBg.left(0).widthRel(0.5f).fullHeight();
         addChild(chatBg);
 
         friendsBg = new RectNode();
@@ -51,17 +52,23 @@ public class SocialTabBarNode extends PositionedNode {
             UiTheme theme = UiThemeRepository.get();
             return activeTab != Tab.CHAT ? theme.tabActiveFill() : friendsSegment.isHovered() ? theme.tabHoverFill() : 0;
         });
+        friendsBg.leftRel(0.5f).right(0).fullHeight();
         addChild(friendsBg);
 
         underline = new RectNode();
         underline.setFillResolver(UiTheme::accent);
         underline.setCornerRadius(UNDERLINE_H / 2);
+        underline.fullWidth().bottom(0).height(UNDERLINE_H);
         addChild(underline);
 
         chatTab = new TextNode(() -> chatLabel).setTextAlign(0.5f, 0.5f);
+        chatTab.setColorResolver(theme -> activeTab == Tab.CHAT ? theme.textPrimary() : theme.textMuted());
+        chatTab.left(0).widthRel(0.5f).fullHeight();
         addChild(chatTab);
 
         friendsTab = new TextNode(() -> friendsLabel).setTextAlign(0.5f, 0.5f);
+        friendsTab.setColorResolver(theme -> activeTab != Tab.CHAT ? theme.textPrimary() : theme.textMuted());
+        friendsTab.leftRel(0.5f).right(0).fullHeight();
         addChild(friendsTab);
 
         badge = new BadgeNode(() -> incomingRequestBadgeCount);
@@ -69,6 +76,8 @@ public class SocialTabBarNode extends PositionedNode {
         addChild(badge);
 
         // Segments are added last so they sit on top in hit-test order.
+        chatSegment.left(0).widthRel(0.5f).fullHeight();
+        friendsSegment.leftRel(0.5f).right(0).fullHeight();
         addChild(chatSegment);
         addChild(friendsSegment);
     }
@@ -111,31 +120,10 @@ public class SocialTabBarNode extends PositionedNode {
     @Override
     public void layout(RenderFrame renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
         super.layout(renderFrame, parentX, parentY, parentWidth, parentHeight);
-        int posX = bounds().positionX();
-        int posY = bounds().positionY();
-        int width = bounds().width();
-        int height = bounds().height();
-        int halfW = width / 2;
-
-        chatBg.layout(renderFrame, posX, posY, halfW, height);
-        friendsBg.layout(renderFrame, posX + halfW, posY, halfW, height);
-
         boolean chatActive = activeTab == Tab.CHAT;
-        int underlineY = posY + height - UNDERLINE_H;
-        if (chatActive) {
-            underline.layout(renderFrame, posX + UNDERLINE_INSET, underlineY, halfW - UNDERLINE_INSET * 2, UNDERLINE_H);
-        } else {
-            underline.layout(renderFrame, posX + halfW + UNDERLINE_INSET, underlineY, halfW - UNDERLINE_INSET * 2, UNDERLINE_H);
-        }
-
-        chatTab.setColorArgb(chatActive ? UiThemeRepository.get().textPrimary() : UiThemeRepository.get().textMuted());
-        chatTab.layout(renderFrame, posX, posY, halfW, height);
-
-        friendsTab.setColorArgb(!chatActive ? UiThemeRepository.get().textPrimary() : UiThemeRepository.get().textMuted());
-        friendsTab.layout(renderFrame, posX + halfW, posY, halfW, height);
-
-        chatSegment.layout(renderFrame, posX, posY, halfW, height);
-        friendsSegment.layout(renderFrame, posX + halfW, posY, halfW, height);
+        int halfW = bounds().width() / 2;
+        int underlineX = bounds().positionX() + (chatActive ? UNDERLINE_INSET : halfW + UNDERLINE_INSET);
+        underline.layout(renderFrame, underlineX, bounds().positionY() + bounds().height() - UNDERLINE_H, halfW - UNDERLINE_INSET * 2, UNDERLINE_H);
     }
 
     private static class TabSegmentNode extends PositionedNode {
@@ -175,11 +163,6 @@ public class SocialTabBarNode extends PositionedNode {
             }
             onPress.run();
             return true;
-        }
-
-        @Override
-        public void layout(RenderFrame renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
-            bounds().set(parentX, parentY, parentWidth, parentHeight);
         }
     }
 }

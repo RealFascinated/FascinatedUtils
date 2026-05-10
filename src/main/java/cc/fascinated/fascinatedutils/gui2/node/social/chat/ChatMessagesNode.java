@@ -98,7 +98,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
                 editingFound = true;
                 TextboxInputNode editInput = buildEditInput(message);
                 messageNode.setEditInput(editInput);
-            } else {
+            } else if (!message.pending()) {
                 messageNode.setOnContextMenu((pointerX, pointerY) -> {
                     boolean own = isOwnMessage(message);
                     GlobalContextMenu.open(() -> {

@@ -1,7 +1,9 @@
 package cc.fascinated.fascinatedutils.gui2.node.social.chat;
 
+import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.node.ButtonNode;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
@@ -14,7 +16,8 @@ class AttachButtonNode extends ButtonNode {
         super(null);
         setVariant(ButtonVariant.GHOST);
         setLabel("+");
-        setOnPress(() -> {
+        setOnPress(() -> AlumiteMod.SCHEDULED_POOL.execute(() -> {
+            String selected;
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 PointerBuffer filters = stack.mallocPointer(4);
                 filters.put(stack.UTF8("*.png"));
@@ -22,11 +25,12 @@ class AttachButtonNode extends ButtonNode {
                 filters.put(stack.UTF8("*.jpeg"));
                 filters.put(stack.UTF8("*.gif"));
                 filters.flip();
-                String selected = TinyFileDialogs.tinyfd_openFileDialog("Select Image", "", filters, "Image Files", false);
-                if (selected != null) {
-                    pendingAttachment.set(Path.of(selected));
-                }
+                selected = TinyFileDialogs.tinyfd_openFileDialog("Select Image", "", filters, "Image Files", false);
             }
-        });
+            if (selected != null) {
+                Path path = Path.of(selected);
+                Minecraft.getInstance().execute(() -> pendingAttachment.set(path));
+            }
+        }));
     }
 }

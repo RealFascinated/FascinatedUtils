@@ -9,10 +9,12 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.*;
 
 @Getter
@@ -62,9 +64,24 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         }
         String messageContent = (content == null || content.isEmpty()) ? null : content;
         ChannelMessageDTO dto = alumite.sendChannelMessage(channelId, new SendChannelMessageBodyDTO(messageContent, attachmentIds.isEmpty() ? null : attachmentIds));
-        Message message = AlumiteModelMapper.toChannelMessage(dto);
-        alumite.channels().cacheSentMessage(channelId, message);
-        return message;
+        return AlumiteModelMapper.toChannelMessage(dto);
+    }
+
+    public void insertOptimisticMessage(String nonce, @Nullable String content) {
+        String selfId = alumite.users().selfUser() != null ? alumite.users().selfUser().user().id() : null;
+        if (selfId == null) {
+            return;
+        }
+        Message optimistic = Message.optimistic("opt-" + nonce, channelId, selfId, content, Instant.now().toString());
+        alumite.channels().addOptimisticMessage(channelId, nonce, optimistic);
+    }
+
+    public void confirmOptimisticSend(String nonce, Message realMessage) {
+        alumite.channels().confirmOptimisticSend(channelId, nonce, realMessage);
+    }
+
+    public void removeOptimisticMessage(String nonce) {
+        alumite.channels().removeOptimisticMessage(channelId, nonce);
     }
 
     public AttachmentDTO uploadAttachment(byte[] data, String filename) throws AlumiteApiException {

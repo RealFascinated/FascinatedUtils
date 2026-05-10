@@ -7,8 +7,10 @@ import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.core.UiStateStore;
 import cc.fascinated.fascinatedutils.gui2.node.TextboxInputNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
+import net.minecraft.client.Minecraft;
 
 import java.nio.file.Path;
+import java.util.UUID;
 
 public class ChatComposerNode extends PositionedNode {
 
@@ -49,19 +51,28 @@ public class ChatComposerNode extends PositionedNode {
                 return;
             }
             composerDraft.set("");
+            String nonce = UUID.randomUUID().toString();
+            channel.insertOptimisticMessage(nonce, trimmedText.isBlank() ? null : trimmedText);
             if (attachment != null) {
                 pendingAttachment.set(null);
+                Path captured = attachment;
                 AlumiteMod.SCHEDULED_POOL.execute(() -> {
                     try {
-                        channel.sendMessage(trimmedText, attachment);
+                        var real = channel.sendMessage(trimmedText, captured);
+                        Minecraft.getInstance().execute(() -> channel.confirmOptimisticSend(nonce, real));
                     } catch (Exception ignored) {
+                        Minecraft.getInstance().execute(() -> channel.removeOptimisticMessage(nonce));
                     }
                 });
             } else {
-                try {
-                    channel.sendMessage(trimmedText);
-                } catch (Exception ignored) {
-                }
+                AlumiteMod.SCHEDULED_POOL.execute(() -> {
+                    try {
+                        var real = channel.sendMessage(trimmedText);
+                        Minecraft.getInstance().execute(() -> channel.confirmOptimisticSend(nonce, real));
+                    } catch (Exception ignored) {
+                        Minecraft.getInstance().execute(() -> channel.removeOptimisticMessage(nonce));
+                    }
+                });
             }
         });
         addChild(composerInput);

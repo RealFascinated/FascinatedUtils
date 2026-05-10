@@ -18,7 +18,10 @@ import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerContextMenuNo
 import cc.fascinated.fascinatedutils.gui2.node.social.player.SelfProfileNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.StatusMenuNode;
 import cc.fascinated.fascinatedutils.gui2.screens.RootScreen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -29,12 +32,15 @@ public class SocialScreen extends RootScreen {
     private static final int DIVIDER_WIDTH = 1;
     private static final int PROFILE_PANE_HEIGHT = 52;
 
+    private UiStateStore stateStore;
+
     public SocialScreen() {
         super(Component.translatable("alumite.social.title"));
     }
 
     @Override
     protected UiNode composeContent(UiStateStore stateStore) {
+        this.stateStore = stateStore;
         UiState<String> selectedChannelId = stateStore.state("social.channel", null);
         UiState<Boolean> statusMenuOpen = stateStore.state("social.statusMenu.open", false);
         UiState<Float> statusMenuPositionX = stateStore.state("social.statusMenu.x", 0f);
@@ -130,6 +136,56 @@ public class SocialScreen extends RootScreen {
             rightPane.addChild(new FriendsPanelNode(contextMenuHandler,
                     user -> openDmWithUser(user, selectedChannelId)));
         }
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        if (super.keyPressed(event)) {
+            return true;
+        }
+        if (stateStore == null) {
+            return false;
+        }
+        int key = event.key();
+        if (key != GLFW.GLFW_KEY_ENTER && key != GLFW.GLFW_KEY_KP_ENTER) {
+            return false;
+        }
+        String channelId = stateStore.<String>state("social.channel", null).get();
+        if (channelId == null) {
+            return false;
+        }
+        stateStore.requestFocus("social.chat-composer");
+        return true;
+    }
+
+    @Override
+    public boolean charTyped(CharacterEvent event) {
+        if (super.charTyped(event)) {
+            return true;
+        }
+        if (stateStore == null) {
+            return false;
+        }
+        String channelId = stateStore.<String>state("social.channel", null).get();
+        if (channelId == null) {
+            return false;
+        }
+        int codepoint = event.codepoint();
+        if (codepoint < 0x20 || codepoint > 0xFFFF) {
+            return false;
+        }
+        char typed = (char) codepoint;
+        UiState<String> draft = stateStore.state("social.composer.draft." + channelId, "");
+        UiState<Integer> caretState = stateStore.state("social.composer.caret." + channelId, Integer.MAX_VALUE);
+        UiState<Integer> selectionState = stateStore.state("social.composer.selection." + channelId, -1);
+        String text = draft.get();
+        int caretPos = caretState.get();
+        int actualCaret = caretPos == Integer.MAX_VALUE ? text.length() : Math.min(caretPos, text.length());
+        draft.set(text.substring(0, actualCaret) + typed + text.substring(actualCaret));
+        caretState.set(actualCaret + 1);
+        selectionState.set(-1);
+        stateStore.requestFocus("social.chat-composer");
+        return true;
     }
 
     private void openDmWithUser(User user, UiState<String> selectedChannelId) {

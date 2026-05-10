@@ -75,6 +75,7 @@ public class PlayerRowNode extends PositionedNode {
 
         height(ROW_HEIGHT).fullWidth();
         addChild(bg);
+        avatar.left(AVATAR_PADDING).alignY(0.5f);
         addChild(avatar);
         addChild(nameText);
         addChild(subtextNode);
@@ -123,6 +124,7 @@ public class PlayerRowNode extends PositionedNode {
         }
         trailingAction = actionNode;
         trailingActionSize = Math.round(actionSize);
+        trailingAction.setVisible(false);
         addChild(trailingAction);
         return this;
     }
@@ -135,12 +137,18 @@ public class PlayerRowNode extends PositionedNode {
     @Override
     public boolean onPointerEnter(float pointerX, float pointerY) {
         hovered = true;
+        if (trailingAction != null) {
+            trailingAction.setVisible(true);
+        }
         return false;
     }
 
     @Override
     public boolean onPointerLeave(float pointerX, float pointerY) {
         hovered = false;
+        if (trailingAction != null) {
+            trailingAction.setVisible(false);
+        }
         return false;
     }
 
@@ -166,9 +174,6 @@ public class PlayerRowNode extends PositionedNode {
         int width = bounds().width();
         int height = bounds().height();
 
-        int avatarY = posY + (height - avatarSize) / 2;
-        avatar.layout(renderFrame, posX + AVATAR_PADDING, avatarY, avatarSize, avatarSize);
-
         int trailingReserved = trailingAction != null ? AVATAR_PADDING + trailingActionSize : AVATAR_PADDING;
         int textX = posX + AVATAR_PADDING + avatarSize + 8;
         int textW = Math.max(0, width - textX + posX - trailingReserved);
@@ -193,7 +198,6 @@ public class PlayerRowNode extends PositionedNode {
         if (trailingAction != null) {
             int actionY = posY + (height - trailingActionSize) / 2;
             trailingAction.layout(renderFrame, posX + width - AVATAR_PADDING - trailingActionSize, actionY, trailingActionSize, trailingActionSize);
-            trailingAction.setVisible(hovered);
         }
     }
 }

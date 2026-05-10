@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.gui2.node.social.chat;
 
 import cc.fascinated.fascinatedutils.caches.UrlTextureCache;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui2.core.UiNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.node.ButtonNode;
 import cc.fascinated.fascinatedutils.gui2.node.CardNode;
@@ -23,6 +22,7 @@ class PendingAttachmentPreviewNode extends PositionedNode {
 
     PendingAttachmentPreviewNode(UiState<Path> pendingAttachment) {
         this.pendingAttachment = pendingAttachment;
+        fullWidth().height(HEIGHT);
 
         addChild(new CardNode()
                 .setCornerRadius(CORNER_RADIUS)
@@ -52,14 +52,6 @@ class PendingAttachmentPreviewNode extends PositionedNode {
     @Override
     public boolean blocksHitWhenEmpty() {
         return true;
-    }
-
-    @Override
-    public void layout(RenderFrame frame, int parentX, int parentY, int parentWidth, int parentHeight) {
-        bounds().set(parentX, parentY, parentWidth, HEIGHT);
-        for (UiNode child : childrenView()) {
-            child.layout(frame, parentX, parentY, parentWidth, HEIGHT);
-        }
     }
 
     @Override
