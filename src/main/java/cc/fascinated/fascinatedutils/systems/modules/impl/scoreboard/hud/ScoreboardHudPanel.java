@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.hud;
 
-import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.mixin.scoreboard.GuiScoreDisplayOrderAccessor;
+import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.ScoreboardModule;

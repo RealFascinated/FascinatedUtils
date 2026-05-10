@@ -42,6 +42,7 @@ public class MessageContextMenuNode extends ContextMenuNode {
             onClose.run();
         }));
         if (isOwn) {
+            items.add(Item.separator());
             items.add(new Item("Delete Message", theme -> theme.danger(), () -> {
                 onClose.run();
                 msgPendingDelete.set(message);

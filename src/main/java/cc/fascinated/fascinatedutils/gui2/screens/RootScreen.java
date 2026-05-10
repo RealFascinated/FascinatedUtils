@@ -1,12 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.screens;
 
-import cc.fascinated.fascinatedutils.gui2.core.GlobalContextMenu;
-import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui2.core.UIScale;
-import cc.fascinated.fascinatedutils.gui2.core.UiEvent;
-import cc.fascinated.fascinatedutils.gui2.core.UiHost;
-import cc.fascinated.fascinatedutils.gui2.core.UiNode;
-import cc.fascinated.fascinatedutils.gui2.core.UiStateStore;
+import cc.fascinated.fascinatedutils.gui2.core.*;
 import cc.fascinated.fascinatedutils.gui2.render.GuiRenderFrame;
 import cc.fascinated.fascinatedutils.gui2.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;

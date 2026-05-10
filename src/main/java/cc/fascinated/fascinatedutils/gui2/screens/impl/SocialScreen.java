@@ -7,11 +7,7 @@ import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
 import cc.fascinated.fascinatedutils.api.friend.PendingFriendRequest;
 import cc.fascinated.fascinatedutils.api.user.User;
-import cc.fascinated.fascinatedutils.gui2.core.GlobalContextMenu;
-import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui2.core.UiNode;
-import cc.fascinated.fascinatedutils.gui2.core.UiState;
-import cc.fascinated.fascinatedutils.gui2.core.UiStateStore;
+import cc.fascinated.fascinatedutils.gui2.core.*;
 import cc.fascinated.fascinatedutils.gui2.node.DividerNode;
 import cc.fascinated.fascinatedutils.gui2.node.PanelNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.FriendsPanelNode;
@@ -22,7 +18,6 @@ import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerContextMenuNo
 import cc.fascinated.fascinatedutils.gui2.node.social.player.SelfProfileNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.StatusMenuNode;
 import cc.fascinated.fascinatedutils.gui2.screens.RootScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;

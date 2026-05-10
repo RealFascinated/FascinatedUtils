@@ -7,7 +7,6 @@ import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.gui2.core.ScrollColumnNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.SocialSectionLabelNode;
-import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerContextMenuHandler;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;

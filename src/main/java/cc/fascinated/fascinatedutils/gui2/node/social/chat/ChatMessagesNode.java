@@ -5,19 +5,18 @@ import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.Message;
+import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.gui2.core.GlobalContextMenu;
 import cc.fascinated.fascinatedutils.gui2.core.ScrollColumnNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.core.UiStateStore;
-import cc.fascinated.fascinatedutils.gui2.node.TextboxInputNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
+import cc.fascinated.fascinatedutils.gui2.node.TextboxInputNode;
+import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerContextMenuHandler;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 import cc.fascinated.fascinatedutils.oldgui.toast.Toast;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-
-import cc.fascinated.fascinatedutils.api.user.User;
-import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerContextMenuHandler;
 
 import java.time.Instant;
 import java.time.LocalDate;

@@ -172,6 +172,7 @@ public class ContextMenuNode extends PositionedNode {
                 rowY += buttonHeight;
             } else {
                 int separatorRectY = rowY + (SEPARATOR_HEIGHT - SEPARATOR_LINE_HEIGHT) / 2;
+                separatorRects.get(separatorIndex).size(buttonWidth, SEPARATOR_LINE_HEIGHT);
                 separatorRects.get(separatorIndex).layout(renderFrame, menuPositionX + MENU_PADDING, separatorRectY, buttonWidth, SEPARATOR_LINE_HEIGHT);
                 separatorIndex++;
                 rowY += SEPARATOR_HEIGHT;

@@ -2,11 +2,7 @@ package cc.fascinated.fascinatedutils.gui2.screens.impl;
 
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
-import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui2.core.UIScale;
-import cc.fascinated.fascinatedutils.gui2.core.UiEvent;
-import cc.fascinated.fascinatedutils.gui2.core.UiHost;
-import cc.fascinated.fascinatedutils.gui2.core.UiNode;
+import cc.fascinated.fascinatedutils.gui2.core.*;
 import cc.fascinated.fascinatedutils.gui2.node.ButtonNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.render.GuiRenderFrame;

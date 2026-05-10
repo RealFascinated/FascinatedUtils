@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.gui2.render;
 
 import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 import cc.fascinated.fascinatedutils.oldgui.GuiTheme;
+import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.renderer.MeshBuilder;
 import cc.fascinated.fascinatedutils.renderer.Renderer2D;
 import net.minecraft.client.Minecraft;
@@ -11,7 +12,6 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import org.jspecify.annotations.Nullable;
-import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

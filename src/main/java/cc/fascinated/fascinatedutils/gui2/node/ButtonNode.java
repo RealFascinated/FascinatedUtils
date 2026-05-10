@@ -31,6 +31,7 @@ public class ButtonNode extends PositionedNode {
     private Function<UiTheme, Integer> labelColorResolver;
     private Identifier leftIcon;
     private Identifier rightIcon;
+    private Identifier centerIcon;
     private Integer iconTintArgb;
 
     public ButtonNode(String label) {
@@ -101,6 +102,11 @@ public class ButtonNode extends PositionedNode {
 
     public ButtonNode setLeftAlignLabel(boolean leftAlignLabel) {
         this.leftAlignLabel = leftAlignLabel;
+        return this;
+    }
+
+    public ButtonNode setIconCenter(Identifier centerIcon) {
+        this.centerIcon = centerIcon;
         return this;
     }
 
@@ -204,6 +210,10 @@ public class ButtonNode extends PositionedNode {
         UiText labelText = UiText.of(label()).color(textColor);
         int textWidth = labelText.width(renderFrame);
         int iconY = by + (bh - ICON_SIZE) / 2;
+        if (centerIcon != null) {
+            int iconTint = iconTintArgb != null ? iconTintArgb : renderFrame.theme().textPrimary();
+            renderFrame.drawTexture(centerIcon, bx + (bw - ICON_SIZE) / 2, iconY, ICON_SIZE, ICON_SIZE, iconTint);
+        }
         if (leftIcon != null) {
             int iconTint = iconTintArgb != null ? iconTintArgb : renderFrame.theme().textPrimary();
             renderFrame.drawTexture(leftIcon, bx + ICON_PADDING, iconY, ICON_SIZE, ICON_SIZE, iconTint);

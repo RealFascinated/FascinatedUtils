@@ -2,10 +2,10 @@ package cc.fascinated.fascinatedutils.mixin;
 
 import cc.fascinated.fascinatedutils.common.FrameCounter;
 import cc.fascinated.fascinatedutils.gui2.core.UIScale;
+import cc.fascinated.fascinatedutils.mixininterface.IGameRenderer;
 import cc.fascinated.fascinatedutils.oldgui.screens.WidgetScreen;
 import cc.fascinated.fascinatedutils.oldgui.themes.FascinatedGuiTheme;
 import cc.fascinated.fascinatedutils.oldgui.toast.ToastManager;
-import cc.fascinated.fascinatedutils.mixininterface.IGameRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;

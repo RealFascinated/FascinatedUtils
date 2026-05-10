@@ -1,16 +1,16 @@
 package cc.fascinated.fascinatedutils.gui2.node;
 
-import cc.fascinated.fascinatedutils.oldgui.core.TextLineLayout;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiNode;
 import cc.fascinated.fascinatedutils.gui2.layout.AxisConstraints;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import cc.fascinated.fascinatedutils.gui2.render.UiText;
+import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
+import cc.fascinated.fascinatedutils.oldgui.core.TextLineLayout;
 
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 
 public class TextNode extends PositionedNode {
     private Supplier<String> textSupplier;
