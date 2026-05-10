@@ -5,7 +5,7 @@ import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.core.UiStateStore;
-import cc.fascinated.fascinatedutils.gui2.node.TextboxInputNode;
+import cc.fascinated.fascinatedutils.gui2.node.input.TextboxInputNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import net.minecraft.client.Minecraft;
 

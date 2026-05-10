@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.gui2.node.social.chat;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.node.ButtonNode;
 import net.minecraft.client.Minecraft;
@@ -15,7 +16,7 @@ class AttachButtonNode extends ButtonNode {
     AttachButtonNode(UiState<Path> pendingAttachment) {
         super(null);
         setVariant(ButtonVariant.GHOST);
-        setLabel("+");
+        setIconCenter(ModUiTextures.ADD.getId());
         setOnPress(() -> AlumiteMod.SCHEDULED_POOL.execute(() -> {
             String selected;
             try (MemoryStack stack = MemoryStack.stackPush()) {

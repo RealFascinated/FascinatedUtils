@@ -11,7 +11,7 @@ import cc.fascinated.fascinatedutils.gui2.core.ScrollColumnNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.core.UiStateStore;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
-import cc.fascinated.fascinatedutils.gui2.node.TextboxInputNode;
+import cc.fascinated.fascinatedutils.gui2.node.input.TextboxInputNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerContextMenuHandler;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 import cc.fascinated.fascinatedutils.oldgui.toast.Toast;

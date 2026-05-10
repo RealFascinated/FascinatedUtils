@@ -18,7 +18,7 @@ import net.minecraft.network.chat.Component;
 
 public class ChatPanelNode extends PositionedNode {
 
-    private static final int HEADER_HEIGHT = 40;
+    private static final int HEADER_HEIGHT = 32;
     private static final int PADDING = 6;
 
     private final ChatHeaderNode header;

@@ -13,7 +13,7 @@ import cc.fascinated.fascinatedutils.gui2.core.UiNode;
 import cc.fascinated.fascinatedutils.gui2.node.ClickableNode;
 import cc.fascinated.fascinatedutils.gui2.node.ImageNode;
 import cc.fascinated.fascinatedutils.gui2.node.RectNode;
-import cc.fascinated.fascinatedutils.gui2.node.TextboxInputNode;
+import cc.fascinated.fascinatedutils.gui2.node.input.TextboxInputNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerAvatarNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import cc.fascinated.fascinatedutils.gui2.render.UiText;

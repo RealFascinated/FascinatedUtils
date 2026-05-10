@@ -13,10 +13,10 @@ public class ConfirmPopupNode extends PopupNode {
     private static final int PAD_TOP = 16;
     private static final int PAD_BOTTOM = 12;
     private static final int MESSAGE_TITLE_GAP = 6;
-    private static final int PAD_HORIZONTAL = 20;
     private static final int BUTTON_HEIGHT = 22;
     private static final int BUTTON_GAP = 8;
-    private static final int BUTTON_WIDTH = (POPUP_WIDTH - PAD_HORIZONTAL * 2 - BUTTON_GAP) / 2;
+    private static final int BUTTON_WIDTH = 76;
+    private static final int BUTTON_PAIR_START_X = (POPUP_WIDTH - BUTTON_WIDTH * 2 - BUTTON_GAP) / 2;
 
     private String title = "";
     private String message = null;
@@ -44,9 +44,11 @@ public class ConfirmPopupNode extends PopupNode {
         addPopupChild(messageTextNode);
 
         cancelButton = new ButtonNode(cancelLabel).setOnPress(() -> onCancel.run());
-        confirmButton = new ButtonNode(confirmLabel).setOnPress(() -> onConfirm.run());
-
+        cancelButton.left(BUTTON_PAIR_START_X).bottom(PAD_BOTTOM).size(BUTTON_WIDTH, BUTTON_HEIGHT);
         addPopupChild(cancelButton);
+
+        confirmButton = new ButtonNode(confirmLabel).setOnPress(() -> onConfirm.run());
+        confirmButton.left(BUTTON_PAIR_START_X + BUTTON_WIDTH + BUTTON_GAP).bottom(PAD_BOTTOM).size(BUTTON_WIDTH, BUTTON_HEIGHT);
         addPopupChild(confirmButton);
     }
 
@@ -110,11 +112,5 @@ public class ConfirmPopupNode extends PopupNode {
         }
 
         super.layout(renderFrame, parentX, parentY, parentWidth, parentHeight);
-
-        int buttonY = popupY() + popupHeight() - PAD_BOTTOM - BUTTON_HEIGHT;
-        int buttonStartX = popupX() + PAD_HORIZONTAL;
-
-        cancelButton.layout(renderFrame, buttonStartX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT);
-        confirmButton.layout(renderFrame, buttonStartX + BUTTON_WIDTH + BUTTON_GAP, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT);
     }
 }

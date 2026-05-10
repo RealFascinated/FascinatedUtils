@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.gui2.node;
+package cc.fascinated.fascinatedutils.gui2.node.input;
 
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
