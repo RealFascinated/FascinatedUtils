@@ -130,7 +130,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
 
     private TextboxInputNode buildEditInput(Message message) {
         String draft = editingDraft.get();
-        if (draft == null || draft.isEmpty()) {
+        if (draft == null) {
             draft = message.content() != null ? message.content() : "";
         }
         UiState<Integer> editCaret = stateStore.state("social.chat.edit-input.caret", Integer.MAX_VALUE);

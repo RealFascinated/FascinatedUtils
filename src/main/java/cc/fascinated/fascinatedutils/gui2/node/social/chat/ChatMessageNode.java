@@ -47,6 +47,7 @@ public class ChatMessageNode extends PositionedNode {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm a");
 
     private static final int EDIT_INPUT_GAP = 2;
+    private static final int EDIT_HINT_GAP = 4;
     private static final float EDITED_SCALE = 0.8f;
 
     private final Message message;
@@ -56,6 +57,7 @@ public class ChatMessageNode extends PositionedNode {
     private final ContentNode contentNode;
     private final List<ClickableNode> attachmentNodes = new ArrayList<>();
     private TextboxInputNode editInput;
+    private int editHintY = -1;
     private BiConsumer<Float, Float> onContextMenu;
     private BiConsumer<Float, Float> onAuthorClick;
     private boolean hovered;
@@ -146,6 +148,15 @@ public class ChatMessageNode extends PositionedNode {
     }
 
     @Override
+    public boolean onClick(float pointerX, float pointerY, int button) {
+        if (button == 1 && onContextMenu != null && !authorRow.contains(pointerX, pointerY)) {
+            onContextMenu.accept(pointerX, pointerY);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public boolean onPointerEnter(float pointerX, float pointerY) {
         hovered = true;
         return false;
@@ -199,9 +210,12 @@ public class ChatMessageNode extends PositionedNode {
 
         if (editInput != null) {
             int editInputHeight = editInput.preferredHeight(renderFrame, availableWidth);
-            totalH = PAD_V + nameH + EDIT_INPUT_GAP + editInputHeight + PAD_V;
-            editInput.layout(renderFrame, textX, nameY + nameH + EDIT_INPUT_GAP, availableWidth, editInputHeight);
+            int editInputY = nameY + nameH + EDIT_INPUT_GAP;
+            editInput.layout(renderFrame, textX, editInputY, availableWidth, editInputHeight);
+            editHintY = editInputY + editInputHeight + EDIT_HINT_GAP;
+            totalH = PAD_V + nameH + EDIT_INPUT_GAP + editInputHeight + EDIT_HINT_GAP + renderFrame.fontHeight() + PAD_V;
         } else {
+            editHintY = -1;
             UiText contentText = buildContentText(renderFrame);
             int contentHeight = contentText.wrappedHeight(renderFrame, availableWidth, LINE_GAP);
             int contentY = nameY + nameH;
@@ -232,6 +246,19 @@ public class ChatMessageNode extends PositionedNode {
         hoverBg.layout(renderFrame, parentX, parentY, parentWidth, totalH);
         avatar.layout(renderFrame, parentX + 4, nameY, AVATAR_SIZE, AVATAR_SIZE);
         authorRow.layout(renderFrame, textX, nameY, availableWidth, lineHeight);
+    }
+
+    @Override
+    protected void renderSelf(RenderFrame renderFrame, float deltaSeconds) {
+        if (editInput == null || editHintY < 0) {
+            return;
+        }
+        int hintX = bounds().positionX() + 4 + AVATAR_SIZE + AVATAR_GAP;
+        UiText.of("escape to ").color(renderFrame.theme().textPrimary())
+                .append(UiText.of("cancel").color(renderFrame.theme().textMuted()))
+                .append(UiText.of(" \u2022 enter to ").color(renderFrame.theme().textPrimary()))
+                .append(UiText.of("save").color(renderFrame.theme().textMuted()))
+                .draw(renderFrame, hintX, editHintY);
     }
 
     private UiText buildContentText(RenderFrame frame) {
@@ -338,10 +365,6 @@ public class ChatMessageNode extends PositionedNode {
 
         @Override
         public boolean onClick(float pointerX, float pointerY, int button) {
-            if (button == 1 && onContextMenu != null) {
-                onContextMenu.accept(pointerX, pointerY);
-                return true;
-            }
             return false;
         }
     }

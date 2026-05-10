@@ -6,10 +6,11 @@ import java.util.function.Consumer;
 
 public class ScrollColumnNode extends UiNode {
     private static final int SCROLLBAR_WIDTH = 3;
+    private static final int SCROLLBAR_LEFT_MARGIN = 4;
     private static final int SCROLLBAR_RIGHT_MARGIN = 2;
     private static final int SCROLLBAR_VERTICAL_PADDING = 2;
     private static final int SCROLLBAR_MIN_THUMB_HEIGHT = 16;
-    private static final int SCROLLBAR_TOTAL = SCROLLBAR_WIDTH + SCROLLBAR_RIGHT_MARGIN;
+    private static final int SCROLLBAR_TOTAL = SCROLLBAR_LEFT_MARGIN + SCROLLBAR_WIDTH + SCROLLBAR_RIGHT_MARGIN;
 
     private int gap;
     private int scrollOffset;
@@ -162,7 +163,7 @@ public class ScrollColumnNode extends UiNode {
         }
         contentHeight += gap * Math.max(0, visibleCount - 1);
 
-        // Reserve scrollbar space only when content actually overflows.
+        // Reserve scrollbar space (including left margin) only when content actually overflows.
         boolean needsScrollbar = contentHeight > height;
         int contentWidth = needsScrollbar ? width - SCROLLBAR_TOTAL : width;
 
