@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.gui2.screens.impl;
 
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui2.core.SpacerNode;
 import cc.fascinated.fascinatedutils.gui2.core.StackNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
@@ -14,7 +15,6 @@ import cc.fascinated.fascinatedutils.gui2.node.TextureNode;
 import cc.fascinated.fascinatedutils.gui2.node.screenshot.SendScreenshotPopupNode;
 import cc.fascinated.fascinatedutils.gui2.screens.RootScreen;
 import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
-import cc.fascinated.fascinatedutils.systems.TextureManager;
 import cc.fascinated.fascinatedutils.systems.screenshot.Screenshot;
 import cc.fascinated.fascinatedutils.systems.screenshot.ScreenshotManager;
 import net.minecraft.client.Minecraft;
@@ -94,48 +94,55 @@ public class ScreenshotViewerScreen extends RootScreen {
         PanelNode bottomBar = new PanelNode();
         bottomBar.fullWidth().bottom(0).height(BAR_HEIGHT);
 
+        PositionedNode barRow = new PositionedNode();
+        barRow.left(PADDING).right(PADDING).topRel(0.5f, 0, 0.5f).height(BUTTON_HEIGHT).rowGap(4);
+
         ButtonNode backButton = new ButtonNode("Back");
-        backButton.size(60, BUTTON_HEIGHT).left(PADDING).topRel(0.5f, 0, 0.5f);
+        backButton.height(BUTTON_HEIGHT);
         backButton.setLeftIcon(ModUiTextures.BACK.getId());
         backButton.setOnPress(() -> Minecraft.getInstance().setScreen(new ScreenshotScreen()));
         backButton.setRounded(true);
-        bottomBar.addChild(backButton);
+        barRow.addChild(backButton);
 
         ButtonNode copyButton = new ButtonNode("Copy");
-        copyButton.size(60, BUTTON_HEIGHT).left(PADDING + 64).topRel(0.5f, 0, 0.5f);
+        copyButton.height(BUTTON_HEIGHT);
         copyButton.setLeftIcon(ModUiTextures.COPY.getId());
         copyButton.setOnPress(screenshot::copyToClipboard);
         copyButton.setRounded(true);
-        bottomBar.addChild(copyButton);
+        barRow.addChild(copyButton);
 
         ButtonNode deleteButton = new ButtonNode("Delete");
-        deleteButton.size(70, BUTTON_HEIGHT).left(PADDING + 128).topRel(0.5f, 0, 0.5f);
+        deleteButton.height(BUTTON_HEIGHT);
         deleteButton.setLeftIcon(ModUiTextures.TRASH.getId());
         deleteButton.setVariant(ButtonNode.ButtonVariant.DANGER);
         deleteButton.setOnPress(() -> confirmDelete.set(true));
         deleteButton.setRounded(true);
-        bottomBar.addChild(deleteButton);
+        barRow.addChild(deleteButton);
 
         ButtonNode sendButton = new ButtonNode("Send to Friend");
-        sendButton.size(90, BUTTON_HEIGHT).left(PADDING + 202).topRel(0.5f, 0, 0.5f);
+        sendButton.height(BUTTON_HEIGHT);
         sendButton.setOnPress(() -> showSendPopup.set(true));
         sendButton.setLeftIcon(ModUiTextures.SHARE.getId());
         sendButton.setRounded(true);
-        bottomBar.addChild(sendButton);
+        barRow.addChild(sendButton);
+
+        barRow.addChild(new SpacerNode());
 
         ButtonNode prevButton = new ButtonNode("");
-        prevButton.size(NAV_BUTTON_WIDTH, BUTTON_HEIGHT).right(PADDING + NAV_BUTTON_WIDTH + 4).topRel(0.5f, 0, 0.5f);
+        prevButton.height(BUTTON_HEIGHT).width(NAV_BUTTON_WIDTH);
         prevButton.setIconCenter(ModUiTextures.CHEVRON_LEFT.getId());
         prevButton.setOnPress(() -> navigate(-1));
         prevButton.setRounded(true);
-        bottomBar.addChild(prevButton);
+        barRow.addChild(prevButton);
 
         ButtonNode nextButton = new ButtonNode("");
-        nextButton.size(NAV_BUTTON_WIDTH, BUTTON_HEIGHT).right(PADDING).topRel(0.5f, 0, 0.5f);
+        nextButton.height(BUTTON_HEIGHT).width(NAV_BUTTON_WIDTH);
         nextButton.setIconCenter(ModUiTextures.CHEVRON_RIGHT.getId());
         nextButton.setOnPress(() -> navigate(1));
         nextButton.setRounded(true);
-        bottomBar.addChild(nextButton);
+        barRow.addChild(nextButton);
+
+        bottomBar.addChild(barRow);
 
         StackNode root = new StackNode();
         root.addChild(background);

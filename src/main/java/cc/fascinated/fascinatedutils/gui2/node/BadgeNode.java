@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.node;
 
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui2.layout.AxisConstraints;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import cc.fascinated.fascinatedutils.gui2.render.UiText;
 
@@ -38,21 +37,19 @@ public class BadgeNode extends PositionedNode {
             return;
         }
         setVisible(true);
-        String text = count > cap ? cap + "+" : String.valueOf(count);
-        int intrinsicW = renderFrame.measureTextWidth(text, true) + PAD_H * 2;
-        int intrinsicH = renderFrame.fontHeight() + PAD_V * 2;
+        super.layout(renderFrame, parentX, parentY, parentWidth, parentHeight);
+    }
 
-        AxisConstraints horiz = boxLayout().horizontal();
-        AxisConstraints vert = boxLayout().vertical();
-        int resolvedW = (horiz.hasSizeConstraint() || (horiz.hasStartConstraint() && horiz.hasEndConstraint()))
-                ? horiz.resolveSize(parentWidth)
-                : intrinsicW;
-        int resolvedH = (vert.hasSizeConstraint() || (vert.hasStartConstraint() && vert.hasEndConstraint()))
-                ? vert.resolveSize(parentHeight)
-                : intrinsicH;
-        int resolvedX = horiz.resolvePosition(parentX, parentWidth, resolvedW);
-        int resolvedY = vert.resolvePosition(parentY, parentHeight, resolvedH);
-        bounds().set(resolvedX, resolvedY, resolvedW, resolvedH);
+    @Override
+    protected int intrinsicWidth(RenderFrame renderFrame, int parentWidth) {
+        int count = countSupplier.get();
+        String text = count > cap ? cap + "+" : String.valueOf(count);
+        return renderFrame.measureTextWidth(text, true) + PAD_H * 2;
+    }
+
+    @Override
+    protected int intrinsicHeight(RenderFrame renderFrame, int parentHeight, int resolvedWidth) {
+        return renderFrame.fontHeight() + PAD_V * 2;
     }
 
     @Override

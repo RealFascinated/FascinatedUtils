@@ -132,12 +132,14 @@ public class ScreenshotScreen extends RootScreen {
         ButtonNode closeButton = new ButtonNode("Close");
         closeButton.size(80, BUTTON_HEIGHT).left(PADDING).topRel(0.5f, 0, 0.5f);
         closeButton.setOnPress(() -> Minecraft.getInstance().setScreen(null));
+        closeButton.setRounded(true);
         bottomBar.addChild(closeButton);
 
         ButtonNode openFolderButton = new ButtonNode("Open Folder");
         openFolderButton.size(90, BUTTON_HEIGHT).right(PADDING).topRel(0.5f, 0, 0.5f);
         openFolderButton.setOnPress(() -> Util.getPlatform().openFile(
                 Paths.get(Minecraft.getInstance().gameDirectory.getAbsolutePath(), "screenshots").toFile()));
+        openFolderButton.setRounded(true);
         bottomBar.addChild(openFolderButton);
 
         PositionedNode scrollArea = new PositionedNode();

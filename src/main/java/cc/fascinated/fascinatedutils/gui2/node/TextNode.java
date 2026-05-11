@@ -1,8 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.node;
 
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui2.core.UiNode;
-import cc.fascinated.fascinatedutils.gui2.layout.AxisConstraints;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import cc.fascinated.fascinatedutils.gui2.render.UiText;
 import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
@@ -80,26 +78,17 @@ public class TextNode extends PositionedNode {
     }
 
     @Override
-    public void layout(RenderFrame renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
-        AxisConstraints horizontalConstraints = boxLayout().horizontal();
-        AxisConstraints verticalConstraints = boxLayout().vertical();
+    protected int intrinsicWidth(RenderFrame renderFrame, int parentWidth) {
+        return measureTextWidth(renderFrame);
+    }
 
-        int resolvedWidth = resolveAxisSize(horizontalConstraints, parentWidth, measureTextWidth(renderFrame), "horizontal");
-        int intrinsicHeight;
+    @Override
+    protected int intrinsicHeight(RenderFrame renderFrame, int parentHeight, int resolvedWidth) {
         if (wrap) {
             int lineCount = Math.max(1, TextLineLayout.wrapLines(currentText(), resolvedWidth, segment -> renderFrame.measureTextWidth(segment, bold)).size());
-            intrinsicHeight = lineCount * renderFrame.fontHeight();
-        } else {
-            intrinsicHeight = renderFrame.fontHeight();
+            return lineCount * renderFrame.fontHeight();
         }
-        int resolvedHeight = resolveAxisSize(verticalConstraints, parentHeight, intrinsicHeight, "vertical");
-        int resolvedX = horizontalConstraints.resolvePosition(parentX, parentWidth, resolvedWidth);
-        int resolvedY = verticalConstraints.resolvePosition(parentY, parentHeight, resolvedHeight);
-        bounds().set(resolvedX, resolvedY, resolvedWidth, resolvedHeight);
-
-        for (UiNode childNode : childrenView()) {
-            childNode.layout(renderFrame, resolvedX, resolvedY, resolvedWidth, resolvedHeight);
-        }
+        return renderFrame.fontHeight();
     }
 
     @Override
@@ -125,13 +114,6 @@ public class TextNode extends PositionedNode {
             int textPositionY = bounds().positionY() + Math.round((bounds().height() - renderFrame.fontHeight() * scale) * verticalAlign);
             UiText.of(text).color(textColor).shadow(shadow).bold(bold).scale(scale).draw(renderFrame, textPositionX, textPositionY);
         }
-    }
-
-    private int resolveAxisSize(AxisConstraints axisConstraints, int parentSize, int intrinsicSize, String axisLabel) {
-        if (axisConstraints.hasSizeConstraint() || (axisConstraints.hasStartConstraint() && axisConstraints.hasEndConstraint())) {
-            return axisConstraints.resolveSize(parentSize, axisLabel, debugPath());
-        }
-        return intrinsicSize;
     }
 
     private int measureTextWidth(RenderFrame renderFrame) {

@@ -37,7 +37,6 @@ public class ButtonNode extends PositionedNode {
 
     public ButtonNode(String label) {
         this.labelSupplier = label == null ? () -> "" : () -> label;
-        size(120, 20);
     }
 
     public ButtonNode setLabel(String label) {
@@ -114,6 +113,16 @@ public class ButtonNode extends PositionedNode {
     public ButtonNode setIconSize(int iconSize) {
         this.iconSize = Math.max(1, iconSize);
         return this;
+    }
+
+    @Override
+    protected int intrinsicWidth(RenderFrame renderFrame, int parentWidth) {
+        return (int) minimumWidth(renderFrame);
+    }
+
+    @Override
+    protected int intrinsicHeight(RenderFrame renderFrame, int parentHeight, int resolvedWidth) {
+        return 20;
     }
 
     public float minimumWidth(RenderFrame renderFrame) {

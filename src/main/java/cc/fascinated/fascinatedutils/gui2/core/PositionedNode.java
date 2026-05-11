@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.core;
 
+import cc.fascinated.fascinatedutils.gui2.layout.AxisConstraints;
 import cc.fascinated.fascinatedutils.gui2.layout.BoxLayoutSpec;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
@@ -154,31 +155,82 @@ public class PositionedNode extends UiNode {
         return this;
     }
 
+    protected int intrinsicWidth(RenderFrame renderFrame, int parentWidth) {
+        return 0;
+    }
+
+    protected int intrinsicHeight(RenderFrame renderFrame, int parentHeight, int resolvedWidth) {
+        return 0;
+    }
+
+    protected final int resolveAxisSize(AxisConstraints axisConstraints, int parentSize, int intrinsicSize, String axisLabel) {
+        if (axisConstraints.hasSizeConstraint() || (axisConstraints.hasStartConstraint() && axisConstraints.hasEndConstraint())) {
+            return axisConstraints.resolveSize(parentSize, axisLabel, debugPath());
+        }
+        return intrinsicSize;
+    }
+
     @Override
     public void layout(RenderFrame renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
-        int resolvedWidth = boxLayout.horizontal().resolveSize(parentWidth, "horizontal", debugPath());
-        int resolvedHeight = boxLayout.vertical().resolveSize(parentHeight, "vertical", debugPath());
+        int resolvedWidth = resolveAxisSize(boxLayout.horizontal(), parentWidth, intrinsicWidth(renderFrame, parentWidth), "horizontal");
+        int resolvedHeight = resolveAxisSize(boxLayout.vertical(), parentHeight, intrinsicHeight(renderFrame, parentHeight, resolvedWidth), "vertical");
         int resolvedX = boxLayout.horizontal().resolvePosition(parentX, parentWidth, resolvedWidth);
         int resolvedY = boxLayout.vertical().resolvePosition(parentY, parentHeight, resolvedHeight);
         bounds().set(resolvedX, resolvedY, resolvedWidth, resolvedHeight);
 
         if (columnGap >= 0) {
+            int visibleCount = 0;
+            int spacerCount = 0;
+            int totalFixed = 0;
+            for (UiNode childNode : childrenView()) {
+                if (!childNode.visible()) continue;
+                visibleCount++;
+                if (childNode instanceof SpacerNode) {
+                    spacerCount++;
+                } else {
+                    childNode.layout(renderFrame, resolvedX, resolvedY, resolvedWidth, resolvedHeight);
+                    totalFixed += childNode.bounds().height();
+                }
+            }
+            int totalGap = columnGap * Math.max(0, visibleCount - 1);
+            int spacerHeight = spacerCount > 0 ? Math.max(0, (resolvedHeight - totalFixed - totalGap) / spacerCount) : 0;
             int cursorY = resolvedY;
             for (UiNode childNode : childrenView()) {
-                if (!childNode.visible()) {
-                    continue;
+                if (!childNode.visible()) continue;
+                if (childNode instanceof SpacerNode) {
+                    childNode.layout(renderFrame, resolvedX, cursorY, resolvedWidth, spacerHeight);
+                    cursorY += spacerHeight + columnGap;
+                } else {
+                    childNode.layout(renderFrame, resolvedX, cursorY, resolvedWidth, resolvedHeight);
+                    cursorY += childNode.bounds().height() + columnGap;
                 }
-                childNode.layout(renderFrame, resolvedX, cursorY, resolvedWidth, resolvedHeight);
-                cursorY += childNode.bounds().height() + columnGap;
             }
         } else if (rowGap >= 0) {
+            int visibleCount = 0;
+            int spacerCount = 0;
+            int totalFixed = 0;
+            for (UiNode childNode : childrenView()) {
+                if (!childNode.visible()) continue;
+                visibleCount++;
+                if (childNode instanceof SpacerNode) {
+                    spacerCount++;
+                } else {
+                    childNode.layout(renderFrame, resolvedX, resolvedY, resolvedWidth, resolvedHeight);
+                    totalFixed += childNode.bounds().width();
+                }
+            }
+            int totalGap = rowGap * Math.max(0, visibleCount - 1);
+            int spacerWidth = spacerCount > 0 ? Math.max(0, (resolvedWidth - totalFixed - totalGap) / spacerCount) : 0;
             int cursorX = resolvedX;
             for (UiNode childNode : childrenView()) {
-                if (!childNode.visible()) {
-                    continue;
+                if (!childNode.visible()) continue;
+                if (childNode instanceof SpacerNode) {
+                    childNode.layout(renderFrame, cursorX, resolvedY, spacerWidth, resolvedHeight);
+                    cursorX += spacerWidth + rowGap;
+                } else {
+                    childNode.layout(renderFrame, cursorX, resolvedY, resolvedWidth, resolvedHeight);
+                    cursorX += childNode.bounds().width() + rowGap;
                 }
-                childNode.layout(renderFrame, cursorX, resolvedY, resolvedWidth, resolvedHeight);
-                cursorX += childNode.bounds().width() + rowGap;
             }
         } else {
             for (UiNode childNode : childrenView()) {
