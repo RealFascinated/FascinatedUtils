@@ -9,7 +9,7 @@ import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerAvatarNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 
-class ChatConversationStartNode extends PositionedNode {
+class ChatConversationStartNode extends PositionedNode<ChatConversationStartNode> {
 
     private static final int PAD_V = 16;
     private static final int AVATAR_SIZE = 48;
@@ -37,13 +37,13 @@ class ChatConversationStartNode extends PositionedNode {
                 ? "This is the beginning of your direct message history with " + displayName + "."
                 : "This is the beginning of " + (channel.name() != null ? channel.name() : "this group") + ".";
 
-        nameText = new TextNode(displayName)
+        nameText = new TextNode(() -> displayName)
                 .setColorResolver(UiTheme::textPrimary)
                 .setBold(true)
                 .setTextAlign(0.5f, 0.5f);
         nameText.fullWidth();
 
-        subtitleText = new TextNode(subtitle)
+        subtitleText = new TextNode(() -> subtitle)
                 .setColorResolver(UiTheme::textMuted)
                 .setTextAlign(0.5f, 0f)
                 .setWrap(true);

@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.node.social.chat;
 
-import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
@@ -192,7 +192,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
         }
         editingMessageId.set(null);
         editingDraft.set("");
-        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+        Constants.EXECUTORS.execute(() -> {
             try {
                 channel.editMessage(message.id(), newContent);
             } catch (AlumiteApiException exception) {
@@ -216,7 +216,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
         }
         String oldestMessageId = messages.get(0).id();
         loadingMessagesChannelId.set(channel.id());
-        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+        Constants.EXECUTORS.execute(() -> {
             try {
                 ChannelMessagePageDTO page = channel.fetchMessagesPage(50, oldestMessageId, null);
                 channel.mergeOlderMessagesPage(page);
@@ -232,7 +232,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
             return;
         }
         loadingMessagesChannelId.set(channel.id());
-        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+        Constants.EXECUTORS.execute(() -> {
             channel.fetchMessages(50);
             Minecraft.getInstance().execute(() -> loadingMessagesChannelId.set(null));
         });

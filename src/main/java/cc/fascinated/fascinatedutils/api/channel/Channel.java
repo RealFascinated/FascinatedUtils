@@ -105,20 +105,19 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         alumite.channels().cacheReadState(channelId, lastReadMessageId);
     }
 
-    public void resolveMessages(int limit) throws AlumiteApiException {
-        if (messagesOrNull() != null) {
-            return;
+    public void loadMoreMessages(int limit) throws AlumiteApiException {
+        List<Message> existing = messagesOrNull();
+        String beforeMessageId = null;
+        if (existing != null && !existing.isEmpty()) {
+            beforeMessageId = existing.getFirst().id();
         }
-        ChannelMessagePageDTO page = alumite.getChannelMessages(channelId, Map.of("limit", limit));
-        List<ChannelMessageDTO> dtoMessages = page.messages() == null ? List.of() : page.messages();
-        List<Message> loaded = dtoMessages.stream().map(AlumiteModelMapper::toChannelMessage).sorted(Comparator.comparing(Message::createdAt)).toList();
-        alumite.channels().storeMessages(channelId, loaded);
-        alumite.channels().storeHasMore(channelId, page.hasMore());
+        ChannelMessagePageDTO page = fetchMessagesPage(limit, beforeMessageId, null);
+        mergeOlderMessagesPage(page);
     }
 
     public void fetchMessages(int limit) {
         try {
-            resolveMessages(limit);
+            loadMoreMessages(limit);
         } catch (AlumiteApiException exception) {
             Client.LOG.warn("[{}] fetch messages: {}", getClass().getSimpleName(), exception.getMessage());
         }

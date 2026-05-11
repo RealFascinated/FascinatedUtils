@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.node.social.chat;
 
-import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
@@ -56,7 +56,7 @@ public class ChatComposerNode extends PositionedNode<ChatComposerNode> {
             if (attachment != null) {
                 pendingAttachment.set(null);
                 Path captured = attachment;
-                AlumiteMod.SCHEDULED_POOL.execute(() -> {
+                Constants.EXECUTORS.execute(() -> {
                     try {
                         var real = channel.sendMessage(trimmedText, captured);
                         Minecraft.getInstance().execute(() -> channel.confirmOptimisticSend(nonce, real));
@@ -65,7 +65,7 @@ public class ChatComposerNode extends PositionedNode<ChatComposerNode> {
                     }
                 });
             } else {
-                AlumiteMod.SCHEDULED_POOL.execute(() -> {
+                Constants.EXECUTORS.execute(() -> {
                     try {
                         var real = channel.sendMessage(trimmedText);
                         Minecraft.getInstance().execute(() -> channel.confirmOptimisticSend(nonce, real));

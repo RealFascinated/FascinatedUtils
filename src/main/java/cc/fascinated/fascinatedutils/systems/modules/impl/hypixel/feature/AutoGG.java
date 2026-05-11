@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.hypixel.feature;
 
-import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.PatternHandler;
 import cc.fascinated.fascinatedutils.common.PlaceholderAPI;
@@ -90,7 +90,7 @@ public class AutoGG extends Feature<HypixelModule> {
                 case NORMAL, CASUAL -> {
                     if (PatternHandler.INSTANCE.getPattern(trigger.pattern).matcher(message).matches()) {
                         lastAutoGG = System.currentTimeMillis();
-                        AlumiteMod.SCHEDULED_POOL.schedule(() -> PlayerUtils.runCommand("ac gg"), 1, TimeUnit.SECONDS);
+                        Constants.SCHEDULED_POOL.schedule(() -> PlayerUtils.runCommand("ac gg"), 1, TimeUnit.SECONDS);
                         return;
                     }
                 }

@@ -7,6 +7,10 @@ import com.google.gson.GsonBuilder;
 import lombok.NonNull;
 import net.fabricmc.loader.api.FabricLoader;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
 public class Constants {
 
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().registerTypeAdapter(ChannelDetailDTO.class, new ChannelDetailDTODeserializer()).create();
@@ -15,4 +19,7 @@ public class Constants {
     @NonNull public static final String GAME_VERSION = FabricLoader.getInstance().getModContainer("minecraft").map(container -> container.getMetadata().getVersion().getFriendlyString()).orElse("?");
 
     public static final boolean DEBUG_MODE = FabricLoader.getInstance().isDevelopmentEnvironment();
+
+    public static final ExecutorService EXECUTORS = Executors.newFixedThreadPool(4);
+    public static final ScheduledExecutorService SCHEDULED_POOL = Executors.newScheduledThreadPool(4);
 }

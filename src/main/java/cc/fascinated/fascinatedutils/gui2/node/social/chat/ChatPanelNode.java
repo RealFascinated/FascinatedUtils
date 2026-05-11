@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.node.social.chat;
 
-import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
@@ -104,7 +104,7 @@ public class ChatPanelNode extends PositionedNode<ChatPanelNode> {
     }
 
     private static void deleteMessage(Channel channel, Message message) {
-        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+        Constants.EXECUTORS.execute(() -> {
             try {
                 channel.deleteMessage(message.id());
             } catch (AlumiteApiException exception) {

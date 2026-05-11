@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.node.social.channel;
 
-import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
@@ -47,7 +47,7 @@ public class CloseChannelNode extends PositionedNode<CloseChannelNode> {
         if (button != 0) {
             return false;
         }
-        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+        Constants.EXECUTORS.execute(() -> {
             try {
                 channel.hide();
             } catch (Exception ignored) {

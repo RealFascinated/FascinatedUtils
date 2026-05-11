@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.screens.impl;
 
-import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
@@ -207,7 +207,7 @@ public class SocialScreen extends RootScreen {
             selectChannel.accept(existing.id());
             return;
         }
-        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+        Constants.EXECUTORS.execute(() -> {
             try {
                 DmChannel dm = Alumite.INSTANCE.channels().openDm(user.id());
                 selectChannel.accept(dm.id());
@@ -220,7 +220,7 @@ public class SocialScreen extends RootScreen {
         if (user == null || Alumite.INSTANCE == null || !Alumite.INSTANCE.users().isFriend(user.id())) {
             return;
         }
-        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+        Constants.EXECUTORS.execute(() -> {
             try {
                 Alumite.INSTANCE.removeFriend(user.id());
             } catch (Exception ignored) {

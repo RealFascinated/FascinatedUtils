@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.systems.screenshot;
 
 import cc.fascinated.fascinatedutils.oldgui.toast.Toast;
 import cc.fascinated.fascinatedutils.systems.TextureManager;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.Client;
 import net.minecraft.network.chat.Component;
 import lombok.Getter;
@@ -71,30 +72,32 @@ public class Screenshot {
      * Copies this screenshot image to the system clipboard.
      */
     public void copyToClipboard() {
-        try {
-            BufferedImage img = ImageIO.read(path.toFile());
-            if (img == null) return;
-            Transferable transferable = new Transferable() {
-                @Override
-                public DataFlavor[] getTransferDataFlavors() {
-                    return new DataFlavor[]{DataFlavor.imageFlavor};
-                }
+        Constants.EXECUTORS.execute(() -> {
+            try {
+                BufferedImage img = ImageIO.read(path.toFile());
+                if (img == null) return;
+                Transferable transferable = new Transferable() {
+                    @Override
+                    public DataFlavor[] getTransferDataFlavors() {
+                        return new DataFlavor[]{DataFlavor.imageFlavor};
+                    }
 
-                @Override
-                public boolean isDataFlavorSupported(DataFlavor flavor) {
-                    return DataFlavor.imageFlavor.equals(flavor);
-                }
+                    @Override
+                    public boolean isDataFlavorSupported(DataFlavor flavor) {
+                        return DataFlavor.imageFlavor.equals(flavor);
+                    }
 
-                @Override
-                public @NonNull Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
-                    if (!isDataFlavorSupported(flavor)) throw new UnsupportedFlavorException(flavor);
-                    return img;
-                }
-            };
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(transferable, null);
-            Toast.show().message(Component.translatable("alumite.screenshot.copied").getString()).info();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+                    @Override
+                    public @NonNull Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
+                        if (!isDataFlavorSupported(flavor)) throw new UnsupportedFlavorException(flavor);
+                        return img;
+                    }
+                };
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(transferable, null);
+                Toast.show().message(Component.translatable("alumite.screenshot.copied").getString()).info();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 }

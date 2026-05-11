@@ -4,8 +4,7 @@ import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
 public class UiHost {
     private final UiInputRouter inputRouter = new UiInputRouter();
-    private boolean dirty = true;
-    private final UiStateStore stateStore = new UiStateStore(() -> dirty = true);
+    private final UiStateStore stateStore = new UiStateStore(() -> {});
     private UiNode root;
     private UiComposer composer;
 
@@ -19,7 +18,6 @@ public class UiHost {
 
     public void setComposer(UiComposer composer) {
         this.composer = composer;
-        this.dirty = true;
     }
 
     public void setRoot(UiNode root) {
@@ -73,10 +71,9 @@ public class UiHost {
     }
 
     private void recompose() {
-        if (composer == null || !dirty) {
+        if (composer == null) {
             return;
         }
-        dirty = false;
         String focusedNodeId = inputRouter.focusManager().focusedNode() != null
                 ? inputRouter.focusManager().focusedNode().nodeId()
                 : null;

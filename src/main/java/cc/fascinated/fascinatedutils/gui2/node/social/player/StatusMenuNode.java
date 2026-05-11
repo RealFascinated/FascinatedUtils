@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.node.social.player;
 
-import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
@@ -35,7 +35,7 @@ public class StatusMenuNode extends ContextMenuNode {
     }
 
     private static void submitUpdate(UserStatus status) {
-        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+        Constants.EXECUTORS.execute(() -> {
             try {
                 Alumite.INSTANCE.users().selfUser().updatePreferredUserStatus(status);
             } catch (Exception exception) {

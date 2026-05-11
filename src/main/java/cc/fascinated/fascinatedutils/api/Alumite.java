@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.api;
 
-import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.auth.json.*;
 import cc.fascinated.fascinatedutils.api.channel.AlumiteChannels;
@@ -183,7 +182,7 @@ public class Alumite {
 
     @EventHandler
     private void alumite$onAuthenticated(AlumiteAuthenticatedEvent event) {
-        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+        Constants.EXECUTORS.execute(() -> {
             Client.LOG.info("[Alumite] Fetching channels and social data...");
             try {
                 channels.refreshFromNetwork();

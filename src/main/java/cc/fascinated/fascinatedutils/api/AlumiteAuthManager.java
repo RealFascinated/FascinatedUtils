@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.api;
 
-import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.auth.json.ChallengeResponseDTO;
 import cc.fascinated.fascinatedutils.api.auth.json.RefreshResponseDTO;
 import cc.fascinated.fascinatedutils.api.auth.json.VerifyRequestDTO;
@@ -83,7 +83,7 @@ class AlumiteAuthManager {
     void onGatewayAuthExpired() {
         Client.LOG.info("[Alumite] Gateway refresh token expired, re-authenticating...");
         SessionState staleSession = session.getAndUpdate(state -> state != null ? new SessionState(state.accountKey(), null, null) : null);
-        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+        Constants.EXECUTORS.execute(() -> {
             if (staleSession != null && staleSession.refreshToken() != null && tryRefresh(staleSession.accountKey(), staleSession.refreshToken())) {
                 gateway.connect();
                 return;
@@ -144,7 +144,7 @@ class AlumiteAuthManager {
         try {
             long delayMs = Math.max(0L, Instant.parse(accessExpiresAt).toEpochMilli() - System.currentTimeMillis() - 60_000L);
             SessionState capturedSession = session.get();
-            tokenRefreshTask = AlumiteMod.SCHEDULED_POOL.schedule(() -> {
+            tokenRefreshTask = Constants.SCHEDULED_POOL.schedule(() -> {
                 if (capturedSession != null && capturedSession.refreshToken() != null) {
                     Client.LOG.info("[Alumite] Refreshing access token...");
                     tryRefresh(capturedSession.accountKey(), capturedSession.refreshToken());

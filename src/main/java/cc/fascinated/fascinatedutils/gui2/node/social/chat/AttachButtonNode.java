@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.node.social.chat;
 
-import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.node.ButtonNode;
@@ -17,7 +17,7 @@ class AttachButtonNode extends ButtonNode {
         super(null);
         setVariant(ButtonVariant.GHOST);
         setIconCenter(ModUiTextures.ADD.getId());
-        setOnPress(() -> AlumiteMod.SCHEDULED_POOL.execute(() -> {
+        setOnPress(() -> Constants.EXECUTORS.execute(() -> {
             String selected;
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 PointerBuffer filters = stack.mallocPointer(4);

@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.systems;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
 import cc.fascinated.fascinatedutils.gui2.core.PixelSize;
 
@@ -132,7 +133,7 @@ public class TextureManager {
             return null;
         }
         if (inFlight.add(id)) {
-            AlumiteMod.SCHEDULED_POOL.execute(task);
+            Constants.EXECUTORS.execute(task);
         }
         return null;
     }
