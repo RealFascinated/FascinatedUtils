@@ -231,7 +231,27 @@ public class TextureManager {
                     .header("User-Agent", AlumiteEnvironment.USER_AGENT)
                     .GET()
                     .build();
-            HttpResponse<byte[]> response = HTTP.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            HttpResponse<byte[]> response = null;
+            for (int attempt = 0; attempt <= 3; attempt++) {
+                response = HTTP.send(request, HttpResponse.BodyHandlers.ofByteArray());
+                if (response.statusCode() != 429) {
+                    break;
+                }
+                if (attempt == 3) {
+                    break;
+                }
+                long retryAfterMillis = response.headers().firstValue("Retry-After")
+                        .map(value -> {
+                            try {
+                                return Long.parseLong(value) * 1000L;
+                            } catch (NumberFormatException ignored) {
+                                return 1000L;
+                            }
+                        })
+                        .orElse(1000L);
+                LOGGER.warn("Attachment {} rate-limited (429), retrying in {}ms (attempt {}/3)", id, retryAfterMillis, attempt + 1);
+                Thread.sleep(retryAfterMillis);
+            }
             if (response.statusCode() != 200) {
                 LOGGER.warn("Failed to fetch attachment {}: HTTP {}", id, response.statusCode());
                 failed.add(id);
