@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 public class PositionedNode extends UiNode {
     private final BoxLayoutSpec boxLayout = new BoxLayoutSpec();
     private int columnGap = -1;
+    private int rowGap = -1;
 
     protected BoxLayoutSpec boxLayout() {
         return boxLayout;
@@ -148,6 +149,11 @@ public class PositionedNode extends UiNode {
         return this;
     }
 
+    public PositionedNode rowGap(int gap) {
+        this.rowGap = gap;
+        return this;
+    }
+
     @Override
     public void layout(RenderFrame renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
         int resolvedWidth = boxLayout.horizontal().resolveSize(parentWidth, "horizontal", debugPath());
@@ -164,6 +170,15 @@ public class PositionedNode extends UiNode {
                 }
                 childNode.layout(renderFrame, resolvedX, cursorY, resolvedWidth, resolvedHeight);
                 cursorY += childNode.bounds().height() + columnGap;
+            }
+        } else if (rowGap >= 0) {
+            int cursorX = resolvedX;
+            for (UiNode childNode : childrenView()) {
+                if (!childNode.visible()) {
+                    continue;
+                }
+                childNode.layout(renderFrame, cursorX, resolvedY, resolvedWidth, resolvedHeight);
+                cursorX += childNode.bounds().width() + rowGap;
             }
         } else {
             for (UiNode childNode : childrenView()) {

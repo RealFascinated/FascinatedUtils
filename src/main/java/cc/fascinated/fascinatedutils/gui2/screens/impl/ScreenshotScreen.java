@@ -11,7 +11,6 @@ import cc.fascinated.fascinatedutils.gui2.node.RectNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextureNode;
 import cc.fascinated.fascinatedutils.gui2.node.screenshot.SendScreenshotPopupNode;
-import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import cc.fascinated.fascinatedutils.gui2.screens.RootScreen;
 import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 import cc.fascinated.fascinatedutils.systems.screenshot.Screenshot;
@@ -63,17 +62,11 @@ public class ScreenshotScreen extends RootScreen {
             emptyLabel.full();
             scrollColumn.addChild(emptyLabel);
         } else {
-            GridNode grid = new GridNode() {
-                @Override
-                public void layout(RenderFrame renderFrame, int positionX, int positionY, int width, int height) {
-                    int cols = Math.max(1, width / MIN_CELL_WIDTH);
-                    setCols(cols);
-                    int cellWidth = cols > 1 ? (width - GAP * (cols - 1)) / cols : width;
-                    setRowHeight(cellWidth * 9 / 16 + CELL_FOOTER_HEIGHT);
-                    super.layout(renderFrame, positionX, positionY, width, height);
-                }
-            };
-            grid.setGap(GAP);
+            GridNode grid = new GridNode()
+                    .setMinCellWidth(MIN_CELL_WIDTH)
+                    .setCellAspectRatio(16f / 9f)
+                    .setRowFooterHeight(CELL_FOOTER_HEIGHT)
+                    .setGap(GAP);
             for (int i = 0; i < screenshots.size(); i++) {
                 final int screenshotIndex = i;
                 Screenshot screenshot = screenshots.get(i);
