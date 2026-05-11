@@ -10,7 +10,7 @@ import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
-public class ChannelRowNode extends PlayerRowNode {
+public class ChannelRowNode extends PlayerRowNode<ChannelRowNode> {
 
     public ChannelRowNode(Channel channel) {
         super(

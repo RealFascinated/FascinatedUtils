@@ -6,7 +6,7 @@ import cc.fascinated.fascinatedutils.gui2.render.UiText;
 
 import java.util.function.Supplier;
 
-public class BadgeNode extends PositionedNode {
+public class BadgeNode extends PositionedNode<BadgeNode> {
 
     private static final int PAD_H = 2;
     private static final int PAD_V = 1;

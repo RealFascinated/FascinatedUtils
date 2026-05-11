@@ -206,7 +206,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
     }
 
     private void addStatusRow(String text) {
-        TextNode emptyLabel = new TextNode(text).setColorArgb(UiThemeRepository.get().textSubtle());
+        TextNode emptyLabel = new TextNode(() -> text).setColorArgb(UiThemeRepository.get().textSubtle());
         emptyLabel.fullWidth().height(40);
         addChild(emptyLabel);
     }

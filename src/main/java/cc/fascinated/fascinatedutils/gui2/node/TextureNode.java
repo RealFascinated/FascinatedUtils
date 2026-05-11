@@ -13,7 +13,7 @@ import net.minecraft.resources.Identifier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class TextureNode extends PositionedNode {
+public class TextureNode extends PositionedNode<TextureNode> {
 
     private Supplier<Identifier> textureSupplier;
     private Supplier<PixelSize> naturalSizeSupplier;

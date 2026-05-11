@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 
-public class SocialSectionLabelNode extends PositionedNode {
+public class SocialSectionLabelNode extends PositionedNode<SocialSectionLabelNode> {
 
     private String label;
     private final TextNode text;

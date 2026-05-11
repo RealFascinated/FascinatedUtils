@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-class ChatDaySeparatorNode extends PositionedNode {
+class ChatDaySeparatorNode extends PositionedNode<ChatDaySeparatorNode> {
 
     private static final DateTimeFormatter LABEL_FORMATTER = DateTimeFormatter.ofPattern("MMMM d, yyyy");
     private static final int PAD_V = 6;

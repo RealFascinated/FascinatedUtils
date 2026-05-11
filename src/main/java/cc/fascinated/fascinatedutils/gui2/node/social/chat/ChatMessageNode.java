@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-public class ChatMessageNode extends PositionedNode {
+public class ChatMessageNode extends PositionedNode<ChatMessageNode> {
 
     private static final int AVATAR_SIZE = 20;
     private static final int AVATAR_GAP = 8;

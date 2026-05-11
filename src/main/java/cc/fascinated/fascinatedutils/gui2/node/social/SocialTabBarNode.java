@@ -9,7 +9,7 @@ import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 import net.minecraft.network.chat.Component;
 
-public class SocialTabBarNode extends PositionedNode {
+public class SocialTabBarNode extends PositionedNode<SocialTabBarNode> {
 
     public enum Tab {
         CHAT, FRIENDS

@@ -12,7 +12,7 @@ import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-public class PlayerRowNode extends PositionedNode {
+public class PlayerRowNode<T extends PlayerRowNode<T>> extends PositionedNode<T> {
 
     private static final int AVATAR_SIZE = 24;
     private static final int AVATAR_PADDING = 6;
@@ -33,6 +33,7 @@ public class PlayerRowNode extends PositionedNode {
 
     private boolean hovered;
     private boolean selected;
+    private boolean hoverEnabled = true;
 
     /**
      * Creates a player row node.
@@ -54,7 +55,7 @@ public class PlayerRowNode extends PositionedNode {
         bg.setCornerRadius(BG_CORNER_RADIUS);
         bg.setFillSupplier(() -> {
             UiTheme theme = UiThemeRepository.get();
-            return selected ? theme.rowSelectedFill() : hovered ? theme.rowHoverFill() : 0;
+            return selected ? theme.rowSelectedFill() : (hoverEnabled && hovered) ? theme.rowHoverFill() : 0;
         });
 
         nameText = new TextNode(displayNameSupplier)
@@ -73,35 +74,45 @@ public class PlayerRowNode extends PositionedNode {
         addChild(subtextNode);
     }
 
-    public PlayerRowNode setSelected(boolean selected) {
-        this.selected = selected;
-        return this;
+    @SuppressWarnings("unchecked")
+    protected T self() {
+        return (T) this;
     }
 
-    public PlayerRowNode setAvatarSize(int avatarSize) {
+    public T setSelected(boolean selected) {
+        this.selected = selected;
+        return self();
+    }
+
+    public T setHoverEnabled(boolean hoverEnabled) {
+        this.hoverEnabled = hoverEnabled;
+        return self();
+    }
+
+    public T setAvatarSize(int avatarSize) {
         this.avatarSize = avatarSize;
         avatar.size(avatarSize);
-        return this;
+        return self();
     }
 
-    public PlayerRowNode setRowHeight(int rowHeight) {
+    public T setRowHeight(int rowHeight) {
         height(rowHeight);
-        return this;
+        return self();
     }
 
-    public PlayerRowNode setTextScale(float textScale) {
+    public T setTextScale(float textScale) {
         this.textScale = textScale;
-        return this;
+        return self();
     }
 
-    public PlayerRowNode setOnPrimaryClick(Runnable onPrimaryClick) {
+    public T setOnPrimaryClick(Runnable onPrimaryClick) {
         this.onPrimaryClick = onPrimaryClick == null ? () -> {} : onPrimaryClick;
-        return this;
+        return self();
     }
 
-    public PlayerRowNode setOnSecondaryClick(BiConsumer<Float, Float> onSecondaryClick) {
+    public T setOnSecondaryClick(BiConsumer<Float, Float> onSecondaryClick) {
         this.onSecondaryClick = onSecondaryClick;
-        return this;
+        return self();
     }
 
     /**
@@ -110,7 +121,7 @@ public class PlayerRowNode extends PositionedNode {
      * @param actionNode the node to place on the trailing edge
      * @param actionSize width and height of the square action slot
      */
-    public PlayerRowNode setTrailingAction(UiNode actionNode, float actionSize) {
+    public T setTrailingAction(UiNode actionNode, float actionSize) {
         if (trailingAction != null) {
             removeChild(trailingAction);
         }
@@ -118,7 +129,7 @@ public class PlayerRowNode extends PositionedNode {
         trailingActionSize = Math.round(actionSize);
         trailingAction.setVisible(false);
         addChild(trailingAction);
-        return this;
+        return self();
     }
 
     @Override

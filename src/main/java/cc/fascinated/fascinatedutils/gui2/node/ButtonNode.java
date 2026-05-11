@@ -10,7 +10,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class ButtonNode extends PositionedNode {
+public class ButtonNode extends PositionedNode<ButtonNode> {
 
     public enum ButtonVariant {
         DEFAULT, GHOST, DANGER
@@ -35,8 +35,12 @@ public class ButtonNode extends PositionedNode {
     private Integer iconTintArgb;
     private int iconSize = ICON_SIZE;
 
-    public ButtonNode(String label) {
-        this.labelSupplier = label == null ? () -> "" : () -> label;
+    public ButtonNode() {
+        this.labelSupplier = () -> "";
+    }
+
+    public ButtonNode(Supplier<String> labelSupplier) {
+        this.labelSupplier = labelSupplier == null ? () -> "" : labelSupplier;
     }
 
     public ButtonNode setLabel(String label) {
@@ -237,7 +241,14 @@ public class ButtonNode extends PositionedNode {
         int leftTextInset = leftIcon != null ? ICON_PADDING + ICON_SIZE + ICON_TEXT_GAP : 0;
         int textAreaX = bx + leftTextInset;
         int textAreaWidth = Math.max(0, bw - leftTextInset);
-        int textX = (leftAlignLabel || leftIcon != null || rightIcon != null) ? textAreaX + ICON_PADDING : textAreaX + (textAreaWidth - textWidth) / 2;
+        int textX;
+        if (leftIcon != null) {
+            textX = textAreaX;
+        } else if (leftAlignLabel || rightIcon != null) {
+            textX = textAreaX + ICON_PADDING;
+        } else {
+            textX = textAreaX + (textAreaWidth - textWidth) / 2;
+        }
         int textY = by + (bh - renderFrame.fontHeight()) / 2;
         labelText.draw(renderFrame, textX, textY);
 

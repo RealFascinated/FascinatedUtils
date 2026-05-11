@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.gui2.node;
 
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 
-public class ClickOverlayNode extends PositionedNode {
+public class ClickOverlayNode extends PositionedNode<ClickOverlayNode> {
     private Runnable onPrimaryClick = () -> {};
 
     public ClickOverlayNode() {

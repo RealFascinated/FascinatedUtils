@@ -36,7 +36,7 @@ public class ScreenshotScreen extends RootScreen {
     private static final int CELL_FOOTER_HEIGHT = LABEL_HEIGHT + 4;
 
     public ScreenshotScreen() {
-        super(Component.literal("Screenshots"));
+        super(Component.translatable("alumite.screenshot.screen.title"));
     }
 
     @Override
@@ -51,14 +51,14 @@ public class ScreenshotScreen extends RootScreen {
 
         PanelNode topBar = new PanelNode();
         topBar.fullWidth().top(0).height(BAR_HEIGHT);
-        TextNode titleNode = new TextNode("%s Screenshots".formatted(NumberUtils.formatWithCommas(screenshots.size())));
+        TextNode titleNode = new TextNode(() -> Component.translatable("alumite.screenshot.screen.title_fmt", NumberUtils.formatWithCommas(screenshots.size())).getString());
         titleNode.full();
         topBar.addChild(titleNode);
 
         UiState<Integer> listScrollState = stateStore.state("screenshot.list.scroll", 0);
         ScrollColumnNode scrollColumn = new ScrollColumnNode().bindScrollState(listScrollState);
         if (screenshots.isEmpty()) {
-            TextNode emptyLabel = new TextNode("No screenshots");
+            TextNode emptyLabel = new TextNode(() -> Component.translatable("alumite.screenshot.screen.empty").getString());
             emptyLabel.full();
             scrollColumn.addChild(emptyLabel);
         } else {
@@ -78,21 +78,21 @@ public class ScreenshotScreen extends RootScreen {
                 buttonRow.setVisible(false);
                 buttonRow.rowGap(4);
 
-                ButtonNode copyBtn = new ButtonNode("");
+                ButtonNode copyBtn = new ButtonNode();
                 copyBtn.size(BUTTON_HEIGHT, CELL_BTN_HEIGHT);
                 copyBtn.setIconCenter(ModUiTextures.COPY.getId());
                 copyBtn.setOnPress(screenshot::copyToClipboard);
                 copyBtn.setRounded(true);
                 buttonRow.addChild(copyBtn);
 
-                ButtonNode sendBtn = new ButtonNode("");
+                ButtonNode sendBtn = new ButtonNode();
                 sendBtn.size(BUTTON_HEIGHT, CELL_BTN_HEIGHT);
                 sendBtn.setIconCenter(ModUiTextures.SHARE.getId());
                 sendBtn.setOnPress(() -> sendToFriendIndex.set(screenshotIndex));
                 sendBtn.setRounded(true);
                 buttonRow.addChild(sendBtn);
 
-                ButtonNode deleteBtn = new ButtonNode("");
+                ButtonNode deleteBtn = new ButtonNode();
                 deleteBtn.size(BUTTON_HEIGHT, CELL_BTN_HEIGHT);
                 deleteBtn.setIconCenter(ModUiTextures.TRASH.getId());
                 deleteBtn.setVariant(ButtonNode.ButtonVariant.DANGER);
@@ -111,7 +111,7 @@ public class ScreenshotScreen extends RootScreen {
                 thumbnail.fullWidth().top(0).bottom(CELL_FOOTER_HEIGHT);
                 cell.addChild(thumbnail);
 
-                TextNode label = new TextNode(screenshot.getName());
+                TextNode label = new TextNode(screenshot::getName);
                 label.fullWidth().height(LABEL_HEIGHT).bottom(2);
                 label.setTextAlign(0.5f, 1.0f);
                 cell.addChild(label);
@@ -129,13 +129,13 @@ public class ScreenshotScreen extends RootScreen {
         PanelNode bottomBar = new PanelNode();
         bottomBar.fullWidth().bottom(0).height(BAR_HEIGHT);
 
-        ButtonNode closeButton = new ButtonNode("Close");
+        ButtonNode closeButton = new ButtonNode(() -> Component.translatable("alumite.screenshot.screen.close").getString());
         closeButton.size(80, BUTTON_HEIGHT).left(PADDING).topRel(0.5f, 0, 0.5f);
         closeButton.setOnPress(() -> Minecraft.getInstance().setScreen(null));
         closeButton.setRounded(true);
         bottomBar.addChild(closeButton);
 
-        ButtonNode openFolderButton = new ButtonNode("Open Folder");
+        ButtonNode openFolderButton = new ButtonNode(() -> Component.translatable("alumite.screenshot.screen.open_folder").getString());
         openFolderButton.size(90, BUTTON_HEIGHT).right(PADDING).topRel(0.5f, 0, 0.5f);
         openFolderButton.setOnPress(() -> Util.getPlatform().openFile(
                 Paths.get(Minecraft.getInstance().gameDirectory.getAbsolutePath(), "screenshots").toFile()));
@@ -156,9 +156,9 @@ public class ScreenshotScreen extends RootScreen {
         if (deleteIdx >= 0 && deleteIdx < screenshots.size()) {
             Screenshot toDelete = screenshots.get(deleteIdx);
             ConfirmPopupNode deletePopup = new ConfirmPopupNode();
-            deletePopup.setTitle("Delete Screenshot");
-            deletePopup.setMessage("Are you sure you want to delete \"" + toDelete.getName() + "\"?");
-            deletePopup.setConfirmLabel("Delete");
+            deletePopup.setTitle(Component.translatable("alumite.screenshot.delete_popup.title").getString());
+            deletePopup.setMessage(Component.translatable("alumite.screenshot.delete_popup.message_fmt", toDelete.getName()).getString());
+            deletePopup.setConfirmLabel(Component.translatable("alumite.screenshot.delete_popup.confirm").getString());
             deletePopup.setOnCancel(() -> confirmDeleteIndex.set(-1));
             deletePopup.setOnConfirm(() -> {
                 confirmDeleteIndex.set(-1);

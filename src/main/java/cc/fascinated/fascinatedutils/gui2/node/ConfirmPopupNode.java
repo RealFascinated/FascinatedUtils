@@ -6,8 +6,9 @@ import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 
 import java.util.function.Function;
+import net.minecraft.network.chat.Component;
 
-public class ConfirmPopupNode extends PopupNode {
+public class ConfirmPopupNode extends PopupNode<ConfirmPopupNode> {
 
     private static final int POPUP_HEIGHT = 90;
     private static final int PAD_TOP = 16;
@@ -22,8 +23,8 @@ public class ConfirmPopupNode extends PopupNode {
 
     private String title = "";
     private String message = null;
-    private String cancelLabel = "Cancel";
-    private String confirmLabel = "Confirm";
+    private String cancelLabel = Component.translatable("alumite.common.cancel").getString();
+    private String confirmLabel = Component.translatable("alumite.common.confirm").getString();
     private Runnable onCancel = () -> {};
     private Runnable onConfirm = () -> {};
 
@@ -45,11 +46,13 @@ public class ConfirmPopupNode extends PopupNode {
         messageTextNode.setVisible(false);
         addPopupChild(messageTextNode);
 
-        cancelButton = new ButtonNode(cancelLabel).setOnPress(() -> onCancel.run());
+        cancelButton = new ButtonNode(() -> cancelLabel).setOnPress(() -> onCancel.run());
         cancelButton.left(0).size(BUTTON_WIDTH, BUTTON_HEIGHT);
+        cancelButton.setRounded(true);
 
-        confirmButton = new ButtonNode(confirmLabel).setOnPress(() -> onConfirm.run());
+        confirmButton = new ButtonNode(() -> confirmLabel).setOnPress(() -> onConfirm.run());
         confirmButton.left(BUTTON_WIDTH + BUTTON_GAP).size(BUTTON_WIDTH, BUTTON_HEIGHT);
+        confirmButton.setRounded(true);
 
         PositionedNode buttonRow = new PositionedNode();
         buttonRow.size(BUTTON_ROW_WIDTH, BUTTON_HEIGHT).alignX(0.5f).bottom(PAD_BOTTOM);
@@ -76,7 +79,7 @@ public class ConfirmPopupNode extends PopupNode {
     }
 
     public ConfirmPopupNode setConfirmLabel(String confirmLabel) {
-        this.confirmLabel = confirmLabel == null ? "Confirm" : confirmLabel;
+        this.confirmLabel = confirmLabel == null ? Component.translatable("alumite.common.confirm").getString() : confirmLabel;
         confirmButton.setLabel(this.confirmLabel);
         return this;
     }

@@ -68,11 +68,12 @@ public class ActionsOverlayScreen {
                 .columnGap(BUTTON_GAP);
 
         for (Button button : BUTTONS) {
-            ButtonNode node = new ButtonNode(button.displayName());
+            ButtonNode node = new ButtonNode(button::displayName);
             node.setNodeId(button.id());
             node.size(BUTTON_WIDTH, BUTTON_HEIGHT);
             node.setRightIcon(button.icon());
             node.setOnPress(button.onClick());
+            node.setRounded(true);
             buttonGroup.addChild(node);
         }
 

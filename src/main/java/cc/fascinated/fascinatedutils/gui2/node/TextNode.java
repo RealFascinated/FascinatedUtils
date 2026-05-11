@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class TextNode extends PositionedNode {
+public class TextNode extends PositionedNode<TextNode> {
     private Supplier<String> textSupplier;
     private Integer colorOverrideArgb;
     private Function<UiTheme, Integer> colorResolver;
@@ -20,10 +20,6 @@ public class TextNode extends PositionedNode {
     private float horizontalAlign = 0.5f;
     private float verticalAlign = 0.5f;
     private boolean wrap;
-
-    public TextNode(String text) {
-        this(() -> text);
-    }
 
     public TextNode(Supplier<String> textSupplier) {
         this.textSupplier = textSupplier == null ? () -> "" : textSupplier;

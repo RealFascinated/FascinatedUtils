@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class TextboxInputNode extends PositionedNode {
+public class TextboxInputNode extends PositionedNode<TextboxInputNode> {
 
     private static final int PADDING_V = 10;
     private static final int PADDING_H = 10;

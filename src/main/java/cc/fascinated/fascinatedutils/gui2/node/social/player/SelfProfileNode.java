@@ -14,7 +14,7 @@ import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 
 import java.util.function.BiConsumer;
 
-public class SelfProfileNode extends PositionedNode {
+public class SelfProfileNode extends PositionedNode<SelfProfileNode> {
 
     private static final int CARD_INSET_H = 8;
     private static final int CARD_INSET_V = 6;
@@ -70,8 +70,9 @@ public class SelfProfileNode extends PositionedNode {
         return Alumite.INSTANCE != null ? Alumite.INSTANCE.users().selfUser() : null;
     }
 
-    public void setOnStatusClick(BiConsumer<Float, Float> onStatusClick) {
+    public SelfProfileNode setOnStatusClick(BiConsumer<Float, Float> onStatusClick) {
         this.onStatusClick = onStatusClick;
+        return this;
     }
 
     @Override

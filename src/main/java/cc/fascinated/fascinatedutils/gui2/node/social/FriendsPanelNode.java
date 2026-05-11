@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class FriendsPanelNode extends PositionedNode {
+public class FriendsPanelNode extends PositionedNode<FriendsPanelNode> {
 
     private static final int HEADER_HEIGHT = 40;
     private static final int LIST_PADDING = 8;
@@ -70,7 +70,7 @@ public class FriendsPanelNode extends PositionedNode {
                 || (outgoing != null && !outgoing.isEmpty());
 
         if (!anyContent) {
-            TextNode empty = new TextNode(Component.translatable("alumite.social.no_friends").getString())
+            TextNode empty = new TextNode(() -> Component.translatable("alumite.social.no_friends").getString())
                     .setColorArgb(UiThemeRepository.get().textSubtle())
                     .setTextAlign(0f, 0.5f);
             empty.fullWidth().height(40);

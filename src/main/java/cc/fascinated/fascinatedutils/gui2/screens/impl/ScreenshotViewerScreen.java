@@ -37,7 +37,7 @@ public class ScreenshotViewerScreen extends RootScreen {
     private UiState<Integer> listVersion;
 
     public ScreenshotViewerScreen(int initialIndex) {
-        super(Component.literal("Screenshot Viewer"));
+        super(Component.translatable("alumite.screenshot.viewer.title"));
         this.initialIndex = initialIndex;
     }
 
@@ -97,21 +97,21 @@ public class ScreenshotViewerScreen extends RootScreen {
         PositionedNode barRow = new PositionedNode();
         barRow.left(PADDING).right(PADDING).topRel(0.5f, 0, 0.5f).height(BUTTON_HEIGHT).rowGap(4);
 
-        ButtonNode backButton = new ButtonNode("Back");
+        ButtonNode backButton = new ButtonNode(() -> Component.translatable("alumite.screenshot.viewer.back").getString());
         backButton.height(BUTTON_HEIGHT);
         backButton.setLeftIcon(ModUiTextures.BACK.getId());
         backButton.setOnPress(() -> Minecraft.getInstance().setScreen(new ScreenshotScreen()));
         backButton.setRounded(true);
         barRow.addChild(backButton);
 
-        ButtonNode copyButton = new ButtonNode("Copy");
+        ButtonNode copyButton = new ButtonNode(() -> Component.translatable("alumite.screenshot.viewer.copy").getString());
         copyButton.height(BUTTON_HEIGHT);
         copyButton.setLeftIcon(ModUiTextures.COPY.getId());
         copyButton.setOnPress(screenshot::copyToClipboard);
         copyButton.setRounded(true);
         barRow.addChild(copyButton);
 
-        ButtonNode deleteButton = new ButtonNode("Delete");
+        ButtonNode deleteButton = new ButtonNode(() -> Component.translatable("alumite.screenshot.viewer.delete").getString());
         deleteButton.height(BUTTON_HEIGHT);
         deleteButton.setLeftIcon(ModUiTextures.TRASH.getId());
         deleteButton.setVariant(ButtonNode.ButtonVariant.DANGER);
@@ -119,7 +119,7 @@ public class ScreenshotViewerScreen extends RootScreen {
         deleteButton.setRounded(true);
         barRow.addChild(deleteButton);
 
-        ButtonNode sendButton = new ButtonNode("Send to Friend");
+        ButtonNode sendButton = new ButtonNode(() -> Component.translatable("alumite.screenshot.viewer.send_to_friend").getString());
         sendButton.height(BUTTON_HEIGHT);
         sendButton.setOnPress(() -> showSendPopup.set(true));
         sendButton.setLeftIcon(ModUiTextures.SHARE.getId());
@@ -128,14 +128,14 @@ public class ScreenshotViewerScreen extends RootScreen {
 
         barRow.addChild(new SpacerNode());
 
-        ButtonNode prevButton = new ButtonNode("");
+        ButtonNode prevButton = new ButtonNode();
         prevButton.height(BUTTON_HEIGHT).width(NAV_BUTTON_WIDTH);
         prevButton.setIconCenter(ModUiTextures.CHEVRON_LEFT.getId());
         prevButton.setOnPress(() -> navigate(-1));
         prevButton.setRounded(true);
         barRow.addChild(prevButton);
 
-        ButtonNode nextButton = new ButtonNode("");
+        ButtonNode nextButton = new ButtonNode();
         nextButton.height(BUTTON_HEIGHT).width(NAV_BUTTON_WIDTH);
         nextButton.setIconCenter(ModUiTextures.CHEVRON_RIGHT.getId());
         nextButton.setOnPress(() -> navigate(1));
@@ -152,9 +152,9 @@ public class ScreenshotViewerScreen extends RootScreen {
 
         if (confirmDelete.get()) {
             ConfirmPopupNode popup = new ConfirmPopupNode();
-            popup.setTitle("Delete Screenshot");
-            popup.setMessage("Are you sure you want to delete this screenshot?");
-            popup.setConfirmLabel("Delete");
+            popup.setTitle(Component.translatable("alumite.screenshot.delete_popup.title").getString());
+            popup.setMessage(Component.translatable("alumite.screenshot.delete_popup.message").getString());
+            popup.setConfirmLabel(Component.translatable("alumite.screenshot.delete_popup.confirm").getString());
             popup.setOnCancel(() -> confirmDelete.set(false));
             popup.setOnConfirm(() -> {
                 confirmDelete.set(false);

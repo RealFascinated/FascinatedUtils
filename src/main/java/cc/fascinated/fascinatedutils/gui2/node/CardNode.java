@@ -8,7 +8,7 @@ import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class CardNode extends PositionedNode {
+public class CardNode extends PositionedNode<CardNode> {
 
     private static final int DEFAULT_CORNER_RADIUS = 6;
 

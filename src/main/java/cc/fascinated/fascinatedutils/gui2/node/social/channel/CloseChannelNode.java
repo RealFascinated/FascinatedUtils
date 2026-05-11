@@ -7,7 +7,7 @@ import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextureNode;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 
-public class CloseChannelNode extends PositionedNode {
+public class CloseChannelNode extends PositionedNode<CloseChannelNode> {
 
     static final int SIZE = 14;
     private static final int ICON_INSET = 2;

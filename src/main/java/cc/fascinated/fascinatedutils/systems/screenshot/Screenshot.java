@@ -1,9 +1,12 @@
 package cc.fascinated.fascinatedutils.systems.screenshot;
 
+import cc.fascinated.fascinatedutils.oldgui.toast.Toast;
 import cc.fascinated.fascinatedutils.systems.TextureManager;
 import cc.fascinated.fascinatedutils.client.Client;
+import net.minecraft.network.chat.Component;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import org.jspecify.annotations.NonNull;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -83,12 +86,13 @@ public class Screenshot {
                 }
 
                 @Override
-                public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
+                public @NonNull Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
                     if (!isDataFlavorSupported(flavor)) throw new UnsupportedFlavorException(flavor);
                     return img;
                 }
             };
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(transferable, null);
+            Toast.show().message(Component.translatable("alumite.screenshot.copied").getString()).info();
         } catch (Exception ex) {
             ex.printStackTrace();
         }

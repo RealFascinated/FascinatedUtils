@@ -16,7 +16,7 @@ import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import cc.fascinated.fascinatedutils.oldgui.toast.Toast;
 import net.minecraft.network.chat.Component;
 
-public class ChatPanelNode extends PositionedNode {
+public class ChatPanelNode extends PositionedNode<ChatPanelNode> {
 
     private static final int HEADER_HEIGHT = 32;
     private static final int PADDING = 6;
@@ -54,8 +54,8 @@ public class ChatPanelNode extends PositionedNode {
         Message deleteMsg = msgPendingDelete.get();
         if (deleteMsg != null) {
             ConfirmPopupNode deleteConfirm = new ConfirmPopupNode()
-                    .setTitle("Delete message?")
-                    .setConfirmLabel("Delete")
+                    .setTitle(Component.translatable("alumite.social.chat.delete_popup.title").getString())
+                    .setConfirmLabel(Component.translatable("alumite.common.delete").getString())
                     .setConfirmLabelColorResolver(theme -> theme.danger())
                     .setOnCancel(() -> msgPendingDelete.set(null))
                     .setOnConfirm(() -> {

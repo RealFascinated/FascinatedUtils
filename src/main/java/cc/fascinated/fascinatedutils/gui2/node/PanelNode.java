@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.gui2.node;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
-public class PanelNode extends PositionedNode {
+public class PanelNode extends PositionedNode<PanelNode> {
     private int borderThickness = 1;
     private Integer fillColorOverrideArgb;
     private Integer borderColorOverrideArgb;

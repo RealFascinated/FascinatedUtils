@@ -39,6 +39,7 @@ public class Client implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        System.setProperty("java.awt.headless", "false");
         new Alumite(); // Init the api and auth system
 
         FascinatedEventBus eventBus = FascinatedEventBus.INSTANCE;

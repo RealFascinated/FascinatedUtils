@@ -12,7 +12,7 @@ import net.minecraft.client.Minecraft;
 import java.nio.file.Path;
 import java.util.UUID;
 
-public class ChatComposerNode extends PositionedNode {
+public class ChatComposerNode extends PositionedNode<ChatComposerNode> {
 
     private static final int ATTACH_GAP = 4;
     private static final int ATTACH_INSET_X = 4;

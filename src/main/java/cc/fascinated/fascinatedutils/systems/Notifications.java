@@ -13,6 +13,7 @@ import cc.fascinated.fascinatedutils.oldgui.toast.Toast;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 
 import java.util.Objects;
 
@@ -54,7 +55,7 @@ public class Notifications {
         }
 
         if (event.fromOutgoingRequest() && event.user() != null && event.user().minecraftName() != null) {
-            Toast.show().message(event.user().minecraftName() + " accepted your friend request!").success();
+            Toast.show().message(Component.translatable("alumite.notifications.friend_accepted", event.user().minecraftName()).getString()).success();
             if (shouldPlaySounds()) {
                 Sounds.NOTIFICATION.play();
             }
@@ -68,7 +69,7 @@ public class Notifications {
         }
 
         if (event.user() != null && event.user().minecraftName() != null) {
-            Toast.show().message(event.user().minecraftName() + " sent you a friend request!").info();
+            Toast.show().message(Component.translatable("alumite.notifications.friend_request_incoming", event.user().minecraftName()).getString()).info();
             if (shouldPlaySounds()) {
                 Sounds.NOTIFICATION.play();
             }

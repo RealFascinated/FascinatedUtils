@@ -20,7 +20,7 @@ public class ChannelListNode extends ScrollColumnNode {
 
         List<Channel> channels = Alumite.INSTANCE != null ? Alumite.INSTANCE.channels().all() : List.of();
         if (channels.isEmpty()) {
-            TextNode emptyLabel = new TextNode(Component.translatable("alumite.social.dm.no_conversations").getString())
+            TextNode emptyLabel = new TextNode(() -> Component.translatable("alumite.social.dm.no_conversations").getString())
                     .setColorArgb(UiThemeRepository.get().textSubtle())
                     .setTextAlign(0.5f, 0.5f);
             emptyLabel.fullWidth().height(40);

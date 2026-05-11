@@ -12,7 +12,7 @@ import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-public class ChatHeaderNode extends SocialPanelHeaderNode {
+public class ChatHeaderNode extends SocialPanelHeaderNode<ChatHeaderNode> {
 
     private static final int AVATAR_SIZE = 18;
     private static final int PADDING = 8;

@@ -7,7 +7,7 @@ import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PopupNode extends PositionedNode {
+public class PopupNode<T extends PopupNode<T>> extends PositionedNode<T> {
 
     private static final int DEFAULT_POPUP_WIDTH = 220;
     private static final int DEFAULT_POPUP_HEIGHT = 100;
@@ -32,29 +32,29 @@ public class PopupNode extends PositionedNode {
         addChild(panelNode);
     }
 
-    public PopupNode setPopupWidth(int popupWidth) {
+    public T setPopupWidth(int popupWidth) {
         this.popupWidth = Math.max(1, popupWidth);
-        return this;
+        return self();
     }
 
-    public PopupNode setPopupHeight(int popupHeight) {
+    public T setPopupHeight(int popupHeight) {
         this.popupHeight = Math.max(1, popupHeight);
-        return this;
+        return self();
     }
 
-    public PopupNode setOnDismiss(Runnable onDismiss) {
+    public T setOnDismiss(Runnable onDismiss) {
         this.onDismiss = onDismiss == null ? () -> {} : onDismiss;
-        return this;
+        return self();
     }
 
     /**
      * Adds a child node that will be laid out relative to the popup panel's top-left corner.
      * Use the normal fluent positioning API on the child before calling this.
      */
-    public PopupNode addPopupChild(UiNode child) {
+    public T addPopupChild(UiNode child) {
         popupChildren.add(child);
         addChild(child);
-        return this;
+        return self();
     }
 
     @Override

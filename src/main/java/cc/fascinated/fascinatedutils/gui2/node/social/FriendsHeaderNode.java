@@ -10,7 +10,7 @@ public class FriendsHeaderNode extends SocialPanelHeaderNode {
     public FriendsHeaderNode() {
         int count = Alumite.INSTANCE != null ? Alumite.INSTANCE.users().getFriends().size() : 0;
         String heading = Component.translatable("alumite.social.friends_heading").getString() + " (" + count + ")";
-        TextNode title = new TextNode(heading)
+        TextNode title = new TextNode(() -> heading)
                 .setColorResolver(UiTheme::textPrimary)
                 .setTextAlign(0f, 0.5f);
         title.left(12).right(32).top(0).bottom(0);

@@ -11,7 +11,7 @@ import net.minecraft.resources.Identifier;
 
 import java.util.function.Supplier;
 
-public class PlayerAvatarNode extends PositionedNode {
+public class PlayerAvatarNode extends PositionedNode<PlayerAvatarNode> {
 
     private static final int CORNER_RADIUS = 4;
     private static final int DOT_SIZE = 6;

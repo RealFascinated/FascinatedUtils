@@ -27,7 +27,7 @@ public class FriendsListNode extends ScrollColumnNode {
         boolean hasOutgoing = outgoing != null && !outgoing.isEmpty();
 
         if (!hasFriends && !hasIncoming && !hasOutgoing) {
-            TextNode emptyLabel = new TextNode(Component.translatable("alumite.social.no_friends").getString())
+            TextNode emptyLabel = new TextNode(() -> Component.translatable("alumite.social.no_friends").getString())
                     .setColorArgb(0x88FFFFFF)
                     .setTextAlign(0f, 0.5f);
             emptyLabel.fullWidth().height(40);

@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.gui2.node.social;
 
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui2.core.SpacerNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.node.BadgeNode;
 import cc.fascinated.fascinatedutils.gui2.node.DividerNode;
@@ -14,7 +15,7 @@ import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
-public class SocialNavNode extends PositionedNode {
+public class SocialNavNode extends PositionedNode<SocialNavNode> {
 
     private static final int ITEM_HEIGHT = 36;
     private static final int SEPARATOR_HEIGHT = 1;
@@ -26,24 +27,23 @@ public class SocialNavNode extends PositionedNode {
                          PlayerContextMenuHandler contextMenuHandler,
                          UiState<Integer> channelListScrollState) {
         full();
+        columnGap(0);
 
         FriendsNavItemNode friendsItem = new FriendsNavItemNode(friendsActive, incomingBadgeCount,
                 onFriendsSelected == null ? () -> {} : onFriendsSelected);
-        friendsItem.top(0).fullWidth().height(ITEM_HEIGHT);
+        friendsItem.fullWidth().height(ITEM_HEIGHT);
         addChild(friendsItem);
 
         DividerNode separator = new DividerNode();
-        separator.top(ITEM_HEIGHT).left(SEPARATOR_INSET).right(SEPARATOR_INSET).height(SEPARATOR_HEIGHT);
+        separator.left(SEPARATOR_INSET).right(SEPARATOR_INSET).height(SEPARATOR_HEIGHT);
         addChild(separator);
 
+        addChild(new PositionedNode().fullWidth().height(4));
+
         SocialSectionLabelNode dmLabel = new SocialSectionLabelNode(Component.translatable("alumite.social.dm.title").getString());
-        dmLabel.top(ITEM_HEIGHT + SEPARATOR_HEIGHT + 4).left(8).right(0).height(14);
+        dmLabel.left(8).right(0).height(14);
         addChild(dmLabel);
 
-        PositionedNode channelListArea = new PositionedNode()
-                .fullWidth()
-                .top(ITEM_HEIGHT + SEPARATOR_HEIGHT + 4 + 14)
-                .bottom(0);
         PositionedNode channelListPadded = new PositionedNode()
                 .left(LIST_PAD).right(LIST_PAD)
                 .top(4).bottom(LIST_PAD);
@@ -51,8 +51,10 @@ public class SocialNavNode extends PositionedNode {
         channels.bindScrollState(channelListScrollState);
         channels.setNodeId("social.channel-list");
         channelListPadded.addChild(channels);
-        channelListArea.addChild(channelListPadded);
-        addChild(channelListArea);
+
+        SpacerNode channelListFill = new SpacerNode();
+        channelListFill.addChild(channelListPadded);
+        addChild(channelListFill);
     }
 
     /**
@@ -86,7 +88,7 @@ public class SocialNavNode extends PositionedNode {
             });
             addChild(bg);
 
-            friendsLabel = new TextNode(Component.translatable("alumite.social.friends_heading").getString())
+            friendsLabel = new TextNode(() -> Component.translatable("alumite.social.friends_heading").getString())
                     .setColorResolver(theme -> active ? theme.textPrimary() : theme.textMuted())
                     .setTextAlign(0f, 0.5f);
             friendsLabel.left(PAD_H + LABEL_PAD).right(0).fullHeight();

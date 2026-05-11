@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class ContextMenuNode extends PositionedNode {
+public class ContextMenuNode extends PositionedNode<ContextMenuNode> {
     private static final int MENU_PADDING = 4;
     private static final int MENU_CORNER_RADIUS = 4;
     private static final int BUTTON_GAP = 1;
@@ -90,7 +90,7 @@ public class ContextMenuNode extends PositionedNode {
                 addChild(separatorRect);
                 continue;
             }
-            ButtonNode button = new ButtonNode(item.label())
+            ButtonNode button = new ButtonNode(item::label)
                     .setVariant(ButtonNode.ButtonVariant.GHOST)
                     .setLeftAlignLabel(true)
                     .setRightIcon(item.icon())

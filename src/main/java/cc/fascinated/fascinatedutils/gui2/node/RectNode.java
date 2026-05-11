@@ -8,7 +8,7 @@ import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class RectNode extends PositionedNode {
+public class RectNode extends PositionedNode<RectNode> {
 
     private Supplier<Integer> fillSupplier;
     private Supplier<Integer> borderSupplier;

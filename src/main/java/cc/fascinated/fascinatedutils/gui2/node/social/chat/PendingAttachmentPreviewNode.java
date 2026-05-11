@@ -11,7 +11,7 @@ import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
 import java.nio.file.Path;
 
-class PendingAttachmentPreviewNode extends PositionedNode {
+class PendingAttachmentPreviewNode extends PositionedNode<PendingAttachmentPreviewNode> {
 
     private static final int THUMB_SIZE = 100;
     private static final int PAD = 6;
@@ -39,7 +39,7 @@ class PendingAttachmentPreviewNode extends PositionedNode {
                 .setCornerRadius(CORNER_RADIUS)
                 .left(PAD).top(PAD).size(THUMB_SIZE, THUMB_SIZE));
 
-        addChild(new ButtonNode("\u00D7")
+        addChild(new ButtonNode().setLabel("\u00D7")
                 .setVariant(ButtonNode.ButtonVariant.GHOST)
                 .setLabelColorResolver(theme -> theme.textMuted())
                 .setOnPress(() -> pendingAttachment.set(null))

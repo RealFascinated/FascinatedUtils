@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.gui2.layout.AxisConstraints;
 import cc.fascinated.fascinatedutils.gui2.layout.BoxLayoutSpec;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
-public class PositionedNode extends UiNode {
+public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
     private final BoxLayoutSpec boxLayout = new BoxLayoutSpec();
     private int columnGap = -1;
     private int rowGap = -1;
@@ -13,146 +13,151 @@ public class PositionedNode extends UiNode {
         return boxLayout;
     }
 
-    public PositionedNode width(int width) {
+    @SuppressWarnings("unchecked")
+    protected T self() {
+        return (T) this;
+    }
+
+    public T width(int width) {
         boxLayout.horizontal().sizePx(width);
-        return this;
+        return self();
     }
 
-    public PositionedNode widthRel(float relativeWidth) {
+    public T widthRel(float relativeWidth) {
         boxLayout.horizontal().sizeRel(relativeWidth);
-        return this;
+        return self();
     }
 
-    public PositionedNode height(int height) {
+    public T height(int height) {
         boxLayout.vertical().sizePx(height);
-        return this;
+        return self();
     }
 
-    public PositionedNode heightRel(float relativeHeight) {
+    public T heightRel(float relativeHeight) {
         boxLayout.vertical().sizeRel(relativeHeight);
-        return this;
+        return self();
     }
 
-    public PositionedNode size(int width, int height) {
+    public T size(int width, int height) {
         return width(width).height(height);
     }
 
-    public PositionedNode size(int size) {
+    public T size(int size) {
         return size(size, size);
     }
 
-    public PositionedNode sizeRel(float relativeWidth, float relativeHeight) {
+    public T sizeRel(float relativeWidth, float relativeHeight) {
         return widthRel(relativeWidth).heightRel(relativeHeight);
     }
 
-    public PositionedNode sizeRel(float relativeSize) {
+    public T sizeRel(float relativeSize) {
         return sizeRel(relativeSize, relativeSize);
     }
 
-    public PositionedNode fullWidth() {
+    public T fullWidth() {
         boxLayout.horizontal().startPx(0).endPx(0);
-        return this;
+        return self();
     }
 
-    public PositionedNode fullHeight() {
+    public T fullHeight() {
         boxLayout.vertical().startPx(0).endPx(0);
-        return this;
+        return self();
     }
 
-    public PositionedNode full() {
+    public T full() {
         return fullWidth().fullHeight();
     }
 
-    public PositionedNode left(int leftPixels) {
+    public T left(int leftPixels) {
         boxLayout.horizontal().startPx(leftPixels);
-        return this;
+        return self();
     }
 
-    public PositionedNode leftRel(float relativeLeft) {
+    public T leftRel(float relativeLeft) {
         boxLayout.horizontal().startRel(relativeLeft);
-        return this;
+        return self();
     }
 
-    public PositionedNode leftRel(float relativeLeft, int offsetPixels, float anchor) {
+    public T leftRel(float relativeLeft, int offsetPixels, float anchor) {
         boxLayout.horizontal().startRel(relativeLeft, offsetPixels, anchor);
-        return this;
+        return self();
     }
 
-    public PositionedNode right(int rightPixels) {
+    public T right(int rightPixels) {
         boxLayout.horizontal().endPx(rightPixels);
-        return this;
+        return self();
     }
 
-    public PositionedNode rightRel(float relativeRight) {
+    public T rightRel(float relativeRight) {
         boxLayout.horizontal().endRel(relativeRight);
-        return this;
+        return self();
     }
 
-    public PositionedNode rightRel(float relativeRight, int offsetPixels, float anchor) {
+    public T rightRel(float relativeRight, int offsetPixels, float anchor) {
         boxLayout.horizontal().endRel(relativeRight, offsetPixels, anchor);
-        return this;
+        return self();
     }
 
-    public PositionedNode top(int topPixels) {
+    public T top(int topPixels) {
         boxLayout.vertical().startPx(topPixels);
-        return this;
+        return self();
     }
 
-    public PositionedNode topRel(float relativeTop) {
+    public T topRel(float relativeTop) {
         boxLayout.vertical().startRel(relativeTop);
-        return this;
+        return self();
     }
 
-    public PositionedNode topRel(float relativeTop, int offsetPixels, float anchor) {
+    public T topRel(float relativeTop, int offsetPixels, float anchor) {
         boxLayout.vertical().startRel(relativeTop, offsetPixels, anchor);
-        return this;
+        return self();
     }
 
-    public PositionedNode bottom(int bottomPixels) {
+    public T bottom(int bottomPixels) {
         boxLayout.vertical().endPx(bottomPixels);
-        return this;
+        return self();
     }
 
-    public PositionedNode bottomRel(float relativeBottom) {
+    public T bottomRel(float relativeBottom) {
         boxLayout.vertical().endRel(relativeBottom);
-        return this;
+        return self();
     }
 
-    public PositionedNode bottomRel(float relativeBottom, int offsetPixels, float anchor) {
+    public T bottomRel(float relativeBottom, int offsetPixels, float anchor) {
         boxLayout.vertical().endRel(relativeBottom, offsetPixels, anchor);
-        return this;
+        return self();
     }
 
-    public PositionedNode pos(int positionX, int positionY) {
+    public T pos(int positionX, int positionY) {
         return left(positionX).top(positionY);
     }
 
-    public PositionedNode posRel(float relativeX, float relativeY) {
+    public T posRel(float relativeX, float relativeY) {
         return leftRel(relativeX).topRel(relativeY);
     }
 
-    public PositionedNode alignX(float alignment) {
+    public T alignX(float alignment) {
         boxLayout.horizontal().startRel(alignment, 0, alignment);
-        return this;
+        return self();
     }
 
-    public PositionedNode alignY(float alignment) {
+    public T alignY(float alignment) {
         boxLayout.vertical().startRel(alignment, 0, alignment);
-        return this;
+        return self();
     }
 
-    public PositionedNode center() {
+    public T center() {
         return alignX(0.5f).alignY(0.5f);
     }
 
-    public PositionedNode columnGap(int gap) {
+    public T columnGap(int gap) {
         this.columnGap = gap;
-        return this;
+        return self();
     }
 
-    public PositionedNode rowGap(int gap) {
+    public T rowGap(int gap) {
         this.rowGap = gap;
-        return this;
+        return self();
     }
 
     protected int intrinsicWidth(RenderFrame renderFrame, int parentWidth) {

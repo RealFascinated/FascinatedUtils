@@ -6,7 +6,7 @@ import cc.fascinated.fascinatedutils.gui2.node.ButtonNode;
 import cc.fascinated.fascinatedutils.gui2.node.DividerNode;
 import net.minecraft.client.Minecraft;
 
-public class SocialPanelHeaderNode extends PositionedNode {
+public class SocialPanelHeaderNode<T extends SocialPanelHeaderNode<T>> extends PositionedNode<T> {
 
     private static final int BUTTON_SIZE = 18;
 
@@ -20,7 +20,7 @@ public class SocialPanelHeaderNode extends PositionedNode {
         divider.bottom(0).fullWidth().height(1);
         addChild(divider);
 
-        closeButton = new ButtonNode("");
+        closeButton = new ButtonNode();
         closeButton.size(BUTTON_SIZE, BUTTON_SIZE).right(6).alignY(0.5f);
         closeButton.setIconCenter(ModUiTextures.CLOSE.getId());
         closeButton.setRounded(true);
