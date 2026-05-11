@@ -74,25 +74,30 @@ public class ScreenshotScreen extends RootScreen {
                 // Buttons are hidden by default and shown on hover, overlaid on the thumbnail.
                 // Defined before the cell so the hover callbacks can reference them.
                 PositionedNode buttonRow = new PositionedNode();
-                buttonRow.fullWidth().height(CELL_BTN_HEIGHT).bottom(CELL_FOOTER_HEIGHT + 4);
+                buttonRow.fullWidth().height(CELL_BTN_HEIGHT).bottom(CELL_FOOTER_HEIGHT + 4).left(4);
                 buttonRow.setVisible(false);
+                buttonRow.rowGap(4);
 
-                ButtonNode copyBtn = new ButtonNode("Copy");
-                copyBtn.size(56, CELL_BTN_HEIGHT).left(4).alignY(0.5f);
-                copyBtn.setLeftIcon(ModUiTextures.COPY.getId());
+                ButtonNode copyBtn = new ButtonNode("");
+                copyBtn.size(BUTTON_HEIGHT, CELL_BTN_HEIGHT);
+                copyBtn.setIconCenter(ModUiTextures.COPY.getId());
                 copyBtn.setOnPress(screenshot::copyToClipboard);
+                copyBtn.setRounded(true);
                 buttonRow.addChild(copyBtn);
 
-                ButtonNode sendBtn = new ButtonNode("Send");
-                sendBtn.size(56, CELL_BTN_HEIGHT).alignX(0.5f).alignY(0.5f);
+                ButtonNode sendBtn = new ButtonNode("");
+                sendBtn.size(BUTTON_HEIGHT, CELL_BTN_HEIGHT);
+                sendBtn.setIconCenter(ModUiTextures.SHARE.getId());
                 sendBtn.setOnPress(() -> sendToFriendIndex.set(screenshotIndex));
+                sendBtn.setRounded(true);
                 buttonRow.addChild(sendBtn);
 
-                ButtonNode deleteBtn = new ButtonNode("Delete");
-                deleteBtn.size(56, CELL_BTN_HEIGHT).right(4).alignY(0.5f);
-                deleteBtn.setRightIcon(ModUiTextures.TRASH.getId());
+                ButtonNode deleteBtn = new ButtonNode("");
+                deleteBtn.size(BUTTON_HEIGHT, CELL_BTN_HEIGHT);
+                deleteBtn.setIconCenter(ModUiTextures.TRASH.getId());
                 deleteBtn.setVariant(ButtonNode.ButtonVariant.DANGER);
                 deleteBtn.setOnPress(() -> confirmDeleteIndex.set(screenshotIndex));
+                deleteBtn.setRounded(true);
                 buttonRow.addChild(deleteBtn);
 
                 PositionedNode cell = new PositionedNode().full();

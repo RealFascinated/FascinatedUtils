@@ -37,6 +37,7 @@ public enum ModUiTextures {
     MORE_VERT("ui/more_vert"),
     COPY("ui/copy"),
     IMAGE("ui/image"),
+    SHARE("ui/share"),
     STATUS_ONLINE("ui/user_status/online"),
     STATUS_AWAY("ui/user_status/idle"),
     STATUS_DO_NOT_DISTURB("ui/user_status/do_not_disturb"),

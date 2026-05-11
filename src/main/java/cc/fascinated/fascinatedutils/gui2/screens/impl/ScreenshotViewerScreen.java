@@ -98,12 +98,14 @@ public class ScreenshotViewerScreen extends RootScreen {
         backButton.size(60, BUTTON_HEIGHT).left(PADDING).topRel(0.5f, 0, 0.5f);
         backButton.setLeftIcon(ModUiTextures.BACK.getId());
         backButton.setOnPress(() -> Minecraft.getInstance().setScreen(new ScreenshotScreen()));
+        backButton.setRounded(true);
         bottomBar.addChild(backButton);
 
         ButtonNode copyButton = new ButtonNode("Copy");
         copyButton.size(60, BUTTON_HEIGHT).left(PADDING + 64).topRel(0.5f, 0, 0.5f);
         copyButton.setLeftIcon(ModUiTextures.COPY.getId());
         copyButton.setOnPress(screenshot::copyToClipboard);
+        copyButton.setRounded(true);
         bottomBar.addChild(copyButton);
 
         ButtonNode deleteButton = new ButtonNode("Delete");
@@ -111,23 +113,28 @@ public class ScreenshotViewerScreen extends RootScreen {
         deleteButton.setLeftIcon(ModUiTextures.TRASH.getId());
         deleteButton.setVariant(ButtonNode.ButtonVariant.DANGER);
         deleteButton.setOnPress(() -> confirmDelete.set(true));
+        deleteButton.setRounded(true);
         bottomBar.addChild(deleteButton);
 
         ButtonNode sendButton = new ButtonNode("Send to Friend");
         sendButton.size(90, BUTTON_HEIGHT).left(PADDING + 202).topRel(0.5f, 0, 0.5f);
         sendButton.setOnPress(() -> showSendPopup.set(true));
+        sendButton.setLeftIcon(ModUiTextures.SHARE.getId());
+        sendButton.setRounded(true);
         bottomBar.addChild(sendButton);
 
         ButtonNode prevButton = new ButtonNode("");
         prevButton.size(NAV_BUTTON_WIDTH, BUTTON_HEIGHT).right(PADDING + NAV_BUTTON_WIDTH + 4).topRel(0.5f, 0, 0.5f);
-        prevButton.setIconCenter(ModUiTextures.BACK.getId());
+        prevButton.setIconCenter(ModUiTextures.CHEVRON_LEFT.getId());
         prevButton.setOnPress(() -> navigate(-1));
+        prevButton.setRounded(true);
         bottomBar.addChild(prevButton);
 
         ButtonNode nextButton = new ButtonNode("");
         nextButton.size(NAV_BUTTON_WIDTH, BUTTON_HEIGHT).right(PADDING).topRel(0.5f, 0, 0.5f);
         nextButton.setIconCenter(ModUiTextures.CHEVRON_RIGHT.getId());
         nextButton.setOnPress(() -> navigate(1));
+        nextButton.setRounded(true);
         bottomBar.addChild(nextButton);
 
         StackNode root = new StackNode();
