@@ -104,6 +104,7 @@ public class ChatMessageNode extends PositionedNode<ChatMessageNode> {
                 attachmentNode.addChild(new TextureNode()
                         .setLoadedTextureSupplier(() -> TextureManager.INSTANCE.get(url, null))
                         .setCornerRadius(ATTACHMENT_CORNER_RADIUS)
+                        .setShowLoader(true)
                         .full());
                 attachmentNodes.add(attachmentNode);
                 addChild(attachmentNode);

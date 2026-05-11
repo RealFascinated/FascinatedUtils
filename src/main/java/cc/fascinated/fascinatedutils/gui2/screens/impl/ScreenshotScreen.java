@@ -55,6 +55,13 @@ public class ScreenshotScreen extends RootScreen {
         titleNode.full();
         topBar.addChild(titleNode);
 
+        ButtonNode closeButton = new ButtonNode();
+        closeButton.size(BUTTON_HEIGHT, BUTTON_HEIGHT).right(6).alignY(0.5f);
+        closeButton.setIconCenter(ModUiTextures.CLOSE.getId());
+        closeButton.setOnPress(() -> Minecraft.getInstance().setScreen(null));
+        closeButton.setRounded(true);
+        topBar.addChild(closeButton);
+
         UiState<Integer> listScrollState = stateStore.state("screenshot.list.scroll", 0);
         ScrollColumnNode scrollColumn = new ScrollColumnNode().bindScrollState(listScrollState);
         if (screenshots.isEmpty()) {
@@ -135,13 +142,6 @@ public class ScreenshotScreen extends RootScreen {
                 Paths.get(Minecraft.getInstance().gameDirectory.getAbsolutePath(), "screenshots").toFile()));
         openFolderButton.setRounded(true);
         bottomBar.addChild(openFolderButton);
-
-        ButtonNode closeButton = new ButtonNode();
-        closeButton.size(BUTTON_HEIGHT, BUTTON_HEIGHT).right(6).alignY(0.5f);
-        closeButton.setIconCenter(ModUiTextures.CLOSE.getId());
-        closeButton.setOnPress(() -> Minecraft.getInstance().setScreen(null));
-        closeButton.setRounded(true);
-        bottomBar.addChild(closeButton);
 
         PositionedNode scrollArea = new PositionedNode();
         scrollArea.left(GRID_PADDING).right(GRID_PADDING).top(BAR_HEIGHT + GRID_PADDING).bottom(BAR_HEIGHT + GRID_PADDING);
