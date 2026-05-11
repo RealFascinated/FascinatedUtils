@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import cc.fascinated.fascinatedutils.common.ByteFormatterUtil;
+import cc.fascinated.fascinatedutils.common.ByteUtils;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleDefaults;
@@ -49,7 +49,7 @@ public class WorldSizeModule extends Module {
                     String levelId = dir.getFileName().toString();
                     try {
                         long bytes = computeSize(dir);
-                        newSizes.put(levelId, ByteFormatterUtil.formatBytes(bytes, 1));
+                        newSizes.put(levelId, ByteUtils.formatBytes(bytes, 1));
                     } catch (IOException ignored) {
                     }
                 });

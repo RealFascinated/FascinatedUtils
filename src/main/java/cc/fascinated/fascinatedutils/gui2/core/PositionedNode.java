@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
 public class PositionedNode extends UiNode {
     private final BoxLayoutSpec boxLayout = new BoxLayoutSpec();
+    private int columnGap = -1;
 
     protected BoxLayoutSpec boxLayout() {
         return boxLayout;
@@ -142,6 +143,11 @@ public class PositionedNode extends UiNode {
         return alignX(0.5f).alignY(0.5f);
     }
 
+    public PositionedNode columnGap(int gap) {
+        this.columnGap = gap;
+        return this;
+    }
+
     @Override
     public void layout(RenderFrame renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
         int resolvedWidth = boxLayout.horizontal().resolveSize(parentWidth, "horizontal", debugPath());
@@ -150,8 +156,19 @@ public class PositionedNode extends UiNode {
         int resolvedY = boxLayout.vertical().resolvePosition(parentY, parentHeight, resolvedHeight);
         bounds().set(resolvedX, resolvedY, resolvedWidth, resolvedHeight);
 
-        for (UiNode childNode : childrenView()) {
-            childNode.layout(renderFrame, resolvedX, resolvedY, resolvedWidth, resolvedHeight);
+        if (columnGap >= 0) {
+            int cursorY = resolvedY;
+            for (UiNode childNode : childrenView()) {
+                if (!childNode.visible()) {
+                    continue;
+                }
+                childNode.layout(renderFrame, resolvedX, cursorY, resolvedWidth, resolvedHeight);
+                cursorY += childNode.bounds().height() + columnGap;
+            }
+        } else {
+            for (UiNode childNode : childrenView()) {
+                childNode.layout(renderFrame, resolvedX, resolvedY, resolvedWidth, resolvedHeight);
+            }
         }
     }
 }

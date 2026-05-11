@@ -4,13 +4,13 @@ import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.channel.Message;
 import cc.fascinated.fascinatedutils.api.channel.json.AttachmentDTO;
 import cc.fascinated.fascinatedutils.api.user.User;
-import cc.fascinated.fascinatedutils.caches.UrlTextureCache;
+import cc.fascinated.fascinatedutils.systems.TextureManager;
 import cc.fascinated.fascinatedutils.gui2.core.PixelSize;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.UIScale;
 import cc.fascinated.fascinatedutils.gui2.core.UiNode;
 import cc.fascinated.fascinatedutils.gui2.node.ClickableNode;
-import cc.fascinated.fascinatedutils.gui2.node.ImageNode;
+import cc.fascinated.fascinatedutils.gui2.node.TextureNode;
 import cc.fascinated.fascinatedutils.gui2.node.RectNode;
 import cc.fascinated.fascinatedutils.gui2.node.input.TextboxInputNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerAvatarNode;
@@ -96,13 +96,13 @@ public class ChatMessageNode extends PositionedNode {
                             }
                         });
                 attachmentNode.addChild(new RectNode()
-                        .setFillSupplier(() -> UrlTextureCache.INSTANCE.get(url, null) == null
+                        .setFillSupplier(() -> TextureManager.INSTANCE.get(url, null) == null
                                 ? UiThemeRepository.get().attachmentPlaceholderFill()
                                 : 0)
                         .setCornerRadius(ATTACHMENT_CORNER_RADIUS)
                         .full());
-                attachmentNode.addChild(new ImageNode()
-                        .setTextureSupplier(() -> UrlTextureCache.INSTANCE.get(url, null))
+                attachmentNode.addChild(new TextureNode()
+                        .setLoadedTextureSupplier(() -> TextureManager.INSTANCE.get(url, null))
                         .setCornerRadius(ATTACHMENT_CORNER_RADIUS)
                         .full());
                 attachmentNodes.add(attachmentNode);
@@ -279,13 +279,13 @@ public class ChatMessageNode extends PositionedNode {
     }
 
     private static int[] attachmentDisplaySize(AttachmentDTO attachment, String url, int availableWidth) {
-        float displayWidth = Math.max(1f, Math.min(availableWidth, 220f));
+        float displayWidth = Math.clamp(availableWidth, 1f, 220f);
         float displayHeight = Math.min(MAX_ATTACHMENT_DISPLAY_HEIGHT, displayWidth * 0.75f);
 
         Integer natPixelWidth = attachment.width();
         Integer natPixelHeight = attachment.height();
         if ((natPixelWidth == null || natPixelWidth <= 0) && url != null) {
-            PixelSize cached = UrlTextureCache.INSTANCE.getSizePixels(url);
+            PixelSize cached = TextureManager.INSTANCE.get(url, null).pixelSize();
             if (cached != null) {
                 natPixelWidth = cached.width();
                 natPixelHeight = cached.height();

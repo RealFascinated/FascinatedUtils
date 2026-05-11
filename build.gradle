@@ -23,6 +23,7 @@ repositories {
     // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
     // See https://docs.gradle.org/current/userguide/declaring_repositories.html
     // for more information about repositories.
+    mavenCentral()
     maven {
         url = uri("https://jitpack.io")
     }
@@ -39,6 +40,7 @@ dependencies {
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     implementation(include("net.kyori:adventure-platform-fabric:${project.adventure_fabric_version}"))
     implementation(include("org.yaml:snakeyaml:2.4"))
+    implementation(include("org.sejda.imageio:webp-imageio:0.1.6"))
     implementation(include("com.logisticscraft:occlusionculling:0.0.8-SNAPSHOT"))
     implementation files('libs/occlusionculling.jar')
     

@@ -1,11 +1,12 @@
 package cc.fascinated.fascinatedutils.gui2.node.social.chat;
 
-import cc.fascinated.fascinatedutils.caches.UrlTextureCache;
+import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
+import cc.fascinated.fascinatedutils.systems.TextureManager;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.node.ButtonNode;
 import cc.fascinated.fascinatedutils.gui2.node.CardNode;
-import cc.fascinated.fascinatedutils.gui2.node.ImageNode;
+import cc.fascinated.fascinatedutils.gui2.node.TextureNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
 import java.nio.file.Path;
@@ -27,17 +28,13 @@ class PendingAttachmentPreviewNode extends PositionedNode {
         addChild(new CardNode()
                 .setCornerRadius(CORNER_RADIUS)
                 .setNoBorder()
-                .setFillResolver(theme -> theme.attachmentPlaceholderFill())
+                .setFillResolver(UiTheme::attachmentPlaceholderFill)
                 .left(PAD).top(PAD).size(THUMB_SIZE, THUMB_SIZE));
 
-        addChild(new ImageNode()
-                .setTextureSupplier(() -> {
+        addChild(new TextureNode()
+                .setLoadedTextureSupplier(() -> {
                     Path path = pendingAttachment.get();
-                    return path != null ? UrlTextureCache.INSTANCE.getLocal(path, null) : null;
-                })
-                .setNaturalSizeSupplier(() -> {
-                    Path path = pendingAttachment.get();
-                    return path != null ? UrlTextureCache.INSTANCE.getLocalSizePixels(path) : null;
+                    return path != null ? TextureManager.INSTANCE.getLocal(path, null) : null;
                 })
                 .setCornerRadius(CORNER_RADIUS)
                 .left(PAD).top(PAD).size(THUMB_SIZE, THUMB_SIZE));

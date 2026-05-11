@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.memory.hud;
 
-import cc.fascinated.fascinatedutils.common.ByteFormatterUtil;
+import cc.fascinated.fascinatedutils.common.ByteUtils;
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
@@ -31,7 +31,7 @@ public class MemoryHudPanel extends MiniMessageHudPanel {
         MemoryWidget.Format fmt = memoryWidget.memoryFormatSetting().getValue();
         return switch (fmt) {
             case FULL -> {
-                ByteFormatterUtil.ScaledByteComparison heap = ByteFormatterUtil.scaledByteComparison(2, usedBytes, maxBytes);
+                ByteUtils.ScaledByteComparison heap = ByteUtils.scaledByteComparison(2, usedBytes, maxBytes);
                 List<String> amounts = heap.amounts();
                 yield List.of("<%s>%s <grey>/ <white>%s <white>%s".formatted(hexColor, amounts.get(0), amounts.get(1), heap.unit()));
             }

@@ -1,11 +1,14 @@
 package cc.fascinated.fascinatedutils.common;
 
+import lombok.Getter;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
 public class LRUCache<K, V> {
 
+    @Getter
     private final Map<K, V> map;
 
     public LRUCache(int maxSize) {

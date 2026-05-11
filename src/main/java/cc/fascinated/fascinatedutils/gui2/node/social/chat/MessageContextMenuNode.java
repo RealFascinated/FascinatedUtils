@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.node.ContextMenuNode;
+import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +45,7 @@ public class MessageContextMenuNode extends ContextMenuNode {
         }));
         if (isOwn) {
             items.add(Item.separator());
-            items.add(new Item("Delete Message", theme -> theme.danger(), ModUiTextures.TRASH.getId(), () -> {
+            items.add(new Item("Delete Message", UiTheme::danger, ModUiTextures.TRASH.getId(), () -> {
                 onClose.run();
                 msgPendingDelete.set(message);
             }));

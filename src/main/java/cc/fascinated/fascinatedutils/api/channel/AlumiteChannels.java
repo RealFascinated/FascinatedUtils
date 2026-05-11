@@ -93,8 +93,24 @@ public class AlumiteChannels {
         channels = List.copyOf(orderedChannels);
     }
 
-    public DmChannel openDmAndCache(String recipientUserId) throws AlumiteApiException {
-        return afterOpenDm(alumite.openDm(recipientUserId));
+    public DmChannel openDm(String recipientUserId) throws AlumiteApiException {
+        ChannelDetailDTO channelDto = alumite.openDm(recipientUserId);
+
+        cacheChannelDetail(channelDto);
+        if (channelDto == null) {
+            return null;
+        }
+        Channel channel = channelsById.get(channelDto.id());
+        channel.fetchMessages(50);
+        if (channel instanceof DmChannel dmChannel) {
+            if (channels.stream().noneMatch(existing -> existing.id().equals(channelDto.id()))) {
+                List<Channel> updated = new ArrayList<>(channels);
+                updated.add(dmChannel);
+                channels = List.copyOf(resortChannels(updated));
+            }
+            return dmChannel;
+        }
+        return null;
     }
 
     void cacheReadState(String channelId, String lastReadMessageId) {
@@ -277,23 +293,6 @@ public class AlumiteChannels {
     void hideChannelLocal(String channelId) {
         removeChannel(channelId);
         messagesByChannel.remove(channelId);
-    }
-
-    private DmChannel afterOpenDm(ChannelDetailDTO detailDto) {
-        cacheChannelDetail(detailDto);
-        if (detailDto == null) {
-            return null;
-        }
-        Channel channel = channelsById.get(detailDto.id());
-        if (channel instanceof DmChannel dmChannel) {
-            if (channels.stream().noneMatch(existing -> existing.id().equals(detailDto.id()))) {
-                List<Channel> updated = new ArrayList<>(channels);
-                updated.add(dmChannel);
-                channels = List.copyOf(resortChannels(updated));
-            }
-            return dmChannel;
-        }
-        return null;
     }
 
     private void applyChannelLastMessage(Channel channel, String lastMessageAt, LastMessagePreview preview) {

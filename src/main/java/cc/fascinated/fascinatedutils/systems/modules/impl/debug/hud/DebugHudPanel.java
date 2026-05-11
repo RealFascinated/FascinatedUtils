@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.debug.hud;
 
+import cc.fascinated.fascinatedutils.common.ByteUtils;
+import cc.fascinated.fascinatedutils.systems.TextureManager;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
@@ -81,6 +83,10 @@ public class DebugHudPanel extends MiniMessageHudPanel {
                 out.add(String.format(Locale.ENGLISH, "  Last Pass: %.2f ms", passMs));
             }
         }
+
+        out.add("<grey>Textures</grey>");
+        out.add("  Loaded: " + TextureManager.INSTANCE.loadedTextures());
+        out.add("  Size: " + ByteUtils.formatBytes(TextureManager.INSTANCE.loadedTextureTotalSize(), 2));
 
         return out;
     }

@@ -1,4 +1,26 @@
 {
   "java.configuration.updateBuildConfiguration": "automatic",
-  "java.compile.nullAnalysis.mode": "disabled"
+  "java.compile.nullAnalysis.mode": "disabled",
+  "files.watcherExclude": {
+    "**/run/**": true,
+    "**/.gradle/**": true,
+    "**/build/**": true,
+    "**/*.mca": true,
+    "**/*.dat": true,
+    "**/*.dat_old": true
+  },
+  "files.exclude": {
+    "**/run/**": true,
+    "**/.gradle/**": true,
+    "**/build/**": true
+  },
+  "search.exclude": {
+    "**/run/**": true,
+    "**/.gradle/**": true,
+    "**/build/**": true
+  },
+  "[java]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+  }
 }

@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.ScrollColumnNode;
+import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerContextMenuHandler;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.FriendRowNode;
@@ -30,7 +31,8 @@ public class FriendsPanelNode extends PositionedNode {
             UserStatus.OFFLINE
     };
 
-    public FriendsPanelNode(PlayerContextMenuHandler contextMenuHandler, Consumer<User> onOpenDm) {
+    public FriendsPanelNode(PlayerContextMenuHandler contextMenuHandler, Consumer<User> onOpenDm,
+                             UiState<Integer> listScrollState) {
         full();
 
         FriendsHeaderNode header = new FriendsHeaderNode();
@@ -44,14 +46,16 @@ public class FriendsPanelNode extends PositionedNode {
         PositionedNode listPadded = new PositionedNode()
                 .left(LIST_PADDING).right(LIST_PADDING)
                 .top(LIST_PADDING).bottom(LIST_PADDING);
-        listPadded.addChild(buildList(contextMenuHandler, onOpenDm));
+        listPadded.addChild(buildList(contextMenuHandler, onOpenDm, listScrollState));
         listArea.addChild(listPadded);
         addChild(listArea);
     }
 
-    private static ScrollColumnNode buildList(PlayerContextMenuHandler contextMenuHandler, Consumer<User> onOpenDm) {
+    private static ScrollColumnNode buildList(PlayerContextMenuHandler contextMenuHandler, Consumer<User> onOpenDm,
+                                              UiState<Integer> listScrollState) {
         ScrollColumnNode list = new ScrollColumnNode();
         list.setGap(2);
+        list.bindScrollState(listScrollState);
 
         if (Alumite.INSTANCE == null) {
             return list;

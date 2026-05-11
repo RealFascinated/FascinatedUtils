@@ -35,15 +35,12 @@ public class SocialScreen extends RootScreen {
 
     private static String lastChannelId = null;
 
-    private UiStateStore stateStore;
-
     public SocialScreen() {
         super(Component.translatable("alumite.social.title"));
     }
 
     @Override
-    protected UiNode composeContent(UiStateStore stateStore) {
-        this.stateStore = stateStore;
+    protected UiNode composeContent() {
         UiState<String> selectedChannelId = stateStore.state("social.channel", lastChannelId);
         Consumer<String> selectChannel = id -> { lastChannelId = id; selectedChannelId.set(id); };
         UiState<Boolean> statusMenuOpen = stateStore.state("social.statusMenu.open", false);
@@ -59,8 +56,7 @@ public class SocialScreen extends RootScreen {
         PlayerContextMenuHandler contextMenuHandler = (user, pointerX, pointerY) -> {
             if (user != null) {
                 GlobalContextMenu.open(() -> {
-                    PlayerContextMenuNode menu = new PlayerContextMenuNode(
-                            user, GlobalContextMenu::close, () -> removeFriend(user));
+                    PlayerContextMenuNode menu = new PlayerContextMenuNode(user, GlobalContextMenu::close, () -> removeFriend(user));
                     menu.setPreferredPosition(pointerX, pointerY);
                     return menu;
                 });
@@ -95,7 +91,7 @@ public class SocialScreen extends RootScreen {
                     statusMenuPositionY.set(pointerY);
                     statusMenuOpen.set(!statusMenuOpen.get());
                 });
-        buildRightPane(rightPane, stateStore, activeChannel, contextMenuHandler, selectChannel);
+        buildRightPane(rightPane, activeChannel, contextMenuHandler, selectChannel);
 
         if (statusMenuOpen.get()) {
             StatusMenuNode statusMenu = new StatusMenuNode(() -> statusMenuOpen.set(false));
@@ -113,13 +109,15 @@ public class SocialScreen extends RootScreen {
                 .fullWidth()
                 .top(0)
                 .bottom(PROFILE_PANE_HEIGHT);
+        UiState<Integer> channelListScrollState = stateStore.state("social.channel-list.scroll", 0);
         SocialNavNode navNode = new SocialNavNode(
                 friendsActive,
                 lastChannelId,
                 incomingRequestCount(),
                 () -> selectChannel.accept(null),
                 selectChannel,
-                contextMenuHandler);
+                contextMenuHandler,
+                channelListScrollState);
         navArea.addChild(navNode);
         leftPane.addChild(navArea);
 
@@ -131,14 +129,16 @@ public class SocialScreen extends RootScreen {
         leftPane.setNodeId("social.left-pane");
     }
 
-    private void buildRightPane(PositionedNode rightPane, UiStateStore stateStore,
+    private void buildRightPane(PositionedNode rightPane,
                                  Channel activeChannel, PlayerContextMenuHandler contextMenuHandler,
                                  Consumer<String> selectChannel) {
         if (activeChannel != null) {
             rightPane.addChild(new ChatPanelNode(activeChannel, stateStore, contextMenuHandler));
         } else {
+            UiState<Integer> friendsListScrollState = stateStore.state("social.friends-list.scroll", 0);
             rightPane.addChild(new FriendsPanelNode(contextMenuHandler,
-                    user -> openDmWithUser(user, selectChannel)));
+                    user -> openDmWithUser(user, selectChannel),
+                    friendsListScrollState));
         }
     }
 
@@ -209,7 +209,7 @@ public class SocialScreen extends RootScreen {
         }
         AlumiteMod.SCHEDULED_POOL.execute(() -> {
             try {
-                DmChannel dm = Alumite.INSTANCE.channels().openDmAndCache(user.id());
+                DmChannel dm = Alumite.INSTANCE.channels().openDm(user.id());
                 selectChannel.accept(dm.id());
             } catch (AlumiteApiException ignored) {
             }
@@ -228,6 +228,13 @@ public class SocialScreen extends RootScreen {
         });
     }
 
+    public void openChannel(String channelId) {
+        lastChannelId = channelId;
+        if (stateStore != null) {
+            stateStore.<String>state("social.channel", lastChannelId).set(channelId);
+        }
+    }
+
     private int incomingRequestCount() {
         if (Alumite.INSTANCE == null) {
             return 0;
@@ -236,4 +243,5 @@ public class SocialScreen extends RootScreen {
         return requests != null ? requests.size() : 0;
     }
 
+    
 }

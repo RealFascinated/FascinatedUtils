@@ -22,6 +22,7 @@ public class Settings implements GsonSerializable<Settings> {
 
     private final KeybindSetting shellOpenKeybind = new KeybindSetting("shell_open_keybind", Keybinds::openMenuKeybind);
     private final KeybindSetting socialKeybind = new KeybindSetting("social_keybind", Keybinds::socialKeybind);
+    private final KeybindSetting screenshotsKeybind = new KeybindSetting("screenshots_keybind", Keybinds::screenshotKeybind);
 
     private final BooleanSetting showSelfNameplate = BooleanSetting.builder().id("show_self_nameplate")
             .defaultValue(true)
@@ -67,6 +68,7 @@ public class Settings implements GsonSerializable<Settings> {
     public Settings() {
         addSetting(shellOpenKeybind);
         addSetting(socialKeybind);
+        addSetting(screenshotsKeybind);
         addSetting(showSelfNameplate);
         addSetting(showServerListInPauseMenu);
         addSetting(confirmDisconnect);

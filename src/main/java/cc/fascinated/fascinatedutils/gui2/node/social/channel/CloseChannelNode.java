@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui2.node.ImageNode;
+import cc.fascinated.fascinatedutils.gui2.node.TextureNode;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 
 public class CloseChannelNode extends PositionedNode {
@@ -19,7 +19,7 @@ public class CloseChannelNode extends PositionedNode {
         this.channel = channel;
         size(SIZE);
 
-        addChild(new ImageNode()
+        addChild(new TextureNode()
                 .setTextureSupplier(() -> ModUiTextures.CLOSE.getId())
                 .setTintSupplier(() -> hovered ? UiThemeRepository.get().textPrimary() : UiThemeRepository.get().textMuted())
                 .left(ICON_INSET).right(ICON_INSET).top(ICON_INSET).bottom(ICON_INSET));

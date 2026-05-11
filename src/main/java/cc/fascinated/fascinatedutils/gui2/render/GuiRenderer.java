@@ -216,6 +216,15 @@ public class GuiRenderer implements RenderFrame {
         backend.drawRoundedTexture(textureId, positionX, positionY, width, height, cornerRadius, tintArgb);
     }
 
+    @Override
+    public ClipRegion currentClip() {
+        if (clipStack.isEmpty()) {
+            return null;
+        }
+        ClipLayer top = clipStack.peek();
+        return new ClipRegion(top.positionX, top.positionY, top.width, top.height);
+    }
+
     public void setPointer(float x, float y) {
         pointerX = x;
         pointerY = y;

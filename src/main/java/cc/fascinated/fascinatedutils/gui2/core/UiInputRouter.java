@@ -71,11 +71,14 @@ public class UiInputRouter {
     }
 
     private boolean handlePointerRelease(UiNode root, UiEvent.PointerRelease pointerRelease) {
-        UiNode releaseTarget = pressedLeaf != null ? pressedLeaf : hitLeaf(root, pointerRelease.pointerX(), pointerRelease.pointerY());
+        UiNode releaseLeaf = pressedLeaf;
+        UiNode releaseTarget = releaseLeaf != null ? releaseLeaf : hitLeaf(root, pointerRelease.pointerX(), pointerRelease.pointerY());
         boolean consumed = false;
         if (releaseTarget != null) {
             consumed = walkPointerRelease(releaseTarget, pointerRelease.pointerX(), pointerRelease.pointerY(), pointerRelease.button());
-            consumed = walkClick(releaseTarget, pointerRelease.pointerX(), pointerRelease.pointerY(), pointerRelease.button()) || consumed;
+            if (releaseLeaf != null) {
+                consumed = walkClick(releaseTarget, pointerRelease.pointerX(), pointerRelease.pointerY(), pointerRelease.button()) || consumed;
+            }
         }
         pressedLeaf = null;
         return consumed;

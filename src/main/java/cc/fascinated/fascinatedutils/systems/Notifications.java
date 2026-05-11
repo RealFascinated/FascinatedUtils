@@ -1,4 +1,4 @@
-package cc.fascinated.fascinatedutils.systems.notification;
+package cc.fascinated.fascinatedutils.systems;
 
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.channel.json.AttachmentDTO;

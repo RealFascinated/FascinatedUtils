@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.oldgui.widgets;
 
-import cc.fascinated.fascinatedutils.caches.UrlTextureCache;
+import cc.fascinated.fascinatedutils.systems.TextureManager;
 import cc.fascinated.fascinatedutils.oldgui.core.UiFrameContext;
 import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
@@ -79,8 +79,8 @@ public class FAvatarWidget extends FWidget {
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
         String uuid = minecraftUuidSupplier.get();
-        Identifier texture = uuid != null && !uuid.isBlank()
-                ? UrlTextureCache.INSTANCE.get("https://mc.fascinated.cc/api/skins/%s/face.png".formatted(uuid), () -> {})
+        TextureManager.LoadedTexture texture = uuid != null && !uuid.isBlank()
+                ? TextureManager.INSTANCE.get("https://mc.fascinated.cc/api/skins/%s/face.png".formatted(uuid), () -> {})
                 : null;
         float inset = borderArgb != null ? borderThickness : 0f;
         if (borderArgb != null) {
@@ -91,7 +91,7 @@ public class FAvatarWidget extends FWidget {
             if (borderArgb == null) {
                 graphics.fillRoundedRect(x(), y(), size, size, cornerRadius, textureBackgroundArgb, RectCornerRoundMask.ALL);
             }
-            graphics.drawTexture(texture, x() + inset, y() + inset, size - 2f * inset, size - 2f * inset, 0xFFFFFFFF);
+            graphics.drawTexture(texture.id(), x() + inset, y() + inset, size - 2f * inset, size - 2f * inset, 0xFFFFFFFF);
         } else {
             String name = displayNameSupplier.get();
             String initial = name == null || name.isBlank() ? "?" : String.valueOf(Character.toUpperCase(name.charAt(0)));

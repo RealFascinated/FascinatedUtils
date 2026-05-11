@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.gui2.node.social.player;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
-import cc.fascinated.fascinatedutils.caches.UrlTextureCache;
+import cc.fascinated.fascinatedutils.systems.TextureManager;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import cc.fascinated.fascinatedutils.gui2.render.UiText;
@@ -38,14 +38,14 @@ public class PlayerAvatarNode extends PositionedNode {
 
         User user = userSupplier.get();
         String uuid = user != null ? user.minecraftUuid() : null;
-        Identifier texture = uuid != null && !uuid.isBlank()
-                ? UrlTextureCache.INSTANCE.get("https://mc.fascinated.cc/api/skins/%s/face.png".formatted(uuid), () -> {})
+        TextureManager.LoadedTexture texture = uuid != null && !uuid.isBlank()
+                ? TextureManager.INSTANCE.get("https://mc.fascinated.cc/api/skins/%s/face.png".formatted(uuid), () -> {})
                 : null;
 
         int circleRadius = side / 2;
         if (texture != null) {
             renderFrame.drawRoundedRect(posX, posY, side, side, circleRadius, renderFrame.theme().avatarRing());
-            renderFrame.drawRoundedTexture(texture, posX, posY, side, side, circleRadius, renderFrame.theme().textPrimary());
+            renderFrame.drawRoundedTexture(texture.id(), posX, posY, side, side, circleRadius, renderFrame.theme().textPrimary());
         } else {
             String name = user != null ? user.minecraftName() : null;
             String initial = name == null || name.isBlank() ? "?" : String.valueOf(Character.toUpperCase(name.charAt(0)));

@@ -71,8 +71,11 @@ public class PopupNode extends PositionedNode {
         return false;
     }
 
+    protected void configurePopup(RenderFrame renderFrame) {}
+
     @Override
     public void layout(RenderFrame renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
+        configurePopup(renderFrame);
         bounds().set(parentX, parentY, parentWidth, parentHeight);
         popupX = parentX + (parentWidth - popupWidth) / 2;
         popupY = parentY + (parentHeight - popupHeight) / 2;

@@ -20,6 +20,7 @@ import org.lwjgl.glfw.GLFW;
 public abstract class RootScreen extends WidgetScreen {
     private final UiHost host = new UiHost();
     private boolean initialized;
+    protected final UiStateStore stateStore = host.stateStore();
 
     protected RootScreen(Component title) {
         super(title);
@@ -34,7 +35,7 @@ public abstract class RootScreen extends WidgetScreen {
      * a full-screen root that also mounts the active {@link GlobalContextMenu} as a top-level overlay,
      * ensuring only one context menu can be visible at a time across all screens.
      */
-    protected UiNode composeContent(UiStateStore stateStore) {
+    protected UiNode composeContent() {
         return createRootNode();
     }
 
@@ -44,7 +45,7 @@ public abstract class RootScreen extends WidgetScreen {
      */
     protected final UiNode composeRoot(UiStateStore stateStore) {
         PositionedNode root = new PositionedNode().full();
-        root.addChild(composeContent(stateStore));
+        root.addChild(composeContent());
         GlobalContextMenu.mountIfActive(root);
         return root;
     }

@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.json.*;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteModelMapper;
 import cc.fascinated.fascinatedutils.client.Client;
+import cc.fascinated.fascinatedutils.common.ImageUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -56,9 +57,9 @@ public abstract sealed class Channel permits DmChannel, GroupChannel {
         List<String> attachmentIds = new ArrayList<>();
         for (Path path : attachments) {
             try {
-                byte[] data = Files.readAllBytes(path);
-                attachmentIds.add(uploadAttachment(data, path.getFileName().toString()).id());
-            } catch (IOException exception) {
+                byte[] compressed = ImageUtils.compress(Files.readAllBytes(path), 0.85f);
+                attachmentIds.add(uploadAttachment(compressed, path.getFileName().toString()).id());
+            } catch (Exception exception) {
                 throw new AlumiteApiException(null, "Failed to read attachment: " + path.getFileName());
             }
         }

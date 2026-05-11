@@ -15,9 +15,10 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.oldgui.ModUiClientEntry;
 import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
+import cc.fascinated.fascinatedutils.systems.Notifications;
 import cc.fascinated.fascinatedutils.systems.activity.ActivityHandler;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.notification.Notifications;
+import cc.fascinated.fascinatedutils.systems.screenshot.ScreenshotManager;
 import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
 import cc.fascinated.fascinatedutils.systems.turboparticles.TurboParticles;
 import cc.fascinated.fascinatedutils.updater.Updater;
@@ -50,6 +51,7 @@ public class Client implements ClientModInitializer {
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> eventBus.post(new ClientStartedEvent(client)));
         ClientLifecycleEvents.CLIENT_STARTED.register(ModUiTextures::loadTextures);
+        ClientLifecycleEvents.CLIENT_STARTED.register(_ -> ScreenshotManager.init());
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             if (client.isSingleplayer()) {
                 eventBus.post(new SingleplayerWorldLoadEvent());

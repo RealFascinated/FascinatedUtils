@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.node;
 
+import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
@@ -8,15 +9,16 @@ import java.util.function.Function;
 
 public class ConfirmPopupNode extends PopupNode {
 
-    private static final int POPUP_WIDTH = 220;
     private static final int POPUP_HEIGHT = 90;
     private static final int PAD_TOP = 16;
     private static final int PAD_BOTTOM = 12;
+    private static final int PAD_SIDE = 16;
     private static final int MESSAGE_TITLE_GAP = 6;
     private static final int BUTTON_HEIGHT = 22;
     private static final int BUTTON_GAP = 8;
     private static final int BUTTON_WIDTH = 76;
-    private static final int BUTTON_PAIR_START_X = (POPUP_WIDTH - BUTTON_WIDTH * 2 - BUTTON_GAP) / 2;
+    private static final int BUTTON_ROW_WIDTH = BUTTON_WIDTH * 2 + BUTTON_GAP;
+    private static final int MIN_POPUP_WIDTH = BUTTON_ROW_WIDTH + PAD_SIDE * 2;
 
     private String title = "";
     private String message = null;
@@ -31,7 +33,6 @@ public class ConfirmPopupNode extends PopupNode {
     private final TextNode messageTextNode;
 
     public ConfirmPopupNode() {
-        setPopupWidth(POPUP_WIDTH);
         setPopupHeight(POPUP_HEIGHT);
         setOnDismiss(() -> onCancel.run());
 
@@ -41,15 +42,20 @@ public class ConfirmPopupNode extends PopupNode {
 
         messageTextNode = new TextNode(() -> message != null ? message : "");
         messageTextNode.setColorResolver(theme -> theme.textMuted()).alignX(0.5f).top(PAD_TOP);
+        messageTextNode.setVisible(false);
         addPopupChild(messageTextNode);
 
         cancelButton = new ButtonNode(cancelLabel).setOnPress(() -> onCancel.run());
-        cancelButton.left(BUTTON_PAIR_START_X).bottom(PAD_BOTTOM).size(BUTTON_WIDTH, BUTTON_HEIGHT);
-        addPopupChild(cancelButton);
+        cancelButton.left(0).size(BUTTON_WIDTH, BUTTON_HEIGHT);
 
         confirmButton = new ButtonNode(confirmLabel).setOnPress(() -> onConfirm.run());
-        confirmButton.left(BUTTON_PAIR_START_X + BUTTON_WIDTH + BUTTON_GAP).bottom(PAD_BOTTOM).size(BUTTON_WIDTH, BUTTON_HEIGHT);
-        addPopupChild(confirmButton);
+        confirmButton.left(BUTTON_WIDTH + BUTTON_GAP).size(BUTTON_WIDTH, BUTTON_HEIGHT);
+
+        PositionedNode buttonRow = new PositionedNode();
+        buttonRow.size(BUTTON_ROW_WIDTH, BUTTON_HEIGHT).alignX(0.5f).bottom(PAD_BOTTOM);
+        buttonRow.addChild(cancelButton);
+        buttonRow.addChild(confirmButton);
+        addPopupChild(buttonRow);
     }
 
     public ConfirmPopupNode setTitle(String title) {
@@ -59,6 +65,7 @@ public class ConfirmPopupNode extends PopupNode {
 
     public ConfirmPopupNode setMessage(String message) {
         this.message = message;
+        messageTextNode.setVisible(message != null && !message.isBlank());
         return this;
     }
 
@@ -98,19 +105,14 @@ public class ConfirmPopupNode extends PopupNode {
     }
 
     @Override
-    public void layout(RenderFrame renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
-        // Recompute popup height based on whether message is shown
+    protected void configurePopup(RenderFrame renderFrame) {
         boolean hasMessage = message != null && !message.isBlank();
-        int computedHeight = hasMessage
-                ? POPUP_HEIGHT + renderFrame.fontHeight() + MESSAGE_TITLE_GAP
-                : POPUP_HEIGHT;
-        setPopupHeight(computedHeight);
-
-        messageTextNode.setVisible(hasMessage);
+        setPopupHeight(hasMessage ? POPUP_HEIGHT + renderFrame.fontHeight() + MESSAGE_TITLE_GAP : POPUP_HEIGHT);
         if (hasMessage) {
             messageTextNode.top(PAD_TOP + renderFrame.fontHeight() + MESSAGE_TITLE_GAP);
         }
-
-        super.layout(renderFrame, parentX, parentY, parentWidth, parentHeight);
+        int titleWidth = renderFrame.measureTextWidth(title, true);
+        int messageWidth = hasMessage ? renderFrame.measureTextWidth(message, false) : 0;
+        setPopupWidth(Math.max(MIN_POPUP_WIDTH, Math.max(titleWidth, messageWidth) + PAD_SIDE * 2));
     }
 }

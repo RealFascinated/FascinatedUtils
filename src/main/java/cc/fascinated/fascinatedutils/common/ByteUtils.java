@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Locale;
 
 @UtilityClass
-public class ByteFormatterUtil {
+public class ByteUtils {
     private static final String[] UNITS = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
 
     /**

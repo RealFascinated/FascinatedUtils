@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.Errors;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
 import cc.fascinated.fascinatedutils.common.JsonUtils;
+import cc.fascinated.fascinatedutils.oldgui.toast.Toast;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -160,6 +161,7 @@ public final class AlumiteHttpClient {
             String message = JsonUtils.stringMember(root, "message");
             if ((message == null || message.isBlank()) && error != null) {
                 message = error.getDisplayText();
+                Toast.show().message(message).error();
             }
             return new AlumiteApiException(error, message);
         } catch (Exception ignored) {

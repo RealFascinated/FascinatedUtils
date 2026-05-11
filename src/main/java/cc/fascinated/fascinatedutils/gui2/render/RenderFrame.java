@@ -69,6 +69,14 @@ public interface RenderFrame {
 
     void drawRoundedTexture(Identifier textureId, int positionX, int positionY, int width, int height, int cornerRadius, int tintArgb);
 
+    /**
+     * Returns the current effective clip region in logical coordinates, or {@code null} if there
+     * is no active clip (treat as fully visible).
+     */
+    default ClipRegion currentClip() {
+        return null;
+    }
+
     default float pointerX() { return Float.NaN; }
 
     default float pointerY() { return Float.NaN; }

@@ -142,12 +142,12 @@ public class DefaultUiTheme implements UiTheme {
 
     @Override
     public int dangerFill() {
-        return 0x44E05555;
+        return 0xFF6B2A2A;
     }
 
     @Override
     public int dangerFillHover() {
-        return 0x66E05555;
+        return 0xFF7E3333;
     }
 
     @Override

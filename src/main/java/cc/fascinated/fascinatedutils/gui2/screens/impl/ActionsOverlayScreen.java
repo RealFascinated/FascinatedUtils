@@ -15,6 +15,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NonNull;
+
+import java.util.List;
 
 public class ActionsOverlayScreen {
 
@@ -24,34 +28,60 @@ public class ActionsOverlayScreen {
     private static final int BUTTON_HEIGHT = 20;
     private static final int BUTTON_GAP = 6;
     private static final int RIGHT_MARGIN = 8;
-    private static final int GROUP_TOP_OFFSET = -23;
     private static final int LOGIN_TEXT_X = 5;
     private static final int LOGIN_TEXT_Y = 5;
 
     private final UiHost host = new UiHost();
 
+    private static final List<Button> BUTTONS = List.of(
+            new Button(
+                    "hud-editor",
+                    "Hud Editor",
+                    ModUiTextures.SETTINGS.getId(),
+                    () -> Minecraft.getInstance().setScreen(new HUDEditorScreen())
+            ),
+            new Button(
+                    "social",
+                    "Social",
+                    ModUiTextures.GROUP.getId(),
+                    () -> Minecraft.getInstance().setScreen(new SocialScreen())
+            ),
+            new Button(
+                    "screenshots",
+                    "Screenshots",
+                    ModUiTextures.IMAGE.getId(),
+                    () -> Minecraft.getInstance().setScreen(new ScreenshotScreen())
+            )
+    );
+
     private ActionsOverlayScreen() {
-        host.setComposer(unusedStateStore -> composeRoot());
+        host.setComposer(_ -> composeRoot());
     }
 
     private UiNode composeRoot() {
         PositionedNode rootNode = new PositionedNode().full();
         rootNode.setNodeId("title-root");
 
-        ButtonNode settingsButton = new ButtonNode(Component.translatable("alumite.setting.hud_editor.title").getString());
-        settingsButton.setNodeId("title-hud-editor");
-        settingsButton.size(BUTTON_WIDTH, BUTTON_HEIGHT);
-        settingsButton.right(RIGHT_MARGIN).topRel(0.5f, GROUP_TOP_OFFSET, 0f);
-        settingsButton.setLeftIcon(ModUiTextures.SETTINGS.getId());
-        settingsButton.setOnPress(() -> Minecraft.getInstance().setScreen(new HUDEditorScreen()));
+        PositionedNode buttonGroup = new PositionedNode()
+                .size(BUTTON_WIDTH, BUTTON_HEIGHT * BUTTONS.size() + BUTTON_GAP)
+                .right(RIGHT_MARGIN).alignY(0.5f)
+                .columnGap(BUTTON_GAP);
 
-        ButtonNode socialButton = new ButtonNode(Component.translatable("alumite.social.title").getString());
-        socialButton.setNodeId("title-social");
-        socialButton.size(BUTTON_WIDTH, BUTTON_HEIGHT);
-        socialButton.right(RIGHT_MARGIN).topRel(0.5f, GROUP_TOP_OFFSET + BUTTON_HEIGHT + BUTTON_GAP, 0f);
-        socialButton.setLeftIcon(ModUiTextures.GROUP.getId());
-        socialButton.setOnPress(() -> Minecraft.getInstance().setScreen(new SocialScreen()));
+        for (Button button : BUTTONS) {
+            ButtonNode node = new ButtonNode(button.displayName());
+            node.setNodeId(button.id());
+            node.size(BUTTON_WIDTH, BUTTON_HEIGHT);
+            node.setRightIcon(button.icon());
+            node.setOnPress(button.onClick());
+            buttonGroup.addChild(node);
+        }
 
+        rootNode.addChild(loggedInAccountNode());
+        rootNode.addChild(buttonGroup);
+        return rootNode;
+    }
+
+    private static @NonNull TextNode loggedInAccountNode() {
         TextNode loginTextNode = new TextNode(() -> {
             var selfUser = Alumite.INSTANCE.users().selfUser();
             if (selfUser == null) {
@@ -66,11 +96,7 @@ public class ActionsOverlayScreen {
         loginTextNode.setNodeId("alumite-username");
         loginTextNode.pos(LOGIN_TEXT_X, LOGIN_TEXT_Y);
         loginTextNode.setTextAlign(0f, 0f).setShadow(true);
-
-        rootNode.addChild(loginTextNode);
-        rootNode.addChild(settingsButton);
-        rootNode.addChild(socialButton);
-        return rootNode;
+        return loginTextNode;
     }
 
     public void render(GuiGraphicsExtractor graphics) {
@@ -98,4 +124,6 @@ public class ActionsOverlayScreen {
         GuiRenderer.fireAndClearPressedRegion(pointerX, pointerY);
         return pressed;
     }
+
+    record Button(String id, String displayName, Identifier icon, Runnable onClick) {}
 }

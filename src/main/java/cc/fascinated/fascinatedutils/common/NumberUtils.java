@@ -98,4 +98,8 @@ public class NumberUtils {
         BigDecimal stepDecimal = new BigDecimal(Float.toString(step));
         return Math.max(0, stepDecimal.stripTrailingZeros().scale());
     }
+    
+    public static String formatWithCommas(long value) {
+        return String.format("%,d", value);
+    }
 }

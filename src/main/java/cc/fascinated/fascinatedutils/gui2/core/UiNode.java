@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.gui2.core;
 
+import cc.fascinated.fascinatedutils.gui2.render.ClipRegion;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
 import java.util.ArrayList;
@@ -14,6 +15,11 @@ public abstract class UiNode {
     private boolean visible = true;
     private boolean enabled = true;
     private boolean mounted;
+    private boolean inViewport = false;
+    private Runnable enterViewportCallback;
+    private Runnable leaveViewportCallback;
+    private Runnable pointerEnterCallback;
+    private Runnable pointerLeaveCallback;
 
     public UiNode parent() {
         return parent;
@@ -51,7 +57,13 @@ public abstract class UiNode {
     }
 
     public void setVisible(boolean visible) {
+        if (this.visible == visible) {
+            return;
+        }
         this.visible = visible;
+        if (!visible) {
+            notifySubtreeViewportLeave();
+        }
     }
 
     public boolean enabled() {
@@ -60,6 +72,35 @@ public abstract class UiNode {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    /**
+     * Whether this node's bounds are currently intersecting the active clip region and therefore
+     * visible within the rendered viewport. Updated each frame during {@link #render}.
+     */
+    public boolean inViewport() {
+        return inViewport;
+    }
+
+    /**
+     * Sets a callback invoked the first time this node's bounds enter the rendered viewport.
+     *
+     * @param callback called when the node becomes visible in the viewport
+     */
+    public UiNode setOnEnterViewport(Runnable callback) {
+        this.enterViewportCallback = callback;
+        return this;
+    }
+
+    /**
+     * Sets a callback invoked when this node's bounds leave the rendered viewport, or when the
+     * node is hidden or unmounted.
+     *
+     * @param callback called when the node leaves the viewport
+     */
+    public UiNode setOnLeaveViewport(Runnable callback) {
+        this.leaveViewportCallback = callback;
+        return this;
     }
 
     public List<UiNode> childrenView() {
@@ -113,11 +154,37 @@ public abstract class UiNode {
         if (!visible) {
             return;
         }
-        renderSelf(renderFrame, deltaSeconds);
+
+        ClipRegion clip = renderFrame.currentClip();
+        boolean nowInViewport = clip == null || bounds.intersects(clip);
+        if (nowInViewport != inViewport) {
+            inViewport = nowInViewport;
+            if (inViewport) {
+                if (enterViewportCallback != null) enterViewportCallback.run();
+            } else {
+                if (leaveViewportCallback != null) leaveViewportCallback.run();
+            }
+        }
+
+        if (inViewport) {
+            renderSelf(renderFrame, deltaSeconds);
+        }
+
         if (children.isEmpty()) {
             return;
         }
+
         boolean shouldClipChildren = clipChildren();
+
+        // If this node clips its children and is itself out of the viewport, no child can be
+        // visible — propagate the leave notification and skip the render pass entirely.
+        if (!inViewport && shouldClipChildren) {
+            for (UiNode childNode : children) {
+                childNode.notifySubtreeViewportLeave();
+            }
+            return;
+        }
+
         if (shouldClipChildren) {
             renderFrame.pushClip(bounds.asClipRegion());
         }
@@ -126,8 +193,7 @@ public abstract class UiNode {
                 renderFrame.flushText();
                 childNode.render(renderFrame, deltaSeconds);
             }
-        }
-        finally {
+        } finally {
             if (shouldClipChildren) {
                 renderFrame.popClip();
             }
@@ -193,11 +259,23 @@ public abstract class UiNode {
         return false;
     }
 
+    public UiNode setOnPointerEnter(Runnable callback) {
+        this.pointerEnterCallback = callback;
+        return this;
+    }
+
+    public UiNode setOnPointerLeave(Runnable callback) {
+        this.pointerLeaveCallback = callback;
+        return this;
+    }
+
     public boolean onPointerEnter(float pointerX, float pointerY) {
+        if (pointerEnterCallback != null) pointerEnterCallback.run();
         return false;
     }
 
     public boolean onPointerLeave(float pointerX, float pointerY) {
+        if (pointerLeaveCallback != null) pointerLeaveCallback.run();
         return false;
     }
 
@@ -246,10 +324,25 @@ public abstract class UiNode {
         if (!mounted) {
             return;
         }
+        inViewport = false;
         for (UiNode childNode : children) {
             childNode.unmountSubtree();
         }
         onUnmount();
         mounted = false;
+    }
+
+    /**
+     * Recursively notifies this node and all descendants that they have left the viewport,
+     * firing {@link #onLeaveViewport()} on each node that was previously in the viewport.
+     */
+    void notifySubtreeViewportLeave() {
+        if (inViewport) {
+            inViewport = false;
+            if (leaveViewportCallback != null) leaveViewportCallback.run();
+        }
+        for (UiNode childNode : children) {
+            childNode.notifySubtreeViewportLeave();
+        }
     }
 }

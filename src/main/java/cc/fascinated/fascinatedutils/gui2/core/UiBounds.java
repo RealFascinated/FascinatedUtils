@@ -50,6 +50,11 @@ public class UiBounds {
         return pointerX >= positionX && pointerY >= positionY && pointerX < right() && pointerY < bottom();
     }
 
+    public boolean intersects(ClipRegion clip) {
+        return positionX < clip.right() && right() > clip.positionX()
+                && positionY < clip.bottom() && bottom() > clip.positionY();
+    }
+
     public ClipRegion asClipRegion() {
         return new ClipRegion(positionX, positionY, width, height);
     }

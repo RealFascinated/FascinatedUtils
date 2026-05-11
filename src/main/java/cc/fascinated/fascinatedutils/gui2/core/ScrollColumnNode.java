@@ -16,6 +16,7 @@ public class ScrollColumnNode extends UiNode {
     private int scrollOffset;
     private int contentHeight;
     private Consumer<Integer> onScrollOffsetChanged = ignored -> {};
+    private UiState<Integer> scrollState;
 
     private boolean scrollbarDragging;
     private float scrollbarDragStartY;
@@ -40,6 +41,12 @@ public class ScrollColumnNode extends UiNode {
 
     public ScrollColumnNode setOnScrollOffsetChanged(Consumer<Integer> onScrollOffsetChanged) {
         this.onScrollOffsetChanged = onScrollOffsetChanged == null ? ignored -> {} : onScrollOffsetChanged;
+        return this;
+    }
+
+    public ScrollColumnNode bindScrollState(UiState<Integer> state) {
+        this.scrollState = state;
+        this.scrollOffset = Math.max(0, state.get());
         return this;
     }
 
@@ -194,6 +201,9 @@ public class ScrollColumnNode extends UiNode {
             return;
         }
         scrollOffset = nextOffset;
+        if (scrollState != null) {
+            scrollState.set(scrollOffset);
+        }
         onScrollOffsetChanged.accept(scrollOffset);
     }
 }

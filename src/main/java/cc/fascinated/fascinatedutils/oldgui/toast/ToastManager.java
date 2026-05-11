@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.oldgui.toast;
 
-import cc.fascinated.fascinatedutils.caches.UrlTextureCache;
+import cc.fascinated.fascinatedutils.systems.TextureManager;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
@@ -276,9 +276,9 @@ public class ToastManager {
                     : titleY + capH + IMAGE_GAP;
             float imgDrawH = entry.imageDrawH > 0f ? entry.imageDrawH : imageDrawH(entry.toast, textClipW);
             float imgDrawW = imageDrawW(entry.toast, imgDrawH);
-            Identifier texture = UrlTextureCache.INSTANCE.get(entry.toast.imageUrl(), null);
+            TextureManager.LoadedTexture texture = TextureManager.INSTANCE.get(entry.toast.imageUrl(), null);
             if (texture != null) {
-                renderer.drawTexture(texture, textStartX, imgY, imgDrawW, imgDrawH, 0xFFFFFFFF);
+                renderer.drawTexture(texture.id(), textStartX, imgY, imgDrawW, imgDrawH, 0xFFFFFFFF);
             } else {
                 renderer.drawRect(textStartX, imgY, imgDrawW, imgDrawH, 0x20FFFFFF);
             }

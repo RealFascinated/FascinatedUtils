@@ -45,6 +45,7 @@
     "reach.EntityInteractionReachMixin",
     "scoreboard.GuiMixin",
     "scoreboard.GuiScoreDisplayOrderAccessor",
+    "screenshot.ScreenshotMixin",
     "soundfilter.SoundEngineMixin",
     "statuseffects.GuiMixin",
     "tab.PlayerListHudMixin",

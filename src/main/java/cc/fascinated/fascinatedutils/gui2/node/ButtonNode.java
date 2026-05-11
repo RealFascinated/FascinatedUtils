@@ -228,7 +228,7 @@ public class ButtonNode extends PositionedNode {
         int leftTextInset = leftIcon != null ? ICON_PADDING + ICON_SIZE + ICON_TEXT_GAP : 0;
         int textAreaX = bx + leftTextInset;
         int textAreaWidth = Math.max(0, bw - leftTextInset);
-        int textX = leftAlignLabel ? textAreaX + ICON_PADDING : textAreaX + (textAreaWidth - textWidth) / 2;
+        int textX = (leftAlignLabel || leftIcon != null || rightIcon != null) ? textAreaX + ICON_PADDING : textAreaX + (textAreaWidth - textWidth) / 2;
         int textY = by + (bh - renderFrame.fontHeight()) / 2;
         labelText.draw(renderFrame, textX, textY);
 
