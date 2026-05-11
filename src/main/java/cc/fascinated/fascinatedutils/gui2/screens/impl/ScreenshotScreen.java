@@ -129,18 +129,19 @@ public class ScreenshotScreen extends RootScreen {
         PanelNode bottomBar = new PanelNode();
         bottomBar.fullWidth().bottom(0).height(BAR_HEIGHT);
 
-        ButtonNode closeButton = new ButtonNode(() -> Component.translatable("alumite.screenshot.screen.close").getString());
-        closeButton.size(80, BUTTON_HEIGHT).left(PADDING).topRel(0.5f, 0, 0.5f);
-        closeButton.setOnPress(() -> Minecraft.getInstance().setScreen(null));
-        closeButton.setRounded(true);
-        bottomBar.addChild(closeButton);
-
         ButtonNode openFolderButton = new ButtonNode(() -> Component.translatable("alumite.screenshot.screen.open_folder").getString());
-        openFolderButton.size(90, BUTTON_HEIGHT).right(PADDING).topRel(0.5f, 0, 0.5f);
+        openFolderButton.size(90, BUTTON_HEIGHT).left(PADDING).topRel(0.5f, 0, 0.5f);
         openFolderButton.setOnPress(() -> Util.getPlatform().openFile(
                 Paths.get(Minecraft.getInstance().gameDirectory.getAbsolutePath(), "screenshots").toFile()));
         openFolderButton.setRounded(true);
         bottomBar.addChild(openFolderButton);
+
+        ButtonNode closeButton = new ButtonNode();
+        closeButton.size(BUTTON_HEIGHT, BUTTON_HEIGHT).right(6).alignY(0.5f);
+        closeButton.setIconCenter(ModUiTextures.CLOSE.getId());
+        closeButton.setOnPress(() -> Minecraft.getInstance().setScreen(null));
+        closeButton.setRounded(true);
+        bottomBar.addChild(closeButton);
 
         PositionedNode scrollArea = new PositionedNode();
         scrollArea.left(GRID_PADDING).right(GRID_PADDING).top(BAR_HEIGHT + GRID_PADDING).bottom(BAR_HEIGHT + GRID_PADDING);
