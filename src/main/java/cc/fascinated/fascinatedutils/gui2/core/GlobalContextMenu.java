@@ -19,8 +19,6 @@ public class GlobalContextMenu {
     @Nullable
     private static Supplier<ContextMenuNode> factory;
 
-    private GlobalContextMenu() {}
-
     /**
      * Opens a context menu, replacing any previously open one.
      *

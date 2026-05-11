@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
+import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessagePageDTO;
 import cc.fascinated.fascinatedutils.api.channel.Message;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.gui2.core.GlobalContextMenu;
@@ -70,6 +71,9 @@ public class ChatMessagesNode extends ScrollColumnNode {
             } else {
                 messageScrollByChannel.get().put(channel.id(), offset);
             }
+            if (offset <= SCROLL_EDGE_EPSILON) {
+                triggerLoadMoreMessages();
+            }
         });
     }
 
@@ -83,6 +87,11 @@ public class ChatMessagesNode extends ScrollColumnNode {
         if (messages.isEmpty()) {
             addStatusRow("No messages yet");
             return;
+        }
+        if (!channel.hasMoreMessages()) {
+            addChild(new ChatConversationStartNode(channel));
+        } else if (loadingMessagesChannelId.get() != null && loadingMessagesChannelId.get().equals(channel.id())) {
+            addStatusRow("Loading older messages...");
         }
         boolean editingFound = false;
         LocalDate lastSeenDate = null;
@@ -190,6 +199,30 @@ public class ChatMessagesNode extends ScrollColumnNode {
                 Toast.show().message(Component.translatable("alumite.social.error.generic").getString()).error();
             } catch (Exception exception) {
                 Toast.show().message(Component.translatable("alumite.social.error.generic").getString()).error();
+            }
+        });
+    }
+
+    private void triggerLoadMoreMessages() {
+        if (!channel.hasMoreMessages()) {
+            return;
+        }
+        if (loadingMessagesChannelId.get() != null) {
+            return;
+        }
+        List<Message> messages = channel.messagesOrNull();
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+        String oldestMessageId = messages.get(0).id();
+        loadingMessagesChannelId.set(channel.id());
+        AlumiteMod.SCHEDULED_POOL.execute(() -> {
+            try {
+                ChannelMessagePageDTO page = channel.fetchMessagesPage(50, oldestMessageId, null);
+                channel.mergeOlderMessagesPage(page);
+            } catch (Exception ignored) {
+            } finally {
+                Minecraft.getInstance().execute(() -> loadingMessagesChannelId.set(null));
             }
         });
     }
