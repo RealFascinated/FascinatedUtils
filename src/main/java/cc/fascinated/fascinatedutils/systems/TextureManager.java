@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalCause;
 
 public class TextureManager {
 
@@ -54,7 +55,10 @@ public class TextureManager {
             .maximumWeight(512 * 1024 * 1024L) // 512 MB cap
             .weigher((String _, LoadedTexture v) -> (int) Math.min(v.size(), Integer.MAX_VALUE))
             .removalListener(notification -> {
-                if (notification.getValue() != null) {
+                // Skip release for REPLACED: the new texture's registerTexture() already called
+                // mc.getTextureManager().register(), which closes the old DynamicTexture. Calling
+                // release() here would destroy the newly registered texture, permanently breaking it.
+                if (notification.getValue() != null && notification.getCause() != RemovalCause.REPLACED) {
                     Minecraft.getInstance().getTextureManager().release(notification.getValue().id());
                     inFlight.remove(notification.getKey());
                     failed.remove(notification.getKey());
