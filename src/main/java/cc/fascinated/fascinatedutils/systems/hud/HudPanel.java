@@ -31,6 +31,15 @@ public abstract class  HudPanel implements HudRenderablePanel {
         hudState.setPositionY(defaults.defaultYOffset());
     }
 
+    /**
+     * Whether this panel should be visible by default when its host registers it.
+     *
+     * @return {@code true} to show the panel by default
+     */
+    protected boolean defaultVisible() {
+        return true;
+    }
+
     @Override
     public HudHostModule hudHostModule() {
         return host;
@@ -55,7 +64,7 @@ public abstract class  HudPanel implements HudRenderablePanel {
         if (!host.isEnabled()) {
             return false;
         }
-        if (host.registeredHudPanels().size() <= 1) {
+        if (host.registeredHudPanels().size() <= 1 && !host.getHudDefaults().alwaysShowPanelToggles()) {
             return true;
         }
         return host.isHudPanelUserVisible(id);

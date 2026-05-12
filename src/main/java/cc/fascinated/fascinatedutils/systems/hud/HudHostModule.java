@@ -55,7 +55,7 @@ public abstract class HudHostModule extends Module {
 
     protected void registerHudPanel(HudPanel panel) {
         registeredHudPanelsList.add(panel);
-        if (registeredHudPanelsList.size() >= 2) {
+        if (registeredHudPanelsList.size() >= 2 || hudDefaults.alwaysShowPanelToggles()) {
             reconcileHudPanelVisibilitySettings();
         }
     }
@@ -66,7 +66,7 @@ public abstract class HudHostModule extends Module {
             if (hudPanelVisibilitySettings.containsKey(panelId)) {
                 continue;
             }
-            BooleanSetting visible = BooleanSetting.builder().id("hud_panel_visible_" + sanitizePanelSettingId(panelId)).defaultValue(true).categoryDisplayKey(HUD_PANELS_CATEGORY_DISPLAY_KEY).build();
+            BooleanSetting visible = BooleanSetting.builder().id("hud_panel_visible_" + sanitizePanelSettingId(panelId)).defaultValue(hudPanel.defaultVisible()).categoryDisplayKey(HUD_PANELS_CATEGORY_DISPLAY_KEY).build();
             addSetting(visible);
             hudPanelVisibilitySettings.put(panelId, visible);
         }
@@ -78,8 +78,8 @@ public abstract class HudHostModule extends Module {
      * @param panelId stable panel identifier
      * @return the toggle setting when multi-panel mode is active
      */
-    public java.util.Optional<BooleanSetting> hudPanelVisibilityToggle(String panelId) {
-        return java.util.Optional.ofNullable(hudPanelVisibilitySettings.get(panelId));
+    public Optional<BooleanSetting> hudPanelVisibilityToggle(String panelId) {
+        return Optional.ofNullable(hudPanelVisibilitySettings.get(panelId));
     }
 
     public boolean isHudPanelUserVisible(String panelId) {
@@ -125,7 +125,7 @@ public abstract class HudHostModule extends Module {
     public void resetToDefault() {
         super.resetToDefault();
         setEnabled(hudDefaults.defaultState());
-        if (registeredHudPanelsList.size() <= 1) {
+        if (registeredHudPanelsList.size() <= 1 && !hudDefaults.alwaysShowPanelToggles()) {
             hudPanelVisibilitySettings.clear();
         }
         for (HudPanel hudPanel : registeredHudPanelsList) {
@@ -175,6 +175,8 @@ public abstract class HudHostModule extends Module {
 
     @Override
     public List<SettingCategory> getSettingCategories() {
-        return SettingCategoryGrouper.categoriesInRegistrationOrder(getAllSettings());
+        return SettingCategoryGrouper.categoriesInRegistrationOrder(getAllSettings()).stream()
+                .filter(category -> !HUD_PANELS_CATEGORY_DISPLAY_KEY.equals(category.displayNameKey()))
+                .toList();
     }
 }

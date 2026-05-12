@@ -17,6 +17,7 @@ import cc.fascinated.fascinatedutils.systems.modules.impl.days.DaysCounterWidget
 import cc.fascinated.fascinatedutils.systems.modules.impl.debug.DebugWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.fps.FpsWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.hypixel.HypixelModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.mcutils.McUtilsModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.memory.MemoryWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.movement.MovementModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.music.MusicModule;
@@ -94,6 +95,7 @@ public class ModuleRegistry {
         modules.add(new WaypointsModule());
         modules.add(new WorldSizeModule());
         modules.add(new MusicModule());
+        modules.add(new McUtilsModule());
 
         for (Module module : modules) {
             FascinatedEventBus.INSTANCE.subscribe(module);

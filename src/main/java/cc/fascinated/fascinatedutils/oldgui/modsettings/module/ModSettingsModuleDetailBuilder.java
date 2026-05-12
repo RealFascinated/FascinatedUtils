@@ -46,7 +46,7 @@ public class ModSettingsModuleDetailBuilder {
         String searchLower = (settingsSearchRef.get() == null ? "" : settingsSearchRef.get()).toLowerCase(Locale.ROOT);
         boolean isFiltering = !searchLower.isBlank();
 
-        if (!isFiltering && module instanceof HudHostModule hudHost && hudHost.registeredHudPanels().size() > 1) {
+        if (!isFiltering && module instanceof HudHostModule hudHost && (hudHost.registeredHudPanels().size() > 1 || hudHost.getHudDefaults().alwaysShowPanelToggles())) {
             float paddedInnerHost = ModSettingsCategoryRows.settingsDetailPaddedInnerWidth(settingsInnerWidth);
             scrollBody.addChild(new FSpacerWidget(settingsContentWidth, 2f));
             for (HudPanel hudPanel : hudHost.registeredHudPanels()) {

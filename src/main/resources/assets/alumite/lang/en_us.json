@@ -350,6 +350,8 @@
   "alumite.module.clock.name": "Clock",
   "alumite.module.coordinates.name": "Coordinates",
   "alumite.module.days_counter.name": "Days Counter",
+  "alumite.module.mcutils.name": "McUtils",
+  "alumite.module.mcutils.hud_panel_visible_mcutils.display_name": "Show HUD",
   "alumite.module.debug.name": "Debug",
   "alumite.module.fps.name": "FPS",
   "alumite.module.movement.name": "Movement",
@@ -364,6 +366,7 @@
   "alumite.module.wawla.name": "WAWLA",
 
   "alumite.setting.category.appearance": "Appearance",
+  "alumite.setting.category.hud_panels": "HUD Panels",
   "alumite.setting.category.slots": "Slots",
   "alumite.setting.category.controls": "Controls",
   "alumite.setting.category.flight_speed": "Flight Speed",
