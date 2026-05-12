@@ -37,11 +37,11 @@ public class FriendsPanelNode extends PositionedNode<FriendsPanelNode> {
         header.top(0);
         addChild(header);
 
-        PositionedNode listArea = new PositionedNode()
+        PositionedNode<?> listArea = new PositionedNode<>()
                 .fullWidth()
                 .top(HEADER_HEIGHT)
                 .bottom(0);
-        PositionedNode listPadded = new PositionedNode()
+        PositionedNode<?> listPadded = new PositionedNode<>()
                 .left(LIST_PADDING).right(LIST_PADDING)
                 .top(LIST_PADDING).bottom(LIST_PADDING);
         listPadded.addChild(buildList(contextMenuHandler, onOpenDm));

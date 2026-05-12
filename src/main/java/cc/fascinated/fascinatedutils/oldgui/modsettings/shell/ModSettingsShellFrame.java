@@ -67,7 +67,6 @@ public class ModSettingsShellFrame {
         int closeBorder = closeOver ? glUiRenderer.theme().borderHover() : glUiRenderer.theme().border();
         int closeText = closeOver ? glUiRenderer.theme().textPrimary() : glUiRenderer.theme().textMuted();
         float titleLeftInset = 7f;
-        int titleTextWidth = glUiRenderer.measureTextWidth(titleStr, false);
         boolean showHudLayoutChip = hudLayoutButtonHost.root() != null;
         ModSettingsShellLayout.ShellBounds hudLayoutButtonRect;
         if (showHudLayoutChip) {

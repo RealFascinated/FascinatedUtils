@@ -7,7 +7,6 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.systems.config.impl.config.ConfigRepository;
 import cc.fascinated.fascinatedutils.systems.config.impl.config.FascinatedConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.profiles.ProfileRepository;
-import cc.fascinated.fascinatedutils.systems.waypoint.WaypointRepository;
 import meteordevelopment.orbit.EventHandler;
 import net.fabricmc.loader.api.FabricLoader;
 

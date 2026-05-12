@@ -105,8 +105,6 @@ public class FColorSettingRowWidget extends FSettingRowWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         boolean locked = colorSetting.isLocked();
         float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;
         float padX = SettingsUiMetrics.SETTING_ROW_PADDING_X;

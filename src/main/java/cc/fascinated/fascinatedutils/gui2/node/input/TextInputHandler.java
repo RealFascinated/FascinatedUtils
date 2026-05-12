@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.gui2.node.input;
 
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import lombok.Getter;
-import lombok.Setter;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayDeque;

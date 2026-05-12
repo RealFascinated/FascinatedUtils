@@ -5,7 +5,7 @@ import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 import net.minecraft.network.chat.Component;
 
-public class FriendsHeaderNode extends SocialPanelHeaderNode {
+public class FriendsHeaderNode extends SocialPanelHeaderNode<FriendsHeaderNode> {
 
     public FriendsHeaderNode() {
         int count = Alumite.INSTANCE != null ? Alumite.INSTANCE.users().getFriends().size() : 0;

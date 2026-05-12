@@ -11,8 +11,6 @@ import cc.fascinated.fascinatedutils.oldgui.widgets.FPopupWidget;
 import net.minecraft.network.chat.Component;
 
 public class FProfileDeletePopupWidget extends FPopupWidget {
-    private final Runnable onCancel;
-    private final Runnable onConfirm;
     private final FLabelWidget titleLabel;
     private final FLabelWidget messageLabel;
     private final FButtonWidget cancelButton;
@@ -20,9 +18,6 @@ public class FProfileDeletePopupWidget extends FPopupWidget {
 
     public FProfileDeletePopupWidget(String profileName, Runnable onCancel, Runnable onConfirm) {
         super(onCancel);
-        this.onCancel = onCancel;
-        this.onConfirm = onConfirm;
-
         titleLabel = new FLabelWidget();
         titleLabel.setText(Component.translatable("alumite.setting.shell.profile_delete_popup_title").getString());
         titleLabel.setAlignX(Align.START);

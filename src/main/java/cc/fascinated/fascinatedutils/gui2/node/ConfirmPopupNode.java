@@ -54,7 +54,7 @@ public class ConfirmPopupNode extends PopupNode<ConfirmPopupNode> {
         confirmButton.left(BUTTON_WIDTH + BUTTON_GAP).size(BUTTON_WIDTH, BUTTON_HEIGHT);
         confirmButton.setRounded(true);
 
-        PositionedNode buttonRow = new PositionedNode();
+        PositionedNode<?> buttonRow = new PositionedNode<>();
         buttonRow.size(BUTTON_ROW_WIDTH, BUTTON_HEIGHT).alignX(0.5f).bottom(PAD_BOTTOM);
         buttonRow.addChild(cancelButton);
         buttonRow.addChild(confirmButton);

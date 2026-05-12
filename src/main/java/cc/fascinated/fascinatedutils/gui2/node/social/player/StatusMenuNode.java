@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.gui2.node.social.player;
 
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.Alumite;
-import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.gui2.node.ContextMenuNode;
 import cc.fascinated.fascinatedutils.oldgui.toast.Toast;

@@ -22,7 +22,7 @@ public class ChatPanelNode extends PositionedNode<ChatPanelNode> {
     private static final int PADDING = 6;
 
     private final ChatHeaderNode header;
-    private final PositionedNode messagesWrapper;
+    private final PositionedNode<?> messagesWrapper;
     private final ChatComposerNode composer;
 
     public ChatPanelNode(Channel channel, UiStateStore stateStore, PlayerContextMenuHandler contextMenuHandler) {
@@ -38,7 +38,7 @@ public class ChatPanelNode extends PositionedNode<ChatPanelNode> {
         });
         addChild(header);
 
-        messagesWrapper = new PositionedNode()
+        messagesWrapper = new PositionedNode<>()
                 .left(PADDING)
                 .right(PADDING)
                 .top(HEADER_HEIGHT + PADDING)

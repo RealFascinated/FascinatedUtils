@@ -68,7 +68,7 @@ public class SendScreenshotPopupNode extends PopupNode<SendScreenshotPopupNode> 
         ScrollColumnNode friendList = new ScrollColumnNode();
         friendList.setGap(2);
 
-        PositionedNode listArea = new PositionedNode();
+        PositionedNode<?> listArea = new PositionedNode<>();
         listArea.left(PAD).right(PAD).top(listTop).bottom(PAD + CLOSE_BUTTON_HEIGHT + PAD);
         listArea.addChild(friendList);
 
@@ -81,7 +81,7 @@ public class SendScreenshotPopupNode extends PopupNode<SendScreenshotPopupNode> 
             friendList.addChild(emptyLabel);
         } else {
             for (User friend : friends) {
-                PositionedNode row = new PositionedNode().fullWidth().height(ROW_HEIGHT);
+                PositionedNode<?> row = new PositionedNode<>().fullWidth().height(ROW_HEIGHT);
 
                 FriendRowNode friendRow = new FriendRowNode(friend);
                 friendRow.height(ROW_HEIGHT).left(0).right(SEND_BUTTON_WIDTH + 4);

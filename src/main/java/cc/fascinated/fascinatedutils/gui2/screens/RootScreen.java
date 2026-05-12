@@ -45,7 +45,7 @@ public abstract class RootScreen extends WidgetScreen {
      * context menu overlay on top of all content.
      */
     protected final UiNode composeRoot(UiStateStore stateStore) {
-        PositionedNode root = new PositionedNode().full();
+        PositionedNode<?> root = new PositionedNode<>().full();
         root.addChild(composeContent());
         GlobalContextMenu.mountIfActive(root);
         return root;

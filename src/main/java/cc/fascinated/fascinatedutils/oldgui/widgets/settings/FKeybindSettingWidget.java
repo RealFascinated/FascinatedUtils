@@ -120,8 +120,6 @@ public class FKeybindSettingWidget extends FSettingRowWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         boolean locked = keybindSetting.isLocked();
         float bodyPadX = SettingsUiMetrics.SETTING_ROW_PADDING_X;
         float bodyLeft = x() + bodyPadX;

@@ -167,8 +167,6 @@ public class FModSettingsDetailHeaderCardWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         float corner = graphics.theme().cardCornerRadius();
         float borderThickness = UITheme.BORDER_THICKNESS_PX;
         graphics.fillRoundedRectFrame(x(), y(), w(), h(), corner, graphics.theme().border(), graphics.theme().surface(), borderThickness, borderThickness, RectCornerRoundMask.ALL);

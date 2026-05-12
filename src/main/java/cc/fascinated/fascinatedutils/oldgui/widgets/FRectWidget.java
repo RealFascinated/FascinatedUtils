@@ -36,8 +36,6 @@ public class FRectWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         if (cornerRadius > 0.5f && borderColorArgb != null) {
             graphics.fillRoundedRectFrame(x(), y(), w(), h(), cornerRadius, borderColorArgb, fillColorArgb, borderThickness, borderThickness, cornerRoundMask);
         }

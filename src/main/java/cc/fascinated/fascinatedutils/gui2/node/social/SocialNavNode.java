@@ -36,13 +36,13 @@ public class SocialNavNode extends PositionedNode<SocialNavNode> {
         separator.left(SEPARATOR_INSET).right(SEPARATOR_INSET).height(SEPARATOR_HEIGHT);
         addChild(separator);
 
-        addChild(new PositionedNode().fullWidth().height(4));
+        addChild(new PositionedNode<>().fullWidth().height(4));
 
         SocialSectionLabelNode dmLabel = new SocialSectionLabelNode(Component.translatable("alumite.social.dm.title").getString());
         dmLabel.left(8).right(0).height(14);
         addChild(dmLabel);
 
-        PositionedNode channelListPadded = new PositionedNode()
+        PositionedNode<?> channelListPadded = new PositionedNode<>()
                 .left(LIST_PAD).right(LIST_PAD)
                 .top(4).bottom(LIST_PAD);
         ChannelListNode channels = new ChannelListNode(selectedChannelId, onChannelSelected, contextMenuHandler);
@@ -61,12 +61,11 @@ public class SocialNavNode extends PositionedNode<SocialNavNode> {
      * <p>Renders a rounded selection pill when active or hovered, and a badge for pending
      * incoming friend requests.</p>
      */
-    private static class FriendsNavItemNode extends PositionedNode {
+    private static class FriendsNavItemNode extends PositionedNode<FriendsNavItemNode> {
 
         private static final int PAD_H = 6;
         private static final int LABEL_PAD = 8;
 
-        private final boolean active;
         private final Runnable onPress;
         private final RectNode bg;
         private final TextNode friendsLabel;
@@ -74,7 +73,6 @@ public class SocialNavNode extends PositionedNode<SocialNavNode> {
         private boolean hovered;
 
         FriendsNavItemNode(boolean active, int badgeCount, Runnable onPress) {
-            this.active = active;
             this.onPress = onPress;
 
             bg = new RectNode();

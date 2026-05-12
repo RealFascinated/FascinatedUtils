@@ -39,8 +39,9 @@ public class DefaultArgSpecResolver {
             return BuiltinArgSpecs.bool();
         }
         if (parameterType.isEnum()) {
-            @SuppressWarnings({"unchecked", "rawtypes"}) Class<? extends Enum> enumClass = (Class<? extends Enum>) parameterType;
-            return BuiltinArgSpecs.enumArg(enumClass);
+            @SuppressWarnings({"unchecked", "rawtypes"})
+            ArgSpec<?> spec = BuiltinArgSpecs.enumArg((Class) parameterType);
+            return spec;
         }
         throw new IllegalArgumentException("No default ArgSpec for parameter type " + parameterType.getName() + " on " + parameter.getDeclaringExecutable() + "; add @ArgType with a custom ArgSpec implementation.");
     }

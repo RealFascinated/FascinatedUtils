@@ -126,7 +126,7 @@ public class SocialTabBarNode extends PositionedNode<SocialTabBarNode> {
         underline.layout(renderFrame, underlineX, bounds().positionY() + bounds().height() - UNDERLINE_H, halfW - UNDERLINE_INSET * 2, UNDERLINE_H);
     }
 
-    private static class TabSegmentNode extends PositionedNode {
+    private static class TabSegmentNode extends PositionedNode<TabSegmentNode> {
 
         private final Runnable onPress;
         private boolean hovered;

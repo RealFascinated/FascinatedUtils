@@ -81,8 +81,6 @@ public abstract class FPopupWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         float cornerRadius = Math.max(0.5f, Math.min(UITheme.CORNER_RADIUS_MD, Math.min(dialogWidth, dialogHeight) * 0.5f - 0.01f));
         float borderThickness = 1f;
         int fillColor = (graphics.theme().hintBackground() & 0x00FFFFFF) | 0xFF000000;
@@ -91,8 +89,6 @@ public abstract class FPopupWidget extends FWidget {
 
     @Override
     public void renderOverlayAfterChildren(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         // Redraw the popup over any overlay elements (e.g. tooltips) rendered by sibling widgets
         // that are behind this popup in the z-order but whose overlays run first in the overlay pass.
         renderSelf(graphics, frame, deltaSeconds);

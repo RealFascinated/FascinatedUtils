@@ -47,7 +47,6 @@ public class LevelRendererMixin {
 
         Vec3 cameraPos = levelRenderState.cameraRenderState.pos;
         double playerX = minecraft.player.getX();
-        double playerY = minecraft.player.getY();
         double playerZ = minecraft.player.getZ();
 
         VertexConsumer beamConsumer = bufferSource.getBuffer(FascinatedWorldRenderTypes.WORLD_BEAM);

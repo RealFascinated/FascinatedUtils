@@ -44,8 +44,6 @@ public class FIconActionButton extends FButtonWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         boolean hovered = frame.isHitTarget(this);
         int tintArgb = hovered ? hoverTintArgb : normalTintArgb;
         float iconSize = Math.min(w(), h()) - 4f;

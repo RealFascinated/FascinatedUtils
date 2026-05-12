@@ -128,8 +128,6 @@ public class FEnumSettingRowWidget extends FSettingRowWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         boolean locked = enumSetting.isLocked();
         float innerHeight = Math.max(0f, h() - 2f * SettingsUiMetrics.SETTING_ROW_PADDING_Y);
         float padY = SettingsUiMetrics.SETTING_ROW_PADDING_Y;

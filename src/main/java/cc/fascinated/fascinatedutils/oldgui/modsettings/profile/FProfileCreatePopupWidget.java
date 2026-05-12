@@ -12,7 +12,6 @@ import net.minecraft.network.chat.Component;
 public class FProfileCreatePopupWidget extends FPopupWidget {
     private final FState<String> profileNameRef;
     private final FState<Boolean> copyDefaultProfileSettingsRef;
-    private final Runnable onCancel;
     private final SubmitProfileCallback onSubmit;
     private final FLabelWidget titleLabel;
     private final FLabelWidget descriptionLabel;
@@ -27,7 +26,6 @@ public class FProfileCreatePopupWidget extends FPopupWidget {
         super(onCancel);
         this.profileNameRef = profileNameRef;
         this.copyDefaultProfileSettingsRef = copyDefaultProfileSettingsRef;
-        this.onCancel = onCancel;
         this.onSubmit = onSubmit;
 
         titleLabel = new FLabelWidget();

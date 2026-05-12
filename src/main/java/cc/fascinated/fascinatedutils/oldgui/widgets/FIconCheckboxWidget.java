@@ -112,8 +112,6 @@ public class FIconCheckboxWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         boolean hovered = frame.isHitTarget(this);
         float borderPx = 1f;
         float boxX = x();

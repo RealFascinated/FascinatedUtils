@@ -69,17 +69,17 @@ public class SocialScreen extends RootScreen {
         background.full();
         root.addChild(background);
 
-        PositionedNode layoutRow = new PositionedNode().full();
+        PositionedNode<?> layoutRow = new PositionedNode<>().full();
         root.addChild(layoutRow);
 
-        PositionedNode leftPane = new PositionedNode().width(LEFT_PANE_WIDTH).fullHeight();
+        PositionedNode<?> leftPane = new PositionedNode<>().width(LEFT_PANE_WIDTH).fullHeight();
         layoutRow.addChild(leftPane);
 
         DividerNode divider = new DividerNode();
         divider.left(LEFT_PANE_WIDTH).width(DIVIDER_WIDTH).fullHeight();
         layoutRow.addChild(divider);
 
-        PositionedNode rightPane = new PositionedNode()
+        PositionedNode<?> rightPane = new PositionedNode<>()
                 .left(LEFT_PANE_WIDTH + DIVIDER_WIDTH)
                 .right(0)
                 .fullHeight();
@@ -102,10 +102,10 @@ public class SocialScreen extends RootScreen {
         return root;
     }
 
-    private void buildLeftPane(PositionedNode leftPane, Consumer<String> selectChannel,
+    private void buildLeftPane(PositionedNode<?> leftPane, Consumer<String> selectChannel,
                                 PlayerContextMenuHandler contextMenuHandler, boolean friendsActive,
                                 BiConsumer<Float, Float> onStatusClick) {
-        PositionedNode navArea = new PositionedNode()
+        PositionedNode<?> navArea = new PositionedNode<>()
                 .fullWidth()
                 .top(0)
                 .bottom(PROFILE_PANE_HEIGHT);
@@ -127,7 +127,7 @@ public class SocialScreen extends RootScreen {
         leftPane.setNodeId("social.left-pane");
     }
 
-    private void buildRightPane(PositionedNode rightPane,
+    private void buildRightPane(PositionedNode<?> rightPane,
                                  Channel activeChannel, PlayerContextMenuHandler contextMenuHandler,
                                  Consumer<String> selectChannel) {
         if (activeChannel != null) {

@@ -60,10 +60,10 @@ public class ActionsOverlayScreen {
     }
 
     private UiNode composeRoot() {
-        PositionedNode rootNode = new PositionedNode().full();
+        PositionedNode<?> rootNode = new PositionedNode<>().full();
         rootNode.setNodeId("title-root");
 
-        PositionedNode buttonGroup = new PositionedNode()
+        PositionedNode<?> buttonGroup = new PositionedNode<>()
                 .size(BUTTON_WIDTH, BUTTON_HEIGHT * BUTTONS.size() + BUTTON_GAP)
                 .right(RIGHT_MARGIN).alignY(0.5f)
                 .columnGap(BUTTON_GAP);

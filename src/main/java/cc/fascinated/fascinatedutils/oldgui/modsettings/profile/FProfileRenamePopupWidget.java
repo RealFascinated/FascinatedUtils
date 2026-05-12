@@ -14,7 +14,6 @@ import net.minecraft.network.chat.Component;
 
 public class FProfileRenamePopupWidget extends FPopupWidget {
     private final String currentProfileName;
-    private final Runnable onCancel;
     private final SubmitRenameCallback onSubmit;
     private final FLabelWidget titleLabel;
     private final FLabelWidget descriptionLabel;
@@ -28,7 +27,6 @@ public class FProfileRenamePopupWidget extends FPopupWidget {
     public FProfileRenamePopupWidget(String currentName, Runnable onCancel, SubmitRenameCallback onSubmit) {
         super(onCancel);
         this.currentProfileName = currentName;
-        this.onCancel = onCancel;
         this.onSubmit = onSubmit;
         this.newName = currentName;
 

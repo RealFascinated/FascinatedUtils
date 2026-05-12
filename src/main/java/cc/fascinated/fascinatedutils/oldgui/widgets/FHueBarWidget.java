@@ -71,8 +71,6 @@ public class FHueBarWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         int segments = 48;
         float segmentWidth = w() / segments;
         for (int segment = 0; segment < segments; segment++) {

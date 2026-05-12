@@ -6,7 +6,6 @@ import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.oldgui.renderer.UIRenderer;
 import lombok.Setter;
-import net.minecraft.resources.Identifier;
 
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;

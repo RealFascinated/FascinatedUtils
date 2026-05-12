@@ -84,8 +84,6 @@ public class FLabelWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         float lineBlockH = graphics.getFontCapHeight();
         float textOriginY = y();
         if (alignY == Align.CENTER) {

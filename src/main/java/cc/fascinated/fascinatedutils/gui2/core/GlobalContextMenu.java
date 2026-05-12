@@ -47,7 +47,7 @@ public class GlobalContextMenu {
      * If a context menu is active, adds it to {@code root} as an overlay child.
      * Called by {@link cc.fascinated.fascinatedutils.gui2.screens.RootScreen} on every compose pass.
      */
-    public static void mountIfActive(PositionedNode root) {
+    public static void mountIfActive(PositionedNode<?> root) {
         if (factory != null) {
             root.addChild(factory.get());
         }

@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class Feature<Module> {
+public class Feature<M> {
 
-    private final Module module;
+    private final M module;
 }

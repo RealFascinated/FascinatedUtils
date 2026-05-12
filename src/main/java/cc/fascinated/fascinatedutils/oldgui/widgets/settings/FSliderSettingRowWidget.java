@@ -132,8 +132,6 @@ public class FSliderSettingRowWidget extends FSettingRowWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         boolean locked = sliderSetting.isLocked();
         float bodyLeft = x() + bodyPadX();
         float textLineHeight = Math.max(1f, ModSettingsTheme.shellDesignBodyLineHeight());

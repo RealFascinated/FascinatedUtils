@@ -62,8 +62,6 @@ public class FShellTabStripWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         if (trackWidth <= 0f || trackHeight <= 0f) {
             return;
         }

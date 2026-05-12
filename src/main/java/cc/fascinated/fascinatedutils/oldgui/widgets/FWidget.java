@@ -121,8 +121,6 @@ public abstract class FWidget {
     }
 
     public void renderOverlayAfterChildren(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
     }
 
     public boolean fillsHorizontalInRow() {
@@ -221,7 +219,5 @@ public abstract class FWidget {
     }
 
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
     }
 }

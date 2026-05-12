@@ -53,9 +53,6 @@ public class FButtonWidget extends FWidget {
     }
 
     private static float modSettingsLabelLineHeightPxWithoutRenderer() {
-        if (false) {
-            return ModSettingsTheme.shellDesignBodyLineHeight();
-        }
         Minecraft client = Minecraft.getInstance();
         if (client == null) {
             return ModSettingsTheme.shellDesignBodyLineHeight();
@@ -139,8 +136,6 @@ public class FButtonWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         boolean hovered = frame.isHitTarget(this);
         int fillColor = resolveButtonFillColorArgb(hovered);
         int borderColor = resolveButtonBorderColorArgb(hovered);

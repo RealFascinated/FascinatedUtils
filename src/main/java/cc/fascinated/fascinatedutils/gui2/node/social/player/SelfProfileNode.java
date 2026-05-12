@@ -4,7 +4,6 @@ import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.user.Activity;
 import cc.fascinated.fascinatedutils.api.user.SelfUser;
 import cc.fascinated.fascinatedutils.api.user.User;
-import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.node.CardNode;
 import cc.fascinated.fascinatedutils.gui2.node.RectNode;

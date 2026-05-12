@@ -54,8 +54,6 @@ public class FClickableTabSegmentWidget extends FWidget {
 
     @Override
     protected void renderSelf(GuiRenderer graphics, UiFrameContext frame, float deltaSeconds) {
-        float mouseX = frame.pointerX();
-        float mouseY = frame.pointerY();
         boolean hovered = frame.isHitTarget(this);
         boolean selected = tabKey.equals(selectedKey);
         int fillColor = selected ? graphics.theme().accent() : hovered ? graphics.theme().moduleListRowHover() : 0x20ffffff;
