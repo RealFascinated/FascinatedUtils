@@ -72,7 +72,7 @@ public class WaypointsScreen extends RootScreen {
                     contents.margin(4);
                     ScrollColumnNode list = new ScrollColumnNode()
                             .setGap(4)
-                            .bindScrollState(stateStore.state("waypoints.list.scroll", 0));
+                            .persistScroll("waypoints.list");
                     if (!waypoints.isEmpty()) {
                         for (Waypoint waypoint : waypoints) {
                             CardNode waypointCard = new CardNode().height(28).fullWidth();

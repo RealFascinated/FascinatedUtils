@@ -39,7 +39,7 @@ public class CardNode extends PositionedNode<CardNode> {
 
     public CardNode setHeader(Consumer<PositionedNode<?>> builder) {
         if (headerNode == null) {
-            headerNode = new CenteredRowNode().left(CONTENT_INSET_X).right(CONTENT_INSET_X).top(0).height(HEADER_HEIGHT).rowGap(8);
+            headerNode = new CenteredRowNode().left(CONTENT_INSET_X).right(CONTENT_INSET_X).top(0).height(HEADER_HEIGHT).rowGap(CONTENT_INSET_X);
             addChild(headerNode);
         }
         builder.accept(headerNode);
@@ -48,7 +48,7 @@ public class CardNode extends PositionedNode<CardNode> {
 
     public CardNode setFooter(Consumer<PositionedNode<?>> builder) {
         if (footerNode == null) {
-            footerNode = new CenteredRowNode().left(CONTENT_INSET_X).right(CONTENT_INSET_X).bottom(0).height(FOOTER_HEIGHT).rowGap(8);
+            footerNode = new CenteredRowNode().left(CONTENT_INSET_X).right(CONTENT_INSET_X).bottom(0).height(FOOTER_HEIGHT).rowGap(CONTENT_INSET_X);
             addChild(footerNode);
         }
         builder.accept(footerNode);

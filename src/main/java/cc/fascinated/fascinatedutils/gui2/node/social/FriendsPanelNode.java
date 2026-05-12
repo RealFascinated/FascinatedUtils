@@ -6,7 +6,6 @@ import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.node.ScrollColumnNode;
-import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerContextMenuHandler;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.FriendRowNode;
@@ -31,8 +30,7 @@ public class FriendsPanelNode extends PositionedNode<FriendsPanelNode> {
             UserStatus.OFFLINE
     };
 
-    public FriendsPanelNode(PlayerContextMenuHandler contextMenuHandler, Consumer<User> onOpenDm,
-                             UiState<Integer> listScrollState) {
+    public FriendsPanelNode(PlayerContextMenuHandler contextMenuHandler, Consumer<User> onOpenDm) {
         full();
 
         FriendsHeaderNode header = new FriendsHeaderNode();
@@ -46,16 +44,15 @@ public class FriendsPanelNode extends PositionedNode<FriendsPanelNode> {
         PositionedNode listPadded = new PositionedNode()
                 .left(LIST_PADDING).right(LIST_PADDING)
                 .top(LIST_PADDING).bottom(LIST_PADDING);
-        listPadded.addChild(buildList(contextMenuHandler, onOpenDm, listScrollState));
+        listPadded.addChild(buildList(contextMenuHandler, onOpenDm));
         listArea.addChild(listPadded);
         addChild(listArea);
     }
 
-    private static ScrollColumnNode buildList(PlayerContextMenuHandler contextMenuHandler, Consumer<User> onOpenDm,
-                                              UiState<Integer> listScrollState) {
+    private static ScrollColumnNode buildList(PlayerContextMenuHandler contextMenuHandler, Consumer<User> onOpenDm) {
         ScrollColumnNode list = new ScrollColumnNode();
         list.setGap(2);
-        list.bindScrollState(listScrollState);
+        list.persistScroll("social.friends-list");
 
         if (Alumite.INSTANCE == null) {
             return list;

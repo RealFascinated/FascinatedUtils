@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.gui2.node.social;
 
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.SpacerNode;
-import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.node.BadgeNode;
 import cc.fascinated.fascinatedutils.gui2.node.DividerNode;
 import cc.fascinated.fascinatedutils.gui2.node.RectNode;
@@ -24,8 +23,7 @@ public class SocialNavNode extends PositionedNode<SocialNavNode> {
 
     public SocialNavNode(boolean friendsActive, String selectedChannelId, int incomingBadgeCount,
                          Runnable onFriendsSelected, Consumer<String> onChannelSelected,
-                         PlayerContextMenuHandler contextMenuHandler,
-                         UiState<Integer> channelListScrollState) {
+                         PlayerContextMenuHandler contextMenuHandler) {
         full();
         columnGap(0);
 
@@ -48,7 +46,7 @@ public class SocialNavNode extends PositionedNode<SocialNavNode> {
                 .left(LIST_PAD).right(LIST_PAD)
                 .top(4).bottom(LIST_PAD);
         ChannelListNode channels = new ChannelListNode(selectedChannelId, onChannelSelected, contextMenuHandler);
-        channels.bindScrollState(channelListScrollState);
+        channels.persistScroll("social.channel-list");
         channels.setNodeId("social.channel-list");
         channelListPadded.addChild(channels);
 

@@ -1,11 +1,17 @@
 package cc.fascinated.fascinatedutils.gui2.core;
 
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
+import lombok.Setter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class UiHost {
     private final UiInputRouter inputRouter = new UiInputRouter();
     private final UiStateStore stateStore = new UiStateStore(() -> {});
+    private final Map<String, Integer> persistedScrollOffsets = new HashMap<>();
     private UiNode root;
+    @Setter
     private UiComposer composer;
 
     public UiNode root() {
@@ -14,10 +20,6 @@ public class UiHost {
 
     public UiStateStore stateStore() {
         return stateStore;
-    }
-
-    public void setComposer(UiComposer composer) {
-        this.composer = composer;
     }
 
     public void setRoot(UiNode root) {
@@ -78,7 +80,13 @@ public class UiHost {
                 ? inputRouter.focusManager().focusedNode().nodeId()
                 : null;
 
-        UiNode next = composer.compose(stateStore);
+        NodeScrollContext.push(persistedScrollOffsets);
+        UiNode next;
+        try {
+            next = composer.compose(stateStore);
+        } finally {
+            NodeScrollContext.pop();
+        }
         if (this.root != null) {
             this.root.unmountSubtree();
         }

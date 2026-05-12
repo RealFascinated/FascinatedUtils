@@ -195,7 +195,7 @@ public class PlayerRowNode<T extends PlayerRowNode<T>> extends PositionedNode<T>
             nameText.layout(renderFrame, textX, nameY, textW, lineH);
             subtextNode.layout(renderFrame, textX, nameY + lineH + 3, textW, lineH);
         } else {
-            nameText.layout(renderFrame, textX, posY, textW, height);
+            nameText.layout(renderFrame, textX, posY + (height - lineH) / 2, textW, lineH);
         }
 
         if (trailingAction != null) {

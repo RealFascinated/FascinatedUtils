@@ -109,15 +109,13 @@ public class SocialScreen extends RootScreen {
                 .fullWidth()
                 .top(0)
                 .bottom(PROFILE_PANE_HEIGHT);
-        UiState<Integer> channelListScrollState = stateStore.state("social.channel-list.scroll", 0);
         SocialNavNode navNode = new SocialNavNode(
                 friendsActive,
                 lastChannelId,
                 incomingRequestCount(),
                 () -> selectChannel.accept(null),
                 selectChannel,
-                contextMenuHandler,
-                channelListScrollState);
+                contextMenuHandler);
         navArea.addChild(navNode);
         leftPane.addChild(navArea);
 
@@ -135,10 +133,8 @@ public class SocialScreen extends RootScreen {
         if (activeChannel != null) {
             rightPane.addChild(new ChatPanelNode(activeChannel, stateStore, contextMenuHandler));
         } else {
-            UiState<Integer> friendsListScrollState = stateStore.state("social.friends-list.scroll", 0);
             rightPane.addChild(new FriendsPanelNode(contextMenuHandler,
-                    user -> openDmWithUser(user, selectChannel),
-                    friendsListScrollState));
+                    user -> openDmWithUser(user, selectChannel)));
         }
     }
 

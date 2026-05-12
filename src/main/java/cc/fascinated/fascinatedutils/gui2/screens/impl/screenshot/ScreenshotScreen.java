@@ -55,25 +55,19 @@ public class ScreenshotScreen extends RootScreen {
 
                     header.addChild(new SpacerNode());
 
-                    header.right(4);
+                    header.right(8);
+                    header.addChild(new ButtonNode()
+                            .setLabel(Component.translatable("alumite.screenshot.screen.open_folder").getString())
+                            .setRounded(true)
+                            .setOnPress(() -> Util.getPlatform().openFile(Paths.get(mc.gameDirectory.getAbsolutePath(), "screenshots").toFile())));
                     header.addChild(new ButtonNode()
                             .setIconCenter(ModUiTextures.CLOSE.getId())
                             .setRounded(true)
                             .setOnPress(() -> mc.setScreen(null)));
                 })
-                .setFooter(footer -> {
-                    footer.left(4);
-                    footer.addChild(new ButtonNode()
-                            .setLabel(Component.translatable("alumite.screenshot.screen.open_folder").getString())
-                            .setRounded(true)
-                            .setOnPress(() -> Util.getPlatform().openFile(
-                                    Paths.get(mc.gameDirectory.getAbsolutePath(), "screenshots").toFile())));
-                    footer.addChild(new SpacerNode());
-                })
                 .setContents(contents -> {
                     contents.margin(GRID_PADDING);
-                    UiState<Integer> listScrollState = stateStore.state("screenshot.list.scroll", 0);
-                    ScrollColumnNode scrollColumn = new ScrollColumnNode().bindScrollState(listScrollState);
+                    ScrollColumnNode scrollColumn = new ScrollColumnNode().persistScroll("screenshot.list");
                     if (screenshots.isEmpty()) {
                         scrollColumn.addChild(new TextNode(() -> Component.translatable("alumite.screenshot.screen.empty").getString()).full());
                     } else {
@@ -87,9 +81,9 @@ public class ScreenshotScreen extends RootScreen {
                             Screenshot screenshot = screenshots.get(i);
 
                             // Buttons are hidden by default and shown on hover, overlaid on the thumbnail.
-                            // Defined before the cell so the hover callbacks can reference them.
-                            PositionedNode buttonRow = new PositionedNode()
-                                    .fullWidth().height(CELL_BTN_HEIGHT).bottom(CELL_FOOTER_HEIGHT + 4).left(4)
+                            // Defined before the texture so the hover callbacks can reference them.
+                            PositionedNode<?> buttonRow = new PositionedNode<>()
+                                    .fullWidth().height(CELL_BTN_HEIGHT).bottom(4).left(4)
                                     .rowGap(4);
                             buttonRow.setVisible(false);
 
@@ -112,22 +106,23 @@ public class ScreenshotScreen extends RootScreen {
                                     .setOnPress(() -> confirmDeleteIndex.set(screenshotIndex))
                                     .setRounded(true));
 
-                            PositionedNode cell = new PositionedNode().full();
-                            cell.setOnPointerEnter(() -> buttonRow.setVisible(true));
-                            cell.setOnPointerLeave(() -> buttonRow.setVisible(false));
-
-                            cell.addChild(new TextureNode()
+                            TextureNode texture = new TextureNode()
                                     .setLoadedTextureSupplier(() -> screenshot.getTexture(TEXTURE_MAX_HEIGHT))
                                     .setCornerRadius(3)
                                     .setShowLoader(true)
-                                    .fullWidth().top(0).bottom(CELL_FOOTER_HEIGHT));
+                                    .fullWidth().top(0).bottom(CELL_FOOTER_HEIGHT);
+                            texture.addChild(new ClickOverlayNode(() -> Minecraft.getInstance().setScreen(new ScreenshotViewerScreen(screenshotIndex))).full());
+                            texture.addChild(buttonRow);
+
+                            PositionedNode<?> cell = new PositionedNode<>().full();
+                            cell.setOnPointerEnter(() -> buttonRow.setVisible(true));
+                            cell.setOnPointerLeave(() -> buttonRow.setVisible(false));
+
+                            cell.addChild(texture);
 
                             cell.addChild(new TextNode(screenshot::getName)
-                                    .fullWidth().height(LABEL_HEIGHT).bottom(2)
+                                    .fullWidth().height(LABEL_HEIGHT).bottom(4)
                                     .setTextAlign(0.5f, 1.0f));
-
-                            cell.addChild(new ClickOverlayNode(() -> Minecraft.getInstance().setScreen(new ScreenshotViewerScreen(screenshotIndex))));
-                            cell.addChild(buttonRow);
 
                             grid.addChild(cell);
                         }

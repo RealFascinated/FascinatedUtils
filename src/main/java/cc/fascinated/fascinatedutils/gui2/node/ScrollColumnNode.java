@@ -1,8 +1,10 @@
 package cc.fascinated.fascinatedutils.gui2.node;
 
+import cc.fascinated.fascinatedutils.gui2.core.NodeScrollContext;
 import cc.fascinated.fascinatedutils.gui2.core.UiNode;
-import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
+
+import java.util.Map;
 
 import java.util.function.Consumer;
 
@@ -18,7 +20,8 @@ public class ScrollColumnNode extends UiNode {
     private int scrollOffset;
     private int contentHeight;
     private Consumer<Integer> onScrollOffsetChanged = ignored -> {};
-    private UiState<Integer> scrollState;
+    private String scrollPersistKey;
+    private Map<String, Integer> scrollPersistMap;
 
     private boolean scrollbarDragging;
     private float scrollbarDragStartY;
@@ -46,9 +49,22 @@ public class ScrollColumnNode extends UiNode {
         return this;
     }
 
-    public ScrollColumnNode bindScrollState(UiState<Integer> state) {
-        this.scrollState = state;
-        this.scrollOffset = Math.max(0, state.get());
+    /**
+     * Opts this scroll column into automatic scroll-position persistence across recomposes. The
+     * given {@code key} must be unique within the screen. The current offset is restored from the
+     * host's persisted-offset map (injected via {@link NodeScrollContext} during the compose phase)
+     * and written back whenever the offset changes.
+     */
+    public ScrollColumnNode persistScroll(String key) {
+        this.scrollPersistKey = key;
+        Map<String, Integer> ctx = NodeScrollContext.get();
+        this.scrollPersistMap = ctx;
+        if (ctx != null) {
+            Integer saved = ctx.get(key);
+            if (saved != null) {
+                scrollOffset = Math.max(0, saved);
+            }
+        }
         return this;
     }
 
@@ -203,8 +219,8 @@ public class ScrollColumnNode extends UiNode {
             return;
         }
         scrollOffset = nextOffset;
-        if (scrollState != null) {
-            scrollState.set(scrollOffset);
+        if (scrollPersistMap != null) {
+            scrollPersistMap.put(scrollPersistKey, scrollOffset);
         }
         onScrollOffsetChanged.accept(scrollOffset);
     }

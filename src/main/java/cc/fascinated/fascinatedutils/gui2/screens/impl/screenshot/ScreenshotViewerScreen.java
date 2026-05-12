@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.gui2.screens.impl.screenshot;
 
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
+import cc.fascinated.fascinatedutils.common.ByteUtils;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.SpacerNode;
 import cc.fascinated.fascinatedutils.gui2.core.StackNode;
@@ -66,7 +67,7 @@ public class ScreenshotViewerScreen extends RootScreen {
                 .fullWidth()
                 .top(0)
                 .height(TOP_HEIGHT);
-        topInfo.addChild(new TextNode(screenshot::getName)
+        topInfo.addChild(new TextNode(() -> "%s (%s)".formatted(screenshot.getName(), ByteUtils.formatBytes(screenshot.getSize(), 2)))
                 .fullWidth()
                 .top(7)
                 .height(12)

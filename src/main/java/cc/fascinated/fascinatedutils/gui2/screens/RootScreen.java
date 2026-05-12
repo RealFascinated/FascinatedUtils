@@ -78,6 +78,11 @@ public abstract class RootScreen extends WidgetScreen {
         renderFrame.setPointer(pointerX, pointerY);
         host.tick(deltaSeconds);
         host.layout(0, 0, Math.round(uiWidth), Math.round(uiHeight), renderFrame);
+        // Dispatch PointerMove twice: the first pass triggers any hover-driven visibility
+        // changes (e.g. showing overlaid buttons on cell hover); the second pass re-evaluates
+        // the hit-leaf against the now-stable tree so those newly-visible nodes receive
+        // onPointerEnter and show their hover style correctly.
+        host.dispatch(new UiEvent.PointerMove(pointerX, pointerY));
         host.dispatch(new UiEvent.PointerMove(pointerX, pointerY));
         host.render(renderFrame, deltaSeconds);
         renderFrame.endFrame();
