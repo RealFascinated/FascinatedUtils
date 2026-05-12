@@ -158,15 +158,16 @@ public class MeshRenderer {
      * Queue a filled rounded rectangle (vertical gradient supported via top/bottom colors).
      */
     public void enqueueRoundedGradient(@NonNull GuiGraphicsExtractor drawContext, @Nullable ScreenRectangle scissor, float positionX, float positionY, float width, float height, float cornerRadius, int colorTop, int colorBottom, int cornerRoundMask) {
-        enqueueRoundedGradient(drawContext, scissor, positionX, positionY, width, height, cornerRadius, colorTop, colorBottom, cornerRoundMask, 0f);
+        enqueueRoundedGradient(drawContext, scissor, positionX, positionY, width, height, cornerRadius, colorTop, colorBottom, cornerRoundMask, 0f, 0f);
     }
 
     /**
      * Queues a rounded rectangle; when {@code lutOuterRingStrokePx} is positive, {@code fui_rounded_rect} draws only an
      * outer border band of that thickness (LUT texel {@code (4,0)}) and the preset opaque fast path is disabled so the
-     * LUT shader always runs.
+     * LUT shader always runs. {@code lutExpansionShaderPx} (texel {@code (5,0)}) subtracts from {@code halfSizePx} in
+     * the shader to compensate for any geometry expansion applied before this call.
      */
-    public void enqueueRoundedGradient(@NonNull GuiGraphicsExtractor drawContext, @Nullable ScreenRectangle scissor, float positionX, float positionY, float width, float height, float cornerRadius, int colorTop, int colorBottom, int cornerRoundMask, float lutOuterRingStrokePx) {
+    public void enqueueRoundedGradient(@NonNull GuiGraphicsExtractor drawContext, @Nullable ScreenRectangle scissor, float positionX, float positionY, float width, float height, float cornerRadius, int colorTop, int colorBottom, int cornerRoundMask, float lutOuterRingStrokePx, float lutExpansionShaderPx) {
         if (width < 1e-3f || height < 1e-3f) {
             return;
         }
@@ -213,7 +214,7 @@ public class MeshRenderer {
         else {
             roundedPipeline = FascinatedUiPipelines.ROUNDED_RECT_TEX_LUT;
             TextureSetup white = whiteSetup();
-            DynamicTexture cornerRadiiLut = RoundedRectCornerRadiiTexture.createDisposableRadiiLut(packedCornerRadii, lutOuterRingStrokePx);
+            DynamicTexture cornerRadiiLut = RoundedRectCornerRadiiTexture.createDisposableRadiiLut(packedCornerRadii, lutOuterRingStrokePx, lutExpansionShaderPx);
             disposableCornerRadiiLuts.add(cornerRadiiLut);
             roundedTextureSetup = TextureSetup.doubleTexture(white.texure0(), white.sampler0(), cornerRadiiLut.getTextureView(), cornerRadiiLut.getSampler());
             topLeft = colorTop;

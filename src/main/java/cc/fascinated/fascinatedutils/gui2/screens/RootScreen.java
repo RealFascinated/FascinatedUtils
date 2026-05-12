@@ -18,11 +18,12 @@ import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 public abstract class RootScreen extends WidgetScreen {
+
     private final UiHost host = new UiHost();
     private boolean initialized;
     protected final UiStateStore stateStore = host.stateStore();
 
-    protected RootScreen(Component title) {
+    public RootScreen(Component title) {
         super(title);
     }
 

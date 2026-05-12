@@ -55,6 +55,7 @@ public class ChatPanelNode extends PositionedNode<ChatPanelNode> {
         if (deleteMsg != null) {
             ConfirmPopupNode deleteConfirm = new ConfirmPopupNode()
                     .setTitle(Component.translatable("alumite.social.chat.delete_popup.title").getString())
+                    .setDescription(Component.translatable("alumite.social.chat.delete_popup.description").getString())
                     .setConfirmLabel(Component.translatable("alumite.common.delete").getString())
                     .setConfirmLabelColorResolver(theme -> theme.danger())
                     .setOnCancel(() -> msgPendingDelete.set(null))

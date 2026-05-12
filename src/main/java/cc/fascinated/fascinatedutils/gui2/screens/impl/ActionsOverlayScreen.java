@@ -7,6 +7,7 @@ import cc.fascinated.fascinatedutils.gui2.node.ButtonNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.render.GuiRenderFrame;
 import cc.fascinated.fascinatedutils.gui2.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui2.screens.impl.screenshot.ScreenshotScreen;
 import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 import cc.fascinated.fascinatedutils.oldgui.screens.HUDEditorScreen;

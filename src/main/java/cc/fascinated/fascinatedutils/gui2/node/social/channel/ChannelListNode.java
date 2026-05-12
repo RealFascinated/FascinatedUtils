@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.api.channel.Channel;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
 import cc.fascinated.fascinatedutils.api.user.User;
-import cc.fascinated.fascinatedutils.gui2.core.ScrollColumnNode;
+import cc.fascinated.fascinatedutils.gui2.node.ScrollColumnNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerContextMenuHandler;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;

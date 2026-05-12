@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class TextboxInputNode extends PositionedNode<TextboxInputNode> {
+public class TextboxInputNode<V> extends PositionedNode<TextboxInputNode<V>> {
 
     private static final int PADDING_V = 10;
     private static final int PADDING_H = 10;
@@ -23,8 +23,12 @@ public class TextboxInputNode extends PositionedNode<TextboxInputNode> {
     private static final long CARET_BLINK_HALF_PERIOD_MS = 530L;
     private static final int CARET_VERTICAL_INSET = 0;
     private static final int SELECTION_COLOR = 0x55aaccff;
+    private static final int BORDER_INVALID = 0xFFE05252;
     private static final int NEWLINE_SELECTION_EXTRA = 4;
 
+    private final TextParser<V> parser;
+    private Consumer<V> typedSubmit = ignored -> {};
+    private Consumer<V> typedChange = ignored -> {};
     private final TextInputHandler handler = new TextInputHandler();
     private String placeholder = "";
 
@@ -39,13 +43,22 @@ public class TextboxInputNode extends PositionedNode<TextboxInputNode> {
     private int lastLineHeight;
     private int scrollOffsetY;
 
-    public TextboxInputNode() {
+    public TextboxInputNode(TextParser<V> parser) {
+        this.parser = parser;
         fullWidth();
         handler.setMaxLength(20000);
         handler.setOnBufferMutated(this::invalidateLineCache);
+        handler.setOnSubmit(text -> {
+            V parsed = parser.parse(text);
+            if (parsed != null) typedSubmit.accept(parsed);
+        });
+        handler.setOnChange(text -> {
+            V parsed = parser.parse(text);
+            if (parsed != null) typedChange.accept(parsed);
+        });
     }
 
-    public TextboxInputNode setLeftInset(int leftInset) {
+    public TextboxInputNode<V> setLeftInset(int leftInset) {
         this.leftInset = leftInset;
         return this;
     }
@@ -54,27 +67,27 @@ public class TextboxInputNode extends PositionedNode<TextboxInputNode> {
         return PADDING_V * 2 + frame.fontHeight();
     }
 
-    public TextboxInputNode setPlaceholder(String placeholder) {
+    public TextboxInputNode<V> setPlaceholder(String placeholder) {
         this.placeholder = placeholder == null ? "" : placeholder;
         return this;
     }
 
-    public TextboxInputNode setMaxLength(int maxLength) {
+    public TextboxInputNode<V> setMaxLength(int maxLength) {
         handler.setMaxLength(maxLength);
         return this;
     }
 
-    public TextboxInputNode setOnSubmit(Consumer<String> onSubmit) {
-        handler.setOnSubmit(onSubmit);
+    public TextboxInputNode<V> setOnSubmit(Consumer<V> onSubmit) {
+        this.typedSubmit = onSubmit == null ? ignored -> {} : onSubmit;
         return this;
     }
 
-    public TextboxInputNode setOnChange(Consumer<String> onChange) {
-        handler.setOnChange(onChange);
+    public TextboxInputNode<V> setOnChange(Consumer<V> onChange) {
+        this.typedChange = onChange == null ? ignored -> {} : onChange;
         return this;
     }
 
-    public TextboxInputNode setOnCancel(Runnable onCancel) {
+    public TextboxInputNode<V> setOnCancel(Runnable onCancel) {
         handler.setOnCancel(onCancel);
         return this;
     }
@@ -87,8 +100,8 @@ public class TextboxInputNode extends PositionedNode<TextboxInputNode> {
         handler.cancel();
     }
 
-    public TextboxInputNode setValue(String value) {
-        handler.setValue(value);
+    public TextboxInputNode<V> setValue(V value) {
+        handler.setValue(value == null ? "" : parser.format(value));
         invalidateLineCache();
         return this;
     }
@@ -100,7 +113,7 @@ public class TextboxInputNode extends PositionedNode<TextboxInputNode> {
      * @param state persistent state for the caret index
      * @return this
      */
-    public TextboxInputNode bindCaretState(UiState<Integer> state) {
+    public TextboxInputNode<V> bindCaretState(UiState<Integer> state) {
         handler.bindCaretState(state);
         return this;
     }
@@ -112,7 +125,7 @@ public class TextboxInputNode extends PositionedNode<TextboxInputNode> {
      * @param state persistent state for the selection anchor ({@code -1} means no selection)
      * @return this
      */
-    public TextboxInputNode bindSelectionState(UiState<Integer> state) {
+    public TextboxInputNode<V> bindSelectionState(UiState<Integer> state) {
         handler.bindSelectionState(state);
         return this;
     }
@@ -123,12 +136,16 @@ public class TextboxInputNode extends PositionedNode<TextboxInputNode> {
      * @param state persistent drag state
      * @return this
      */
-    public TextboxInputNode bindDragState(UiState<Boolean> state) {
+    public TextboxInputNode<V> bindDragState(UiState<Boolean> state) {
         handler.bindDragState(state);
         return this;
     }
 
-    public String value() {
+    public V value() {
+        return parser.parse(handler.value());
+    }
+
+    public String rawValue() {
         return handler.value();
     }
 
@@ -316,7 +333,9 @@ public class TextboxInputNode extends PositionedNode<TextboxInputNode> {
         int lineH = frame.fontHeight();
 
         frame.drawRoundedRect(bx, by, bw, bh, CORNER_RADIUS, frame.theme().inputFill());
-        frame.drawRoundedRectFrame(bx, by, bw, bh, CORNER_RADIUS, frame.theme().inputBorder(), 0, 1);
+        int borderColor = !handler.value().isEmpty() && !parser.isValid(handler.value())
+                ? BORDER_INVALID : frame.theme().inputBorder();
+        frame.drawRoundedRectFrame(bx, by, bw, bh, CORNER_RADIUS, borderColor, 0, 1);
 
         if (handler.buffer().isEmpty()) {
             UiText.of(placeholder).color(frame.theme().textMuted()).draw(frame, lastTextAreaX, lastTextAreaY);

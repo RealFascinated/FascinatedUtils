@@ -22,6 +22,7 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
     private static final int CORNER_RADIUS = 4;
     private Supplier<String> labelSupplier;
     private Runnable onPress = () -> {};
+    private Supplier<Boolean> disabledSupplier = () -> false;
     private boolean hovered;
     private boolean focused;
     private boolean rounded;
@@ -59,6 +60,11 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
 
     public ButtonNode setOnPress(Runnable onPress) {
         this.onPress = onPress == null ? () -> {} : onPress;
+        return this;
+    }
+
+    public ButtonNode setDisabled(Supplier<Boolean> disabled) {
+        this.disabledSupplier = disabled == null ? () -> false : disabled;
         return this;
     }
 
@@ -121,7 +127,7 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
 
     @Override
     protected int intrinsicWidth(RenderFrame renderFrame, int parentWidth) {
-        return (int) minimumWidth(renderFrame);
+        return Math.max((int) minimumWidth(renderFrame), intrinsicHeight(renderFrame, parentWidth, 0));
     }
 
     @Override
@@ -170,7 +176,7 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
 
     @Override
     public boolean onClick(float pointerX, float pointerY, int button) {
-        if (button != 0) {
+        if (button != 0 || disabledSupplier.get()) {
             return false;
         }
         onPress.run();
@@ -179,6 +185,9 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
 
     @Override
     public boolean onKeyPress(int keyCode, int modifiers) {
+        if (disabledSupplier.get()) {
+            return false;
+        }
         if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_SPACE) {
             onPress.run();
             return true;
@@ -192,26 +201,28 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
         int by = bounds().positionY();
         int bw = bounds().width();
         int bh = bounds().height();
-        int textColor = labelColorArgb != null ? labelColorArgb
+        boolean isDisabled = disabledSupplier.get();
+        int textColor = isDisabled ? renderFrame.theme().textMuted()
+                : labelColorArgb != null ? labelColorArgb
                 : labelColorResolver != null ? labelColorResolver.apply(renderFrame.theme())
                 : renderFrame.theme().textPrimary();
         ButtonVariant resolvedVariant = variantSupplier.get();
 
         if (resolvedVariant == ButtonVariant.GHOST) {
-            if (hovered || focused) {
+            if (!isDisabled && (hovered || focused)) {
                 renderFrame.drawRoundedRect(bx, by, bw, bh, CORNER_RADIUS, renderFrame.theme().buttonFillHover());
             }
         } else {
             int fillColor;
             int borderColor;
             if (resolvedVariant == ButtonVariant.DANGER) {
-                fillColor = hovered ? renderFrame.theme().dangerFillHover() : renderFrame.theme().dangerFill();
-                borderColor = hovered ? renderFrame.theme().buttonBorderHover() : renderFrame.theme().buttonBorder();
+                fillColor = !isDisabled && hovered ? renderFrame.theme().dangerFillHover() : renderFrame.theme().dangerFill();
+                borderColor = !isDisabled && hovered ? renderFrame.theme().buttonBorderHover() : renderFrame.theme().buttonBorder();
             } else {
-                fillColor = hovered ? renderFrame.theme().buttonFillHover() : renderFrame.theme().buttonFill();
-                if (focused) {
+                fillColor = !isDisabled && hovered ? renderFrame.theme().buttonFillHover() : renderFrame.theme().buttonFill();
+                if (!isDisabled && focused) {
                     borderColor = renderFrame.theme().buttonBorderFocus();
-                } else if (hovered) {
+                } else if (!isDisabled && hovered) {
                     borderColor = renderFrame.theme().buttonBorderHover();
                 } else {
                     borderColor = renderFrame.theme().buttonBorder();

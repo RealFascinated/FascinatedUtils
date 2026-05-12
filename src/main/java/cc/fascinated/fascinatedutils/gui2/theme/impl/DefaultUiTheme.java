@@ -11,6 +11,11 @@ public class DefaultUiTheme implements UiTheme {
     }
 
     @Override
+    public int panelHeaderFill() {
+        return 0xFF252A35;
+    }
+
+    @Override
     public int panelBorder() {
         return 0xFF3E4453;
     }

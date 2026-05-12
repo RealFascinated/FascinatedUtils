@@ -1,14 +1,13 @@
 package cc.fascinated.fascinatedutils.mixin.waypoints;
 
 import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
-import cc.fascinated.fascinatedutils.systems.config.ModConfig;
-import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.Waypoint;
+import cc.fascinated.fascinatedutils.systems.waypoint.Waypoint;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.waypoint.WaypointsModule;
+import cc.fascinated.fascinatedutils.systems.waypoint.WaypointRepository;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
@@ -40,17 +39,8 @@ public class LevelRendererMixin {
             return;
         }
 
-        String worldKey;
-        if (minecraft.getSingleplayerServer() != null) {
-            worldKey = "sp:" + minecraft.getSingleplayerServer().getWorldData().getLevelName();
-        }
-        else {
-            ServerData serverData = minecraft.getCurrentServer();
-            worldKey = "mp:" + (serverData != null ? serverData.ip : "unknown");
-        }
-
         String dimension = minecraft.level.dimension().identifier().toString();
-        List<Waypoint> waypoints = ModConfig.waypoints().getForWorld(worldKey);
+        List<Waypoint> waypoints = WaypointRepository.getForCurrentWorldKey();
         if (waypoints.isEmpty()) {
             return;
         }

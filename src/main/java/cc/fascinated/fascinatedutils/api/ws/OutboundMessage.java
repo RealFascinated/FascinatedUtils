@@ -4,7 +4,11 @@ import cc.fascinated.fascinatedutils.Constants;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
+@Accessors(fluent = true)
+@Getter
 public abstract class OutboundMessage {
 
     private final GatewayOpcode op;
@@ -16,7 +20,7 @@ public abstract class OutboundMessage {
     /**
      * Returns the data payload for this message, or {@link JsonNull#INSTANCE} if there is none.
      */
-    protected JsonElement data() {
+    public JsonElement data() {
         return JsonNull.INSTANCE;
     }
 

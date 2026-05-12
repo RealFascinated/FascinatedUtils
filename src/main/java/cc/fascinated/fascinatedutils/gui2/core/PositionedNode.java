@@ -128,6 +128,10 @@ public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
         return self();
     }
 
+    public T margin(int pixels) {
+        return left(pixels).right(pixels).top(pixels).bottom(pixels);
+    }
+
     public T pos(int positionX, int positionY) {
         return left(positionX).top(positionY);
     }
@@ -160,11 +164,30 @@ public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
         return self();
     }
 
+    @Override
+    public T addChild(UiNode childNode) {
+        super.addChild(childNode);
+        return self();
+    }
+
     protected int intrinsicWidth(RenderFrame renderFrame, int parentWidth) {
         return 0;
     }
 
     protected int intrinsicHeight(RenderFrame renderFrame, int parentHeight, int resolvedWidth) {
+        if (columnGap >= 0) {
+            int totalH = 0;
+            int visibleCount = 0;
+            for (UiNode child : childrenView()) {
+                if (!child.visible()) continue;
+                visibleCount++;
+                if (!(child instanceof SpacerNode)) {
+                    child.layout(renderFrame, 0, 0, resolvedWidth, parentHeight);
+                    totalH += child.bounds().height();
+                }
+            }
+            return totalH + columnGap * Math.max(0, visibleCount - 1);
+        }
         return 0;
     }
 

@@ -5,29 +5,32 @@ import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
-import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.event.impl.PlayerDeathEvent;
-import cc.fascinated.fascinatedutils.oldgui.screens.WaypointCreateScreen;
-import cc.fascinated.fascinatedutils.oldgui.screens.WaypointsScreen;
-import cc.fascinated.fascinatedutils.systems.config.ModConfig;
-import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.WaypointType;
+import cc.fascinated.fascinatedutils.gui2.screens.impl.waypoint.WaypointsScreen;
+import cc.fascinated.fascinatedutils.systems.waypoint.WaypointRepository;
+import cc.fascinated.fascinatedutils.systems.waypoint.WaypointType;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import com.mojang.blaze3d.platform.InputConstants;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ServerData;
 import org.lwjgl.glfw.GLFW;
 
 @Getter
 public class WaypointsModule extends Module {
-    private final KeyMapping openWaypointsKeyBinding = KeybindsWrapper.registerKeybind("key.alumite.open_waypoints", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, KeybindsWrapper.CATEGORY);
-    private final KeybindSetting openWaypointsKeySetting = KeybindSetting.builder().id("open_waypoints_key").defaultValue("").keyBindingSupplier(() -> openWaypointsKeyBinding).categoryDisplayKey("alumite.setting.category.controls").build();
 
-    private final KeyMapping createWaypointKeyBinding = KeybindsWrapper.registerKeybind("key.alumite.create_waypoint", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_PERIOD, KeybindsWrapper.CATEGORY);
-    private final KeybindSetting createWaypointKeySetting = KeybindSetting.builder().id("create_waypoint_key").defaultValue("").keyBindingSupplier(() -> createWaypointKeyBinding).categoryDisplayKey("alumite.setting.category.controls").build();
+    private final KeybindSetting waypointsKeybind = new KeybindSetting("waypoints_keybind", () -> KeybindsWrapper.registerCallbackKeybind(
+            "key.alumite.waypoints_keybind",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_M,
+            KeybindsWrapper.CATEGORY,
+            () -> {
+                if (isEnabled()) {
+                    Minecraft.getInstance().setScreen(new WaypointsScreen());
+                }
+            }
+    ));
 
     private final BooleanSetting showBeam = BooleanSetting.builder().id("show_beam").defaultValue(true).build();
     private final BooleanSetting labelOnLook = BooleanSetting.builder().id("label_on_look").defaultValue(false).build();
@@ -37,50 +40,12 @@ public class WaypointsModule extends Module {
 
     public WaypointsModule() {
         super("Waypoints", ModuleCategory.GENERAL);
-        addSetting(openWaypointsKeySetting);
-        addSetting(createWaypointKeySetting);
+        addSetting(waypointsKeybind);
         addSetting(showBeam);
         addSetting(labelOnLook);
         addSetting(showBorder);
         addSetting(labelPadding);
         addSetting(deathPoints);
-    }
-
-    @EventHandler
-    private void onClientTick(ClientTickEvent event) {
-        if (!isEnabled()) {
-            return;
-        }
-        if (openWaypointsKeyBinding.consumeClick()) {
-            Minecraft minecraft = Minecraft.getInstance();
-            if (minecraft.level != null) {
-                minecraft.setScreen(new WaypointsScreen());
-            }
-        }
-        if (createWaypointKeyBinding.consumeClick()) {
-            openCreateScreen();
-        }
-    }
-
-    private void openCreateScreen() {
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || minecraft.level == null) {
-            return;
-        }
-        double x = minecraft.player.getX();
-        double y = minecraft.player.getY();
-        double z = minecraft.player.getZ();
-        String dimension = minecraft.level.dimension().identifier().toString();
-        String worldKey = resolveWorldKey(minecraft);
-        minecraft.setScreen(new WaypointCreateScreen(x, y, z, dimension, worldKey));
-    }
-
-    private String resolveWorldKey(Minecraft minecraft) {
-        if (minecraft.getSingleplayerServer() != null) {
-            return "sp:" + minecraft.getSingleplayerServer().getWorldData().getLevelName();
-        }
-        ServerData serverData = minecraft.getCurrentServer();
-        return "mp:" + (serverData != null ? serverData.ip : "unknown");
     }
 
     @EventHandler
@@ -96,8 +61,7 @@ public class WaypointsModule extends Module {
         double y = event.player().getY();
         double z = event.player().getZ();
         String dimension = minecraft.level.dimension().identifier().toString();
-        String worldKey = resolveWorldKey(minecraft);
-        int deathCount = (int) ModConfig.waypoints().getForWorld(worldKey).stream().filter(waypoint -> waypoint.getType() == WaypointType.DEATH).count() + 1;
-        ModConfig.waypoints().create("Death #" + deathCount, worldKey, WaypointType.DEATH, x, y, z, dimension, new SettingColor(255, 50, 50, 255));
+        int deathCount = (int) WaypointRepository.getForCurrentWorldKey().stream().filter(waypoint -> waypoint.getType() == WaypointType.DEATH).count() + 1;
+        WaypointRepository.create("Death #" + deathCount, WaypointType.DEATH, x, y, z, dimension, new SettingColor(255, 50, 50, 255));
     }
 }

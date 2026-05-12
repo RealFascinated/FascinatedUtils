@@ -12,7 +12,6 @@ import java.util.function.Function;
 
 public class ContextMenuNode extends PositionedNode<ContextMenuNode> {
     private static final int MENU_PADDING = 4;
-    private static final int MENU_CORNER_RADIUS = 4;
     private static final int BUTTON_GAP = 1;
     private static final int MIN_MENU_WIDTH = 100;
     private static final int SEPARATOR_HEIGHT = 5;
@@ -39,7 +38,6 @@ public class ContextMenuNode extends PositionedNode<ContextMenuNode> {
     public ContextMenuNode() {
         full();
         background = new CardNode()
-                .setCornerRadius(MENU_CORNER_RADIUS)
                 .setFillResolver(UiTheme::contextMenuFill)
                 .setBorderResolver(UiTheme::contextMenuBorder);
         addChild(background);

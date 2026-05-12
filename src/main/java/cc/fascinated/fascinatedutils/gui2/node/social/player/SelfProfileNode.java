@@ -36,7 +36,7 @@ public class SelfProfileNode extends PositionedNode<SelfProfileNode> {
     public SelfProfileNode() {
         height(52).fullWidth();
 
-        card = new CardNode().setCornerRadius(CARD_CORNER);
+        card = new CardNode();
         card.left(CARD_INSET_H).right(CARD_INSET_H).top(CARD_INSET_V).bottom(CARD_INSET_V);
         addChild(card);
 

@@ -26,7 +26,6 @@ class PendingAttachmentPreviewNode extends PositionedNode<PendingAttachmentPrevi
         fullWidth().height(HEIGHT);
 
         addChild(new CardNode()
-                .setCornerRadius(CORNER_RADIUS)
                 .setNoBorder()
                 .setFillResolver(UiTheme::attachmentPlaceholderFill)
                 .left(PAD).top(PAD).size(THUMB_SIZE, THUMB_SIZE));
@@ -39,9 +38,9 @@ class PendingAttachmentPreviewNode extends PositionedNode<PendingAttachmentPrevi
                 .setCornerRadius(CORNER_RADIUS)
                 .left(PAD).top(PAD).size(THUMB_SIZE, THUMB_SIZE));
 
-        addChild(new ButtonNode().setLabel("\u00D7")
+        addChild(new ButtonNode().setLabel("×")
                 .setVariant(ButtonNode.ButtonVariant.GHOST)
-                .setLabelColorResolver(theme -> theme.textMuted())
+                .setLabelColorResolver(UiTheme::textMuted)
                 .setOnPress(() -> pendingAttachment.set(null))
                 .left(PAD + THUMB_SIZE - CLOSE_BTN_SIZE).top(PAD).size(CLOSE_BTN_SIZE, CLOSE_BTN_SIZE));
     }

@@ -5,16 +5,15 @@ import cc.fascinated.fascinatedutils.event.impl.render.ClientFovEvent;
 import cc.fascinated.fascinatedutils.gui2.core.UIScale;
 import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.oldgui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.systems.config.ModConfig;
-import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.Waypoint;
+import cc.fascinated.fascinatedutils.systems.waypoint.Waypoint;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
+import cc.fascinated.fascinatedutils.systems.waypoint.WaypointRepository;
 import meteordevelopment.orbit.EventHandler;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -49,17 +48,8 @@ public class WaypointLabelHudElement implements HudElement {
             return;
         }
 
-        String worldKey;
-        if (minecraft.getSingleplayerServer() != null) {
-            worldKey = "sp:" + minecraft.getSingleplayerServer().getWorldData().getLevelName();
-        }
-        else {
-            ServerData serverData = minecraft.getCurrentServer();
-            worldKey = "mp:" + (serverData != null ? serverData.ip : "unknown");
-        }
-
         String dimension = minecraft.level.dimension().identifier().toString();
-        List<Waypoint> waypoints = ModConfig.waypoints().getForWorld(worldKey);
+        List<Waypoint> waypoints = WaypointRepository.getForCurrentWorldKey();
         if (waypoints.isEmpty()) {
             return;
         }

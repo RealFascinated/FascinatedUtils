@@ -63,7 +63,7 @@ public class SocialScreen extends RootScreen {
             }
         };
 
-        PositionedNode root = new PositionedNode().full();
+        PositionedNode<?> root = new PositionedNode<>().full();
 
         PanelNode background = new PanelNode();
         background.full();

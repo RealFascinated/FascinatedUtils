@@ -15,7 +15,7 @@ public class C2SAuthMessage extends OutboundMessage {
     }
 
     @Override
-    protected JsonElement data() {
+    public JsonElement data() {
         JsonObject data = new JsonObject();
         data.addProperty("token", token);
         return data;

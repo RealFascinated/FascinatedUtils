@@ -3,6 +3,8 @@ package cc.fascinated.fascinatedutils.gui2.theme;
 public interface UiTheme {
     int panelFill();
 
+    int panelHeaderFill();
+
     int panelBorder();
 
     int divider();

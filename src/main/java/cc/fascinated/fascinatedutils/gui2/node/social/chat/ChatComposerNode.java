@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.core.UiStateStore;
 import cc.fascinated.fascinatedutils.gui2.node.input.TextboxInputNode;
+import cc.fascinated.fascinatedutils.gui2.node.input.TextParser;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 import net.minecraft.client.Minecraft;
 
@@ -21,7 +22,7 @@ public class ChatComposerNode extends PositionedNode<ChatComposerNode> {
     private final UiState<Path> pendingAttachment;
     private final PendingAttachmentPreviewNode attachmentPreview;
     private final AttachButtonNode attachButton;
-    private final TextboxInputNode composerInput;
+    private final TextboxInputNode<String> composerInput;
 
     public ChatComposerNode(Channel channel, UiStateStore stateStore, String placeholder) {
         UiState<Path> pendingAttachment = stateStore.<Path>state("social.composer.attachment." + channel.id(), null);
@@ -36,7 +37,7 @@ public class ChatComposerNode extends PositionedNode<ChatComposerNode> {
 
         attachButton = new AttachButtonNode(pendingAttachment);
 
-        composerInput = new TextboxInputNode();
+        composerInput = new TextboxInputNode<>(TextParser.STRING);
         composerInput.setNodeId("social.chat-composer");
         composerInput.setValue(composerDraft.get());
         composerInput.bindCaretState(composerCaret);

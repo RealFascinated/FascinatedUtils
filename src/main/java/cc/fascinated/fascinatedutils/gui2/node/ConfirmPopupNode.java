@@ -22,7 +22,7 @@ public class ConfirmPopupNode extends PopupNode<ConfirmPopupNode> {
     private static final int MIN_POPUP_WIDTH = BUTTON_ROW_WIDTH + PAD_SIDE * 2;
 
     private String title = "";
-    private String message = null;
+    private String description = null;
     private String cancelLabel = Component.translatable("alumite.common.cancel").getString();
     private String confirmLabel = Component.translatable("alumite.common.confirm").getString();
     private Runnable onCancel = () -> {};
@@ -31,7 +31,7 @@ public class ConfirmPopupNode extends PopupNode<ConfirmPopupNode> {
     private final ButtonNode cancelButton;
     private final ButtonNode confirmButton;
     private final TextNode titleTextNode;
-    private final TextNode messageTextNode;
+    private final TextNode descriptionTextNode;
 
     public ConfirmPopupNode() {
         setPopupHeight(POPUP_HEIGHT);
@@ -41,10 +41,10 @@ public class ConfirmPopupNode extends PopupNode<ConfirmPopupNode> {
         titleTextNode.setBold(true).setColorResolver(theme -> theme.textPrimary()).alignX(0.5f).top(PAD_TOP);
         addPopupChild(titleTextNode);
 
-        messageTextNode = new TextNode(() -> message != null ? message : "");
-        messageTextNode.setColorResolver(theme -> theme.textMuted()).alignX(0.5f).top(PAD_TOP);
-        messageTextNode.setVisible(false);
-        addPopupChild(messageTextNode);
+        descriptionTextNode = new TextNode(() -> description != null ? description : "");
+        descriptionTextNode.setColorResolver(theme -> theme.textMuted()).alignX(0.5f).top(PAD_TOP);
+        descriptionTextNode.setVisible(false);
+        addPopupChild(descriptionTextNode);
 
         cancelButton = new ButtonNode(() -> cancelLabel).setOnPress(() -> onCancel.run());
         cancelButton.left(0).size(BUTTON_WIDTH, BUTTON_HEIGHT);
@@ -66,9 +66,9 @@ public class ConfirmPopupNode extends PopupNode<ConfirmPopupNode> {
         return this;
     }
 
-    public ConfirmPopupNode setMessage(String message) {
-        this.message = message;
-        messageTextNode.setVisible(message != null && !message.isBlank());
+    public ConfirmPopupNode setDescription(String description) {
+        this.description = description;
+        descriptionTextNode.setVisible(description != null && !description.isBlank());
         return this;
     }
 
@@ -109,13 +109,13 @@ public class ConfirmPopupNode extends PopupNode<ConfirmPopupNode> {
 
     @Override
     protected void configurePopup(RenderFrame renderFrame) {
-        boolean hasMessage = message != null && !message.isBlank();
-        setPopupHeight(hasMessage ? POPUP_HEIGHT + renderFrame.fontHeight() + MESSAGE_TITLE_GAP : POPUP_HEIGHT);
-        if (hasMessage) {
-            messageTextNode.top(PAD_TOP + renderFrame.fontHeight() + MESSAGE_TITLE_GAP);
+        boolean hasDescription = description != null && !description.isBlank();
+        setPopupHeight(hasDescription ? POPUP_HEIGHT + renderFrame.fontHeight() + MESSAGE_TITLE_GAP : POPUP_HEIGHT);
+        if (hasDescription) {
+            descriptionTextNode.top(PAD_TOP + renderFrame.fontHeight() + MESSAGE_TITLE_GAP);
         }
         int titleWidth = renderFrame.measureTextWidth(title, true);
-        int messageWidth = hasMessage ? renderFrame.measureTextWidth(message, false) : 0;
-        setPopupWidth(Math.max(MIN_POPUP_WIDTH, Math.max(titleWidth, messageWidth) + PAD_SIDE * 2));
+        int descriptionWidth = hasDescription ? renderFrame.measureTextWidth(description, false) : 0;
+        setPopupWidth(Math.max(MIN_POPUP_WIDTH, Math.max(titleWidth, descriptionWidth) + PAD_SIDE * 2));
     }
 }

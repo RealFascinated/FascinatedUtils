@@ -1,16 +1,24 @@
 package cc.fascinated.fascinatedutils.settings;
 
-import cc.fascinated.fascinatedutils.client.keybind.Keybinds;
+import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
 import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
+import cc.fascinated.fascinatedutils.gui2.screens.impl.SocialScreen;
+import cc.fascinated.fascinatedutils.gui2.screens.impl.screenshot.ScreenshotScreen;
+import cc.fascinated.fascinatedutils.gui2.screens.impl.waypoint.WaypointsScreen;
 import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
+import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.blaze3d.platform.InputConstants;
 import lombok.Getter;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,9 +28,36 @@ public class Settings implements GsonSerializable<Settings> {
 
     private final List<Setting<?>> settings = new ArrayList<>();
 
-    private final KeybindSetting shellOpenKeybind = new KeybindSetting("shell_open_keybind", Keybinds::openMenuKeybind);
-    private final KeybindSetting socialKeybind = new KeybindSetting("social_keybind", Keybinds::socialKeybind);
-    private final KeybindSetting screenshotsKeybind = new KeybindSetting("screenshots_keybind", Keybinds::screenshotKeybind);
+    private final KeybindSetting shellOpenKeybind = new KeybindSetting("settings_keybind", () -> KeybindsWrapper.registerCallbackKeybind(
+            "key.alumite.settings_keybind",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_RIGHT_SHIFT,
+            KeybindsWrapper.CATEGORY,
+            () -> HUDManager.INSTANCE.setEditMode(!HUDManager.INSTANCE.isEditMode())
+    ));
+    private final KeybindSetting socialKeybind = new KeybindSetting("social_keybind", () -> KeybindsWrapper.registerCallbackKeybind(
+            "key.alumite.social_keybind",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_BACKSLASH,
+            KeybindsWrapper.CATEGORY,
+            () -> {
+                Minecraft minecraftClient = Minecraft.getInstance();
+                Screen currentScreen = minecraftClient.screen;
+                if (currentScreen instanceof SocialScreen) {
+                    minecraftClient.setScreen(null);
+                }
+                else {
+                    minecraftClient.setScreen(new SocialScreen());
+                }
+            }
+    ));
+    private final KeybindSetting screenshotsKeybind = new KeybindSetting("screenshots_keybind", () -> KeybindsWrapper.registerCallbackKeybind(
+            "key.alumite.screenshots_keybind",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_U,
+            KeybindsWrapper.CATEGORY,
+            () -> Minecraft.getInstance().setScreen(new ScreenshotScreen())
+    ));
 
     private final BooleanSetting showSelfNameplate = BooleanSetting.builder().id("show_self_nameplate")
             .defaultValue(true)

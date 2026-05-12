@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.api.channel.json.AttachmentDTO;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.api.user.UserStatus;
 import cc.fascinated.fascinatedutils.common.sound.Sounds;
+import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.social.ChannelMessageCreateEvent;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendAddEvent;
 import cc.fascinated.fascinatedutils.event.impl.social.FriendRequestIncomingEvent;
@@ -18,6 +19,11 @@ import net.minecraft.network.chat.Component;
 import java.util.Objects;
 
 public class Notifications {
+
+    public Notifications() {
+        FascinatedEventBus.INSTANCE.subscribe(this);
+    }
+
     @EventHandler
     public void onMessageCreate(ChannelMessageCreateEvent event) {
         if (!shouldToast()) {

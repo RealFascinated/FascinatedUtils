@@ -78,6 +78,9 @@ class AlumiteGateway implements WebSocket.Listener {
     void send(OutboundMessage message) {
         if (ws != null) {
             ws.sendText(message.toJson(), true);
+            if (Constants.DEBUG_MODE) {
+                Client.LOG.info("[AlumiteGateway] Sending opcode {} with data: {}", message.op(), message.data());
+            }
         }
     }
 

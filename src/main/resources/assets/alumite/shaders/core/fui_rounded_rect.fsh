@@ -30,7 +30,8 @@ void main() {
     vec2 h = max(fwidth(uv), vec2(1e-5));
     float widthPx = 1.0 / h.x;
     float heightPx = 1.0 / h.y;
-    vec2 halfSizePx = vec2(widthPx, heightPx) * 0.5;
+    float expansionPx = texelFetch(Sampler1, ivec2(5, 0), 0).r * 255.0;
+    vec2 halfSizePx = vec2(widthPx, heightPx) * 0.5 - expansionPx;
     vec2 pointPx = (uv - vec2(0.5)) * vec2(widthPx, heightPx);
     float minSidePx = min(widthPx, heightPx);
     float r_tl = texelFetch(Sampler1, ivec2(0, 0), 0).r * minSidePx * 0.5;

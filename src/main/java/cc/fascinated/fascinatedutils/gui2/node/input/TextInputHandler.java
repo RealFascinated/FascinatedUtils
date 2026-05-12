@@ -5,19 +5,26 @@ import lombok.Getter;
 import lombok.Setter;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayDeque;
 import java.util.function.Consumer;
 
 public class TextInputHandler {
+
+    private record TextSnapshot(String text, int caret) {}
+
+    private static final int MAX_UNDO_DEPTH = 200;
 
     private final StringBuilder buffer = new StringBuilder();
     private int caretIndex;
     private int selectionAnchor = -1;
     @Getter
-    @Setter
     private boolean focused;
     @Getter
     private boolean mouseSelecting;
     private int maxLength = 2000;
+    private final ArrayDeque<TextSnapshot> undoStack = new ArrayDeque<>();
+    private final ArrayDeque<TextSnapshot> redoStack = new ArrayDeque<>();
+    private boolean inTypingRun;
     private Consumer<String> onSubmit = ignored -> {};
     private Consumer<String> onChange = ignored -> {};
     private Runnable onCancel = () -> {};
@@ -66,12 +73,63 @@ public class TextInputHandler {
         return this;
     }
 
+    public void setFocused(boolean focused) {
+        if (!focused) {
+            inTypingRun = false;
+        }
+        this.focused = focused;
+    }
+
     public void setValue(String value) {
+        inTypingRun = false;
+        undoStack.clear();
+        redoStack.clear();
         buffer.setLength(0);
         if (value != null) {
             buffer.append(value);
         }
         caretIndex = buffer.length();
+    }
+
+    public boolean undo() {
+        inTypingRun = false;
+        if (undoStack.isEmpty()) {
+            return false;
+        }
+        redoStack.push(new TextSnapshot(buffer.toString(), caretIndex));
+        applySnapshot(undoStack.pop());
+        return true;
+    }
+
+    public boolean redo() {
+        inTypingRun = false;
+        if (redoStack.isEmpty()) {
+            return false;
+        }
+        undoStack.push(new TextSnapshot(buffer.toString(), caretIndex));
+        applySnapshot(redoStack.pop());
+        return true;
+    }
+
+    private void saveUndoSnapshot() {
+        String current = buffer.toString();
+        if (!undoStack.isEmpty() && undoStack.peek().text().equals(current)) {
+            return;
+        }
+        if (undoStack.size() >= MAX_UNDO_DEPTH) {
+            undoStack.removeLast();
+        }
+        undoStack.push(new TextSnapshot(current, caretIndex));
+        redoStack.clear();
+    }
+
+    private void applySnapshot(TextSnapshot snapshot) {
+        buffer.setLength(0);
+        buffer.append(snapshot.text());
+        caretIndex = Math.min(snapshot.caret(), buffer.length());
+        clearSelection();
+        persistCaret();
+        fireChange();
     }
 
     public String value() {
@@ -276,6 +334,12 @@ public class TextInputHandler {
     public boolean handleCtrlKeyPress(int keyCode, int modifiers, boolean allowNewlinesInPaste) {
         boolean shift = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
         switch (keyCode) {
+            case GLFW.GLFW_KEY_Z -> {
+                return shift ? redo() : undo();
+            }
+            case GLFW.GLFW_KEY_Y -> {
+                return redo();
+            }
             case GLFW.GLFW_KEY_A -> {
                 selectionAnchor = 0;
                 caretIndex = buffer.length();
@@ -291,6 +355,8 @@ public class TextInputHandler {
             }
             case GLFW.GLFW_KEY_X -> {
                 if (hasSelection()) {
+                    inTypingRun = false;
+                    saveUndoSnapshot();
                     GLFW.glfwSetClipboardString(0L, buffer.substring(selectStart(), selectEnd()));
                     deleteSelection();
                 }
@@ -299,6 +365,8 @@ public class TextInputHandler {
             case GLFW.GLFW_KEY_V -> {
                 String clip = GLFW.glfwGetClipboardString(0L);
                 if (clip != null && !clip.isEmpty()) {
+                    inTypingRun = false;
+                    saveUndoSnapshot();
                     deleteSelection();
                     StringBuilder filtered = new StringBuilder();
                     for (char character : clip.toCharArray()) {
@@ -331,6 +399,8 @@ public class TextInputHandler {
                 return true;
             }
             case GLFW.GLFW_KEY_BACKSPACE -> {
+                inTypingRun = false;
+                if (hasSelection() || caretIndex > 0) saveUndoSnapshot();
                 if (deleteSelection()) {
                     return true;
                 }
@@ -344,6 +414,8 @@ public class TextInputHandler {
                 return true;
             }
             case GLFW.GLFW_KEY_DELETE -> {
+                inTypingRun = false;
+                if (hasSelection() || caretIndex < buffer.length()) saveUndoSnapshot();
                 if (deleteSelection()) {
                     return true;
                 }
@@ -377,6 +449,8 @@ public class TextInputHandler {
                 return true;
             }
             case GLFW.GLFW_KEY_BACKSPACE -> {
+                inTypingRun = false;
+                if (hasSelection() || caretIndex > 0) saveUndoSnapshot();
                 if (deleteSelection()) {
                     return true;
                 }
@@ -389,6 +463,8 @@ public class TextInputHandler {
                 return true;
             }
             case GLFW.GLFW_KEY_DELETE -> {
+                inTypingRun = false;
+                if (hasSelection() || caretIndex < buffer.length()) saveUndoSnapshot();
                 if (deleteSelection()) {
                     return true;
                 }
@@ -431,6 +507,10 @@ public class TextInputHandler {
      * @return {@code true} always (the character is consumed regardless of insertion)
      */
     public boolean handleCharType(char character) {
+        if (!inTypingRun) {
+            saveUndoSnapshot();
+            inTypingRun = true;
+        }
         deleteSelection();
         if (buffer.length() >= maxLength) {
             return true;

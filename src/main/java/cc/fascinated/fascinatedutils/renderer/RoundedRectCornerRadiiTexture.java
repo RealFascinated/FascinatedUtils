@@ -25,16 +25,20 @@ public class RoundedRectCornerRadiiTexture {
      * any fragment sampling, so a single shared LUT texture cannot work for batched quads; bake radii at enqueue time
      * instead and {@link MeshRenderer#releaseDisposableRadiiLutsAfterGuiRenderPass()} after {@code GuiRenderer#render}.
      */
-    public static DynamicTexture createDisposableRadiiLut(int packedCornerRadii, float lutRingStrokePx) {
-        NativeImage image = new NativeImage(NativeImage.Format.RGBA, 5, 1, false);
-        writeRadiiLutPixels(image, packedCornerRadii, lutRingStrokePx);
+    public static DynamicTexture createDisposableRadiiLut(int packedCornerRadii, float lutRingStrokePx, float lutExpansionShaderPx) {
+        NativeImage image = new NativeImage(NativeImage.Format.RGBA, 6, 1, false);
+        writeRadiiLutPixels(image, packedCornerRadii, lutRingStrokePx, lutExpansionShaderPx);
         long sequence = DISPOSABLE_LUT_SEQUENCE.getAndIncrement();
         DynamicTexture texture = new DynamicTexture(() -> AlumiteMod.MOD_ID + "/disposable_corner_lut/" + sequence, image);
         texture.upload();
         return texture;
     }
 
-    private static void writeRadiiLutPixels(NativeImage image, int packedCornerRadii, float lutRingStrokePx) {
+    public static DynamicTexture createDisposableRadiiLut(int packedCornerRadii, float lutRingStrokePx) {
+        return createDisposableRadiiLut(packedCornerRadii, lutRingStrokePx, 0f);
+    }
+
+    private static void writeRadiiLutPixels(NativeImage image, int packedCornerRadii, float lutRingStrokePx, float lutExpansionShaderPx) {
         int topLeft = (packedCornerRadii >>> 24) & 0xFF;
         int topRight = (packedCornerRadii >>> 16) & 0xFF;
         int bottomRight = (packedCornerRadii >>> 8) & 0xFF;
@@ -45,6 +49,8 @@ public class RoundedRectCornerRadiiTexture {
         image.setPixel(3, 0, 0xFF000000 | (bottomLeft << 16) | (bottomLeft << 8) | bottomLeft);
         int strokeByte = lutRingStrokePx > 0f ? Math.max(1, Math.min(255, Math.round(lutRingStrokePx))) : 0;
         image.setPixel(4, 0, 0xFF000000 | (strokeByte << 16) | (strokeByte << 8) | strokeByte);
+        int expansionByte = lutExpansionShaderPx > 0f ? Math.max(1, Math.min(255, Math.round(lutExpansionShaderPx))) : 0;
+        image.setPixel(5, 0, 0xFF000000 | (expansionByte << 16) | (expansionByte << 8) | expansionByte);
     }
 
     /**
@@ -59,8 +65,8 @@ public class RoundedRectCornerRadiiTexture {
         if (backing != null) {
             return;
         }
-        NativeImage image = new NativeImage(NativeImage.Format.RGBA, 5, 1, false);
-        for (int cornerIndex = 0; cornerIndex < 5; cornerIndex++) {
+        NativeImage image = new NativeImage(NativeImage.Format.RGBA, 6, 1, false);
+        for (int cornerIndex = 0; cornerIndex < 6; cornerIndex++) {
             image.setPixel(cornerIndex, 0, 0xFF000000);
         }
         backing = new DynamicTexture(TEXTURE_ID::toString, image);
@@ -82,7 +88,7 @@ public class RoundedRectCornerRadiiTexture {
         if (image == null) {
             return;
         }
-        writeRadiiLutPixels(image, packedCornerRadii, lutRingStrokePx);
+        writeRadiiLutPixels(image, packedCornerRadii, lutRingStrokePx, 0f);
         backing.upload();
     }
 

@@ -180,7 +180,7 @@ public class Renderer2D {
     }
 
     public void fillRoundedRect(float positionX, float positionY, float width, float height, float cornerRadius, int fillArgb, int cornerRoundMask) {
-        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, currentScissor(), positionX, positionY, width, height, cornerRadius, fillArgb, fillArgb, cornerRoundMask, 0f);
+        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, currentScissor(), positionX, positionY, width, height, cornerRadius, fillArgb, fillArgb, cornerRoundMask, 0f, 0f);
     }
 
     /**
@@ -194,14 +194,14 @@ public class Renderer2D {
     public void fillRoundedRectFrame(float positionX, float positionY, float width, float height, float cornerRadius, int borderArgb, int fillArgb, float borderThicknessX, float borderThicknessY, int cornerRoundMask) {
         float thickness = roundedRectFrameBorderThickness(borderThicknessX, borderThicknessY);
         ScreenRectangle scissor = currentScissor();
-        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, scissor, positionX, positionY, width, height, cornerRadius, borderArgb, borderArgb, cornerRoundMask, 0f);
+        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, scissor, positionX, positionY, width, height, cornerRadius, borderArgb, borderArgb, cornerRoundMask, 0f, 0f);
         float innerX = positionX + thickness;
         float innerY = positionY + thickness;
         float innerW = Math.max(0f, width - 2f * thickness);
         float innerH = Math.max(0f, height - 2f * thickness);
         float innerRadius = Math.max(0f, cornerRadius - thickness);
         if (innerW > 0.5f && innerH > 0.5f) {
-            MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, scissor, innerX, innerY, innerW, innerH, innerRadius, fillArgb, fillArgb, cornerRoundMask, 0f);
+            MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, scissor, innerX, innerY, innerW, innerH, innerRadius, fillArgb, fillArgb, cornerRoundMask, 0f, 0f);
         }
     }
 
@@ -458,7 +458,11 @@ public class Renderer2D {
         Minecraft mc = Minecraft.getInstance();
         float guiScale = mc.getWindow().getWidth() / Math.max(1f, (float) mc.getWindow().getGuiScaledWidth());
         float strokeForLut = ringStrokeLogicalPx * poseScale * guiScale * 0.5f;
-        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, currentScissor(), positionX, positionY, width, height, cornerRadius, borderArgb, borderArgb, cornerRoundMask, strokeForLut);
+        // Expand the quad by 1 logical pixel outward on each side so the outer anti-aliasing fringe has
+        // geometry to render into. The shader subtracts expansionShaderPx from halfSizePx to restore the
+        // correct SDF boundary, keeping the visible ring at the original logical position.
+        float expansionShaderPx = poseScale * guiScale;
+        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, currentScissor(), positionX - 1f, positionY - 1f, width + 2f, height + 2f, cornerRadius, borderArgb, borderArgb, cornerRoundMask, strokeForLut, expansionShaderPx);
     }
 
     private FormattedCharSequence styledLiteralSequence(String raw, boolean bold) {

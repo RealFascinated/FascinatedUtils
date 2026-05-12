@@ -1,5 +1,7 @@
-package cc.fascinated.fascinatedutils.gui2.core;
+package cc.fascinated.fascinatedutils.gui2.node;
 
+import cc.fascinated.fascinatedutils.gui2.core.UiNode;
+import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
 import java.util.function.Consumer;

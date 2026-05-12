@@ -55,7 +55,7 @@ public class ChatMessageNode extends PositionedNode<ChatMessageNode> {
     private final AuthorRowNode authorRow;
     private final ContentNode contentNode;
     private final List<ClickableNode> attachmentNodes = new ArrayList<>();
-    private TextboxInputNode editInput;
+    private TextboxInputNode<String> editInput;
     private int editHintY = -1;
     private BiConsumer<Float, Float> onContextMenu;
     private BiConsumer<Float, Float> onAuthorClick;
@@ -112,7 +112,7 @@ public class ChatMessageNode extends PositionedNode<ChatMessageNode> {
         }
     }
 
-    public ChatMessageNode setEditInput(TextboxInputNode editInput) {
+    public ChatMessageNode setEditInput(TextboxInputNode<String> editInput) {
         if (this.editInput != null) {
             removeChild(this.editInput);
         }

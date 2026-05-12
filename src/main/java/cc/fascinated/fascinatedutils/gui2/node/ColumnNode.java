@@ -1,5 +1,6 @@
-package cc.fascinated.fascinatedutils.gui2.core;
+package cc.fascinated.fascinatedutils.gui2.node;
 
+import cc.fascinated.fascinatedutils.gui2.core.UiNode;
 import cc.fascinated.fascinatedutils.gui2.render.RenderFrame;
 
 public class ColumnNode extends UiNode {

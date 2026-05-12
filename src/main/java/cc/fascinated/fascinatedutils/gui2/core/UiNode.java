@@ -107,9 +107,9 @@ public abstract class UiNode {
         return Collections.unmodifiableList(children);
     }
 
-    public void addChild(UiNode childNode) {
+    public UiNode addChild(UiNode childNode) {
         if (childNode == null) {
-            return;
+            return this;
         }
         if (childNode.parent != null) {
             childNode.parent.removeChild(childNode);
@@ -119,6 +119,7 @@ public abstract class UiNode {
         if (mounted) {
             childNode.mountSubtree();
         }
+        return this;
     }
 
     public void removeChild(UiNode childNode) {

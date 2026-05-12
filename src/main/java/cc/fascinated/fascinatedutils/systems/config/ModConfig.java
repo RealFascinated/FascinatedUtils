@@ -7,7 +7,7 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.systems.config.impl.config.ConfigRepository;
 import cc.fascinated.fascinatedutils.systems.config.impl.config.FascinatedConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.profiles.ProfileRepository;
-import cc.fascinated.fascinatedutils.systems.config.impl.waypoint.WaypointRepository;
+import cc.fascinated.fascinatedutils.systems.waypoint.WaypointRepository;
 import meteordevelopment.orbit.EventHandler;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -18,7 +18,6 @@ public class ModConfig {
 
     private final ProfileRepository profileRepository;
     private final ConfigRepository configRepository;
-    private final WaypointRepository waypointRepository;
 
     private ModConfig() {
         FascinatedEventBus.INSTANCE.subscribe(this);
@@ -33,9 +32,6 @@ public class ModConfig {
         }
 
         configRepository = new ConfigRepository(configManager);
-
-        waypointRepository = new WaypointRepository(getDirectory().resolve("waypoints.json"), Constants.GSON);
-        waypointRepository.refreshCache();
     }
 
     public static Path getDirectory() {
@@ -54,14 +50,9 @@ public class ModConfig {
         return INSTANCE.configRepository;
     }
 
-    public static WaypointRepository waypoints() {
-        return INSTANCE.waypointRepository;
-    }
-
     @EventHandler
     private void alumite$onClientStopping(ClientStoppingEvent event) {
         profileRepository.saveActiveProfile();
         configRepository.save();
-        waypointRepository.save();
     }
 }

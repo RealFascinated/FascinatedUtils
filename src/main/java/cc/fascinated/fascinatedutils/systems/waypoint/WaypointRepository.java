@@ -1,11 +1,13 @@
-package cc.fascinated.fascinatedutils.systems.config.impl.waypoint;
+package cc.fascinated.fascinatedutils.systems.waypoint;
 
+import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
-import com.google.gson.Gson;
+import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import lombok.RequiredArgsConstructor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ServerData;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -13,26 +15,28 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-@RequiredArgsConstructor
 public class WaypointRepository {
-    private final Path waypointsFile;
-    private final Gson gson;
+    private static List<Waypoint> WAYPOINTS = new ArrayList<>();
+    private static Path waypointsFile;
 
-    private List<Waypoint> cache = new ArrayList<>();
+    public WaypointRepository() {
+        waypointsFile = ModConfig.getDirectory().resolve("waypoints.json");
+        this.loadWaypoints();
+    }
 
-    public void refreshCache() {
+    private void loadWaypoints() {
         if (!Files.isRegularFile(waypointsFile)) {
-            cache = new ArrayList<>();
+            WAYPOINTS = new ArrayList<>();
             return;
         }
         List<Waypoint> loaded = new ArrayList<>();
         try {
             String json = Files.readString(waypointsFile, StandardCharsets.UTF_8);
-            JsonElement element = gson.fromJson(json, JsonElement.class);
+            JsonElement element = Constants.GSON.fromJson(json, JsonElement.class);
             if (element != null && element.isJsonArray()) {
                 for (JsonElement entry : element.getAsJsonArray()) {
                     try {
-                        loaded.add(Waypoint.defaults().deserialize(entry, gson));
+                        loaded.add(Waypoint.defaults().deserialize(entry, Constants.GSON));
                     } catch (Exception exception) {
                         Client.LOG.warn("Failed to load waypoint: {}", exception.toString());
                     }
@@ -41,24 +45,17 @@ public class WaypointRepository {
         } catch (IOException exception) {
             Client.LOG.warn("Failed to read waypoints file: {}", exception.toString());
         }
-        cache = loaded;
+        WAYPOINTS = loaded;
     }
 
     /**
-     * Returns all waypoints for the given server address.
-     *
-     * @param server the server address (or world name for singleplayer)
-     * @return unmodifiable list of matching waypoints
-     */
-    /**
-     * Returns all waypoints matching the given world key.
+     * Returns all waypoints matching the current world key.
      * For multiplayer, pass the server IP; for singleplayer, pass the level name.
      *
-     * @param worldKey the server IP or singleplayer level name
      * @return matching waypoints
      */
-    public List<Waypoint> getForWorld(String worldKey) {
-        return cache.stream().filter(waypoint -> waypoint.getWorldKey().equals(worldKey)).toList();
+    public static List<Waypoint> getForCurrentWorldKey() {
+        return WAYPOINTS.stream().filter(waypoint -> waypoint.getWorldKey().equals(getWorldKey())).toList();
     }
 
     /**
@@ -66,25 +63,28 @@ public class WaypointRepository {
      *
      * @return unmodifiable view of the full waypoint list
      */
-    public List<Waypoint> list() {
-        return Collections.unmodifiableList(cache);
+    public static List<Waypoint> list() {
+        return Collections.unmodifiableList(WAYPOINTS);
     }
 
-    /**
-     * Finds a waypoint by its unique ID.
-     *
-     * @param id the waypoint UUID
-     * @return the matching waypoint, if present
-     */
-    public Optional<Waypoint> findById(UUID id) {
-        return cache.stream().filter(waypoint -> waypoint.getId().equals(id)).findFirst();
+    public static String getWorldKey() {
+        Minecraft minecraft = Minecraft.getInstance();
+        String worldKey;
+        if (minecraft.getSingleplayerServer() != null) {
+            worldKey = "sp:" + minecraft.getSingleplayerServer().getWorldData().getLevelName();
+        }
+        else {
+            ServerData serverData = minecraft.getCurrentServer();
+            worldKey = "mp:" + (serverData != null ? serverData.ip : "unknown");
+        }
+
+        return worldKey;
     }
 
     /**
      * Creates a new waypoint, adds it to the cache, and persists it.
      *
      * @param name      display name
-     * @param worldKey  prefixed world key: {@code sp:<levelName>} or {@code mp:<serverIP>}
      * @param type      waypoint type
      * @param x         world X coordinate
      * @param y         world Y coordinate
@@ -93,9 +93,9 @@ public class WaypointRepository {
      * @param color     ARGB color
      * @return the newly created waypoint
      */
-    public Waypoint create(String name, String worldKey, WaypointType type, double x, double y, double z, String dimension, SettingColor color) {
-        Waypoint waypoint = new Waypoint(UUID.randomUUID(), type, name, worldKey, x, y, z, dimension, true, true, true, color.copy());
-        cache.add(waypoint);
+    public static Waypoint create(String name, WaypointType type, double x, double y, double z, String dimension, SettingColor color) {
+        Waypoint waypoint = Waypoint.create(UUID.randomUUID(), type, name, x, y, z, dimension, true, true, true, color.copy());
+        WAYPOINTS.add(waypoint);
         save();
         return waypoint;
     }
@@ -106,12 +106,12 @@ public class WaypointRepository {
      * @param id the waypoint UUID
      * @return true if a waypoint was removed, false if not found
      */
-    public boolean delete(UUID id) {
-        List<Waypoint> updated = cache.stream().filter(waypoint -> !waypoint.getId().equals(id)).toList();
-        if (updated.size() == cache.size()) {
+    public static boolean delete(UUID id) {
+        List<Waypoint> updated = WAYPOINTS.stream().filter(waypoint -> !waypoint.getId().equals(id)).toList();
+        if (updated.size() == WAYPOINTS.size()) {
             return false;
         }
-        cache = new ArrayList<>(updated);
+        WAYPOINTS = new ArrayList<>(updated);
         save();
         return true;
     }
@@ -119,14 +119,14 @@ public class WaypointRepository {
     /**
      * Persists all cached waypoints to disk.
      */
-    public void save() {
+    public static void save() {
         JsonArray array = new JsonArray();
-        for (Waypoint waypoint : cache) {
-            array.add(waypoint.serialize(gson));
+        for (Waypoint waypoint : WAYPOINTS) {
+            array.add(waypoint.serialize(Constants.GSON));
         }
         try {
             Files.createDirectories(waypointsFile.getParent());
-            Files.writeString(waypointsFile, gson.toJson(array), StandardCharsets.UTF_8);
+            Files.writeString(waypointsFile, Constants.GSON.toJson(array), StandardCharsets.UTF_8);
         } catch (IOException exception) {
             Client.LOG.warn("Failed to save waypoints: {}", exception.toString());
         }

@@ -5,7 +5,7 @@ import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.channel.DmChannel;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.gui2.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui2.core.ScrollColumnNode;
+import cc.fascinated.fascinatedutils.gui2.node.ScrollColumnNode;
 import cc.fascinated.fascinatedutils.gui2.node.ButtonNode;
 import cc.fascinated.fascinatedutils.gui2.node.PopupNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;

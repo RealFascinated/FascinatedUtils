@@ -4,7 +4,6 @@ import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.client.command.ClientCommandBootstrap;
-import cc.fascinated.fascinatedutils.client.keybind.Keybinds;
 import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
@@ -21,6 +20,7 @@ import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.screenshot.ScreenshotManager;
 import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
 import cc.fascinated.fascinatedutils.systems.turboparticles.TurboParticles;
+import cc.fascinated.fascinatedutils.systems.waypoint.WaypointRepository;
 import cc.fascinated.fascinatedutils.updater.Updater;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 public class Client implements ClientModInitializer {
     public static final Logger LOG = LoggerFactory.getLogger(AlumiteMod.MOD_ID);
-
 
     public static final TurboEntities TURBO_ENTITIES = new TurboEntities();
     public static final TurboParticles TURBO_PARTICLES = new TurboParticles();
@@ -47,28 +46,37 @@ public class Client implements ClientModInitializer {
         eventBus.subscribe(Alumite.INSTANCE);
         eventBus.subscribe(TURBO_PARTICLES);
         eventBus.subscribe(TURBO_ENTITIES);
-        eventBus.subscribe(new Notifications());
         eventBus.subscribe(ActivityHandler.INSTANCE);
 
-        ClientLifecycleEvents.CLIENT_STARTED.register(client -> eventBus.post(new ClientStartedEvent(client)));
-        ClientLifecycleEvents.CLIENT_STARTED.register(ModUiTextures::loadTextures);
-        ClientLifecycleEvents.CLIENT_STARTED.register(_ -> ScreenshotManager.init());
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+        ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
+            eventBus.post(new ClientStartedEvent(client));
+            ModUiTextures.loadTextures(client);
+            ScreenshotManager.init();
+        });
+        ClientPlayConnectionEvents.JOIN.register((_, _, client) -> {
             if (client.isSingleplayer()) {
                 eventBus.post(new SingleplayerWorldLoadEvent());
             } else {
                 eventBus.post(new JoinMultiplayerServerEvent());
             }
         });
+        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+            eventBus.post(new ClientStoppingEvent(client));
+        });
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            KeybindsWrapper.dispatchRegisteredCallbacks();
+            FascinatedEventBus.INSTANCE.post(new ClientTickEvent(client));
+        });
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, _) -> {
+            ClientCommandBootstrap.registerWithFabric(dispatcher);
+        });
+
         ModuleRegistry.INSTANCE.initialize();
-        FascinatedWorldRenderTypes.registerWithIris();
         RainbowColors.init();
-        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> eventBus.post(new ClientStoppingEvent(client)));
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> ClientCommandBootstrap.registerWithFabric(dispatcher));
-        new Keybinds();
+        FascinatedWorldRenderTypes.registerWithIris();
         ModUiClientEntry.register();
-        ClientTickEvents.END_CLIENT_TICK.register(_ -> KeybindsWrapper.dispatchRegisteredCallbacks());
-        ClientTickEvents.END_CLIENT_TICK.register(client -> FascinatedEventBus.INSTANCE.post(new ClientTickEvent(client)));
+        new Notifications();
+        new WaypointRepository();
 
         // Register updater shutdown hook; check and download will run on game exit
         if (!Constants.DEBUG_MODE) {

@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 public class KeybindSetting extends Setting<String> {
-    private final Supplier<KeyMapping> keyBindingSupplier;
+    private final KeyMapping keyMapping;
 
     public KeybindSetting(String id, Supplier<KeyMapping> keyBindingSupplier) {
         this(builder().id(id).defaultValue("").keyBindingSupplier(keyBindingSupplier));
@@ -18,41 +18,34 @@ public class KeybindSetting extends Setting<String> {
 
     private KeybindSetting(Builder builder) {
         super(builder);
-        this.keyBindingSupplier = Objects.requireNonNull(builder.keyBindingSupplier, "key binding supplier is required");
+        keyMapping = Objects.requireNonNull(builder.keyBindingSupplier.get(), "key binding supplier is required");
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public KeyMapping keyBinding() {
-        return keyBindingSupplier.get();
-    }
-
     public String currentBindingLabel() {
-        KeyMapping keyBinding = keyBinding();
-        if (keyBinding == null) {
+        if (this.keyMapping == null) {
             return "...";
         }
-        return keyBinding.getTranslatedKeyMessage().getString();
+        return this.keyMapping .getTranslatedKeyMessage().getString();
     }
 
     @Override
     public boolean isAtDefault() {
-        KeyMapping keyBinding = keyBinding();
-        if (keyBinding == null) {
+        if (this.keyMapping == null) {
             return true;
         }
-        InputConstants.Key currentKey = ((KeyBindingAccessorMixin) keyBinding).getKey();
-        return currentKey.equals(keyBinding.getDefaultKey());
+        InputConstants.Key currentKey = ((KeyBindingAccessorMixin) this.keyMapping).getKey();
+        return currentKey.equals(this.keyMapping.getDefaultKey());
     }
 
     public void applyBinding(InputConstants.Key nextKey) {
-        KeyMapping keyBinding = keyBinding();
-        if (keyBinding == null || nextKey == null) {
+        if (this.keyMapping == null || nextKey == null) {
             return;
         }
-        keyBinding.setKey(nextKey);
+        this.keyMapping.setKey(nextKey);
         KeyMapping.resetMapping();
         Minecraft minecraftClient = Minecraft.getInstance();
         minecraftClient.options.save();
@@ -63,10 +56,9 @@ public class KeybindSetting extends Setting<String> {
      */
     @Override
     public void resetToDefault() {
-        KeyMapping keyBinding = keyBinding();
-        if (keyBinding != null) {
-            InputConstants.Key defaultKey = keyBinding.getDefaultKey();
-            keyBinding.setKey(defaultKey);
+        if (this.keyMapping != null) {
+            InputConstants.Key defaultKey = this.keyMapping.getDefaultKey();
+            this.keyMapping.setKey(defaultKey);
             KeyMapping.resetMapping();
             Minecraft minecraftClient = Minecraft.getInstance();
             //noinspection ConstantValue

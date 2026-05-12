@@ -12,7 +12,7 @@ public class C2SHeartbeatAckMessage extends OutboundMessage {
     }
 
     @Override
-    protected JsonElement data() {
+    public JsonElement data() {
         return new JsonObject();
     }
 }

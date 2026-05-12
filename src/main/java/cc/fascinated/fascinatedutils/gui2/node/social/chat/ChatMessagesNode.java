@@ -8,11 +8,12 @@ import cc.fascinated.fascinatedutils.api.channel.json.ChannelMessagePageDTO;
 import cc.fascinated.fascinatedutils.api.channel.Message;
 import cc.fascinated.fascinatedutils.api.user.User;
 import cc.fascinated.fascinatedutils.gui2.core.GlobalContextMenu;
-import cc.fascinated.fascinatedutils.gui2.core.ScrollColumnNode;
+import cc.fascinated.fascinatedutils.gui2.node.ScrollColumnNode;
 import cc.fascinated.fascinatedutils.gui2.core.UiState;
 import cc.fascinated.fascinatedutils.gui2.core.UiStateStore;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.node.input.TextboxInputNode;
+import cc.fascinated.fascinatedutils.gui2.node.input.TextParser;
 import cc.fascinated.fascinatedutils.gui2.node.social.player.PlayerContextMenuHandler;
 import cc.fascinated.fascinatedutils.gui2.theme.UiThemeRepository;
 import cc.fascinated.fascinatedutils.oldgui.toast.Toast;
@@ -105,7 +106,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
             boolean isEditing = Objects.equals(editingMessageId.get(), message.id());
             if (isEditing) {
                 editingFound = true;
-                TextboxInputNode editInput = buildEditInput(message);
+                TextboxInputNode<String> editInput = buildEditInput(message);
                 messageNode.setEditInput(editInput);
             } else if (!message.pending()) {
                 messageNode.setOnContextMenu((pointerX, pointerY) -> {
@@ -139,7 +140,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
         }
     }
 
-    private TextboxInputNode buildEditInput(Message message) {
+    private TextboxInputNode<String> buildEditInput(Message message) {
         String draft = editingDraft.get();
         if (draft == null) {
             draft = message.content() != null ? message.content() : "";
@@ -147,7 +148,7 @@ public class ChatMessagesNode extends ScrollColumnNode {
         UiState<Integer> editCaret = stateStore.state("social.chat.edit-input.caret", Integer.MAX_VALUE);
         UiState<Integer> editSelection = stateStore.state("social.chat.edit-input.selection", -1);
         UiState<Boolean> editDrag = stateStore.state("social.chat.edit-input.drag", false);
-        TextboxInputNode editInput = new TextboxInputNode();
+        TextboxInputNode<String> editInput = new TextboxInputNode<>(TextParser.STRING);
         editInput.setNodeId("social.chat.edit-input");
         editInput.setValue(draft);
         editInput.bindCaretState(editCaret);

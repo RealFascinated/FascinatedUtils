@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.common.color;
 
 import com.google.gson.JsonObject;
+import java.util.Random;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -100,6 +101,16 @@ public class SettingColor {
 
         float lightnessAdjust = value - chroma;
         return new SettingColor(Math.round((red + lightnessAdjust) * 255f), Math.round((green + lightnessAdjust) * 255f), Math.round((blue + lightnessAdjust) * 255f), 255);
+    }
+
+    /**
+     * Randomizes this color's RGB values to random values with full opacity.
+     */
+    public void random() {
+        Random random = new Random();
+        this.red = random.nextInt(256);
+        this.green = random.nextInt(256);
+        this.blue = random.nextInt(256);
     }
 
     private static int clampChannel(int channel) {
