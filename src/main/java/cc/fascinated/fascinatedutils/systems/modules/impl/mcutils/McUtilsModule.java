@@ -22,21 +22,22 @@ import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
 import cc.fascinated.fascinatedutils.systems.modules.impl.mcutils.hud.McUtilsHudPanel;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.util.Locale;
 import com.mojang.authlib.GameProfile;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 
 public class McUtilsModule extends HudHostModule {
 
-    private static final int MAX_UUIDS = 50_000;
+    private static final int MAX_NAMES = 50_000;
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
 
-    private final ConcurrentLinkedQueue<UUID> toSubmit = new ConcurrentLinkedQueue<>();
-    private final LinkedHashSet<UUID> submittedUuids = new LinkedHashSet<>(MAX_UUIDS * 2);
+    private final ConcurrentLinkedQueue<String> toSubmit = new ConcurrentLinkedQueue<>();
+    private final LinkedHashSet<String> submittedUuids = new LinkedHashSet<>(MAX_NAMES * 2);
 
     private volatile long initialCount = -1;
     private volatile long currentCount = -1;
@@ -77,21 +78,21 @@ public class McUtilsModule extends HudHostModule {
 
     private void submitPending() {
         try {
-            // Drain the queue into a local list, skipping already-submitted UUIDs.
-            List<UUID> sending = new ArrayList<>();
-            UUID uuid;
-            while ((uuid = toSubmit.poll()) != null) {
-                if (!submittedUuids.contains(uuid)) {
-                    sending.add(uuid);
+            // Drain the queue into a local list, skipping already-queried names.
+            List<String> names = new ArrayList<>();
+            String name;
+            while ((name = toSubmit.poll()) != null) {
+                if (!submittedUuids.contains(name.toLowerCase(Locale.ROOT))) {
+                    names.add(name);
                 }
             }
 
-            if (sending.isEmpty()) {
+            if (names.isEmpty()) {
                 return;
             }
 
             // Evict oldest entries before adding new ones so we never exceed the cap.
-            int overflow = (submittedUuids.size() + sending.size()) - MAX_UUIDS;
+            int overflow = (submittedUuids.size() + names.size()) - MAX_NAMES;
             if (overflow > 0) {
                 var iterator = submittedUuids.iterator();
                 for (int i = 0; i < overflow && iterator.hasNext(); i++) {
@@ -99,15 +100,25 @@ public class McUtilsModule extends HudHostModule {
                     iterator.remove();
                 }
             }
-            submittedUuids.addAll(sending);
+            // Mark names now so invalid ones aren't re-queried next cycle.
+            for (String validating : names) {
+                submittedUuids.add(validating.toLowerCase(Locale.ROOT));
+            }
 
-            Minecraft client = Minecraft.getInstance();
-            GameProfile player = client.getGameProfile();
-            if (player == null) {
+            // Validate names against Mojang in batches of 10.
+            List<UUID> validatedUuids = new ArrayList<>();
+            for (int i = 0; i < names.size(); i += 10) {
+                validatedUuids.addAll(lookupUuids(names.subList(i, Math.min(i + 10, names.size()))));
+            }
+
+            if (validatedUuids.isEmpty()) {
                 return;
             }
 
-            SubmitPlayers payload = new SubmitPlayers(sending, player.id());
+            Minecraft client = Minecraft.getInstance();
+            GameProfile player = client.getGameProfile();
+
+            SubmitPlayers payload = new SubmitPlayers(validatedUuids, player.id());
             String json = Constants.GSON.toJson(payload);
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -117,19 +128,33 @@ public class McUtilsModule extends HudHostModule {
                     .build();
 
             HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.discarding());
-            Client.LOG.info("Submitted {} UUIDs!", sending.size());
-        } catch (Exception e) {
-            Client.LOG.error("Failed to submit UUIDs to McUtils", e);
+            Client.LOG.info("Submitted {} UUIDs!", validatedUuids.size());
+        } catch (Exception exception) {
+            Client.LOG.error("Failed to submit UUIDs to McUtils", exception);
         }
+    }
+
+    private List<UUID> lookupUuids(List<String> names) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI("https://api.minecraftservices.com/minecraft/profile/lookup/bulk/byname"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(Constants.GSON.toJson(names)))
+                .build();
+
+        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        List<UUID> uuids = new ArrayList<>();
+        for (var element : Constants.GSON.fromJson(response.body(), JsonArray.class)) {
+            String id = element.getAsJsonObject().get("id").getAsString();
+            uuids.add(UUID.fromString(id.replaceFirst(
+                    "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5")));
+        }
+        return uuids;
     }
 
     private void fetchStats() {
         try {
             Minecraft client = Minecraft.getInstance();
             GameProfile player = client.getGameProfile();
-            if (player == null) {
-                return;
-            }
             String uuid = player.id().toString();
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -174,11 +199,19 @@ public class McUtilsModule extends HudHostModule {
                 continue;
             }
             UUID id = profile.id();
-            // Skip Geyser (Bedrock) players — their UUIDs start with 00000000.
+            // Skip Geyser (Bedrock) players - their UUIDs start with 00000000.
             if (id.toString().startsWith("00000000")) {
                 continue;
             }
-            toSubmit.add(id);
+            // Skip empty names - usually found in servers with custom tabs.
+            if (profile.name().trim().isEmpty()) {
+                continue;
+            }
+            // Likely NPC.
+            if (entry.latency() < 1) {
+                continue;
+            }
+            toSubmit.add(profile.name());
         }
     }
 
