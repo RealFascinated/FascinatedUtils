@@ -170,7 +170,7 @@ public class McUtilsModule extends HudHostModule {
             String uuid = player.id().toString();
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI("https://mc.fascinated.cc/api/players/" + uuid))
+                    .uri(new URI("https://mc.fascinated.cc/api/players/%s?type=full".formatted(uuid)))
                     .GET()
                     .build();
 
