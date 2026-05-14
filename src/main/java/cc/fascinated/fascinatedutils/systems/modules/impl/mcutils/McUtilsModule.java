@@ -37,7 +37,7 @@ public class McUtilsModule extends HudHostModule {
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
 
     private final ConcurrentLinkedQueue<String> toSubmit = new ConcurrentLinkedQueue<>();
-    private final LinkedHashSet<String> submittedUuids = new LinkedHashSet<>(MAX_NAMES * 2);
+    private final LinkedHashSet<String> submittedNames = new LinkedHashSet<>(MAX_NAMES * 2);
 
     private volatile long initialCount = -1;
     private volatile long currentCount = -1;
@@ -71,8 +71,20 @@ public class McUtilsModule extends HudHostModule {
         addSetting(textShadow);
         registerHudPanel(new McUtilsHudPanel(this));
 
-        Constants.SCHEDULED_POOL.scheduleAtFixedRate(this::submitPending, 0, 1, TimeUnit.MINUTES);
-        Constants.SCHEDULED_POOL.scheduleAtFixedRate(this::fetchStats, 0, 10, TimeUnit.SECONDS);
+        Constants.SCHEDULED_POOL.scheduleAtFixedRate(() -> {
+            try {
+                this.submitPending();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }, 0, 1, TimeUnit.MINUTES);
+        Constants.SCHEDULED_POOL.scheduleAtFixedRate(() -> {
+            try {
+                this.fetchStats();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }, 0, 10, TimeUnit.SECONDS);
         FascinatedEventBus.INSTANCE.subscribe(this);
     }
 
@@ -82,7 +94,7 @@ public class McUtilsModule extends HudHostModule {
             List<String> names = new ArrayList<>();
             String name;
             while ((name = toSubmit.poll()) != null) {
-                if (!submittedUuids.contains(name.toLowerCase(Locale.ROOT))) {
+                if (!submittedNames.contains(name.toLowerCase(Locale.ROOT))) {
                     names.add(name);
                 }
             }
@@ -92,9 +104,9 @@ public class McUtilsModule extends HudHostModule {
             }
 
             // Evict oldest entries before adding new ones so we never exceed the cap.
-            int overflow = (submittedUuids.size() + names.size()) - MAX_NAMES;
+            int overflow = (submittedNames.size() + names.size()) - MAX_NAMES;
             if (overflow > 0) {
-                var iterator = submittedUuids.iterator();
+                var iterator = submittedNames.iterator();
                 for (int i = 0; i < overflow && iterator.hasNext(); i++) {
                     iterator.next();
                     iterator.remove();
@@ -102,7 +114,7 @@ public class McUtilsModule extends HudHostModule {
             }
             // Mark names now so invalid ones aren't re-queried next cycle.
             for (String validating : names) {
-                submittedUuids.add(validating.toLowerCase(Locale.ROOT));
+                submittedNames.add(validating.toLowerCase(Locale.ROOT));
             }
 
             // Validate names against Mojang in batches of 10.
@@ -175,7 +187,7 @@ public class McUtilsModule extends HudHostModule {
         }
     }
 
-    public long getSubmittedUuids() {
+    public long getSubmittedCount() {
         return currentCount;
     }
 
@@ -205,10 +217,6 @@ public class McUtilsModule extends HudHostModule {
             }
             // Skip empty names - usually found in servers with custom tabs.
             if (profile.name().trim().isEmpty()) {
-                continue;
-            }
-            // Likely NPC.
-            if (entry.latency() < 1) {
                 continue;
             }
             toSubmit.add(profile.name());

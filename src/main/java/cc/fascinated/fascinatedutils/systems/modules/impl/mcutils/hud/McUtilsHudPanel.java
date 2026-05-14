@@ -40,7 +40,7 @@ public class McUtilsHudPanel extends MiniMessageHudPanel {
     @Override
     protected List<String> computeMiniMessageLines(float deltaSeconds, boolean editorMode) {
         return List.of(
-                "Submitted <white>" + NUMBER_FORMAT.format(module.getSubmittedUuids()) + "</white>",
+                "Submitted <white>" + NUMBER_FORMAT.format(module.getSubmittedCount()) + "</white>",
                 "Session <green>+" + NUMBER_FORMAT.format(module.getSessionDelta()) + "</green>"
         );
     }
