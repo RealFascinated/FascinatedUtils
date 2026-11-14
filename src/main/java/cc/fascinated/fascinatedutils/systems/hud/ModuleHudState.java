@@ -13,6 +13,11 @@ public class ModuleHudState {
     private float anchorOffsetY = 5f;
     private float scale = 1.0f;
     private HUDWidgetAnchor hudAnchor = HUDWidgetAnchor.TOP_LEFT;
+    /**
+     * For the {@code BOTTOM} anchor only: whether the panel hangs left of the centre line (offset measured
+     * from its right edge) instead of right of it (offset measured from its left edge).
+     */
+    private boolean bottomAnchorRightAligned = false;
 
     private float lastLayoutWidth = -1f;
     private float lastLayoutHeight = -1f;

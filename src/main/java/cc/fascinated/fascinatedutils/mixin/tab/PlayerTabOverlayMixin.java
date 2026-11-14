@@ -18,7 +18,7 @@ public class PlayerTabOverlayMixin {
         Optional<TabModule> optionalTabModule = ModuleRegistry.INSTANCE.getModule(TabModule.class);
         if (optionalTabModule.isPresent()) {
             TabModule tabModule = optionalTabModule.get();
-            if (tabModule.isEnabled()) {
+            if (!tabModule.isEnabled()) {
                 return count;
             }
             SliderSetting maxPlayerSlots = tabModule.getMaxPlayerSlots();

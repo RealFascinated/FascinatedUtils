@@ -13,7 +13,6 @@ import cc.fascinated.fascinatedutils.gui2.node.PanelNode;
 import cc.fascinated.fascinatedutils.gui2.node.RectNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextureNode;
-import cc.fascinated.fascinatedutils.gui2.node.screenshot.SendScreenshotPopupNode;
 import cc.fascinated.fascinatedutils.gui2.screens.RootScreen;
 import cc.fascinated.fascinatedutils.gui2.theme.UiTheme;
 import cc.fascinated.fascinatedutils.systems.screenshot.Screenshot;
@@ -54,7 +53,6 @@ public class ScreenshotViewerScreen extends RootScreen {
         indexState = stateStore.state("index", initialIndex);
         listVersion = stateStore.state("listVersion", 0);
         UiState<Boolean> confirmDelete = stateStore.state("confirmDelete", false);
-        UiState<Boolean> showSendPopup = stateStore.state("showSendPopup", false);
 
         int clamped = Math.clamp(indexState.get(), 0, screenshots.size() - 1);
         if (clamped != indexState.get()) {
@@ -114,11 +112,6 @@ public class ScreenshotViewerScreen extends RootScreen {
                 .setVariant(ButtonNode.ButtonVariant.DANGER)
                 .setOnPress(() -> confirmDelete.set(true))
                 .setRounded(true));
-        barRow.addChild(new ButtonNode(() -> Component.translatable("alumite.screenshot.viewer.send_to_friend").getString())
-                .height(BUTTON_HEIGHT)
-                .setLeftIcon(ModUiTextures.SHARE.getId())
-                .setOnPress(() -> showSendPopup.set(true))
-                .setRounded(true));
 
         barRow.addChild(new SpacerNode());
 
@@ -155,10 +148,6 @@ public class ScreenshotViewerScreen extends RootScreen {
                         confirmDelete.set(false);
                         deleteScreenshot(screenshots, indexState.get());
                     }));
-        }
-
-        if (showSendPopup.get()) {
-            root.addChild(new SendScreenshotPopupNode(screenshot, () -> showSendPopup.set(false)));
         }
 
         return root;

@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.turboentities;
 
+import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
 import com.logisticscraft.occlusionculling.util.Vec3d;
@@ -94,6 +95,9 @@ public class EntitiesCullTask implements Runnable {
             } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
                 break;
+            } catch (Exception exception) {
+                // A failed pass must not end the thread, or every entity keeps its last culled flag forever.
+                Client.LOG.warn("Entity cull pass failed: {}", exception.toString());
             }
         }
     }
@@ -163,21 +167,27 @@ public class EntitiesCullTask implements Runnable {
 
             considered++;
 
-            if (Minecraft.getInstance().shouldEntityAppearGlowing(entity) || (Minecraft.getInstance().player != null && Minecraft.getInstance().player.getVehicle() == entity)) {
-                cullable.alumite$setCulled(false);
-            }
-            else if (entity.distanceToSqr(lastCameraPos.x, lastCameraPos.y, lastCameraPos.z) > ENTITY_FORCE_CULL_DISTANCE_SQ) {
-                cullable.alumite$setCulled(true);
-            }
-            else {
-                EntityRenderer<?, ?> renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
-                if (!(renderer instanceof EntityRendererAccess rendererAccess) || !rendererAccess.alumite$affectedByCulling(entity)) {
+            try {
+                if (Minecraft.getInstance().shouldEntityAppearGlowing(entity) || (Minecraft.getInstance().player != null && Minecraft.getInstance().player.getVehicle() == entity)) {
                     cullable.alumite$setCulled(false);
                 }
-                else {
-                    AABB box = getCullingBox(entity, rendererAccess);
-                    cullable.alumite$setCulled(!isVisible(box));
+                else if (entity.distanceToSqr(lastCameraPos.x, lastCameraPos.y, lastCameraPos.z) > ENTITY_FORCE_CULL_DISTANCE_SQ) {
+                    cullable.alumite$setCulled(true);
                 }
+                else {
+                    EntityRenderer<?, ?> renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
+                    if (!(renderer instanceof EntityRendererAccess rendererAccess) || !rendererAccess.alumite$affectedByCulling(entity)) {
+                        cullable.alumite$setCulled(false);
+                    }
+                    else {
+                        AABB box = getCullingBox(entity, rendererAccess);
+                        cullable.alumite$setCulled(!isVisible(box));
+                    }
+                }
+            } catch (Exception exception) {
+                // Fail visible: one bad entity must not hide itself or abort the pass for the rest.
+                cullable.alumite$setCulled(false);
+                continue;
             }
 
             if (cullable.alumite$isCulled()) {

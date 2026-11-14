@@ -6,18 +6,23 @@ import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 public class WaypointRepository {
     private static List<Waypoint> WAYPOINTS = new ArrayList<>();
+    private static List<JsonElement> UNPARSED_ENTRIES = new ArrayList<>();
     private static Path waypointsFile;
+    private static boolean saveBlocked;
 
     public WaypointRepository() {
         waypointsFile = ModConfig.getDirectory().resolve("waypoints.json");
@@ -30,6 +35,7 @@ public class WaypointRepository {
             return;
         }
         List<Waypoint> loaded = new ArrayList<>();
+        List<JsonElement> unparsed = new ArrayList<>();
         try {
             String json = Files.readString(waypointsFile, StandardCharsets.UTF_8);
             JsonElement element = Constants.GSON.fromJson(json, JsonElement.class);
@@ -38,14 +44,32 @@ public class WaypointRepository {
                     try {
                         loaded.add(Waypoint.defaults().deserialize(entry, Constants.GSON));
                     } catch (Exception exception) {
+                        // Keep the raw entry so it is written back instead of being silently erased on the next save.
+                        unparsed.add(entry);
                         Client.LOG.warn("Failed to load waypoint: {}", exception.toString());
                     }
                 }
             }
         } catch (IOException exception) {
-            Client.LOG.warn("Failed to read waypoints file: {}", exception.toString());
+            // Do not overwrite a file we could not read with only the waypoints created this session.
+            saveBlocked = true;
+            Client.LOG.warn("Failed to read waypoints file, saving is disabled this session: {}", exception.toString());
+        } catch (JsonParseException exception) {
+            quarantineCorruptFile(exception);
         }
         WAYPOINTS = loaded;
+        UNPARSED_ENTRIES = unparsed;
+    }
+
+    private void quarantineCorruptFile(Exception error) {
+        Path corruptPath = waypointsFile.resolveSibling(waypointsFile.getFileName() + ".corrupt");
+        try {
+            Files.move(waypointsFile, corruptPath, StandardCopyOption.REPLACE_EXISTING);
+            Client.LOG.warn("Waypoints file is corrupt ({}); moved to {}", error.toString(), corruptPath);
+        } catch (IOException moveError) {
+            saveBlocked = true;
+            Client.LOG.warn("Waypoints file is corrupt ({}) and could not be moved aside, saving is disabled this session: {}", error.toString(), moveError.toString());
+        }
     }
 
     /**
@@ -120,13 +144,25 @@ public class WaypointRepository {
      * Persists all cached waypoints to disk.
      */
     public static void save() {
+        if (saveBlocked) {
+            return;
+        }
         JsonArray array = new JsonArray();
         for (Waypoint waypoint : WAYPOINTS) {
             array.add(waypoint.serialize(Constants.GSON));
         }
+        for (JsonElement unparsedEntry : UNPARSED_ENTRIES) {
+            array.add(unparsedEntry);
+        }
         try {
             Files.createDirectories(waypointsFile.getParent());
-            Files.writeString(waypointsFile, Constants.GSON.toJson(array), StandardCharsets.UTF_8);
+            Path temporaryFile = waypointsFile.resolveSibling(waypointsFile.getFileName() + ".tmp");
+            Files.writeString(temporaryFile, Constants.GSON.toJson(array), StandardCharsets.UTF_8);
+            try {
+                Files.move(temporaryFile, waypointsFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(temporaryFile, waypointsFile, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException exception) {
             Client.LOG.warn("Failed to save waypoints: {}", exception.toString());
         }

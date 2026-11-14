@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.soundfilter;
 
+import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.SoundFilterModule;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -15,12 +16,14 @@ public class SoundEngineMixin {
     @Inject(method = "play", at = @At("HEAD"), cancellable = true)
     private void onPlay(SoundInstance instance, CallbackInfoReturnable<SoundEngine.PlayResult> cir) {
         ModuleRegistry.INSTANCE.getModule(SoundFilterModule.class).ifPresent(module -> {
+            if (!module.isEnabled()) {
+                return;
+            }
             String id = instance.getIdentifier().getNamespace() + ":" + instance.getIdentifier().getPath();
-            module.getSoundToggles().stream().filter(toggle -> toggle.getNameProvider().get().equals(id)).findFirst().ifPresent(toggle -> {
-                if (!toggle.getValue()) {
-                    cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
-                }
-            });
+            BooleanSetting toggle = module.getTogglesById().get(id);
+            if (toggle != null && !toggle.getValue()) {
+                cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
+            }
         });
     }
 }

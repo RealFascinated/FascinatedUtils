@@ -5,7 +5,6 @@ import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
-import cc.fascinated.fascinatedutils.gui2.screens.impl.SocialScreen;
 import cc.fascinated.fascinatedutils.gui2.screens.impl.screenshot.ScreenshotScreen;
 import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
@@ -15,7 +14,6 @@ import com.google.gson.JsonObject;
 import com.mojang.blaze3d.platform.InputConstants;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import org.lwjgl.glfw.GLFW;
 
@@ -33,22 +31,6 @@ public class Settings implements GsonSerializable<Settings> {
             GLFW.GLFW_KEY_RIGHT_SHIFT,
             KeybindsWrapper.CATEGORY,
             () -> HUDManager.INSTANCE.setEditMode(!HUDManager.INSTANCE.isEditMode())
-    ));
-    private final KeybindSetting socialKeybind = new KeybindSetting("social_keybind", () -> KeybindsWrapper.registerCallbackKeybind(
-            "key.alumite.social_keybind",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_BACKSLASH,
-            KeybindsWrapper.CATEGORY,
-            () -> {
-                Minecraft minecraftClient = Minecraft.getInstance();
-                Screen currentScreen = minecraftClient.screen;
-                if (currentScreen instanceof SocialScreen) {
-                    minecraftClient.setScreen(null);
-                }
-                else {
-                    minecraftClient.setScreen(new SocialScreen());
-                }
-            }
     ));
     private final KeybindSetting screenshotsKeybind = new KeybindSetting("screenshots_keybind", () -> KeybindsWrapper.registerCallbackKeybind(
             "key.alumite.screenshots_keybind",
@@ -90,18 +72,8 @@ public class Settings implements GsonSerializable<Settings> {
             .categoryDisplayKey("alumite.setting.category.performance")
             .build();
 
-    private final BooleanSetting socialNotifications = BooleanSetting.builder().id("social_notifications")
-            .defaultValue(true)
-            .categoryDisplayKey("alumite.setting.category.social")
-            .build();
-    private final BooleanSetting socialSounds = BooleanSetting.builder().id("social_sounds")
-            .defaultValue(true)
-            .categoryDisplayKey("alumite.setting.category.social")
-            .build();
-
     public Settings() {
         addSetting(shellOpenKeybind);
-        addSetting(socialKeybind);
         addSetting(screenshotsKeybind);
         addSetting(showSelfNameplate);
         addSetting(showServerListInPauseMenu);
@@ -109,9 +81,6 @@ public class Settings implements GsonSerializable<Settings> {
         addSetting(reduceMacOSResolution);
         addSetting(turboEntities);
         addSetting(turboParticles);
-
-        addSetting(socialNotifications);
-        addSetting(socialSounds);
 
         // ensure it's only enabled on macOS
         if (!ClientUtils.isMacOS() && reduceMacOSResolution.isEnabled()) {

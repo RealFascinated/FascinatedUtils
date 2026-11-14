@@ -5,6 +5,8 @@ import cc.fascinated.fascinatedutils.mixin.GameRendererPostProcessorAccessorMixi
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import meteordevelopment.orbit.EventHandler;
+import net.fabricmc.loader.api.FabricLoader;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.Identifier;
@@ -16,6 +18,13 @@ public class VibrancyModule extends Module {
      */
     public static final Identifier POST_EFFECT_ID = Identifier.fromNamespaceAndPath("alumite", "vibrancy");
 
+    /**
+     * Last-observed Iris shader-pack-in-use state. Null until first observed. Used to detect a
+     * shader-pack enable/disable so the stale vibrancy PostChain can be rebuilt.
+     */
+    @Nullable
+    private Boolean lastIrisPackInUse;
+
     public VibrancyModule() {
         super("Vibrancy", ModuleCategory.GENERAL);
     }
@@ -25,11 +34,33 @@ public class VibrancyModule extends Module {
         if (!isEnabled()) {
             return;
         }
-        GameRenderer gameRenderer = event.minecraftClient().gameRenderer;
+        Minecraft minecraftClient = event.minecraftClient();
+        if (isIrisShaderPackStateChange()) {
+            minecraftClient.reloadResourcePacks();
+        }
+        GameRenderer gameRenderer = minecraftClient.gameRenderer;
         if (gameRenderer != null && POST_EFFECT_ID.equals(gameRenderer.currentPostEffect())) {
             return;
         }
         ensureVibrancyPostProcessor(gameRenderer);
+    }
+
+    /**
+     * Detects a change in the Iris shader-pack-in-use state. Enabling or disabling a shader pack
+     * swaps Iris's rendering pipeline, which leaves the cached vibrancy PostChain and its compiled
+     * pipeline stale; the post effect then stops applying until the game is restarted.
+     *
+     * @return true when the in-use state changed since the last tick, signalling that a resource
+     *         reload is needed to rebuild the stale PostChain and compiled pipeline
+     */
+    private boolean isIrisShaderPackStateChange() {
+        if (!FabricLoader.getInstance().isModLoaded("iris")) {
+            return false;
+        }
+        boolean inUse = IrisApi.getInstance().isShaderPackInUse();
+        Boolean previous = lastIrisPackInUse;
+        lastIrisPackInUse = inUse;
+        return previous != null && previous != inUse;
     }
 
     @Override

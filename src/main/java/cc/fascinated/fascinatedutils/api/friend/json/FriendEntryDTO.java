@@ -1,5 +1,0 @@
-package cc.fascinated.fascinatedutils.api.friend.json;
-
-import cc.fascinated.fascinatedutils.api.user.json.PublicUserDTO;
-
-public record FriendEntryDTO(PublicUserDTO user, String since) {}

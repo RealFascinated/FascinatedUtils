@@ -1,12 +1,16 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.mcutils;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +38,8 @@ import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 public class McUtilsModule extends HudHostModule {
 
     private static final int MAX_NAMES = 50_000;
-    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(15);
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
     private final ConcurrentLinkedQueue<String> toSubmit = new ConcurrentLinkedQueue<>();
     private final LinkedHashSet<String> submittedNames = new LinkedHashSet<>(MAX_NAMES * 2);
@@ -89,12 +94,19 @@ public class McUtilsModule extends HudHostModule {
     }
 
     private void submitPending() {
+        if (!isEnabled()) {
+            return;
+        }
+        // Names whose Mojang lookup succeeded; they are marked as submitted and re-queued if the submit fails.
+        List<String> processedNames = new ArrayList<>();
         try {
             // Drain the queue into a local list, skipping already-queried names.
             List<String> names = new ArrayList<>();
+            Set<String> seenInDrain = new HashSet<>();
             String name;
             while ((name = toSubmit.poll()) != null) {
-                if (!submittedNames.contains(name.toLowerCase(Locale.ROOT))) {
+                String normalized = name.toLowerCase(Locale.ROOT);
+                if (!submittedNames.contains(normalized) && seenInDrain.add(normalized)) {
                     names.add(name);
                 }
             }
@@ -112,15 +124,23 @@ public class McUtilsModule extends HudHostModule {
                     iterator.remove();
                 }
             }
-            // Mark names now so invalid ones aren't re-queried next cycle.
-            for (String validating : names) {
-                submittedNames.add(validating.toLowerCase(Locale.ROOT));
-            }
 
-            // Validate names against Mojang in batches of 10.
+            // Validate names against Mojang in batches of 10. A batch is marked as submitted only once its
+            // lookup succeeded, so names from a failed (e.g. rate limited) batch are retried next cycle.
             List<UUID> validatedUuids = new ArrayList<>();
-            for (int i = 0; i < names.size(); i += 10) {
-                validatedUuids.addAll(lookupUuids(names.subList(i, Math.min(i + 10, names.size()))));
+            for (int batchStart = 0; batchStart < names.size(); batchStart += 10) {
+                List<String> batch = names.subList(batchStart, Math.min(batchStart + 10, names.size()));
+                try {
+                    validatedUuids.addAll(lookupUuids(batch));
+                } catch (Exception exception) {
+                    Client.LOG.warn("McUtils name lookup failed, retrying later: {}", exception.toString());
+                    toSubmit.addAll(names.subList(batchStart, names.size()));
+                    break;
+                }
+                for (String validated : batch) {
+                    submittedNames.add(validated.toLowerCase(Locale.ROOT));
+                    processedNames.add(validated);
+                }
             }
 
             if (validatedUuids.isEmpty()) {
@@ -135,25 +155,37 @@ public class McUtilsModule extends HudHostModule {
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(new URI("https://mc.fascinated.cc/api/players/submit"))
+                    .timeout(REQUEST_TIMEOUT)
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(json))
                     .build();
 
-            HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.discarding());
+            HttpResponse<Void> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.discarding());
+            if (response.statusCode() / 100 != 2) {
+                throw new IOException("McUtils submit returned HTTP " + response.statusCode());
+            }
             Client.LOG.info("Submitted {} UUIDs!", validatedUuids.size());
         } catch (Exception exception) {
             Client.LOG.error("Failed to submit UUIDs to McUtils", exception);
+            for (String processed : processedNames) {
+                submittedNames.remove(processed.toLowerCase(Locale.ROOT));
+                toSubmit.add(processed);
+            }
         }
     }
 
     private List<UUID> lookupUuids(List<String> names) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(new URI("https://api.minecraftservices.com/minecraft/profile/lookup/bulk/byname"))
+                .timeout(REQUEST_TIMEOUT)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(Constants.GSON.toJson(names)))
                 .build();
 
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) {
+            throw new IOException("Mojang name lookup returned HTTP " + response.statusCode());
+        }
         List<UUID> uuids = new ArrayList<>();
         for (var element : Constants.GSON.fromJson(response.body(), JsonArray.class)) {
             String id = element.getAsJsonObject().get("id").getAsString();
@@ -164,6 +196,9 @@ public class McUtilsModule extends HudHostModule {
     }
 
     private void fetchStats() {
+        if (!isEnabled()) {
+            return;
+        }
         try {
             Minecraft client = Minecraft.getInstance();
             GameProfile player = client.getGameProfile();
@@ -171,10 +206,15 @@ public class McUtilsModule extends HudHostModule {
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(new URI("https://mc.fascinated.cc/api/players/%s?type=full".formatted(uuid)))
+                    .timeout(REQUEST_TIMEOUT)
                     .GET()
                     .build();
 
             HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                Client.LOG.warn("McUtils player stats returned HTTP {}", response.statusCode());
+                return;
+            }
             JsonObject json = Constants.GSON.fromJson(response.body(), JsonObject.class);
             long count = json.get("submittedUuids").getAsLong();
 
@@ -200,6 +240,9 @@ public class McUtilsModule extends HudHostModule {
 
     @EventHandler
     public void onPacket(PacketReceiveEvent event) {
+        if (!isEnabled()) {
+            return;
+        }
         Packet<?> packet = event.packet();
         if (!(packet instanceof ClientboundPlayerInfoUpdatePacket infoUpdatePacket)) {
             return;

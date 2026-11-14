@@ -14,7 +14,6 @@ import cc.fascinated.fascinatedutils.gui2.node.GridNode;
 import cc.fascinated.fascinatedutils.gui2.node.ScrollColumnNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.node.TextureNode;
-import cc.fascinated.fascinatedutils.gui2.node.screenshot.SendScreenshotPopupNode;
 import cc.fascinated.fascinatedutils.gui2.screens.RootScreen;
 import cc.fascinated.fascinatedutils.systems.screenshot.Screenshot;
 import cc.fascinated.fascinatedutils.systems.screenshot.ScreenshotManager;
@@ -45,7 +44,6 @@ public class ScreenshotScreen extends RootScreen {
         Minecraft mc = Minecraft.getInstance();
         List<Screenshot> screenshots = ScreenshotManager.getScreenshots();
         UiState<Integer> confirmDeleteIndex = stateStore.state("confirmDeleteIndex", -1);
-        UiState<Integer> sendToFriendIndex = stateStore.state("sendToFriendIndex", -1);
 
         CardNode card = new CardNode()
                 .setRounded(false)
@@ -95,12 +93,6 @@ public class ScreenshotScreen extends RootScreen {
 
                             buttonRow.addChild(new ButtonNode()
                                     .size(BUTTON_SIZE, CELL_BTN_HEIGHT)
-                                    .setIconCenter(ModUiTextures.SHARE.getId())
-                                    .setOnPress(() -> sendToFriendIndex.set(screenshotIndex))
-                                    .setRounded(true));
-
-                            buttonRow.addChild(new ButtonNode()
-                                    .size(BUTTON_SIZE, CELL_BTN_HEIGHT)
                                     .setIconCenter(ModUiTextures.TRASH.getId())
                                     .setVariant(ButtonNode.ButtonVariant.DANGER)
                                     .setOnPress(() -> confirmDeleteIndex.set(screenshotIndex))
@@ -146,14 +138,6 @@ public class ScreenshotScreen extends RootScreen {
                         confirmDeleteIndex.set(-1);
                         ScreenshotManager.delete(toDelete);
                     }));
-        }
-
-        int sendIdx = sendToFriendIndex.get();
-        if (sendIdx >= 0 && sendIdx < screenshots.size()) {
-            SendScreenshotPopupNode sendPopup = new SendScreenshotPopupNode(
-                    screenshots.get(sendIdx),
-                    () -> sendToFriendIndex.set(-1));
-            root.addChild(sendPopup);
         }
 
         return root;

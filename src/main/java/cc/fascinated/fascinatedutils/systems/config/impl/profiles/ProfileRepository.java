@@ -8,13 +8,16 @@ import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -159,7 +162,8 @@ public class ProfileRepository {
         String profileName = requestedName == null || requestedName.isBlank() ? "Profile" : requestedName.trim();
         Profile created = new Profile(UUID.randomUUID(), profileName, 1, initialSettings);
         saveProfile(created);
-        if (configManager.getCurrent().activeProfileId() == null) {
+        UUID activeId = configManager.getCurrent().activeProfileId();
+        if (activeId == null || cachedProfiles.stream().noneMatch(profile -> profile.getProfileId().equals(activeId))) {
             setActiveProfileId(created.getProfileId());
         }
         cachedProfiles = new ArrayList<>(cachedProfiles);
@@ -207,7 +211,14 @@ public class ProfileRepository {
     public void saveProfile(Profile profile) {
         try {
             Files.createDirectories(profilesDirectory);
-            Files.writeString(profile.resolveFilePath(profilesDirectory), gson.toJson(profile.serialize(gson)), StandardCharsets.UTF_8);
+            Path profilePath = profile.resolveFilePath(profilesDirectory);
+            Path temporaryPath = profilePath.resolveSibling(profilePath.getFileName() + ".tmp");
+            Files.writeString(temporaryPath, gson.toJson(profile.serialize(gson)), StandardCharsets.UTF_8);
+            try {
+                Files.move(temporaryPath, profilePath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(temporaryPath, profilePath, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException error) {
             Client.LOG.warn("Failed to save profile {}: {}", profile.getProfileId(), error.toString());
         }
@@ -224,9 +235,11 @@ public class ProfileRepository {
                     String json = Files.readString(path, StandardCharsets.UTF_8);
                     JsonElement element = gson.fromJson(json, JsonElement.class);
                     if (element == null || !element.isJsonObject()) {
-                        throw new IOException("Profile is not a JSON object: " + path);
+                        throw new JsonParseException("Profile is not a JSON object: " + path);
                     }
                     profiles.add(migrateAndSave(Profile.defaults().deserialize(element, gson)));
+                } catch (JsonParseException error) {
+                    quarantineCorruptProfile(path, error);
                 } catch (Exception error) {
                     Client.LOG.warn("Failed to load profile from {}: {}", path, error.toString());
                 }
@@ -236,6 +249,22 @@ public class ProfileRepository {
         }
         profiles.sort((profileA, profileB) -> profileA.getProfileName().compareToIgnoreCase(profileB.getProfileName()));
         return profiles;
+    }
+
+    /**
+     * Moves an unparseable profile file aside so it is kept for recovery instead of being overwritten.
+     *
+     * @param path  the profile file that failed to parse
+     * @param error the parse failure
+     */
+    private void quarantineCorruptProfile(Path path, Exception error) {
+        Path corruptPath = path.resolveSibling(path.getFileName() + ".corrupt");
+        try {
+            Files.move(path, corruptPath, StandardCopyOption.REPLACE_EXISTING);
+            Client.LOG.warn("Profile {} is corrupt ({}); moved to {}", path, error.toString(), corruptPath);
+        } catch (IOException moveError) {
+            Client.LOG.warn("Profile {} is corrupt ({}) and could not be moved aside: {}", path, error.toString(), moveError.toString());
+        }
     }
 
     private Profile migrateAndSave(Profile profile) {

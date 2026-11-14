@@ -76,7 +76,9 @@ public class UiInputRouter {
         boolean consumed = false;
         if (releaseTarget != null) {
             consumed = walkPointerRelease(releaseTarget, pointerRelease.pointerX(), pointerRelease.pointerY(), pointerRelease.button());
-            if (releaseLeaf != null) {
+            // Fire the click only when the pointer is still over the pressed node; the node is compared by its
+            // last laid-out bounds because the tree may have been recomposed since the press.
+            if (releaseLeaf != null && releaseLeaf.contains(pointerRelease.pointerX(), pointerRelease.pointerY())) {
                 consumed = walkClick(releaseTarget, pointerRelease.pointerX(), pointerRelease.pointerY(), pointerRelease.button()) || consumed;
             }
         }

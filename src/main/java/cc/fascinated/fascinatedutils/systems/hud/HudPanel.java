@@ -27,6 +27,7 @@ public abstract class  HudPanel implements HudRenderablePanel {
         hudState.setHudAnchor(defaults.defaultAnchor());
         hudState.setAnchorOffsetX(defaults.defaultXOffset());
         hudState.setAnchorOffsetY(defaults.defaultYOffset());
+        hudState.setBottomAnchorRightAligned(defaults.defaultXOffset() < 0f);
         hudState.setPositionX(defaults.defaultXOffset());
         hudState.setPositionY(defaults.defaultYOffset());
     }
@@ -111,7 +112,7 @@ public abstract class  HudPanel implements HudRenderablePanel {
             return anchorAlignment;
         }
         if (hudState.getHudAnchor() == HUDWidgetAnchor.BOTTOM) {
-            return hudState.getAnchorOffsetX() < 0f ? HudAnchorContentAlignment.Horizontal.RIGHT : HudAnchorContentAlignment.Horizontal.LEFT;
+            return hudState.isBottomAnchorRightAligned() ? HudAnchorContentAlignment.Horizontal.RIGHT : HudAnchorContentAlignment.Horizontal.LEFT;
         }
         return HudAnchorContentAlignment.Horizontal.CENTER;
     }
@@ -126,6 +127,7 @@ public abstract class  HudPanel implements HudRenderablePanel {
         hudState.setHudAnchor(defaults.defaultAnchor());
         hudState.setAnchorOffsetX(defaults.defaultXOffset());
         hudState.setAnchorOffsetY(defaults.defaultYOffset());
+        hudState.setBottomAnchorRightAligned(defaults.defaultXOffset() < 0f);
         hudState.setPositionX(defaults.defaultXOffset());
         hudState.setPositionY(defaults.defaultYOffset());
         hudState.setLastLayoutWidth(-1f);
@@ -195,7 +197,6 @@ public abstract class  HudPanel implements HudRenderablePanel {
         float halfCanvasHeight = canvasHeight * 0.5f;
         float halfWidgetWidth = widgetWidth * 0.5f;
         float halfWidgetHeight = widgetHeight * 0.5f;
-        HudAnchorContentAlignment.Horizontal hAlign = hudContentHorizontalAlignment();
         float posX = hudState.getPositionX();
         float posY = hudState.getPositionY();
 
@@ -221,12 +222,10 @@ public abstract class  HudPanel implements HudRenderablePanel {
                 hudState.setAnchorOffsetY(posY);
             }
             case BOTTOM -> {
-                float ox = switch (hAlign) {
-                    case LEFT -> posX - halfCanvasWidth;
-                    case RIGHT -> posX + widgetWidth - halfCanvasWidth;
-                    case CENTER -> posX + halfWidgetWidth - halfCanvasWidth;
-                };
-                hudState.setAnchorOffsetX(ox);
+                // Pick the side from where the panel actually is, not from the offset about to be rewritten.
+                boolean rightAligned = posX + halfWidgetWidth < halfCanvasWidth;
+                hudState.setBottomAnchorRightAligned(rightAligned);
+                hudState.setAnchorOffsetX(rightAligned ? posX + widgetWidth - halfCanvasWidth : posX - halfCanvasWidth);
                 hudState.setAnchorOffsetY(canvasHeight - posY - widgetHeight);
             }
             case LEFT -> {
@@ -260,6 +259,7 @@ public abstract class  HudPanel implements HudRenderablePanel {
         hudJson.addProperty("anchor", hudState.getHudAnchor().name());
         hudJson.addProperty("anchor_offset_x", hudState.getAnchorOffsetX());
         hudJson.addProperty("anchor_offset_y", hudState.getAnchorOffsetY());
+        hudJson.addProperty("bottom_anchor_right_aligned", hudState.isBottomAnchorRightAligned());
         hudJson.addProperty("last_layout_width", hudState.getLastLayoutWidth());
         hudJson.addProperty("last_layout_height", hudState.getLastLayoutHeight());
         return hudJson;
@@ -281,6 +281,12 @@ public abstract class  HudPanel implements HudRenderablePanel {
         }
         if (hudJson.has("anchor_offset_y")) {
             hudState.setAnchorOffsetY(hudJson.get("anchor_offset_y").getAsFloat());
+        }
+        if (hudJson.has("bottom_anchor_right_aligned")) {
+            hudState.setBottomAnchorRightAligned(hudJson.get("bottom_anchor_right_aligned").getAsBoolean());
+        } else {
+            // Layouts saved before the flag existed derived the side from the sign of the offset.
+            hudState.setBottomAnchorRightAligned(hudState.getAnchorOffsetX() < 0f);
         }
         if (hudJson.has("last_layout_width")) {
             float width = hudJson.get("last_layout_width").getAsFloat();

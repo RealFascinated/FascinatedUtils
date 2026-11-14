@@ -30,19 +30,13 @@ public enum ModUiTextures {
     VISIBILITY("ui/visibility"),
     VISIBILITY_OFF("ui/visibility_off"),
     SEARCH("ui/search"),
-    GROUP("ui/group"),
     SUNNY("ui/sunny"),
     ADD("ui/add"),
     WARNING("ui/warning"),
     MORE_VERT("ui/more_vert"),
     COPY("ui/copy"),
     IMAGE("ui/image"),
-    SHARE("ui/share"),
     SAVE("ui/save"),
-    STATUS_ONLINE("ui/user_status/online"),
-    STATUS_AWAY("ui/user_status/idle"),
-    STATUS_DO_NOT_DISTURB("ui/user_status/do_not_disturb"),
-    STATUS_INVISIBLE("ui/user_status/invisible"),
     ;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ModUiTextures.class);

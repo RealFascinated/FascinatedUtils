@@ -1,10 +1,8 @@
 package cc.fascinated.fascinatedutils.gui2.screens.impl;
 
-import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui2.core.*;
 import cc.fascinated.fascinatedutils.gui2.node.ButtonNode;
-import cc.fascinated.fascinatedutils.gui2.node.TextNode;
 import cc.fascinated.fascinatedutils.gui2.render.GuiRenderFrame;
 import cc.fascinated.fascinatedutils.gui2.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui2.screens.impl.screenshot.ScreenshotScreen;
@@ -15,9 +13,7 @@ import cc.fascinated.fascinatedutils.oldgui.themes.FascinatedGuiTheme;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
@@ -29,8 +25,6 @@ public class ActionsOverlayScreen {
     private static final int BUTTON_HEIGHT = 20;
     private static final int BUTTON_GAP = 6;
     private static final int RIGHT_MARGIN = 8;
-    private static final int LOGIN_TEXT_X = 5;
-    private static final int LOGIN_TEXT_Y = 5;
 
     private final UiHost host = new UiHost();
 
@@ -40,12 +34,6 @@ public class ActionsOverlayScreen {
                     "Hud Editor",
                     ModUiTextures.SETTINGS.getId(),
                     () -> Minecraft.getInstance().setScreen(new HUDEditorScreen())
-            ),
-            new Button(
-                    "social",
-                    "Social",
-                    ModUiTextures.GROUP.getId(),
-                    () -> Minecraft.getInstance().setScreen(new SocialScreen())
             ),
             new Button(
                     "screenshots",
@@ -78,27 +66,8 @@ public class ActionsOverlayScreen {
             buttonGroup.addChild(node);
         }
 
-        rootNode.addChild(loggedInAccountNode());
         rootNode.addChild(buttonGroup);
         return rootNode;
-    }
-
-    private static @NonNull TextNode loggedInAccountNode() {
-        TextNode loginTextNode = new TextNode(() -> {
-            var selfUser = Alumite.INSTANCE.users().selfUser();
-            if (selfUser == null) {
-                return "";
-            }
-            String minecraftName = selfUser.user().minecraftName();
-            if (minecraftName == null || minecraftName.isBlank()) {
-                return "";
-            }
-            return String.format(Component.translatable("alumite.title_screen.logged_in_as").getString(), minecraftName);
-        });
-        loginTextNode.setNodeId("alumite-username");
-        loginTextNode.pos(LOGIN_TEXT_X, LOGIN_TEXT_Y);
-        loginTextNode.setTextAlign(0f, 0f).setShadow(true);
-        return loginTextNode;
     }
 
     public void render(GuiGraphicsExtractor graphics) {
