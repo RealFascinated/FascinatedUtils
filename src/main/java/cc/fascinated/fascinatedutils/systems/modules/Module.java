@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules;
 
+import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
@@ -38,6 +39,7 @@ public abstract class Module implements GsonSerializable<Module> {
 
     // settings
     private boolean enabled;
+    private boolean batchingEnabledEvents;
 
     public Module(String displayName, ModuleCategory category, ModuleDefaults defaults) {
         this.moduleKey = idFromModuleClass(getClass());
@@ -143,7 +145,26 @@ public abstract class Module implements GsonSerializable<Module> {
             return;
         }
         this.enabled = enabled;
-        if (ModuleRegistry.INSTANCE.isInitialized()) {
+        if (ModuleRegistry.INSTANCE.isInitialized() && !batchingEnabledEvents) {
+            FascinatedEventBus.INSTANCE.post(new ModuleEnabledStateChangedEvent(this, enabled));
+        }
+    }
+
+    /**
+     * Runs {@code action} and posts at most one {@link ModuleEnabledStateChangedEvent}, only if the enabled state
+     * differs from before. Used when a reset followed by a load would otherwise toggle the module twice.
+     *
+     * @param action the work that may change the enabled state
+     */
+    public void batchEnabledStateEvents(Runnable action) {
+        boolean enabledBefore = enabled;
+        batchingEnabledEvents = true;
+        try {
+            action.run();
+        } finally {
+            batchingEnabledEvents = false;
+        }
+        if (enabled != enabledBefore && ModuleRegistry.INSTANCE.isInitialized()) {
             FascinatedEventBus.INSTANCE.post(new ModuleEnabledStateChangedEvent(this, enabled));
         }
     }
@@ -192,7 +213,12 @@ public abstract class Module implements GsonSerializable<Module> {
         for (Setting<?> setting : settings) {
             JsonElement value = settingsJson.get(setting.getSettingKey());
             if (value != null && !value.isJsonNull()) {
-                setting.deserialize(value, gson);
+                try {
+                    setting.deserialize(value, gson);
+                } catch (RuntimeException exception) {
+                    // One bad value must not stop the remaining settings (or HUD layouts) from loading.
+                    Client.LOG.warn("Failed to load setting {} of module {}: {}", setting.getSettingKey(), moduleKey, exception.toString());
+                }
             }
         }
         return this;

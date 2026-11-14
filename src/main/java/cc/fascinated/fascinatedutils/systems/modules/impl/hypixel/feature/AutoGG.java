@@ -12,6 +12,7 @@ import cc.fascinated.fascinatedutils.systems.config.YMLConfigFile;
 import cc.fascinated.fascinatedutils.systems.modules.Feature;
 import cc.fascinated.fascinatedutils.systems.modules.impl.hypixel.HypixelModule;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.Minecraft;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +27,6 @@ public class AutoGG extends Feature<HypixelModule> {
 
     public AutoGG(HypixelModule module) {
         super(module);
-        loadTriggersFromResource();
 
         Set<String> antiGGStrings = new LinkedHashSet<>();
         antiGGStrings.addAll(PRIMARY_ANTI_GG_STRINGS);
@@ -58,8 +58,12 @@ public class AutoGG extends Feature<HypixelModule> {
                 if (patternString.isBlank()) {
                     continue;
                 }
-                AutoGGType triggerType = AutoGGType.valueOf(typeString.trim().toUpperCase());
-                loadedTriggers.add(new AutoGGTrigger(triggerType, patternString));
+                try {
+                    AutoGGType triggerType = AutoGGType.valueOf(typeString.trim().toUpperCase(Locale.ROOT));
+                    loadedTriggers.add(new AutoGGTrigger(triggerType, patternString));
+                } catch (IllegalArgumentException exception) {
+                    Client.LOG.warn("Skipping AutoGG trigger with unknown type '{}' in {}", typeString, AUTOGG_TRIGGERS_RESOURCE);
+                }
             }
         } catch (Exception exception) {
             Client.LOG.warn("Failed to load AutoGG triggers from {}, triggers disabled: {}", AUTOGG_TRIGGERS_RESOURCE, exception.toString());
@@ -74,9 +78,11 @@ public class AutoGG extends Feature<HypixelModule> {
 
     @EventHandler
     public void onChatMessage(ChatMessageEvent event) {
-        if (getModule().getAutoGG().isDisabled() || !getModule().isOnHypixel() || System.currentTimeMillis() - lastAutoGG < 10_000) {
+        if (getModule().getAutoGG().isDisabled() || !getModule().isOnHypixel()) {
             return;
         }
+        // The cooldown only limits sending our own "gg"; other players' gg messages must still be filtered during it.
+        boolean onCooldown = System.currentTimeMillis() - lastAutoGG < 10_000;
 
         String message = StringUtils.stripColors(event.getRawMessage());
         for (AutoGGTrigger trigger : TRIGGERS) {
@@ -88,9 +94,10 @@ public class AutoGG extends Feature<HypixelModule> {
                     }
                 }
                 case NORMAL, CASUAL -> {
-                    if (PatternHandler.INSTANCE.getPattern(trigger.pattern).matcher(message).matches()) {
+                    if (!onCooldown && PatternHandler.INSTANCE.getPattern(trigger.pattern).matcher(message).matches()) {
                         lastAutoGG = System.currentTimeMillis();
-                        Constants.SCHEDULED_POOL.schedule(() -> PlayerUtils.runCommand("ac gg"), 1, TimeUnit.SECONDS);
+                        // Hop back to the main thread: sending a command touches connection state.
+                        Constants.SCHEDULED_POOL.schedule(() -> Minecraft.getInstance().execute(() -> PlayerUtils.runCommand("ac gg")), 1, TimeUnit.SECONDS);
                         return;
                     }
                 }

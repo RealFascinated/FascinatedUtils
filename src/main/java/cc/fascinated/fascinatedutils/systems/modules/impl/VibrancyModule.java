@@ -68,6 +68,8 @@ public class VibrancyModule extends Module {
         super.setEnabled(enabled);
         Minecraft minecraftClient = Minecraft.getInstance();
         if (enabled) {
+            // Re-observe the Iris state from scratch so a pack toggled while disabled doesn't trigger a reload now.
+            lastIrisPackInUse = null;
             ensureVibrancyPostProcessor(minecraftClient.gameRenderer);
             return;
         }

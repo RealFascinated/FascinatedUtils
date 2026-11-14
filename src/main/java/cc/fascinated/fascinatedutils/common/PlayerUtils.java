@@ -79,7 +79,9 @@ public class PlayerUtils {
      */
     public static void runCommand(String command) {
         LocalPlayer player = Minecraft.getInstance().player;
-        assert player != null;
+        if (player == null) {
+            return;
+        }
         player.connection.sendCommand(command);
     }
 
@@ -90,7 +92,9 @@ public class PlayerUtils {
      */
     public static void sendMessage(String message) {
         LocalPlayer player = Minecraft.getInstance().player;
-        assert player != null;
+        if (player == null) {
+            return;
+        }
         player.connection.sendChat(message);
     }
 }

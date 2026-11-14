@@ -24,6 +24,8 @@ public class ZoomModule extends Module {
     private static final float ZOOM_LERP_STEP_PER_TICK = 0.45f;
     private static final float ZOOM_SCALE_EPSILON = 1e-4f;
     private static final float ZOOM_MAX_MAGNIFICATION = 15f;
+    // Wheel zoom may exceed the slider maximum, but not without bound.
+    private static final float ZOOM_SCROLL_MAX_MAGNIFICATION = ZOOM_MAX_MAGNIFICATION * 4f;
     // Wheel zoom multiplies mag per notch so each step stays noticeable at high zoom (FOV ~ 1/mag).
     private static final float SCROLL_ZOOM_MAG_RATIO_PER_NOTCH = 1.12f;
     private static final float ZOOM_MOUSE_LOOK_SCALE_MIN = 0.02f;
@@ -136,11 +138,27 @@ public class ZoomModule extends Module {
             return;
         }
         if (verticalScroll > 0.0) {
-            tempScrollZoomOffset++;
+            nudgeScrollOffset(1);
         }
         else if (verticalScroll < 0.0) {
-            tempScrollZoomOffset--;
+            nudgeScrollOffset(-1);
         }
+    }
+
+    /**
+     * Moves the scroll offset by one notch unless that would push the magnification past the cap or more than one
+     * notch below 1x, so the offset cannot wind up far beyond what is visible and then need as many opposite notches
+     * to come back.
+     *
+     * @param delta {@code 1} to zoom in a notch, {@code -1} to zoom out a notch
+     */
+    private void nudgeScrollOffset(int delta) {
+        int baseMagnification = Mth.clamp(Math.round(zoomLevel.getValue().floatValue()), 1, (int) ZOOM_MAX_MAGNIFICATION);
+        float candidate = baseMagnification * (float) Math.pow(SCROLL_ZOOM_MAG_RATIO_PER_NOTCH, tempScrollZoomOffset + delta);
+        if (delta > 0 ? candidate > ZOOM_SCROLL_MAX_MAGNIFICATION : candidate < 1f / SCROLL_ZOOM_MAG_RATIO_PER_NOTCH) {
+            return;
+        }
+        tempScrollZoomOffset += delta;
     }
 
     @EventHandler

@@ -10,11 +10,12 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(value = {Entity.class, BlockEntity.class, Particle.class})
 public class CullableMixin implements Cullable {
 
+    // Written by the cull thread, read by the render and tick threads.
     @Unique
-    private boolean alumite$culled = false;
+    private volatile boolean alumite$culled = false;
 
     @Unique
-    private boolean alumite$outOfCamera = false;
+    private volatile boolean alumite$outOfCamera = false;
 
     @Override
     public void alumite$setCulled(boolean culled) {

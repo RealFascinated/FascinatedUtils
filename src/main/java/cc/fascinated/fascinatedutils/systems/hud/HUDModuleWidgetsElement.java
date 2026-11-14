@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
+import cc.fascinated.fascinatedutils.debug.perf.PerfProbe;
 import cc.fascinated.fascinatedutils.gui2.core.UIScale;
 import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
 import cc.fascinated.fascinatedutils.oldgui.screens.ModSettingsScreen;
@@ -26,6 +27,7 @@ public class HUDModuleWidgetsElement implements HudElement {
 
     @Override
     public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, @NonNull DeltaTracker tickCounter) {
+        PerfProbe.INSTANCE.markFrame();
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.screen instanceof DebugOptionsScreen || minecraft.screen instanceof ModSettingsScreen) {
             return;

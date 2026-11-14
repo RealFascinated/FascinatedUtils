@@ -109,7 +109,9 @@ public interface TextParser<V> {
         @Override
         public Double parse(String text) {
             try {
-                return Double.parseDouble(text.trim());
+                double parsed = Double.parseDouble(text.trim());
+                // NaN and +/-Infinity parse fine but are not usable coordinates or amounts.
+                return Double.isFinite(parsed) ? parsed : null;
             } catch (NumberFormatException ignored) {
                 return null;
             }

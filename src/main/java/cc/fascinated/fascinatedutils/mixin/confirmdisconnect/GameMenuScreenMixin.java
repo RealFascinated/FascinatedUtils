@@ -25,6 +25,8 @@ public abstract class GameMenuScreenMixin {
 
     @Inject(method = "createPauseMenu", at = @At("RETURN"))
     private void alumite$wrapDisconnectWithConfirm(CallbackInfo ci) {
+        // The pause menu is rebuilt on resize and gets a fresh button label, so a pending confirmation must not survive.
+        this.awaitingConfirm = false;
         if (!SettingsRegistry.INSTANCE.getSettings().getConfirmDisconnect().isEnabled() || Minecraft.getInstance().hasSingleplayerServer() || this.disconnectButton == null) {
             return;
         }

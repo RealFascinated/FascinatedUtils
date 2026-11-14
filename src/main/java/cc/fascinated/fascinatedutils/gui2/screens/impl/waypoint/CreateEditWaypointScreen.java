@@ -50,9 +50,9 @@ public class CreateEditWaypointScreen extends RootScreen {
         assert player != null;
 
         UiState<String> nameState = stateStore.state("waypoint.create.name", type == Type.CREATE ? "" : editWaypoint.getName());
-        UiState<Double> xState = stateStore.state("waypoint.create.x", type == Type.CREATE ? (double) (int) player.getX() : editWaypoint.getX());
-        UiState<Double> yState = stateStore.state("waypoint.create.y", type == Type.CREATE ? (double) (int) player.getY() : editWaypoint.getY());
-        UiState<Double> zState = stateStore.state("waypoint.create.z", type == Type.CREATE ? (double) (int) player.getZ() : editWaypoint.getZ());
+        UiState<Double> xState = stateStore.state("waypoint.create.x", type == Type.CREATE ? Math.floor(player.getX()) : editWaypoint.getX());
+        UiState<Double> yState = stateStore.state("waypoint.create.y", type == Type.CREATE ? Math.floor(player.getY()) : editWaypoint.getY());
+        UiState<Double> zState = stateStore.state("waypoint.create.z", type == Type.CREATE ? Math.floor(player.getZ()) : editWaypoint.getZ());
         UiState<SettingColor> colorState = stateStore.state("waypoint.create.color", type == Type.CREATE ? new SettingColor() : editWaypoint.getColor().copy());
 
         UiState<Boolean> colorPickerOpen = stateStore.state("waypoint.colorpicker.open", false);

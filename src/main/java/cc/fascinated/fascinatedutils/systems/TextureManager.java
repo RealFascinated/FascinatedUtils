@@ -18,8 +18,11 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -29,6 +32,8 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,9 +50,13 @@ public class TextureManager {
     private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
     private static final long MAX_DOWNLOAD_BYTES = 10 * 1024 * 1024;
+    // Decoded images take width * height * 4 bytes of native memory plus VRAM; 64M pixels is about 256 MB.
+    private static final long MAX_IMAGE_PIXELS = 64L * 1024 * 1024;
+    private static final long FAILURE_RETRY_MILLIS = TimeUnit.MINUTES.toMillis(1);
 
     private final Set<String> inFlight = ConcurrentHashMap.newKeySet();
-    private final Set<String> failed = ConcurrentHashMap.newKeySet();
+    // Failed id -> time of failure; a failed texture is retried after FAILURE_RETRY_MILLIS.
+    private final Map<String, Long> failedAtMillis = new ConcurrentHashMap<>();
     private final Map<String, String> hashCache = new ConcurrentHashMap<>();
 
     private final Cache<String, LoadedTexture> textures = CacheBuilder.newBuilder()
@@ -61,7 +70,7 @@ public class TextureManager {
                 if (notification.getValue() != null && notification.getCause() != RemovalCause.REPLACED) {
                     Minecraft.getInstance().getTextureManager().release(notification.getValue().id());
                     inFlight.remove(notification.getKey());
-                    failed.remove(notification.getKey());
+                    failedAtMillis.remove(notification.getKey());
                 }
             })
             .build();
@@ -133,13 +142,47 @@ public class TextureManager {
         if (cached != null) {
             return cached;
         }
-        if (failed.contains(id)) {
-            return null;
+        Long failedAt = failedAtMillis.get(id);
+        if (failedAt != null) {
+            if (System.currentTimeMillis() - failedAt < FAILURE_RETRY_MILLIS) {
+                return null;
+            }
+            failedAtMillis.remove(id);
         }
         if (inFlight.add(id)) {
             Constants.EXECUTORS.execute(task);
         }
         return null;
+    }
+
+    private void markFailed(String id) {
+        failedAtMillis.put(id, System.currentTimeMillis());
+    }
+
+    /**
+     * Rejects an image whose decoded size would exceed {@link #MAX_IMAGE_PIXELS}, reading only its header so a
+     * small file that expands to a huge bitmap is never decoded.
+     *
+     * @param bytes encoded image data
+     * @throws IOException if the format is unsupported or the image is too large
+     */
+    private void requireWithinPixelBudget(byte[] bytes) throws IOException {
+        try (ImageInputStream stream = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
+            Iterator<ImageReader> readers = stream == null ? Collections.emptyIterator() : ImageIO.getImageReaders(stream);
+            if (!readers.hasNext()) {
+                throw new IOException("Unsupported or unreadable image format");
+            }
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(stream);
+                long pixels = (long) reader.getWidth(0) * reader.getHeight(0);
+                if (pixels > MAX_IMAGE_PIXELS) {
+                    throw new IOException("Image is too large (" + reader.getWidth(0) + "x" + reader.getHeight(0) + ")");
+                }
+            } finally {
+                reader.dispose();
+            }
+        }
     }
 
     public long loadedTextures() {
@@ -175,11 +218,17 @@ public class TextureManager {
      * <p>Must be called on the main thread.
      */
     private void registerTexture(String id, Identifier identifier, NativeImage image, long byteSize, Runnable onLoad) {
-        DynamicTexture texture = new DynamicTexture(identifier::toString, image);
-        texture.upload();
-        image.close();
+        int width = image.getWidth();
+        int height = image.getHeight();
+        DynamicTexture texture;
+        try {
+            texture = new DynamicTexture(identifier::toString, image);
+            texture.upload();
+        } finally {
+            image.close();
+        }
         Minecraft.getInstance().getTextureManager().register(identifier, texture);
-        textures.put(id, new LoadedTexture(id, identifier, byteSize, new PixelSize(image.getWidth(), image.getHeight())));
+        textures.put(id, new LoadedTexture(id, identifier, byteSize, new PixelSize(width, height)));
         if (onLoad != null) {
             onLoad.run();
         }
@@ -205,6 +254,7 @@ public class TextureManager {
         NativeImage image = null;
         try {
             byte[] bytes = Files.readAllBytes(path);
+            requireWithinPixelBudget(bytes);
             image = NativeImage.read(bytes);
             image = downscaleIfNeeded(image, maxHeight);
             final NativeImage finalImage = image;
@@ -213,13 +263,16 @@ public class TextureManager {
                     String safePath = "local-attachment/" + Integer.toHexString(id.hashCode() & Integer.MAX_VALUE);
                     Identifier identifier = Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, safePath);
                     registerTexture(id, identifier, finalImage, (long) finalImage.getWidth() * finalImage.getHeight() * finalImage.format().components(), onLoad);
+                } catch (RuntimeException exception) {
+                    markFailed(id);
+                    LOGGER.error("Failed to register local attachment {}", path, exception);
                 } finally {
                     inFlight.remove(id);
                 }
             });
             image = null;
-        } catch (IOException exception) {
-            failed.add(id);
+        } catch (IOException | RuntimeException exception) {
+            markFailed(id);
             LOGGER.error("Failed to load local attachment {}", path, exception);
         } finally {
             cleanupBackgroundTask(id, image);
@@ -235,15 +288,16 @@ public class TextureManager {
                     .header("User-Agent", AlumiteEnvironment.USER_AGENT)
                     .GET()
                     .build();
-            HttpResponse<byte[]> response = null;
+            HttpResponse<InputStream> response = null;
             for (int attempt = 0; attempt <= 3; attempt++) {
-                response = HTTP.send(request, HttpResponse.BodyHandlers.ofByteArray());
+                response = HTTP.send(request, HttpResponse.BodyHandlers.ofInputStream());
                 if (response.statusCode() != 429) {
                     break;
                 }
                 if (attempt == 3) {
                     break;
                 }
+                response.body().close();
                 long retryAfterMillis = response.headers().firstValue("Retry-After")
                         .map(value -> {
                             try {
@@ -257,32 +311,52 @@ public class TextureManager {
                 Thread.sleep(retryAfterMillis);
             }
             if (response.statusCode() != 200) {
+                response.body().close();
                 LOGGER.warn("Failed to fetch attachment {}: HTTP {}", id, response.statusCode());
-                failed.add(id);
+                markFailed(id);
                 return;
             }
-            byte[] bytes = response.body();
+            if (response.headers().firstValueAsLong("Content-Length").orElse(-1L) > MAX_DOWNLOAD_BYTES) {
+                response.body().close();
+                LOGGER.warn("Attachment {} exceeds size limit, skipping", id);
+                markFailed(id);
+                return;
+            }
+            // Read at most one byte past the limit so an oversized body is never fully buffered.
+            byte[] bytes;
+            try (InputStream body = response.body()) {
+                bytes = body.readNBytes((int) MAX_DOWNLOAD_BYTES + 1);
+            }
             if (bytes.length > MAX_DOWNLOAD_BYTES) {
-                LOGGER.warn("Attachment {} exceeds size limit ({} bytes), skipping", id, bytes.length);
-                failed.add(id);
+                LOGGER.warn("Attachment {} exceeds size limit ({} bytes), skipping", id, MAX_DOWNLOAD_BYTES);
+                markFailed(id);
                 return;
             }
+            requireWithinPixelBudget(bytes);
             bytes = toPngIfNeeded(bytes);
             image = NativeImage.read(bytes);
             image = downscaleIfNeeded(image, maxHeight);
             final NativeImage finalImage = image;
-            byte[] finalBytes = bytes;
+            // Weigh by decoded size (what actually occupies native memory and VRAM), not by the compressed download.
+            long decodedBytes = (long) finalImage.getWidth() * finalImage.getHeight() * finalImage.format().components();
             Minecraft.getInstance().execute(() -> {
                 try {
                     Identifier identifier = Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "attachment/" + id);
-                    registerTexture(id, identifier, finalImage, finalBytes.length, onLoad);
+                    registerTexture(id, identifier, finalImage, decodedBytes, onLoad);
+                } catch (RuntimeException exception) {
+                    markFailed(id);
+                    LOGGER.error("Failed to register attachment {}", id, exception);
                 } finally {
                     inFlight.remove(id);
                 }
             });
             image = null;
-        } catch (IOException | InterruptedException exception) {
-            failed.add(id);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            markFailed(id);
+            LOGGER.error("Interrupted while downloading attachment {}", id, exception);
+        } catch (IOException | RuntimeException exception) {
+            markFailed(id);
             LOGGER.error("Failed to download attachment {}", id, exception);
         } finally {
             cleanupBackgroundTask(id, image);
@@ -306,7 +380,7 @@ public class TextureManager {
         if (image != null) {
             image.close();
         }
-        if (failed.contains(id)) {
+        if (failedAtMillis.containsKey(id)) {
             inFlight.remove(id);
         }
     }

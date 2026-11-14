@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
+import cc.fascinated.fascinatedutils.debug.perf.PerfProbe;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
@@ -48,6 +49,7 @@ public class HUDManager {
         long renderStart = System.nanoTime();
         for (HudPanel widget : widgets.stream().filter(HudPanel::shouldRenderHudPanel).toList()) {
             profiler.push("widget-" + widget.getId());
+            long widgetStart = PerfProbe.INSTANCE.begin();
 
             Runnable draw = widget.prepareAndDraw(renderer, deltaSeconds, editorMode);
             if (draw == null) {
@@ -62,9 +64,11 @@ public class HUDManager {
                 renderer.popScale();
                 renderer.popTranslate();
             }
+            PerfProbe.INSTANCE.end("hud.widget.", widget.getId(), widgetStart);
             profiler.pop();
         }
         lastRenderNanos = System.nanoTime() - renderStart;
+        PerfProbe.INSTANCE.record("hud.render", lastRenderNanos);
     }
 
     public void setEditMode(boolean editMode) {

@@ -42,15 +42,17 @@ public class ProfileRepository {
         profileLoadInProgress = true;
         try {
             for (Module module : ModuleRegistry.INSTANCE.getModules()) {
-                module.resetToDefault();
-                JsonElement element = moduleStates.get(module.getModuleKey());
-                if (element != null && element.isJsonObject()) {
-                    try {
-                        module.deserialize(element, gson);
-                    } catch (Exception error) {
-                        Client.LOG.warn("Failed to apply module settings for {}: {}", module.getModuleKey(), error.toString());
+                module.batchEnabledStateEvents(() -> {
+                    module.resetToDefault();
+                    JsonElement element = moduleStates.get(module.getModuleKey());
+                    if (element != null && element.isJsonObject()) {
+                        try {
+                            module.deserialize(element, gson);
+                        } catch (Exception error) {
+                            Client.LOG.warn("Failed to apply module settings for {}: {}", module.getModuleKey(), error.toString());
+                        }
                     }
-                }
+                });
             }
         } finally {
             profileLoadInProgress = false;

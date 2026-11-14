@@ -12,6 +12,11 @@ public class MovementHudPanel extends MiniMessageHudPanel {
     }
 
     @Override
+    protected boolean hideWhenNoLines() {
+        return true;
+    }
+
+    @Override
     protected List<String> computeMiniMessageLines(float deltaSeconds, boolean editorMode) {
         MovementModule movementHost = (MovementModule) hudHostModule();
         return movementHost.resolveMovementHudLines(editorMode);

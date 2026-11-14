@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.config;
 
+import cc.fascinated.fascinatedutils.client.Client;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -76,7 +77,12 @@ public class ConfigManager<R extends GsonSerializable<R>> {
             if (root == null) {
                 throw new JsonParseException("file is empty or not a JSON object");
             }
-            int fileVersion = root.has("version") ? root.get("version").getAsInt() : 1;
+            int fileVersion;
+            try {
+                fileVersion = root.has("version") ? root.get("version").getAsInt() : 1;
+            } catch (RuntimeException exception) {
+                throw new JsonParseException("invalid version field", exception);
+            }
             int codeVersion = codeVersion();
             if (fileVersion > codeVersion) {
                 throw new IllegalStateException("Config file version " + fileVersion + " is newer than the supported version " + codeVersion + ". Please update the mod.");
@@ -90,8 +96,25 @@ public class ConfigManager<R extends GsonSerializable<R>> {
                 save();
             }
         } catch (IOException | JsonParseException exception) {
+            backUpUnreadableConfig(exception);
             current = rootDefaults.get();
             save();
+        }
+    }
+
+    /**
+     * Copies a config file that could not be read or parsed to a {@code .corrupt} sibling so the defaults written
+     * next do not destroy it.
+     *
+     * @param cause why the file was rejected
+     */
+    private void backUpUnreadableConfig(Exception cause) {
+        Path backupPath = filePath.resolveSibling(filePath.getFileName() + ".corrupt");
+        try {
+            Files.copy(filePath, backupPath, StandardCopyOption.REPLACE_EXISTING);
+            Client.LOG.warn("Config {} could not be loaded ({}); original saved to {}", filePath, cause.toString(), backupPath);
+        } catch (IOException backupError) {
+            Client.LOG.warn("Config {} could not be loaded ({}) and could not be backed up: {}", filePath, cause.toString(), backupError.toString());
         }
     }
 

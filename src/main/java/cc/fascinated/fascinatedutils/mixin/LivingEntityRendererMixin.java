@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin;
 
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.world.entity.LivingEntity;
@@ -17,6 +18,7 @@ public abstract class LivingEntityRendererMixin {
         if (!(entity instanceof LocalPlayer)) {
             return;
         }
-        cir.setReturnValue(SettingsRegistry.INSTANCE.getSettings().getShowSelfNameplate().isEnabled());
+        // Still honour the hidden-GUI (F1) state that vanilla applies to every nameplate.
+        cir.setReturnValue(SettingsRegistry.INSTANCE.getSettings().getShowSelfNameplate().isEnabled() && Minecraft.renderNames());
     }
 }

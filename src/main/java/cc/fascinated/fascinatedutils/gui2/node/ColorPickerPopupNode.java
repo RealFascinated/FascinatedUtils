@@ -183,7 +183,8 @@ public class ColorPickerPopupNode extends PopupNode<ColorPickerPopupNode> {
     }
 
     private void applyAndClose() {
-        onApply.accept(editingColor);
+        // Hand over a copy: the stored colour must not alias the one this popup keeps editing.
+        onApply.accept(editingColor.copy());
     }
 
     private static class SvAreaNode extends PositionedNode<SvAreaNode> {

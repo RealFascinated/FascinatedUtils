@@ -152,7 +152,7 @@ public class TextInputHandler {
 
     public void bindSelectionState(UiState<Integer> state) {
         this.selectionState = state;
-        this.selectionAnchor = state.get();
+        this.selectionAnchor = Math.min(state.get(), buffer.length());
     }
 
     public void bindDragState(UiState<Boolean> state) {
@@ -388,12 +388,12 @@ public class TextInputHandler {
                 return true;
             }
             case GLFW.GLFW_KEY_LEFT -> {
-                int target = wordLeft(shift && hasSelection() ? selectStart() : caretIndex);
+                int target = wordLeft(caretIndex);
                 moveCaret(target, shift);
                 return true;
             }
             case GLFW.GLFW_KEY_RIGHT -> {
-                int target = wordRight(shift && hasSelection() ? selectEnd() : caretIndex);
+                int target = wordRight(caretIndex);
                 moveCaret(target, shift);
                 return true;
             }

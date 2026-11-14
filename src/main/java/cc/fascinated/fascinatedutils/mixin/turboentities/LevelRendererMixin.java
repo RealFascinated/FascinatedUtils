@@ -79,7 +79,8 @@ public class LevelRendererMixin {
 
         cullTask.setInGame(true);
         cullTask.setCamera(camera.position());
-        cullTask.setFrustum(frustum);
+        // Hand the cull thread a private copy; the render thread keeps mutating the live frustum.
+        cullTask.setFrustum(new Frustum(frustum));
 
         module.snapshotAndResetRenderFrameCounters();
 

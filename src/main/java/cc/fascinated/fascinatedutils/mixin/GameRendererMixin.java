@@ -48,7 +48,8 @@ public abstract class GameRendererMixin implements IGameRenderer {
 
         float uiWidth = UIScale.uiWidth();
         float uiHeight = UIScale.uiHeight();
-        float deltaSeconds = deltaTracker.getGameTimeDeltaTicks() / 20f;
+        // Real-time delta: the game-time delta is 0 while a singleplayer game is paused, which froze toasts and animations.
+        float deltaSeconds = deltaTracker.getRealtimeDeltaTicks() / 20f;
         int mouseX = (int) minecraft.mouseHandler.getScaledXPos(minecraft.getWindow());
         int mouseY = (int) minecraft.mouseHandler.getScaledYPos(minecraft.getWindow());
 
@@ -57,7 +58,7 @@ public abstract class GameRendererMixin implements IGameRenderer {
 
         if (minecraft.screen instanceof WidgetScreen widgetScreen) {
             int scale = minecraft.getWindow().getGuiScale();
-            widgetScreen.renderCustom(drawContext, mouseX * scale, mouseY * scale, deltaTracker.getGameTimeDeltaTicks());
+            widgetScreen.renderCustom(drawContext, mouseX * scale, mouseY * scale, deltaTracker.getRealtimeDeltaTicks());
         }
 
         cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer toastRenderer = new cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer(drawContext, FascinatedGuiTheme.INSTANCE);

@@ -13,6 +13,7 @@ public abstract class MiniMessageHudPanel extends HudPanel {
 
     private final float baseMinWidthValue;
     private List<String> cachedMiniMessageLines;
+    private boolean cachedLinesHidden;
     private long lastMiniMessageSampleNanos;
 
     protected MiniMessageHudPanel(HudHostModule hostModule, String panelId, float baseMinWidth) {
@@ -76,11 +77,23 @@ public abstract class MiniMessageHudPanel extends HudPanel {
         return null;
     }
 
+    /**
+     * Whether the panel should draw nothing (no background or border either) when
+     * {@link #computeMiniMessageLines} returns {@code null} or empty, instead of a single blank line.
+     *
+     * @return {@code true} to hide the panel when there are no lines
+     */
+    protected boolean hideWhenNoLines() {
+        return false;
+    }
+
     private List<String> miniMessageLinesWithCache(float deltaSeconds, boolean editorMode) {
         long intervalNanos = miniMessageLineUpdateIntervalNanos();
         long now = System.nanoTime();
         if (intervalNanos <= 0L || cachedMiniMessageLines == null || now - lastMiniMessageSampleNanos >= intervalNanos) {
-            cachedMiniMessageLines = normalizeMiniMessageLines(computeMiniMessageLines(deltaSeconds, editorMode));
+            List<String> rawLines = computeMiniMessageLines(deltaSeconds, editorMode);
+            cachedLinesHidden = hideWhenNoLines() && (rawLines == null || rawLines.isEmpty());
+            cachedMiniMessageLines = normalizeMiniMessageLines(rawLines);
             lastMiniMessageSampleNanos = now;
         }
         return cachedMiniMessageLines;
@@ -93,7 +106,11 @@ public abstract class MiniMessageHudPanel extends HudPanel {
 
     @Override
     protected HudContent produceHudContent(float deltaSeconds, boolean editorMode) {
-        return new HudContent.TextLines(miniMessageLinesWithCache(deltaSeconds, editorMode));
+        List<String> lines = miniMessageLinesWithCache(deltaSeconds, editorMode);
+        if (cachedLinesHidden) {
+            return null;
+        }
+        return new HudContent.TextLines(lines);
     }
 
     @Override

@@ -5,6 +5,9 @@ import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.command.ClientCommandBootstrap;
 import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
+import cc.fascinated.fascinatedutils.debug.perf.PerfAutoRun;
+import cc.fascinated.fascinatedutils.debug.perf.PerfCommand;
+import cc.fascinated.fascinatedutils.debug.perf.PerfProbe;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
@@ -38,6 +41,8 @@ public class Client implements ClientModInitializer {
         eventBus.ensureSetup();
         eventBus.subscribe(TURBO_PARTICLES);
         eventBus.subscribe(TURBO_ENTITIES);
+        ClientCommandBootstrap.register(PerfCommand.class);
+        PerfAutoRun.INSTANCE.register();
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
             eventBus.post(new ClientStartedEvent(client));
@@ -48,8 +53,10 @@ public class Client implements ClientModInitializer {
             eventBus.post(new ClientStoppingEvent(client));
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            long tickStart = PerfProbe.INSTANCE.begin();
             KeybindsWrapper.dispatchRegisteredCallbacks();
             FascinatedEventBus.INSTANCE.post(new ClientTickEvent(client));
+            PerfProbe.INSTANCE.end("client.tick", tickStart);
         });
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, _) -> {
             ClientCommandBootstrap.registerWithFabric(dispatcher);

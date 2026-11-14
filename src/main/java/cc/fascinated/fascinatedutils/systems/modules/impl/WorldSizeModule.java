@@ -7,17 +7,17 @@ import cc.fascinated.fascinatedutils.systems.modules.ModuleDefaults;
 import net.minecraft.client.Minecraft;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 public class WorldSizeModule extends Module {
 
-    private final Map<String, String> worldSizes = new ConcurrentHashMap<>();
+    private volatile Map<String, String> worldSizes = Map.of();
 
     public WorldSizeModule() {
         super("World Size", ModuleCategory.GENERAL, ModuleDefaults.builder().defaultState(true).build());
@@ -50,13 +50,14 @@ public class WorldSizeModule extends Module {
                     try {
                         long bytes = computeSize(dir);
                         newSizes.put(levelId, ByteUtils.formatBytes(bytes, 1));
-                    } catch (IOException ignored) {
+                    } catch (IOException | UncheckedIOException ignored) {
+                        // A file vanished mid-walk (e.g. an autosave); skip this world's size.
                     }
                 });
-            } catch (IOException ignored) {
+            } catch (IOException | UncheckedIOException ignored) {
             }
-            worldSizes.clear();
-            worldSizes.putAll(newSizes);
+            // Publish a complete map in one step so readers never see a half-filled or empty one.
+            worldSizes = Map.copyOf(newSizes);
         });
     }
 
