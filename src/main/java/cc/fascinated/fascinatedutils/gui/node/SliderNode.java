@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.gui.node;
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.core.UiNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import net.minecraft.util.Mth;
 
@@ -47,6 +48,11 @@ public class SliderNode extends PositionedNode<SliderNode> {
     public SliderNode setDisabled(Supplier<Boolean> disabled) {
         this.disabled = disabled == null ? () -> false : disabled;
         return this;
+    }
+
+    @Override
+    protected void inheritAnimationState(UiNode previous) {
+        activeAnim.snap(((SliderNode) previous).activeAnim.value());
     }
 
     @Override

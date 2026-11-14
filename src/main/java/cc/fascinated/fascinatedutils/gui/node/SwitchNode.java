@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.gui.node;
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.core.UiNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import org.lwjgl.glfw.GLFW;
@@ -41,6 +42,13 @@ public class SwitchNode extends PositionedNode<SwitchNode> {
     public SwitchNode setOnChange(Consumer<Boolean> onChange) {
         this.onChange = onChange == null ? ignored -> {} : onChange;
         return this;
+    }
+
+    @Override
+    protected void inheritAnimationState(UiNode previous) {
+        SwitchNode other = (SwitchNode) previous;
+        knobProgress = other.knobProgress;
+        hoverAnim.snap(other.hoverAnim.value());
     }
 
     @Override
@@ -135,8 +143,8 @@ public class SwitchNode extends PositionedNode<SwitchNode> {
             int borderColor = Colors.mixArgb(knobProgress, theme.borderStrong(), theme.borderStrong() & 0x00FFFFFF);
             renderFrame.drawRoundedRectFrame(trackX, trackY, TRACK_WIDTH, TRACK_HEIGHT, radius, borderColor, 0, 1);
         }
-        int knobSize = TRACK_HEIGHT - KNOB_INSET * 2 + Math.round(hover);
-        float knobWidth = knobSize + KNOB_STRETCH * travelStretch + hover;
+        int knobSize = TRACK_HEIGHT - KNOB_INSET * 2;
+        float knobWidth = knobSize + KNOB_STRETCH * travelStretch;
         float knobTravel = TRACK_WIDTH - KNOB_INSET * 2 - knobSize;
         float knobX = trackX + KNOB_INSET + (knobTravel - (knobWidth - knobSize)) * knobProgress;
         float knobY = trackY + (TRACK_HEIGHT - knobSize) / 2f;

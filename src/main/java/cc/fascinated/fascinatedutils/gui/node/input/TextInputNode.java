@@ -139,6 +139,12 @@ public class TextInputNode<V> extends PositionedNode<TextInputNode<V>> {
     }
 
     @Override
+    protected void onTranslated(int deltaX, int deltaY) {
+        lastTextX += deltaX;
+        lastTextY += deltaY;
+    }
+
+    @Override
     public boolean focusable() {
         return true;
     }

@@ -4,6 +4,8 @@ import cc.fascinated.fascinatedutils.gui.layout.AxisConstraints;
 import cc.fascinated.fascinatedutils.gui.layout.BoxLayoutSpec;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 
+import java.util.function.IntSupplier;
+
 public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
     private final BoxLayoutSpec boxLayout = new BoxLayoutSpec();
     private int columnGap = -1;
@@ -175,94 +177,104 @@ public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
     }
 
     protected int intrinsicHeight(GuiRenderer renderFrame, int parentHeight, int resolvedWidth) {
-        if (columnGap >= 0) {
-            int totalH = 0;
-            int visibleCount = 0;
-            for (UiNode child : childrenView()) {
-                if (!child.visible()) continue;
-                visibleCount++;
-                if (!(child instanceof SpacerNode)) {
-                    child.layout(renderFrame, 0, 0, resolvedWidth, parentHeight);
-                    totalH += child.bounds().height();
-                }
-            }
-            return totalH + columnGap * Math.max(0, visibleCount - 1);
-        }
         return 0;
     }
 
-    protected final int resolveAxisSize(AxisConstraints axisConstraints, int parentSize, int intrinsicSize, String axisLabel) {
+    protected final int resolveAxisSize(AxisConstraints axisConstraints, int parentSize, IntSupplier intrinsicSize, String axisLabel) {
         if (axisConstraints.hasSizeConstraint() || (axisConstraints.hasStartConstraint() && axisConstraints.hasEndConstraint())) {
             return axisConstraints.resolveSize(parentSize, axisLabel, debugPath());
         }
-        return intrinsicSize;
+        return intrinsicSize.getAsInt();
     }
 
     @Override
     public void layout(GuiRenderer renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
-        int resolvedWidth = resolveAxisSize(boxLayout.horizontal(), parentWidth, intrinsicWidth(renderFrame, parentWidth), "horizontal");
-        int resolvedHeight = resolveAxisSize(boxLayout.vertical(), parentHeight, intrinsicHeight(renderFrame, parentHeight, resolvedWidth), "vertical");
+        int resolvedWidth = resolveAxisSize(boxLayout.horizontal(), parentWidth, () -> intrinsicWidth(renderFrame, parentWidth), "horizontal");
+        if (columnGap >= 0) {
+            layoutColumn(renderFrame, parentX, parentY, parentWidth, parentHeight, resolvedWidth);
+            return;
+        }
+        int resolvedHeight = resolveAxisSize(boxLayout.vertical(), parentHeight, () -> intrinsicHeight(renderFrame, parentHeight, resolvedWidth), "vertical");
         int resolvedX = boxLayout.horizontal().resolvePosition(parentX, parentWidth, resolvedWidth);
         int resolvedY = boxLayout.vertical().resolvePosition(parentY, parentHeight, resolvedHeight);
         bounds().set(resolvedX, resolvedY, resolvedWidth, resolvedHeight);
 
-        if (columnGap >= 0) {
-            int visibleCount = 0;
-            int spacerCount = 0;
-            int totalFixed = 0;
-            for (UiNode childNode : childrenView()) {
-                if (!childNode.visible()) continue;
-                visibleCount++;
-                if (childNode instanceof SpacerNode) {
-                    spacerCount++;
-                } else {
-                    childNode.layout(renderFrame, resolvedX, resolvedY, resolvedWidth, resolvedHeight);
-                    totalFixed += childNode.bounds().height();
-                }
-            }
-            int totalGap = columnGap * Math.max(0, visibleCount - 1);
-            int spacerHeight = spacerCount > 0 ? Math.max(0, (resolvedHeight - totalFixed - totalGap) / spacerCount) : 0;
-            int cursorY = resolvedY;
-            for (UiNode childNode : childrenView()) {
-                if (!childNode.visible()) continue;
-                if (childNode instanceof SpacerNode) {
-                    childNode.layout(renderFrame, resolvedX, cursorY, resolvedWidth, spacerHeight);
-                    cursorY += spacerHeight + columnGap;
-                } else {
-                    childNode.layout(renderFrame, resolvedX, cursorY, resolvedWidth, resolvedHeight);
-                    cursorY += childNode.bounds().height() + columnGap;
-                }
-            }
-        } else if (rowGap >= 0) {
-            int visibleCount = 0;
-            int spacerCount = 0;
-            int totalFixed = 0;
-            for (UiNode childNode : childrenView()) {
-                if (!childNode.visible()) continue;
-                visibleCount++;
-                if (childNode instanceof SpacerNode) {
-                    spacerCount++;
-                } else {
-                    childNode.layout(renderFrame, resolvedX, resolvedY, resolvedWidth, resolvedHeight);
-                    totalFixed += childNode.bounds().width();
-                }
-            }
-            int totalGap = rowGap * Math.max(0, visibleCount - 1);
-            int spacerWidth = spacerCount > 0 ? Math.max(0, (resolvedWidth - totalFixed - totalGap) / spacerCount) : 0;
-            int cursorX = resolvedX;
-            for (UiNode childNode : childrenView()) {
-                if (!childNode.visible()) continue;
-                if (childNode instanceof SpacerNode) {
-                    childNode.layout(renderFrame, cursorX, resolvedY, spacerWidth, resolvedHeight);
-                    cursorX += spacerWidth + rowGap;
-                } else {
-                    childNode.layout(renderFrame, cursorX, resolvedY, resolvedWidth, resolvedHeight);
-                    cursorX += childNode.bounds().width() + rowGap;
-                }
-            }
+        if (rowGap >= 0) {
+            layoutRow(renderFrame, resolvedX, resolvedY, resolvedWidth, resolvedHeight);
         } else {
             for (UiNode childNode : childrenView()) {
                 childNode.layout(renderFrame, resolvedX, resolvedY, resolvedWidth, resolvedHeight);
+            }
+        }
+    }
+
+    /**
+     * Lays out a vertical stack. Each child is laid out exactly once, then shifted into its final slot, so nesting depth
+     * does not multiply the work. A column without a fixed height is as tall as its children and gaps (spacers collapse).
+     */
+    private void layoutColumn(GuiRenderer renderFrame, int parentX, int parentY, int parentWidth, int parentHeight, int resolvedWidth) {
+        AxisConstraints vertical = boxLayout.vertical();
+        boolean fixedHeight = vertical.hasSizeConstraint() || (vertical.hasStartConstraint() && vertical.hasEndConstraint());
+        int fixedResolvedHeight = fixedHeight ? vertical.resolveSize(parentHeight, "vertical", debugPath()) : parentHeight;
+        int resolvedX = boxLayout.horizontal().resolvePosition(parentX, parentWidth, resolvedWidth);
+
+        int visibleCount = 0;
+        int spacerCount = 0;
+        int totalFixed = 0;
+        for (UiNode childNode : childrenView()) {
+            if (!childNode.visible()) continue;
+            visibleCount++;
+            if (childNode instanceof SpacerNode) {
+                spacerCount++;
+            } else {
+                childNode.layout(renderFrame, resolvedX, parentY, resolvedWidth, fixedResolvedHeight);
+                totalFixed += childNode.bounds().height();
+            }
+        }
+        int totalGap = columnGap * Math.max(0, visibleCount - 1);
+        int resolvedHeight = fixedHeight ? fixedResolvedHeight : totalFixed + totalGap;
+        int resolvedY = vertical.resolvePosition(parentY, parentHeight, resolvedHeight);
+        bounds().set(resolvedX, resolvedY, resolvedWidth, resolvedHeight);
+
+        int spacerHeight = spacerCount > 0 ? Math.max(0, (resolvedHeight - totalFixed - totalGap) / spacerCount) : 0;
+        int cursorY = resolvedY;
+        for (UiNode childNode : childrenView()) {
+            if (!childNode.visible()) continue;
+            if (childNode instanceof SpacerNode) {
+                childNode.layout(renderFrame, resolvedX, cursorY, resolvedWidth, spacerHeight);
+                cursorY += spacerHeight + columnGap;
+            } else {
+                childNode.translate(0, cursorY - childNode.bounds().positionY());
+                cursorY += childNode.bounds().height() + columnGap;
+            }
+        }
+    }
+
+    private void layoutRow(GuiRenderer renderFrame, int resolvedX, int resolvedY, int resolvedWidth, int resolvedHeight) {
+        int visibleCount = 0;
+        int spacerCount = 0;
+        int totalFixed = 0;
+        for (UiNode childNode : childrenView()) {
+            if (!childNode.visible()) continue;
+            visibleCount++;
+            if (childNode instanceof SpacerNode) {
+                spacerCount++;
+            } else {
+                childNode.layout(renderFrame, resolvedX, resolvedY, resolvedWidth, resolvedHeight);
+                totalFixed += childNode.bounds().width();
+            }
+        }
+        int totalGap = rowGap * Math.max(0, visibleCount - 1);
+        int spacerWidth = spacerCount > 0 ? Math.max(0, (resolvedWidth - totalFixed - totalGap) / spacerCount) : 0;
+        int cursorX = resolvedX;
+        for (UiNode childNode : childrenView()) {
+            if (!childNode.visible()) continue;
+            if (childNode instanceof SpacerNode) {
+                childNode.layout(renderFrame, cursorX, resolvedY, spacerWidth, resolvedHeight);
+                cursorX += spacerWidth + rowGap;
+            } else {
+                childNode.translate(cursorX - childNode.bounds().positionX(), 0);
+                cursorX += childNode.bounds().width() + rowGap;
             }
         }
     }

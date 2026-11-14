@@ -4,7 +4,9 @@ import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.ContainerPreviewModule;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,8 +19,19 @@ public abstract class AbstractContainerScreenContainerPreviewMixin {
     @Shadow
     protected Slot hoveredSlot;
 
-    @Inject(method = "extractRenderState", at = @At("TAIL"))
-    private void alumite$renderContainerPreview(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
-        ModuleRegistry.INSTANCE.getModule(ContainerPreviewModule.class).ifPresent(module -> module.renderPreview(graphics, hoveredSlot, mouseX, mouseY));
+    @Shadow
+    @Final
+    protected AbstractContainerMenu menu;
+
+    @Inject(method = "extractTooltip", at = @At("HEAD"), cancellable = true)
+    private void alumite$replaceTooltipWithPreview(GuiGraphicsExtractor graphics, int mouseX, int mouseY, CallbackInfo ci) {
+        if (!menu.getCarried().isEmpty()) {
+            return;
+        }
+        ModuleRegistry.INSTANCE.getModule(ContainerPreviewModule.class).ifPresent(module -> {
+            if (module.renderPreview(graphics, hoveredSlot, mouseX, mouseY)) {
+                ci.cancel();
+            }
+        });
     }
 }

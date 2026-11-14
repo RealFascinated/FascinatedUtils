@@ -88,6 +88,12 @@ public class PopupNode<T extends PopupNode<T>> extends PositionedNode<T> {
         }
     }
 
+    @Override
+    protected void onTranslated(int deltaX, int deltaY) {
+        popupX += deltaX;
+        popupY += deltaY;
+    }
+
     protected int popupX() {
         return popupX;
     }

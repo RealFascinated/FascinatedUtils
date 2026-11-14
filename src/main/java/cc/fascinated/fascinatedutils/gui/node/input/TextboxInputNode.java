@@ -170,6 +170,12 @@ public class TextboxInputNode<V> extends PositionedNode<TextboxInputNode<V>> {
     }
 
     @Override
+    protected void onTranslated(int deltaX, int deltaY) {
+        lastTextAreaX += deltaX;
+        lastTextAreaY += deltaY;
+    }
+
+    @Override
     public void layout(GuiRenderer frame, int parentX, int parentY, int parentWidth, int parentHeight) {
         lastRenderFrame = frame;
         int textAreaWidth = Math.max(1, parentWidth - PADDING_H - leftInset - PADDING_H);

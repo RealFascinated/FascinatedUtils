@@ -46,6 +46,11 @@ public class UiBounds {
         this.height = Math.max(0, nextHeight);
     }
 
+    public void translate(int deltaX, int deltaY) {
+        this.positionX += deltaX;
+        this.positionY += deltaY;
+    }
+
     public boolean contains(float pointerX, float pointerY) {
         return pointerX >= positionX && pointerY >= positionY && pointerX < right() && pointerY < bottom();
     }

@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.gui.node;
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.core.UiNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.render.UiText;
@@ -212,6 +213,11 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
             return true;
         }
         return false;
+    }
+
+    @Override
+    protected void inheritAnimationState(UiNode previous) {
+        hoverAnim.snap(((ButtonNode) previous).hoverAnim.value());
     }
 
     @Override

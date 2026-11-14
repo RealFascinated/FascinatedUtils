@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.anim.Easing;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.core.UiNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import org.lwjgl.glfw.GLFW;
@@ -48,6 +49,13 @@ public class CheckboxNode extends PositionedNode<CheckboxNode> {
     public CheckboxNode setOnChange(Consumer<Boolean> onChange) {
         this.onChange = onChange == null ? ignored -> {} : onChange;
         return this;
+    }
+
+    @Override
+    protected void inheritAnimationState(UiNode previous) {
+        CheckboxNode other = (CheckboxNode) previous;
+        hoverAnim.snap(other.hoverAnim.value());
+        checkAnim.snap(other.checkAnim.value());
     }
 
     @Override

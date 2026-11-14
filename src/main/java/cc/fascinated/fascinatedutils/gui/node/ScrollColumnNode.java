@@ -230,7 +230,7 @@ public class ScrollColumnNode extends UiNode {
         advanceVisualOffset(maxScroll);
         int cursorY = positionY - Math.round(visualOffset);
         for (UiNode childNode : visibleChildren) {
-            childNode.layout(renderFrame, positionX, cursorY, contentWidth, height);
+            childNode.translate(0, cursorY - childNode.bounds().positionY());
             cursorY += Math.max(0, childNode.bounds().height()) + gap;
         }
     }

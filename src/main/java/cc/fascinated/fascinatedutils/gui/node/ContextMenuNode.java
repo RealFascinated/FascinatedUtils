@@ -125,6 +125,12 @@ public class ContextMenuNode extends PositionedNode<ContextMenuNode> {
     }
 
     @Override
+    protected void onTranslated(int deltaX, int deltaY) {
+        menuPositionX += deltaX;
+        menuPositionY += deltaY;
+    }
+
+    @Override
     public void layout(GuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
         bounds().set(positionX, positionY, width, height);
 

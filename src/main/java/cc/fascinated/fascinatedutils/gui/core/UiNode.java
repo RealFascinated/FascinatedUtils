@@ -151,6 +151,30 @@ public abstract class UiNode {
         }
     }
 
+    /**
+     * Shift this node and everything below it without re-running layout. Layout sizes never depend on position, so a
+     * parent can lay a child out once and then slide it into its final slot.
+     *
+     * @param deltaX horizontal shift in pixels
+     * @param deltaY vertical shift in pixels
+     */
+    public void translate(int deltaX, int deltaY) {
+        if (deltaX == 0 && deltaY == 0) {
+            return;
+        }
+        bounds.translate(deltaX, deltaY);
+        onTranslated(deltaX, deltaY);
+        for (UiNode childNode : children) {
+            childNode.translate(deltaX, deltaY);
+        }
+    }
+
+    /**
+     * Hook for nodes that cache absolute coordinates outside {@link #bounds()}.
+     */
+    protected void onTranslated(int deltaX, int deltaY) {
+    }
+
     public void render(GuiRenderer renderFrame, float deltaSeconds) {
         if (!visible) {
             return;
@@ -301,6 +325,28 @@ public abstract class UiNode {
     }
 
     protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    }
+
+    /**
+     * Copy in-flight animation state from the equivalent node of the previous composed tree so animations survive recomposition.
+     *
+     * @param previous the node that occupied the same position in the previous tree, always the same class as this node
+     */
+    protected void inheritAnimationState(UiNode previous) {
+    }
+
+    void inheritAnimationStateSubtree(UiNode previous) {
+        if (previous == null || previous.getClass() != getClass()) {
+            return;
+        }
+        inheritAnimationState(previous);
+        List<UiNode> previousChildren = previous.children;
+        if (previousChildren.size() != children.size()) {
+            return;
+        }
+        for (int index = 0; index < children.size(); index++) {
+            children.get(index).inheritAnimationStateSubtree(previousChildren.get(index));
+        }
     }
 
     void tickSubtree(float deltaSeconds) {
