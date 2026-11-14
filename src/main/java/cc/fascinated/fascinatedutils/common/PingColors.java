@@ -29,7 +29,7 @@ public class PingColors {
     }
 
     private static int getPingColorInternal(int latencyMs) {
-        if (latencyMs < PING_START) {
+        if (latencyMs <= PING_START) {
             return COLOR_GREY;
         }
         if (latencyMs < PING_MID) {

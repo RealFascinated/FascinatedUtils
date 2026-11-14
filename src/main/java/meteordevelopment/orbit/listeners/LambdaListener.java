@@ -87,7 +87,7 @@ public class LambdaListener implements IListener {
                 this.executor = (Consumer<Object>) lambdaFactory.invoke(object);
             }
         } catch (Throwable throwable) {
-            throwable.printStackTrace();
+            throw new IllegalStateException("Failed to create lambda listener for " + klass.getName() + "#" + method.getName(), throwable);
         }
     }
 

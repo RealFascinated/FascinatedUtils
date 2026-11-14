@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin;
 
-import cc.fascinated.fascinatedutils.gui2.screens.impl.ActionsOverlayScreen;
+import cc.fascinated.fascinatedutils.gui.screens.impl.ActionsOverlayScreen;
 import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.Minecraft;

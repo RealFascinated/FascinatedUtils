@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.renderer;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
-import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
+import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.textures.AddressMode;

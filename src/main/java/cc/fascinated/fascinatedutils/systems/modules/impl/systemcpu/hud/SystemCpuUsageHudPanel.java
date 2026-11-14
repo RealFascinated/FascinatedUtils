@@ -2,8 +2,7 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.systemcpu.hud;
 
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.oldgui.theme.UITheme;
-import cc.fascinated.fascinatedutils.oldgui.theme.UiColor;
+import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.impl.systemcpu.SystemCpuUsageWidget;
@@ -25,7 +24,7 @@ public class SystemCpuUsageHudPanel extends MiniMessageHudPanel {
     }
 
     private static float clampPercent(float cpuPercent) {
-        return Math.max(0f, Math.min(100f, cpuPercent));
+        return Math.clamp(cpuPercent, 0f, 100f);
     }
 
     private static int cpuColorArgb(float cpuPercent) {
@@ -54,7 +53,7 @@ public class SystemCpuUsageHudPanel extends MiniMessageHudPanel {
         float clampedPercent = clampPercent(systemCpuPercent);
         int roundedPercent = Math.round(clampedPercent);
         BooleanSetting useCpuColorSetting = systemCpuWidget.getUseCpuColor();
-        int color = useCpuColorSetting.isEnabled() ? cpuColorArgb(clampedPercent) : UITheme.COLOR_TEXT_PRIMARY;
+        int color = useCpuColorSetting.isEnabled() ? cpuColorArgb(clampedPercent) : 0xFFFFFFFF;
         return List.of("<color:" + Colors.rgbHex(color) + "><white>" + roundedPercent + "% CPU");
     }
 }

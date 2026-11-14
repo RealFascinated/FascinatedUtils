@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.config;
 
 import cc.fascinated.fascinatedutils.client.Client;
+import cc.fascinated.fascinatedutils.debug.perf.PerfMode;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -8,6 +9,7 @@ import com.google.gson.JsonParseException;
 import lombok.Getter;
 
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -91,7 +93,11 @@ public class ConfigManager<R extends GsonSerializable<R>> {
             if (migrated) {
                 root = applyMigrations(root, fileVersion, codeVersion);
             }
-            current = rootDefaults.get().deserialize(root, gson);
+            try {
+                current = rootDefaults.get().deserialize(root, gson);
+            } catch (RuntimeException exception) {
+                throw new JsonParseException("invalid config structure", exception);
+            }
             if (migrated) {
                 save();
             }
@@ -124,6 +130,9 @@ public class ConfigManager<R extends GsonSerializable<R>> {
      * Writes to a {@code .tmp} sibling file first, then moves it into place.
      */
     public void save() {
+        if (PerfMode.isWorldScenario()) {
+            return;
+        }
         try {
             Path parent = filePath.getParent();
             if (parent != null) {
@@ -134,7 +143,11 @@ public class ConfigManager<R extends GsonSerializable<R>> {
             JsonObject root = serialized.isJsonObject() ? serialized.getAsJsonObject() : new JsonObject();
             root.addProperty("version", codeVersion());
             Files.writeString(tmp, gson.toJson(root));
-            Files.move(tmp, filePath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            try {
+                Files.move(tmp, filePath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(tmp, filePath, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException exception) {
             throw new RuntimeException("Failed to save config to " + filePath, exception);
         }
@@ -146,8 +159,14 @@ public class ConfigManager<R extends GsonSerializable<R>> {
      * @param newCurrent the new root config to use
      */
     public void updateAndSave(R newCurrent) {
+        R previous = this.current;
         this.current = newCurrent;
-        save();
+        try {
+            save();
+        } catch (RuntimeException exception) {
+            this.current = previous;
+            throw exception;
+        }
     }
 
     /**

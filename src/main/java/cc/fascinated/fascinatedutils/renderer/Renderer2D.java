@@ -3,14 +3,14 @@ package cc.fascinated.fascinatedutils.renderer;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.common.LRUCache;
-import cc.fascinated.fascinatedutils.oldgui.GuiTheme;
-import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
+import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.renderer.text.TextRenderer;
+import cc.fascinated.fascinatedutils.renderer.text.VanillaTextRenderer;
 import net.kyori.adventure.platform.modcommon.MinecraftClientAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -33,23 +33,23 @@ import java.util.function.Supplier;
 /**
  * Low-level GUI draw bridge: batched mesh quads (rounded rects, gradients, {@link #drawBorder}) via {@link MeshBuilder}
  * / {@link MeshRenderer}, then {@link GuiGraphicsExtractor} immediate draws for text and items. Text uses the active
- * {@link GuiTheme#textRenderer}.
+ * {@link VanillaTextRenderer}.
  */
 public class Renderer2D {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final LRUCache<String, net.minecraft.network.chat.Component> MINI_MESSAGE_CACHE = new LRUCache<>(1024);
+    private static final LRUCache<String, Integer> MINI_MESSAGE_WIDTH_CACHE = new LRUCache<>(1024);
+    private static volatile int cachedFontOptionsKey;
     private final GuiGraphicsExtractor graphics;
-    private final GuiTheme guiTheme;
     private final TextRenderer guiTextRenderer;
     private final Supplier<ScreenRectangle> scissorSupplier;
     private float multiplyAlpha = 1f;
     private float multiplyAlphaText = 1f;
 
-    public Renderer2D(GuiGraphicsExtractor graphics, GuiTheme guiTheme, Supplier<ScreenRectangle> scissorSupplier) {
+    public Renderer2D(GuiGraphicsExtractor graphics, Supplier<ScreenRectangle> scissorSupplier) {
         this.graphics = graphics;
-        this.guiTheme = guiTheme;
-        this.guiTextRenderer = guiTheme.textRenderer(graphics);
+        this.guiTextRenderer = VanillaTextRenderer.INSTANCE;
         this.scissorSupplier = scissorSupplier;
     }
 
@@ -89,13 +89,6 @@ public class Renderer2D {
         unitX.sub(origin);
         unitY.sub(origin);
         return 0.5f * (unitX.length() + unitY.length());
-    }
-
-    /**
-     * @return theme bound to this renderer for the current frame
-     */
-    public GuiTheme guiTheme() {
-        return guiTheme;
     }
 
     public void setMultiplyAlpha(float factor) {
@@ -240,17 +233,47 @@ public class Renderer2D {
         }
 
         ProfilerFiller profiler = Profiler.get();
+        profiler.push("parseMiniMessage");
         try {
-            profiler.push("parseMiniMessage");
             Component adventure = MINI_MESSAGE.deserialize(miniMessageText == null ? "" : miniMessageText);
             net.minecraft.network.chat.Component nativeComponent = MinecraftClientAudiences.of().asNative(adventure);
             MINI_MESSAGE_CACHE.put(miniMessageText, nativeComponent);
-            profiler.pop();
             return nativeComponent;
         } catch (Exception exception) {
             Client.LOG.debug("MiniMessage parse failed for UI text \"{}\", falling back to literal", miniMessageText, exception);
             return net.minecraft.network.chat.Component.literal(miniMessageText == null ? "" : miniMessageText);
+        } finally {
+            profiler.pop();
         }
+    }
+
+    /**
+     * Measures the width of MiniMessage text in logical pixels, reusing the last measurement for the exact same text.
+     *
+     * @param miniMessageText MiniMessage source text
+     * @return width in logical pixels, at least one
+     */
+    public int measureMiniMessageTextWidth(String miniMessageText) {
+        Options options = Minecraft.getInstance().options;
+        int fontOptionsKey = (options.forceUnicodeFont().get() ? 1 : 0) | (options.japaneseGlyphVariants().get() ? 2 : 0);
+        if (fontOptionsKey != cachedFontOptionsKey) {
+            cachedFontOptionsKey = fontOptionsKey;
+            MINI_MESSAGE_WIDTH_CACHE.clear();
+        }
+        Integer cachedWidth = MINI_MESSAGE_WIDTH_CACHE.get(miniMessageText);
+        if (cachedWidth != null) {
+            return cachedWidth;
+        }
+        int width = measureTextWidth(parseMiniMessage(miniMessageText));
+        MINI_MESSAGE_WIDTH_CACHE.put(miniMessageText, width);
+        return width;
+    }
+
+    /**
+     * Drops every cached MiniMessage width; call when fonts or languages may have changed.
+     */
+    public static void clearMiniMessageWidthCache() {
+        MINI_MESSAGE_WIDTH_CACHE.clear();
     }
 
     /**

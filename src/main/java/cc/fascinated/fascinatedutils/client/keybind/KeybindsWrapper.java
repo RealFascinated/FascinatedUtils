@@ -5,11 +5,14 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.Identifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class KeybindsWrapper {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeybindsWrapper.class);
     public static final KeybindsWrapper INSTANCE = new KeybindsWrapper();
     public static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, AlumiteMod.MOD_ID));
 
@@ -20,8 +23,12 @@ public class KeybindsWrapper {
      */
     public static void dispatchRegisteredCallbacks() {
         for (Map.Entry<KeyMapping, Runnable> entry : INSTANCE.keybindCallbacks.entrySet()) {
-            if (entry.getKey().consumeClick()) {
-                entry.getValue().run();
+            try {
+                if (entry.getKey().consumeClick()) {
+                    entry.getValue().run();
+                }
+            } catch (Throwable throwable) {
+                LOGGER.error("Keybind callback failed for {}", entry.getKey().getName(), throwable);
             }
         }
     }

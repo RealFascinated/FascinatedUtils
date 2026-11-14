@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.mixin.turboparticles;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.SingleQuadParticle;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,7 +17,7 @@ public abstract class SingleQuadParticleMixin {
 
     @Inject(method = "extract", at = @At("HEAD"), cancellable = true)
     private void alumite$earlyCull(CallbackInfo ci) {
-        if (!SettingsRegistry.INSTANCE.getSettings().getTurboParticles().isEnabled()) {
+        if (!Client.TURBO_PARTICLES.isEnabled()) {
             return;
         }
 

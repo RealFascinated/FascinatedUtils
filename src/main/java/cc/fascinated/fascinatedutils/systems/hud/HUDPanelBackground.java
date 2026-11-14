@@ -1,13 +1,12 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.oldgui.renderer.RectCornerRoundMask;
-import cc.fascinated.fascinatedutils.oldgui.theme.UITheme;
+import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 
 public class HUDPanelBackground {
 
-    public static final float HORIZONTAL_PADDING = UITheme.PADDING_SM;
-    public static final float VERTICAL_PADDING = UITheme.PADDING_SM;
+    public static final float HORIZONTAL_PADDING = 6f;
+    public static final float VERTICAL_PADDING = 6f;
     public static final float LINE_GAP_PX = 1f;
     private static final int DOTTED_OUTLINE_COLOR = 0x80FFFFFF;
     private static final float DOTTED_OUTLINE_DOT_SIZE = 1f;

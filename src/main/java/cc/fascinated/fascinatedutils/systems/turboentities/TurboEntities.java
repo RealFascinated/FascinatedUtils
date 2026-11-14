@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.systems.turboentities;
 
 import cc.fascinated.fascinatedutils.common.culling.CullCounters;
 import cc.fascinated.fascinatedutils.common.culling.OcclusionProvider;
+import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
@@ -26,6 +27,7 @@ public class TurboEntities {
 
     // Rebuild entity + block-entity cull snapshots only every N client ticks to spread chunk/entity scan cost.
     private static final int CULL_SNAPSHOT_CAPTURE_RATE_TICKS = 5;
+    private static final PerfProbe.Section SNAPSHOT_SECTION = PerfProbe.INSTANCE.section("turbo_entities.snapshot");
 
     public final CullCounters itemFrameCounters = new CullCounters();
     public final CullCounters signCounters = new CullCounters();
@@ -102,8 +104,10 @@ public class TurboEntities {
         if (cullTask != null && enabled) {
             if (cullSnapshotTickCounter++ % CULL_SNAPSHOT_CAPTURE_RATE_TICKS == 0) {
                 Minecraft client = Minecraft.getInstance();
+                long snapshotStart = SNAPSHOT_SECTION.begin();
                 cullTask.publishEntityCullSnapshotFromWorld(client);
                 cullTask.publishBlockEntityCullSnapshotFromWorld(client, BLOCK_ENTITY_CULL_CHUNK_RADIUS_CAP);
+                SNAPSHOT_SECTION.end(snapshotStart);
             }
         }
     }

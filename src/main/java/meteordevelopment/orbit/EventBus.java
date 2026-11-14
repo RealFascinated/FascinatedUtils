@@ -3,6 +3,9 @@ package meteordevelopment.orbit;
 import meteordevelopment.orbit.listeners.IListener;
 import meteordevelopment.orbit.listeners.LambdaListener;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +15,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
 public class EventBus implements IEventBus {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventBus.class);
+
     private final Map<Object, List<IListener>> listenerCache = new ConcurrentHashMap<>();
     private final Map<Class<?>, List<IListener>> staticListenerCache = new ConcurrentHashMap<>();
     private final Map<Class<?>, List<IListener>> listenerMap = new ConcurrentHashMap<>();
@@ -36,7 +41,7 @@ public class EventBus implements IEventBus {
 
         if (listeners != null) {
             for (IListener listener : listeners) {
-                listener.call(event);
+                callSafely(listener, event);
             }
         }
 
@@ -51,7 +56,7 @@ public class EventBus implements IEventBus {
             event.setCancelled(false);
 
             for (IListener listener : listeners) {
-                listener.call(event);
+                callSafely(listener, event);
                 if (event.isCancelled()) {
                     break;
                 }
@@ -59,6 +64,14 @@ public class EventBus implements IEventBus {
         }
 
         return event;
+    }
+
+    private void callSafely(IListener listener, Object event) {
+        try {
+            listener.call(event);
+        } catch (Throwable throwable) {
+            LOGGER.error("Event listener failed while handling {}", event.getClass().getName(), throwable);
+        }
     }
 
     @Override
@@ -107,6 +120,7 @@ public class EventBus implements IEventBus {
     @Override
     public void unsubscribe(Object object) {
         unsubscribe(getListeners(object.getClass(), object), false);
+        listenerCache.keySet().removeIf(key -> key == object);
     }
 
     @Override
@@ -168,7 +182,12 @@ public class EventBus implements IEventBus {
     private void getListeners(List<IListener> listeners, Class<?> klass, Object object) {
         for (Method method : klass.getDeclaredMethods()) {
             if (isValid(method)) {
-                listeners.add(new LambdaListener(getLambdaFactory(klass), klass, object, method));
+                LambdaListener.Factory factory = getLambdaFactory(klass);
+                try {
+                    listeners.add(new LambdaListener(factory, klass, object, method));
+                } catch (Throwable throwable) {
+                    LOGGER.error("Skipping event listener {}#{}", klass.getName(), method.getName(), throwable);
+                }
             }
         }
 

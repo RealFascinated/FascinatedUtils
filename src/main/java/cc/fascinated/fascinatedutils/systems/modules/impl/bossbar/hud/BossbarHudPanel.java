@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.bossbar.hud;
 
 import cc.fascinated.fascinatedutils.mixin.bossbar.BossHealthOverlayEventsAccessor;
-import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.bossbar.BossbarModule;
@@ -52,7 +52,7 @@ public class BossbarHudPanel extends HudPanel {
 
         boolean barHidden = bossbarModule.bossbarHudHideBarGraphic();
         float barWidth = BossbarModule.BOSS_BAR_WIDTH;
-        float fontHeight = glRenderer.getFontHeight();
+        float fontHeight = glRenderer.fontHeight();
         float contentWidth = barWidth;
         for (BossRow row : rows) {
             contentWidth = Math.max(contentWidth, glRenderer.measureTextWidth(row.name()));

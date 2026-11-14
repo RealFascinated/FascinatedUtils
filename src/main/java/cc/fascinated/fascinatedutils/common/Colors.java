@@ -3,14 +3,13 @@ package cc.fascinated.fascinatedutils.common;
 import lombok.experimental.UtilityClass;
 import net.minecraft.util.Mth;
 
-import java.util.Locale;
-
 @UtilityClass
 public class Colors {
 
     public static final int GOOD_COLOR = 0x00E676;
     public static final int WARNING_COLOR = 0xD6CD30;
     public static final int BAD_COLOR = 0xE53935;
+    private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
 
     /**
      * Resolves a packed RGB color on the good→warning→bad gradient for a given percentage.
@@ -63,6 +62,13 @@ public class Colors {
      * @return a {@code #RRGGBB} string in English locale
      */
     public static String rgbHex(int argbColor) {
-        return String.format(Locale.ENGLISH, "#%06X", argbColor & 0xFFFFFF);
+        int rgb = argbColor & 0xFFFFFF;
+        char[] hexChars = new char[7];
+        hexChars[0] = '#';
+        for (int index = 6; index >= 1; index--) {
+            hexChars[index] = HEX_DIGITS[rgb & 0xF];
+            rgb >>>= 4;
+        }
+        return new String(hexChars);
     }
 }

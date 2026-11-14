@@ -33,7 +33,7 @@ public final class TimeUtils {
             return "Permanent";
         }
 
-        if (millis == 0L) {
+        if (millis <= 0L) {
             return "0ms";
         }
 
@@ -55,6 +55,9 @@ public final class TimeUtils {
     public static String timeAgo(long inputMillis, int maxUnits) {
         long now = System.currentTimeMillis();
         long remaining = now - inputMillis;
+        if (remaining <= 0L) {
+            return "just now";
+        }
         return formatDuration(remaining, maxUnits) + " ago";
     }
 
@@ -105,11 +108,20 @@ public final class TimeUtils {
         long millis = 0;
 
         while (matcher.find()) {
-            int amount = Integer.parseInt(matcher.group(1));
+            long amount;
+            try {
+                amount = Long.parseLong(matcher.group(1));
+            } catch (NumberFormatException exception) {
+                continue;
+            }
             String suffix = matcher.group(2);
             AlumiteTimeUnit timeUnit = AlumiteTimeUnit.fromSuffix(suffix);
             if (timeUnit != null) {
-                millis += amount * timeUnit.getMillis();
+                try {
+                    millis = Math.addExact(millis, Math.multiplyExact(amount, timeUnit.getMillis()));
+                } catch (ArithmeticException exception) {
+                    continue;
+                }
             }
         }
         return millis;

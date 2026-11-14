@@ -5,8 +5,6 @@ import cc.fascinated.fascinatedutils.systems.modules.impl.ParticleFilterModule;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,16 +19,9 @@ public class ParticleEngineMixin {
             if (!module.isEnabled()) {
                 return;
             }
-            Identifier key = BuiltInRegistries.PARTICLE_TYPE.getKey(options.getType());
-            if (key == null) {
-                return;
+            if (module.isParticleBlocked(options)) {
+                cir.setReturnValue(null);
             }
-            String id = key.getNamespace() + ":" + key.getPath();
-            module.getParticleToggles().stream().filter(toggle -> toggle.getNameProvider().get().equals(id)).findFirst().ifPresent(toggle -> {
-                if (!toggle.getValue()) {
-                    cir.setReturnValue(null);
-                }
-            });
         });
     }
 }

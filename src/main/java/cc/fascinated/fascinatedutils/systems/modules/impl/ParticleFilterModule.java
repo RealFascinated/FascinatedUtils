@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import lombok.Getter;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 
@@ -19,6 +20,21 @@ public class ParticleFilterModule extends Module {
     public ParticleFilterModule() {
         super("Particle Filter", ModuleCategory.GENERAL);
         initParticleToggles();
+    }
+
+    /**
+     * Checks whether the user has switched off the given particle's type.
+     *
+     * @param options the particle about to be created
+     * @return true when the particle should be suppressed
+     */
+    public boolean isParticleBlocked(ParticleOptions options) {
+        Identifier key = BuiltInRegistries.PARTICLE_TYPE.getKey(options.getType());
+        if (key == null) {
+            return false;
+        }
+        String id = key.getNamespace() + ":" + key.getPath();
+        return particleToggles.stream().filter(toggle -> toggle.getNameProvider().get().equals(id)).findFirst().map(toggle -> !toggle.getValue()).orElse(false);
     }
 
     private void initParticleToggles() {

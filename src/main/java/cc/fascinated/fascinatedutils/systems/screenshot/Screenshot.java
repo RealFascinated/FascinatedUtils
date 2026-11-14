@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.screenshot;
 
-import cc.fascinated.fascinatedutils.oldgui.toast.Toast;
+import cc.fascinated.fascinatedutils.gui.toast.Toast;
 import cc.fascinated.fascinatedutils.systems.TextureManager;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.Client;

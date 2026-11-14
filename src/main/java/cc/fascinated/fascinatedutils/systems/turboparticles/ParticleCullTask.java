@@ -1,44 +1,44 @@
 package cc.fascinated.fascinatedutils.systems.turboparticles;
 
+import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
+import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
+import cc.fascinated.fascinatedutils.systems.turboentities.CullSnapshotBuffers;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
 import com.logisticscraft.occlusionculling.util.Vec3d;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.ParticleGroup;
 import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Getter
 public class ParticleCullTask implements Runnable {
     private static final int SLEEP_DELAY = 10;
-    private static final int PARTICLE_BUFFER_CAPACITY = 8192;
     private static final double PARTICLE_FORCE_CULL_DISTANCE_SQ = 64.0 * 64.0;
+    private static final PerfProbe.Section PUBLISH_SECTION = PerfProbe.INSTANCE.section("turbo_particles.publish");
+    private static final PerfProbe.Section CULL_PASS_SECTION = PerfProbe.INSTANCE.section("turbo_particles.cull_pass");
 
     private final OcclusionCullingInstance culling;
 
     private final Vec3d aabbMin = new Vec3d(0, 0, 0);
     private final Vec3d aabbMax = new Vec3d(0, 0, 0);
     private final Vec3d cameraVec3d = new Vec3d(0, 0, 0);
-    private final ArrayList<Particle> particlePublishScratch = new ArrayList<>(PARTICLE_BUFFER_CAPACITY);
+    private final CullSnapshotBuffers<Particle> particleSnapshots = new CullSnapshotBuffers<>();
     private volatile boolean running = true;
     private volatile boolean requestCull = false;
     @Setter
     private volatile boolean inGame = false;
     @Setter
     private volatile Vec3 camera = Vec3.ZERO;
-    /**
-     * Immutable hand-off from the main thread.
-     * The cull thread only reads this reference once per pass.
-     */
-    private volatile List<Particle> particleCullSnapshot = List.of();
-
     @Setter
     private volatile Frustum frustum = null;
 
@@ -73,19 +73,14 @@ public class ParticleCullTask implements Runnable {
                 Vec3 cameraSnap = camera;
                 if (requestCull || !cameraSnap.equals(lastCameraPos)) {
                     requestCull = false;
-                    lastCameraPos = cameraSnap;
-                    cameraVec3d.set(cameraSnap.x, cameraSnap.y, cameraSnap.z);
-
-                    long passStart = System.nanoTime();
-                    culling.resetCache();
-
-                    cullParticles();
-
-                    lastPassNanos = System.nanoTime() - passStart;
+                    cullPass(cameraSnap);
                 }
             } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
                 break;
+            } catch (Exception exception) {
+                // A failed pass must not end the thread, or every particle keeps its last culled flag forever.
+                Client.LOG.warn("Particle cull pass failed: {}", exception.toString());
             }
         }
     }
@@ -94,18 +89,55 @@ public class ParticleCullTask implements Runnable {
      * To be called from the Main Thread (typically in a mixin or client tick).
      * Copies particles currently active in the ParticleManager.
      */
-    public void publishParticleCullSnapshot(Iterable<Particle> particles) {
-        particlePublishScratch.clear();
+    private void collectCullable(Iterable<? extends Particle> particles, ArrayList<Particle> target) {
         for (Particle particle : particles) {
-            if (particle == null) {
-                continue;
-            }
             // Only add particles that we can actually cull
             if (particle instanceof SingleQuadParticle && particle instanceof Cullable) {
-                particlePublishScratch.add(particle);
+                target.add(particle);
             }
         }
-        this.particleCullSnapshot = List.copyOf(particlePublishScratch);
+    }
+
+    /**
+     * Runs one occlusion and frustum pass over the published particle snapshot.
+     *
+     * @param cameraPosition the camera position to cull from
+     */
+    public void cullPass(Vec3 cameraPosition) {
+        lastCameraPos = cameraPosition;
+        cameraVec3d.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+        long passStart = System.nanoTime();
+        culling.resetCache();
+
+        List<Particle> particles = particleSnapshots.acquire();
+        try {
+            cullParticles(particles);
+        } finally {
+            particleSnapshots.release();
+        }
+
+        lastPassNanos = System.nanoTime() - passStart;
+        CULL_PASS_SECTION.record(lastPassNanos);
+    }
+
+    /**
+     * Gathers every particle from the engine's render groups and publishes them as the next cull snapshot.
+     * Called from the main thread before particle extraction.
+     *
+     * @param groups the particle engine's render groups
+     */
+    public void publishParticleCullSnapshotFromGroups(Collection<ParticleGroup<?>> groups) {
+        long publishStart = PUBLISH_SECTION.begin();
+        ArrayList<Particle> snapshot = particleSnapshots.beginPublish();
+        for (ParticleGroup<?> group : groups) {
+            try {
+                collectCullable(group.getAll(), snapshot);
+            } catch (Exception ignored) {
+            }
+        }
+        particleSnapshots.publish(snapshot);
+        PUBLISH_SECTION.end(publishStart);
     }
 
     public void requestCull() {
@@ -116,11 +148,11 @@ public class ParticleCullTask implements Runnable {
         this.running = false;
     }
 
-    private void cullParticles() {
+    private void cullParticles(List<Particle> snapshot) {
         int considered = 0;
         int culled = 0;
 
-        for (Particle particle : this.particleCullSnapshot) {
+        for (Particle particle : snapshot) {
             if (!(particle instanceof Cullable cullable)) {
                 continue;
             }

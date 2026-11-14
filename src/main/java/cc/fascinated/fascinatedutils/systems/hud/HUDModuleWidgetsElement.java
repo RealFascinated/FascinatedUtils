@@ -1,11 +1,8 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import cc.fascinated.fascinatedutils.debug.perf.PerfProbe;
-import cc.fascinated.fascinatedutils.gui2.core.UIScale;
-import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.oldgui.screens.ModSettingsScreen;
-import cc.fascinated.fascinatedutils.oldgui.themes.FascinatedGuiTheme;
-import cc.fascinated.fascinatedutils.oldgui.toast.ToastManager;
+import cc.fascinated.fascinatedutils.gui.core.UIScale;
+import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.toast.ToastManager;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -27,13 +24,12 @@ public class HUDModuleWidgetsElement implements HudElement {
 
     @Override
     public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, @NonNull DeltaTracker tickCounter) {
-        PerfProbe.INSTANCE.markFrame();
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.screen instanceof DebugOptionsScreen || minecraft.screen instanceof ModSettingsScreen) {
+        if (minecraft.screen instanceof DebugOptionsScreen) {
             return;
         }
 
-        GuiRenderer guiRenderer = new GuiRenderer(graphics, FascinatedGuiTheme.INSTANCE);
+        GuiRenderer guiRenderer = new GuiRenderer(graphics);
         ProfilerFiller profiler = Profiler.get();
         profiler.push("futils_hud_elements");
         float deltaSeconds = tickCounter.getGameTimeDeltaTicks() / 20f;
@@ -44,14 +40,14 @@ public class HUDModuleWidgetsElement implements HudElement {
         float canvasHeight = HudLayoutCanvas.height();
         float uiWidth = UIScale.uiWidth();
         float uiHeight = UIScale.uiHeight();
-        guiRenderer.begin(canvasWidth, canvasHeight);
+        guiRenderer.beginFrame(canvasWidth, canvasHeight);
         hudManager.renderHUD(guiRenderer, canvasWidth, canvasHeight, Mth.clamp(deltaSeconds, 0f, 1f), false);
         // Toasts are rendered after the screen by GameRendererMixin when a WidgetScreen is open,
         // so only render them here when no screen is obscuring them.
-        if (!(minecraft.screen instanceof cc.fascinated.fascinatedutils.oldgui.screens.WidgetScreen)) {
+        if (!(minecraft.screen instanceof cc.fascinated.fascinatedutils.gui.screens.WidgetScreen)) {
             ToastManager.INSTANCE.render(guiRenderer, uiWidth, uiHeight, UIScale.uiPointerX(), UIScale.uiPointerY(), deltaSeconds);
         }
-        guiRenderer.end();
+        guiRenderer.endFrame();
         profiler.pop();
     }
 }

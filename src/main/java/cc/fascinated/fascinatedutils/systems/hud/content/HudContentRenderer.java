@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.hud.content;
 
-import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HUDPanelBackground;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
@@ -33,7 +33,7 @@ public class HudContentRenderer {
     private static Runnable prepareTextLines(GuiRenderer glRenderer, List<String> rawLines, HudHostModule host, HudPanel panel, boolean editorMode) {
         List<String> lines = rawLines == null || rawLines.isEmpty() ? List.of("") : rawLines;
 
-        float lineHeight = glRenderer.getFontHeight();
+        float lineHeight = glRenderer.fontHeight();
         float maxLineWidth = 0f;
         float[] lineWidths = new float[lines.size()];
         for (int index = 0; index < lines.size(); index++) {
@@ -88,7 +88,7 @@ public class HudContentRenderer {
 
         float horizontalPadding = host.getPaddingValue();
         float verticalPadding = host.getPaddingValue();
-        float lineHeight = glRenderer.getFontHeight();
+        float lineHeight = glRenderer.fontHeight();
         float itemIconSize = 16f;
         float iconTextGap = 4f;
         float itemGapPx = 2f;

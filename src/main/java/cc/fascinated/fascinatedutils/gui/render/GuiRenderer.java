@@ -1,0 +1,496 @@
+package cc.fascinated.fascinatedutils.gui.render;
+
+import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
+import cc.fascinated.fascinatedutils.gui.theme.UiThemeRepository;
+import cc.fascinated.fascinatedutils.renderer.MeshBuilder;
+import cc.fascinated.fascinatedutils.renderer.Renderer2D;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.navigation.ScreenPosition;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import org.jspecify.annotations.Nullable;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
+
+/**
+ * The single GUI renderer: nested clips with segment flushes, deferred text, alpha and transform stacks, click
+ * regions, and a low-level {@link Renderer2D} for batched geometry and immediate chrome.
+ *
+ * <p>Deferred text keeps the logical {@code (x, y)} it was queued with ({@code y} is a layout line top) and is drawn
+ * when the current segment flushes. Pose transforms that must apply to queued text have to still be on the stack when
+ * {@link #endRenderSegment()}, {@link #flushText()} or {@link #endFrame()} runs.
+ */
+public class GuiRenderer {
+    private static final List<ClickRegion> FRAME_CLICK_REGIONS = new ArrayList<>();
+    private static ClickRegion pressedClickRegion = null;
+
+    private final GuiGraphicsExtractor drawContext;
+    private final Minecraft minecraftClient;
+    private final Renderer2D backend;
+    private final Deque<ClipLayer> clipStack = new ArrayDeque<>();
+    private final Deque<Float> alphaStack = new ArrayDeque<>();
+    private final List<QueuedTextDraw> queuedTextDraws = new ArrayList<>();
+    private float logicalToVanillaScaleX = 1f;
+    private float logicalToVanillaScaleY = 1f;
+    private float pointerX = Float.NaN;
+    private float pointerY = Float.NaN;
+
+    public GuiRenderer(GuiGraphicsExtractor drawContext) {
+        this.drawContext = drawContext;
+        this.minecraftClient = Minecraft.getInstance();
+        this.backend = new Renderer2D(drawContext, this::currentScissorArea);
+    }
+
+    /**
+     * @return the active UI theme
+     */
+    public UiTheme theme() {
+        return UiThemeRepository.get();
+    }
+
+    /**
+     * Begins a frame: batch scope, first render segment, and a root clip covering the logical area.
+     *
+     * @param logicalWidth  logical width of the root clip in pixels
+     * @param logicalHeight logical height of the root clip in pixels
+     */
+    public void beginFrame(float logicalWidth, float logicalHeight) {
+        pointerX = Float.NaN;
+        pointerY = Float.NaN;
+        FRAME_CLICK_REGIONS.clear();
+        float vanillaWidth = (float) minecraftClient.getWindow().getGuiScaledWidth();
+        float vanillaHeight = (float) minecraftClient.getWindow().getGuiScaledHeight();
+        logicalToVanillaScaleX = vanillaWidth / Math.max(1f, logicalWidth);
+        logicalToVanillaScaleY = vanillaHeight / Math.max(1f, logicalHeight);
+
+        drawContext.pose().pushMatrix();
+        drawContext.pose().identity();
+        drawContext.pose().scale(logicalToVanillaScaleX, logicalToVanillaScaleY);
+
+        MeshBuilder.INSTANCE.beginFrame(drawContext, minecraftClient);
+        MeshBuilder.INSTANCE.beginSegment(drawContext);
+
+        ClipLayer rootLayer = new ClipLayer(0, 0, logicalWidth, logicalHeight);
+        clipStack.push(rootLayer);
+        alphaStack.clear();
+        alphaStack.push(1f);
+        backend.setMultiplyAlpha(1f);
+        enableScissor(rootLayer);
+    }
+
+    /**
+     * Ends the frame: flushes the last segment, pops the root clip and closes the mesh frame.
+     */
+    public void endFrame() {
+        flushCurrentSegment();
+        if (!clipStack.isEmpty()) {
+            clipStack.pop();
+        }
+        drawContext.disableScissor();
+        alphaStack.clear();
+        backend.setMultiplyAlpha(1f);
+        MeshBuilder.INSTANCE.endFrame(drawContext);
+        drawContext.pose().popMatrix();
+    }
+
+    /**
+     * Flushes batched geometry for the current segment, draws its deferred text, then reopens a mesh segment.
+     */
+    public void endRenderSegment() {
+        flushCurrentSegment();
+    }
+
+    public void pushClip(ClipRegion clipRegion) {
+        pushClip(clipRegion.positionX(), clipRegion.positionY(), clipRegion.width(), clipRegion.height());
+    }
+
+    public void pushClip(float positionX, float positionY, float width, float height) {
+        ClipLayer nextLayer;
+        if (!clipStack.isEmpty()) {
+            nextLayer = intersect(clipStack.peek(), positionX, positionY, width, height);
+            flushCurrentSegment();
+            drawContext.nextStratum();
+        }
+        else {
+            nextLayer = new ClipLayer(positionX, positionY, width, height);
+        }
+        clipStack.push(nextLayer);
+        enableScissor(nextLayer);
+        MeshBuilder.INSTANCE.beginSegment(drawContext);
+    }
+
+    public void popClip() {
+        if (clipStack.isEmpty()) {
+            return;
+        }
+        flushCurrentSegment();
+        drawContext.nextStratum();
+        clipStack.pop();
+        drawContext.disableScissor();
+        MeshBuilder.INSTANCE.beginSegment(drawContext);
+    }
+
+    public void pushAlpha(float alphaFactor) {
+        float parentAlpha = alphaStack.isEmpty() ? 1f : alphaStack.peek();
+        float nextAlpha = Mth.clamp(parentAlpha * alphaFactor, 0f, 1f);
+        alphaStack.push(nextAlpha);
+        backend.setMultiplyAlpha(nextAlpha);
+    }
+
+    public void popAlpha() {
+        if (alphaStack.size() <= 1) {
+            return;
+        }
+        alphaStack.pop();
+        backend.setMultiplyAlpha(alphaStack.peek());
+    }
+
+    public void setMultiplyAlpha(float factor) {
+        backend.setMultiplyAlpha(factor);
+    }
+
+    /**
+     * Separate alpha multipliers for geometry and text (shell fades).
+     *
+     * @param geometryFactor multiplier for fills and textures
+     * @param textFactor     multiplier for deferred text draws
+     */
+    public void setMultiplyAlpha(float geometryFactor, float textFactor) {
+        backend.setMultiplyAlpha(geometryFactor, textFactor);
+    }
+
+    public void resetMultiplyAlpha() {
+        backend.resetMultiplyAlpha();
+    }
+
+    public void pushTransform(float translateX, float translateY, float scaleX, float scaleY) {
+        flushCurrentSegment();
+        drawContext.pose().pushMatrix();
+        drawContext.pose().translate(translateX, translateY);
+        drawContext.pose().scale(scaleX, scaleY);
+    }
+
+    public void popTransform() {
+        flushCurrentSegment();
+        drawContext.pose().popMatrix();
+    }
+
+    public void pushTranslate(float offsetX, float offsetY) {
+        backend.pushTranslate(offsetX, offsetY);
+    }
+
+    public void popTranslate() {
+        backend.popTranslate();
+    }
+
+    public void pushScale(float scale) {
+        backend.pushScale(scale);
+    }
+
+    public void popScale() {
+        backend.popScale();
+    }
+
+    public void drawRect(float positionX, float positionY, float width, float height, int argbColor) {
+        backend.drawRect(positionX, positionY, width, height, argbColor);
+    }
+
+    public void drawLine(float startX, float startY, float endX, float endY, float thickness, int argbColor) {
+        backend.drawLine(startX, startY, endX, endY, thickness, argbColor);
+    }
+
+    public void drawBorder(float positionX, float positionY, float width, float height, float thickness, int argbColor) {
+        backend.drawBorder(positionX, positionY, width, height, thickness, argbColor);
+    }
+
+    public void drawRoundedRect(float positionX, float positionY, float width, float height, float cornerRadius, int argbColor) {
+        backend.fillRoundedRect(positionX, positionY, width, height, cornerRadius, argbColor, RectCornerRoundMask.ALL);
+    }
+
+    public void fillRoundedRect(float positionX, float positionY, float width, float height, float cornerRadius, int fillArgb, int cornerRoundMask) {
+        backend.fillRoundedRect(positionX, positionY, width, height, cornerRadius, fillArgb, cornerRoundMask);
+    }
+
+    public void drawRoundedRectFrame(float positionX, float positionY, float width, float height, float cornerRadius, int borderArgbColor, int fillArgbColor, float borderThickness) {
+        if (fillArgbColor != 0) {
+            backend.fillRoundedRect(positionX, positionY, width, height, cornerRadius, fillArgbColor, RectCornerRoundMask.ALL);
+        }
+        backend.fillRoundedRectBorderRing(positionX, positionY, width, height, cornerRadius, borderThickness, borderArgbColor, RectCornerRoundMask.ALL);
+    }
+
+    public void fillRoundedRectFrame(float positionX, float positionY, float width, float height, float cornerRadius, int borderArgb, int fillArgb, float borderThicknessX, float borderThicknessY, int cornerRoundMask) {
+        backend.fillRoundedRectFrame(positionX, positionY, width, height, cornerRadius, borderArgb, fillArgb, borderThicknessX, borderThicknessY, cornerRoundMask);
+    }
+
+    /**
+     * Draws only an outer border band (no inner fill), for stacking on top of a separate rounded fill pass.
+     *
+     * @param positionX       logical left of the outer bounds
+     * @param positionY       logical top of the outer bounds
+     * @param width           logical width of the outer bounds
+     * @param height          logical height of the outer bounds
+     * @param cornerRadius    logical corner radius in pixels
+     * @param ringStrokePx    stroke width, scaled to framebuffer pixels using the current matrix stack
+     * @param borderArgb      packed ARGB tint for the ring
+     * @param cornerRoundMask which corners are rounded
+     */
+    public void fillRoundedRectBorderRing(float positionX, float positionY, float width, float height, float cornerRadius, float ringStrokePx, int borderArgb, int cornerRoundMask) {
+        backend.fillRoundedRectBorderRing(positionX, positionY, width, height, cornerRadius, ringStrokePx, borderArgb, cornerRoundMask);
+    }
+
+    public void drawVerticalGradient(float positionX, float positionY, float width, float height, int topArgbColor, int bottomArgbColor) {
+        backend.fillGradientVertical(positionX, positionY, width, height, topArgbColor, bottomArgbColor);
+    }
+
+    public void drawText(String text, float positionX, float positionY, int argbColor, boolean shadow, boolean bold) {
+        queuedTextDraws.add(new QueuedTextDraw(text, null, positionX, positionY, backend.withQueuedTextColor(argbColor), shadow, bold));
+    }
+
+    public void drawCenteredText(String text, float centerX, float positionY, int argbColor, boolean shadow, boolean bold) {
+        float left = centerX - backend.measureTextWidth(text, bold) * 0.5f;
+        queuedTextDraws.add(new QueuedTextDraw(text, null, left, positionY, backend.withQueuedTextColor(argbColor), shadow, bold));
+    }
+
+    public void drawMiniMessageText(String miniMessageText, float positionX, float positionY, boolean shadow) {
+        queuedTextDraws.add(new QueuedTextDraw(null, backend.parseMiniMessage(miniMessageText), positionX, positionY, backend.withQueuedTextColor(0xFFFFFFFF), shadow, false));
+    }
+
+    public int measureMiniMessageTextWidth(String miniMessageText) {
+        return backend.measureMiniMessageTextWidth(miniMessageText);
+    }
+
+    /**
+     * Draws a vanilla {@link Component} immediately. Call {@link #endRenderSegment()} once before the first of these
+     * if batched mesh was queued in the same segment.
+     *
+     * @param text      rich text to draw
+     * @param positionX left origin in logical pixels
+     * @param positionY layout line top in logical pixels
+     * @param color     packed ARGB text color
+     * @param shadow    whether to draw vanilla text shadow
+     */
+    public void drawComponentText(Component text, float positionX, float positionY, int color, boolean shadow) {
+        backend.drawTextImmediate(text, positionX, positionY, color, shadow);
+    }
+
+    /**
+     * Draws all queued text now, for call sites that need text layered before later geometry.
+     */
+    public void flushText() {
+        if (queuedTextDraws.isEmpty()) {
+            return;
+        }
+        MeshBuilder.INSTANCE.endSegment(drawContext);
+        drawQueuedText();
+        drawContext.nextStratum();
+        MeshBuilder.INSTANCE.beginSegment(drawContext);
+    }
+
+    public int measureTextWidth(String text, boolean bold) {
+        return backend.measureTextWidth(text, bold);
+    }
+
+    public int measureTextWidth(Component text) {
+        return backend.measureTextWidth(text);
+    }
+
+    public int fontHeight() {
+        return backend.getFontHeight();
+    }
+
+    public int fontCapHeight() {
+        return Math.max(1, fontHeight() - 1);
+    }
+
+    public void drawTexture(Identifier textureId, float positionX, float positionY, float width, float height, int tintArgb) {
+        backend.drawTexture(textureId, positionX, positionY, width, height, tintArgb);
+    }
+
+    public void drawRoundedTexture(Identifier textureId, float positionX, float positionY, float width, float height, float cornerRadius, int tintArgb) {
+        backend.drawRoundedTexture(textureId, positionX, positionY, width, height, cornerRadius, tintArgb);
+    }
+
+    public void drawSprite(Identifier spriteId, float positionX, float positionY, float width, float height, int tintArgb) {
+        backend.drawSprite(spriteId, positionX, positionY, width, height, tintArgb);
+    }
+
+    public void drawSprite(Identifier spriteId, int textureWidth, int textureHeight, int sourceX, int sourceY, float positionX, float positionY, float width, float height) {
+        backend.drawSprite(spriteId, textureWidth, textureHeight, sourceX, sourceY, positionX, positionY, width, height);
+    }
+
+    /**
+     * Draws a GUI item stack with vanilla overlays (immediate; flushes batched geometry first).
+     *
+     * @param stack     item stack to draw
+     * @param positionX left origin in logical pixels
+     * @param positionY top origin in logical pixels
+     */
+    public void drawGuiItem(ItemStack stack, float positionX, float positionY) {
+        backend.drawGuiItem(stack, positionX, positionY);
+    }
+
+    /**
+     * Draws a GUI item for a holder entity (immediate; flushes batched geometry first).
+     *
+     * @param holder    living entity for glint seed
+     * @param stack     item stack to draw
+     * @param positionX left origin in logical pixels
+     * @param positionY top origin in logical pixels
+     */
+    public void drawGuiItem(LivingEntity holder, ItemStack stack, float positionX, float positionY) {
+        backend.drawGuiItem(holder, stack, positionX, positionY);
+    }
+
+    @Nullable
+    public ClipRegion currentClip() {
+        if (clipStack.isEmpty()) {
+            return null;
+        }
+        ClipLayer top = clipStack.peek();
+        int left = Mth.floor(top.positionX);
+        int topEdge = Mth.floor(top.positionY);
+        return new ClipRegion(left, topEdge, Mth.ceil(top.positionX + top.width) - left, Mth.ceil(top.positionY + top.height) - topEdge);
+    }
+
+    public void setPointer(float x, float y) {
+        pointerX = x;
+        pointerY = y;
+    }
+
+    public float pointerX() {
+        return pointerX;
+    }
+
+    public float pointerY() {
+        return pointerY;
+    }
+
+    public void addClickRegion(int x, int y, int w, int h, Runnable callback) {
+        FRAME_CLICK_REGIONS.add(new ClickRegion(x, y, w, h, callback));
+    }
+
+    /**
+     * Records whichever click region from the most recent frame is under the pointer at press
+     * time, without firing its callback. Call this during {@code mouseClicked} (press).
+     *
+     * @param pointerX logical X of the press
+     * @param pointerY logical Y of the press
+     * @param button   GLFW mouse button; only button {@code 0} (primary) is checked
+     *
+     * @return {@code true} if a region was found under the pointer
+     */
+    public static boolean recordPressedRegion(float pointerX, float pointerY, int button) {
+        if (button != 0) {
+            return false;
+        }
+        for (ClickRegion region : FRAME_CLICK_REGIONS) {
+            if (pointerX >= region.x && pointerX < region.x + region.w
+                    && pointerY >= region.y && pointerY < region.y + region.h) {
+                pressedClickRegion = region;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Fires the callback of the region recorded by {@link #recordPressedRegion} if the release
+     * pointer is still within that region's bounds, then clears the record. Call this during
+     * {@code mouseReleased} (release).
+     *
+     * @param pointerX logical X of the release
+     * @param pointerY logical Y of the release
+     *
+     * @return {@code true} if a region was fired
+     */
+    public static boolean fireAndClearPressedRegion(float pointerX, float pointerY) {
+        ClickRegion pressed = pressedClickRegion;
+        pressedClickRegion = null;
+        if (pressed == null) {
+            return false;
+        }
+        if (pointerX >= pressed.x && pointerX < pressed.x + pressed.w
+                && pointerY >= pressed.y && pointerY < pressed.y + pressed.h) {
+            pressed.callback().run();
+            return true;
+        }
+        return false;
+    }
+
+    private record ClickRegion(int x, int y, int w, int h, Runnable callback) {}
+
+    private void flushCurrentSegment() {
+        MeshBuilder.INSTANCE.endSegment(drawContext);
+        drawQueuedText();
+        MeshBuilder.INSTANCE.beginSegment(drawContext);
+    }
+
+    private void drawQueuedText() {
+        for (QueuedTextDraw queued : queuedTextDraws) {
+            if (queued.component() != null) {
+                backend.drawTextImmediate(queued.component(), queued.positionX(), queued.positionY(), queued.argbColor(), queued.shadow());
+            }
+            else {
+                backend.drawTextImmediate(queued.text(), queued.positionX(), queued.positionY(), queued.argbColor(), queued.shadow(), queued.bold());
+            }
+        }
+        queuedTextDraws.clear();
+    }
+
+    private void enableScissor(ClipLayer clipLayer) {
+        // The graphics context transforms scissor rectangles by the current pose, which already scales logical to
+        // vanilla units, so the rectangle is passed in logical units. Converting it here as well would shrink every
+        // clip toward the origin whenever the pose scale is not 1 (any GUI scale other than 2x the screen scale).
+        int x0 = Mth.floor(clipLayer.positionX);
+        int y0 = Mth.floor(clipLayer.positionY);
+        int x1 = Math.max(x0, Mth.ceil(clipLayer.positionX + clipLayer.width));
+        int y1 = Math.max(y0, Mth.ceil(clipLayer.positionY + clipLayer.height));
+        drawContext.enableScissor(x0, y0, x1, y1);
+    }
+
+    @Nullable
+    private ScreenRectangle currentScissorArea() {
+        if (clipStack.isEmpty()) {
+            return null;
+        }
+        ClipLayer clipLayer = clipStack.peek();
+        int scaledX = Mth.floor(clipLayer.positionX * logicalToVanillaScaleX);
+        int scaledY = Mth.floor(clipLayer.positionY * logicalToVanillaScaleY);
+        int scaledRight = Math.max(scaledX, Mth.ceil((clipLayer.positionX + clipLayer.width) * logicalToVanillaScaleX));
+        int scaledBottom = Math.max(scaledY, Mth.ceil((clipLayer.positionY + clipLayer.height) * logicalToVanillaScaleY));
+        return new ScreenRectangle(new ScreenPosition(scaledX, scaledY), Math.max(0, scaledRight - scaledX), Math.max(0, scaledBottom - scaledY));
+    }
+
+    private static ClipLayer intersect(ClipLayer parentLayer, float positionX, float positionY, float width, float height) {
+        float outputX = Math.max(positionX, parentLayer.positionX);
+        float outputY = Math.max(positionY, parentLayer.positionY);
+        float outputRight = Math.min(positionX + width, parentLayer.positionX + parentLayer.width);
+        float outputBottom = Math.min(positionY + height, parentLayer.positionY + parentLayer.height);
+        return new ClipLayer(outputX, outputY, Math.max(0f, outputRight - outputX), Math.max(0f, outputBottom - outputY));
+    }
+
+    private static class ClipLayer {
+        private final float positionX;
+        private final float positionY;
+        private final float width;
+        private final float height;
+
+        private ClipLayer(float positionX, float positionY, float width, float height) {
+            this.positionX = positionX;
+            this.positionY = positionY;
+            this.width = Math.max(0f, width);
+            this.height = Math.max(0f, height);
+        }
+    }
+
+    private record QueuedTextDraw(String text, Component component, float positionX, float positionY, int argbColor, boolean shadow, boolean bold) {
+    }
+}

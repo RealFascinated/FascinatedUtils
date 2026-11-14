@@ -6,7 +6,7 @@ import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.event.impl.PlayerDeathEvent;
-import cc.fascinated.fascinatedutils.gui2.screens.impl.waypoint.WaypointsScreen;
+import cc.fascinated.fascinatedutils.gui.screens.impl.waypoint.WaypointsScreen;
 import cc.fascinated.fascinatedutils.systems.waypoint.WaypointRepository;
 import cc.fascinated.fascinatedutils.systems.waypoint.WaypointType;
 import cc.fascinated.fascinatedutils.systems.modules.Module;

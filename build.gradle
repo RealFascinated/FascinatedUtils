@@ -115,10 +115,11 @@ publishing {
 
 // Forward perf-suite properties from the Gradle command line to the game, e.g.
 // ./gradlew runClient -Dalumite.perf.run=after -Dalumite.perf.compare=before -Dalumite.perf.exit=true
+// ./gradlew runClient -Dalumite.perf.world=after -Dalumite.perf.exit=true
 tasks.matching { it.name == 'runClient' }.configureEach { task ->
-    ['alumite.perf.run', 'alumite.perf.filter', 'alumite.perf.compare', 'alumite.perf.exit'].each { key ->
-        if (System.getProperty(key) != null) {
-            task.systemProperty key, System.getProperty(key)
+    System.properties.each { key, value ->
+        if (key.toString().startsWith('alumite.perf.')) {
+            task.systemProperty key.toString(), value.toString()
         }
     }
 }

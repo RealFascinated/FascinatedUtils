@@ -33,7 +33,8 @@ public record FascinatedConfig(UUID activeProfileId,
         if (root.has("active_profile_id")) {
             try {
                 deserializedActiveProfileId = UUID.fromString(root.get("active_profile_id").getAsString());
-            } catch (IllegalArgumentException ignored) {
+            } catch (RuntimeException ignored) {
+                // Wrong JSON type or malformed UUID: fall back to no active profile.
             }
         }
         JsonElement settingsElement = root.get("settings");

@@ -24,6 +24,15 @@ public class TurboParticles {
 
     private volatile boolean previousEnabledState = false;
 
+    private volatile boolean enabledMirror = false;
+
+    /**
+     * Fast gate for mixins: avoids walking {@link SettingsRegistry} for every particle; refreshed each client tick.
+     */
+    public boolean isEnabled() {
+        return enabledMirror;
+    }
+
     public void frameSnapshot() {
         particleCounters.snapshotAndReset();
     }
@@ -35,6 +44,7 @@ public class TurboParticles {
     @EventHandler
     private void alumite$onClientStarted(ClientStartedEvent event) {
         previousEnabledState = SettingsRegistry.INSTANCE.getSettings().getTurboParticles().isEnabled();
+        enabledMirror = previousEnabledState;
         if (previousEnabledState) {
             startParticleCullThread();
         }
@@ -43,6 +53,7 @@ public class TurboParticles {
     @EventHandler
     private void alumite$onClientTick(ClientTickEvent event) {
         boolean enabled = SettingsRegistry.INSTANCE.getSettings().getTurboParticles().isEnabled();
+        enabledMirror = enabled;
         if (enabled == previousEnabledState) {
             return;
         }
@@ -58,6 +69,7 @@ public class TurboParticles {
 
     @EventHandler
     private void alumite$onClientStopping(ClientStoppingEvent event) {
+        enabledMirror = false;
         stopParticleCullThread();
     }
 

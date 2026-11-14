@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin;
 
-import cc.fascinated.fascinatedutils.gui2.screens.impl.ActionsOverlayScreen;
+import cc.fascinated.fascinatedutils.gui.screens.impl.ActionsOverlayScreen;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.input.MouseButtonEvent;

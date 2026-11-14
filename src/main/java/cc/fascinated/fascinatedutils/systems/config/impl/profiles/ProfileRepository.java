@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.config.impl.profiles;
 
 import cc.fascinated.fascinatedutils.client.Client;
+import cc.fascinated.fascinatedutils.debug.perf.PerfMode;
 import cc.fascinated.fascinatedutils.systems.config.ConfigManager;
 import cc.fascinated.fascinatedutils.systems.config.impl.config.FascinatedConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
@@ -67,15 +68,24 @@ public class ProfileRepository {
         if (activeProfile.isEmpty()) {
             return;
         }
+        Profile profile = activeProfile.get();
+        profile.setSettings(captureModuleSettings());
+        saveProfile(profile);
+    }
+
+    /**
+     * Serialises every module's settings, each stamped with its {@code version} field, as stored in a profile.
+     *
+     * @return one settings blob per module key
+     */
+    public JsonObject captureModuleSettings() {
         JsonObject capturedModules = new JsonObject();
         for (Module module : ModuleRegistry.INSTANCE.getModules()) {
             JsonObject blob = module.serialize(gson).getAsJsonObject();
             blob.addProperty("version", module.getVersion());
             capturedModules.add(module.getModuleKey(), blob);
         }
-        Profile profile = activeProfile.get();
-        profile.setSettings(capturedModules);
-        saveProfile(profile);
+        return capturedModules;
     }
 
     public void saveModule(Module module) {
@@ -98,6 +108,11 @@ public class ProfileRepository {
     public void refreshCache() {
         cachedProfiles = loadAllFromDisk();
         UUID activeId = getActiveProfileId().orElse(null);
+        if (activeId != null && cachedProfiles.stream().noneMatch(profile -> profile.getProfileId().equals(activeId)) && Files.exists(profilesDirectory.resolve(activeId + ".json"))) {
+            // The active profile file exists but failed to load; keep the file and the active id untouched.
+            Client.LOG.error("Active profile {} exists on disk but could not be loaded; leaving it untouched", activeId);
+            return;
+        }
         if (!cachedProfiles.isEmpty() && (activeId == null || cachedProfiles.stream().noneMatch(profile -> profile.getProfileId().equals(activeId)))) {
             setActiveProfileId(cachedProfiles.getFirst().getProfileId());
         }
@@ -211,9 +226,22 @@ public class ProfileRepository {
     }
 
     public void saveProfile(Profile profile) {
+        if (PerfMode.isWorldScenario()) {
+            return;
+        }
+        writeProfile(profile, profilesDirectory);
+    }
+
+    /**
+     * Writes a profile atomically into a directory (temporary file, then move into place).
+     *
+     * @param profile   the profile to write
+     * @param directory the directory that holds profile files
+     */
+    public void writeProfile(Profile profile, Path directory) {
         try {
-            Files.createDirectories(profilesDirectory);
-            Path profilePath = profile.resolveFilePath(profilesDirectory);
+            Files.createDirectories(directory);
+            Path profilePath = profile.resolveFilePath(directory);
             Path temporaryPath = profilePath.resolveSibling(profilePath.getFileName() + ".tmp");
             Files.writeString(temporaryPath, gson.toJson(profile.serialize(gson)), StandardCharsets.UTF_8);
             try {

@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.hud;
 
 import cc.fascinated.fascinatedutils.mixin.scoreboard.GuiScoreDisplayOrderAccessor;
-import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.ScoreboardModule;
@@ -40,7 +40,7 @@ public class ScoreboardHudPanel extends HudPanel {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null) {
             if (editorMode) {
-                float lineHeight = glRenderer.getFontHeight();
+                float lineHeight = glRenderer.fontHeight();
                 return buildScoreboardDraw(glRenderer, lineHeight, PREVIEW_TITLE, PREVIEW_ROWS, editorMode);
             }
             return null;
@@ -49,7 +49,7 @@ public class ScoreboardHudPanel extends HudPanel {
         Scoreboard board = minecraft.level.getScoreboard();
         Objective objective = board.getDisplayObjective(DisplaySlot.SIDEBAR);
 
-        float lineHeight = glRenderer.getFontHeight();
+        float lineHeight = glRenderer.fontHeight();
         if (objective == null) {
             if (editorMode) {
                 return buildScoreboardDraw(glRenderer, lineHeight, PREVIEW_TITLE, PREVIEW_ROWS, editorMode);

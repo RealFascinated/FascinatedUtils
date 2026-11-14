@@ -1,16 +1,13 @@
 package cc.fascinated.fascinatedutils.mixin.tab;
 
-import cc.fascinated.fascinatedutils.common.PingColors;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.TabModule;
-import net.kyori.adventure.platform.modcommon.MinecraftClientAudiences;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -25,16 +22,7 @@ import java.util.Optional;
 public class PlayerListHudMixin {
 
     @Unique
-    private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
-
-    @Unique
     private static final int TAB_LIST_MS_PING_EXTRA_COLUMN_PX = 45;
-
-    @Unique
-    private static net.minecraft.network.chat.Component parseMiniMessage(String miniMessageText) {
-        Component adventure = MINI_MESSAGE.deserialize(miniMessageText == null ? "" : miniMessageText);
-        return MinecraftClientAudiences.of().asNative(adventure);
-    }
 
     @ModifyConstant(method = "extractRenderState", constant = @Constant(intValue = 13))
     private int alumite$tabListPingColumnWidthWhenMs(int original) {
@@ -59,12 +47,10 @@ public class PlayerListHudMixin {
                 callbackInfo.cancel();
                 Font textRenderer = Minecraft.getInstance().font;
                 int latency = info.getLatency();
-                String formatted = "%sms".formatted(latency);
-                int textX = slotWidth + xo - textRenderer.width(formatted) - 13;
+                Component pingLabel = tabModuleOptional.get().millisecondsPingComponent(latency);
+                int textX = slotWidth + xo - textRenderer.width(pingLabel) - 13;
                 textX += 12;
-                int color = tabModuleOptional.get().getColoredPing().getValue() ? PingColors.getPingColor(latency) : 0xFFFFFFFF;
-                String miniMessageText = "<color:#" + String.format("%06X", color & 0xFFFFFF) + ">" + formatted + "</color>";
-                graphics.text(textRenderer, parseMiniMessage(miniMessageText), textX, yo, color, true);
+                graphics.text(textRenderer, pingLabel, textX, yo, tabModuleOptional.get().pingColor(latency), true);
             }
         }
     }

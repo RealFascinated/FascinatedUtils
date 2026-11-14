@@ -92,6 +92,7 @@ public class ModuleRegistry {
         modules.add(new ReachWidget());
         modules.add(new FullbrightModule());
         modules.add(new ItemTooltipModule());
+        modules.add(new ContainerPreviewModule());
         modules.add(new WaypointsModule());
         modules.add(new WorldSizeModule());
         modules.add(new MusicModule());

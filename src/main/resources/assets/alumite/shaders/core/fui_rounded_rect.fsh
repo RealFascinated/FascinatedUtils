@@ -44,12 +44,12 @@ void main() {
     float edgeWidth = max(fwidth(signedDistance), 1e-4);
     float coverage;
     if (ringStrokePx > 0.5) {
-        float insideShape = 1.0 - smoothstep(-edgeWidth, edgeWidth, signedDistance);
+        float insideShape = clamp(0.5 - signedDistance / edgeWidth, 0.0, 1.0);
         float depthInward = max(0.0, -signedDistance);
-        float ringBody = 1.0 - smoothstep(ringStrokePx - edgeWidth, ringStrokePx + edgeWidth, depthInward);
+        float ringBody = clamp(0.5 - (depthInward - ringStrokePx) / edgeWidth, 0.0, 1.0);
         coverage = insideShape * ringBody;
     } else {
-        coverage = 1.0 - smoothstep(-edgeWidth, edgeWidth, signedDistance);
+        coverage = clamp(0.5 - signedDistance / edgeWidth, 0.0, 1.0);
     }
     if (coverage <= 0.001) {
         discard;

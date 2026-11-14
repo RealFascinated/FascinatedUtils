@@ -1,0 +1,60 @@
+package cc.fascinated.fascinatedutils.debug.perf.tests.particle;
+
+import cc.fascinated.fascinatedutils.common.culling.OcclusionProvider;
+import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
+import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
+import cc.fascinated.fascinatedutils.mixin.turboparticles.ParticleEngineAccessor;
+import cc.fascinated.fascinatedutils.systems.turboparticles.ParticleCullTask;
+import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
+import com.logisticscraft.occlusionculling.cache.ArrayOcclusionCache;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.List;
+
+/**
+ * One particle snapshot publish plus one cull pass over the particles scene's live particles, on a private
+ * {@link ParticleCullTask} so the live cull thread's state is not shared. Settings match TurboParticles.
+ */
+public class ParticleCullPassPerfTest extends PerfTest {
+    private static final int OCCLUSION_RANGE = 128;
+    private static final double AABB_EXPANSION = 0.0;
+
+    private ParticleCullTask cullTask;
+    private ParticleEngineAccessor particleEngine;
+    private Vec3 cameraPosition;
+
+    public ParticleCullPassPerfTest() {
+        super("turbo_particles.publish_and_cull", "ParticleCullTask publish from the engine groups plus cullPass", 20, 500);
+    }
+
+    @Override
+    public void setup() {
+        Minecraft minecraft = Minecraft.getInstance();
+        cullTask = new ParticleCullTask(new OcclusionCullingInstance(OCCLUSION_RANGE, new OcclusionProvider(), new ArrayOcclusionCache(OCCLUSION_RANGE), AABB_EXPANSION));
+        particleEngine = (ParticleEngineAccessor) minecraft.particleEngine;
+        cameraPosition = minecraft.gameRenderer.getMainCamera().position();
+    }
+
+    @Override
+    public void runOnce() {
+        cullTask.publishParticleCullSnapshotFromGroups(particleEngine.getParticles().values());
+        cullTask.cullPass(cameraPosition);
+    }
+
+    @Override
+    public void teardown() {
+        cullTask = null;
+        particleEngine = null;
+    }
+
+    @Override
+    public List<String> sceneIds() {
+        return List.of("particles");
+    }
+
+    @Override
+    public List<String> covers() {
+        return List.of(PerfCoverage.system("turboparticles"), PerfCoverage.mixin("turboparticles.ParticleEngineAccessor"));
+    }
+}

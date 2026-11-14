@@ -1,11 +1,12 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import cc.fascinated.fascinatedutils.debug.perf.PerfProbe;
+import cc.fascinated.fascinatedutils.debug.perf.PerfMode;
+import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
-import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.oldgui.screens.HUDEditorScreen;
+import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.screens.impl.hudeditor.HUDEditorScreen;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import lombok.Getter;
@@ -16,13 +17,21 @@ import net.minecraft.util.profiling.ProfilerFiller;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 public class HUDManager {
     public static final HUDManager INSTANCE = new HUDManager();
 
+    private static final PerfProbe.Section RENDER_SECTION = PerfProbe.INSTANCE.section("hud.render");
+    private static final String WIDGET_SECTION_PREFIX = "hud.widget.";
+    private static final String WIDGET_PROFILER_PREFIX = "widget-";
+
     private final List<HudPanel> widgets = new ArrayList<>();
+    private final Map<HudPanel, PerfProbe.Section> widgetSections = new IdentityHashMap<>();
+    private final Map<HudPanel, String> widgetProfilerNames = new IdentityHashMap<>();
     private boolean editMode;
     private boolean initialized;
     private volatile long lastRenderNanos = 0L;
@@ -36,6 +45,10 @@ public class HUDManager {
             return;
         }
         widgets.addAll(ModuleRegistry.INSTANCE.getHudPanels());
+        for (HudPanel widget : widgets) {
+            widgetSections.put(widget, PerfProbe.INSTANCE.section(WIDGET_SECTION_PREFIX + widget.getId()));
+            widgetProfilerNames.put(widget, WIDGET_PROFILER_PREFIX + widget.getId());
+        }
         initialized = true;
     }
 
@@ -47,9 +60,14 @@ public class HUDManager {
         ProfilerFiller profiler = Profiler.get();
 
         long renderStart = System.nanoTime();
-        for (HudPanel widget : widgets.stream().filter(HudPanel::shouldRenderHudPanel).toList()) {
-            profiler.push("widget-" + widget.getId());
-            long widgetStart = PerfProbe.INSTANCE.begin();
+        long renderAllocStart = PerfProbe.INSTANCE.beginAllocation();
+        for (HudPanel widget : widgets) {
+            if (!widget.shouldRenderHudPanel()) {
+                continue;
+            }
+            profiler.push(widgetProfilerNames.get(widget));
+            PerfProbe.Section widgetSection = widgetSections.get(widget);
+            long widgetStart = widgetSection.begin();
 
             Runnable draw = widget.prepareAndDraw(renderer, deltaSeconds, editorMode);
             if (draw == null) {
@@ -64,11 +82,21 @@ public class HUDManager {
                 renderer.popScale();
                 renderer.popTranslate();
             }
-            PerfProbe.INSTANCE.end("hud.widget.", widget.getId(), widgetStart);
+            widgetSection.end(widgetStart);
             profiler.pop();
         }
         lastRenderNanos = System.nanoTime() - renderStart;
-        PerfProbe.INSTANCE.record("hud.render", lastRenderNanos);
+        RENDER_SECTION.record(lastRenderNanos);
+        RENDER_SECTION.endAllocation(renderAllocStart);
+    }
+
+    /**
+     * Lists the HUD panels that want to render this frame.
+     *
+     * @return a new list of the visible panels
+     */
+    public List<HudPanel> visibleWidgets() {
+        return widgets.stream().filter(HudPanel::shouldRenderHudPanel).toList();
     }
 
     public void setEditMode(boolean editMode) {
@@ -124,6 +152,9 @@ public class HUDManager {
 
     @EventHandler
     private void alumite$onClientStopping(ClientStoppingEvent event) {
+        if (PerfMode.isWorldScenario()) {
+            return;
+        }
         saveAll();
     }
 }

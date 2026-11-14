@@ -18,7 +18,11 @@ public class OcclusionProvider implements DataProvider {
 
     @Override
     public boolean isOpaqueFullCube(int x, int y, int z) {
-        return world.getBlockState(new BlockPos(x, y, z)).isSolidRender();
+        ClientLevel level = world;
+        if (level == null) {
+            return false;
+        }
+        return level.getBlockState(new BlockPos(x, y, z)).isSolidRender();
     }
 
     @Override

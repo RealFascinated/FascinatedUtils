@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.systems.turboentities;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
+import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
 import com.logisticscraft.occlusionculling.util.Vec3d;
 import lombok.Getter;
@@ -19,7 +20,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,33 +30,28 @@ public class EntitiesCullTask implements Runnable {
     private static final double ENTITY_FORCE_CULL_DISTANCE_SQ = 128.0 * 128.0;
     private static final double BLOCK_ENTITY_FORCE_CULL_DISTANCE_SQ = 64.0 * 64.0;
 
-    private static final int ENTITY_BUFFER_CAPACITY = 4096;
-
-    private static final int BLOCK_ENTITY_SNAPSHOT_INITIAL_CAPACITY = 16384;
+    private static final PerfProbe.Section CULL_PASS_SECTION = PerfProbe.INSTANCE.section("turbo_entities.cull_pass");
     private final OcclusionCullingInstance culling;
     private final Vec3d aabbMin = new Vec3d(0, 0, 0);
 
     private final Vec3d aabbMax = new Vec3d(0, 0, 0);
     private final Vec3d cameraVec3d = new Vec3d(0, 0, 0);
-    private final ArrayList<Entity> entityPublishScratch = new ArrayList<>(ENTITY_BUFFER_CAPACITY);
+    /**
+     * Entity hand-off on a fixed tick cadence; the cull thread only reads the published list while holding it.
+     */
+    private final CullSnapshotBuffers<Entity> entitySnapshots = new CullSnapshotBuffers<>();
+
+    /**
+     * Block entity hand-off on a fixed tick cadence (see {@link TurboEntities}); the cull thread only reads the
+     * published list while holding it.
+     */
+    private final CullSnapshotBuffers<BlockEntity> blockEntitySnapshots = new CullSnapshotBuffers<>();
     private volatile boolean running = true;
     private volatile boolean requestCull = false;
     @Setter
     private volatile boolean inGame = false;
     @Setter
     private volatile Vec3 camera = Vec3.ZERO;
-    /**
-     * Immutable hand-off on a fixed tick cadence; the cull thread
-     * only reads this reference.
-     */
-    private volatile List<Entity> entityCullSnapshot = List.of();
-
-    /**
-     * Replaced on the main thread on a fixed tick cadence (see {@link TurboEntities}). The cull thread only reads the
-     * published map reference once per pass.
-     */
-    private volatile Map<BlockPos, BlockEntity> blockEntityCullSnapshot = Map.of();
-
     private volatile int consideredEntityCount = 0;
     private volatile int culledEntityCount = 0;
     private volatile int consideredBlockEntityCount = 0;
@@ -84,13 +79,7 @@ public class EntitiesCullTask implements Runnable {
                 Vec3 cameraSnap = camera;
                 if (requestCull || !cameraSnap.equals(lastCameraPos)) {
                     requestCull = false;
-                    lastCameraPos = cameraSnap;
-                    cameraVec3d.set(cameraSnap.x, cameraSnap.y, cameraSnap.z);
-                    long passStart = System.nanoTime();
-                    culling.resetCache();
-                    cullEntities();
-                    cullBlockEntities();
-                    lastPassNanos = System.nanoTime() - passStart;
+                    cullPass(cameraSnap);
                 }
             } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
@@ -100,6 +89,29 @@ public class EntitiesCullTask implements Runnable {
                 Client.LOG.warn("Entity cull pass failed: {}", exception.toString());
             }
         }
+    }
+
+    /**
+     * Runs one occlusion and frustum pass over the published entity and block entity snapshots.
+     *
+     * @param cameraPosition the camera position to cull from
+     */
+    public void cullPass(Vec3 cameraPosition) {
+        lastCameraPos = cameraPosition;
+        cameraVec3d.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+        long passStart = System.nanoTime();
+        culling.resetCache();
+        List<Entity> entities = entitySnapshots.acquire();
+        List<BlockEntity> blockEntities = blockEntitySnapshots.acquire();
+        try {
+            cullEntities(entities);
+            cullBlockEntities(blockEntities);
+        } finally {
+            entitySnapshots.release();
+            blockEntitySnapshots.release();
+        }
+        lastPassNanos = System.nanoTime() - passStart;
+        CULL_PASS_SECTION.record(lastPassNanos);
     }
 
     public void requestCull() {
@@ -117,47 +129,52 @@ public class EntitiesCullTask implements Runnable {
      */
     public void publishEntityCullSnapshotFromWorld(Minecraft client) {
         if (client.level == null) {
-            entityPublishScratch.clear();
-            entityCullSnapshot = List.of();
+            entitySnapshots.clear();
             return;
         }
-        entityPublishScratch.clear();
+        ArrayList<Entity> snapshot = entitySnapshots.beginPublish();
         for (Entity entity : client.level.entitiesForRendering()) {
-            entityPublishScratch.add(entity);
+            snapshot.add(entity);
         }
-        entityCullSnapshot = List.copyOf(entityPublishScratch);
+        entitySnapshots.publish(snapshot);
     }
 
     /**
-     * Builds a position-keyed map of block entities near the player on the main thread (matches vanilla
-     * client tick / world access expectations).
+     * Collects the block entities near the player on the main thread (matches vanilla client tick / world access
+     * expectations).
      *
      * @param client         Minecraft client
      * @param chunkRadiusCap maximum chunk radius from the player chunk (inclusive)
      */
     public void publishBlockEntityCullSnapshotFromWorld(Minecraft client, int chunkRadiusCap) {
         if (client.level == null || client.player == null) {
-            this.blockEntityCullSnapshot = Map.of();
+            blockEntitySnapshots.clear();
             return;
         }
         int chunkRadius = Math.min(client.options.getEffectiveRenderDistance(), chunkRadiusCap);
-        HashMap<BlockPos, BlockEntity> map = new HashMap<>(BLOCK_ENTITY_SNAPSHOT_INITIAL_CAPACITY);
+        ArrayList<BlockEntity> snapshot = blockEntitySnapshots.beginPublish();
         int playerChunkX = client.player.chunkPosition().x();
         int playerChunkZ = client.player.chunkPosition().z();
         for (int chunkX = -chunkRadius; chunkX <= chunkRadius; chunkX++) {
             for (int chunkZ = -chunkRadius; chunkZ <= chunkRadius; chunkZ++) {
                 LevelChunk chunk = client.level.getChunk(playerChunkX + chunkX, playerChunkZ + chunkZ);
-                map.putAll(chunk.getBlockEntities());
+                Map<BlockPos, BlockEntity> chunkBlockEntities = chunk.getBlockEntities();
+                if (chunkBlockEntities.isEmpty()) {
+                    continue;
+                }
+                for (BlockEntity blockEntity : chunkBlockEntities.values()) {
+                    snapshot.add(blockEntity);
+                }
             }
         }
-        this.blockEntityCullSnapshot = map;
+        blockEntitySnapshots.publish(snapshot);
     }
 
-    private void cullEntities() {
+    private void cullEntities(List<Entity> snapshot) {
         int considered = 0;
         int culled = 0;
 
-        for (Entity entity : entityCullSnapshot) {
+        for (Entity entity : snapshot) {
             if (entity == null) {
                 break;
             }
@@ -199,11 +216,11 @@ public class EntitiesCullTask implements Runnable {
         culledEntityCount = culled;
     }
 
-    private void cullBlockEntities() {
+    private void cullBlockEntities(List<BlockEntity> snapshot) {
         int considered = 0;
         int culled = 0;
 
-        for (BlockEntity blockEntity : blockEntityCullSnapshot.values()) {
+        for (BlockEntity blockEntity : snapshot) {
             try {
                 if (!(blockEntity instanceof Cullable cullable)) {
                     continue;
@@ -226,7 +243,12 @@ public class EntitiesCullTask implements Runnable {
                 if (cullable.alumite$isCulled()) {
                     culled++;
                 }
-            } catch (Exception ignored) {
+            } catch (Exception exception) {
+                // Fail visible: one bad block entity must not stay hidden or abort the pass for the rest.
+                if (blockEntity instanceof Cullable failedCullable) {
+                    failedCullable.alumite$setCulled(false);
+                }
+                Client.LOG.debug("Block entity cull failed: {}", exception.toString());
             }
         }
 

@@ -1,5 +1,8 @@
 package cc.fascinated.fascinatedutils.mixin.scoreboard;
 
+import cc.fascinated.fascinatedutils.systems.modules.Module;
+import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
+import cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.ScoreboardModule;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.scores.Objective;
@@ -13,6 +16,8 @@ public class GuiMixin {
 
     @Inject(method = "displayScoreboardSidebar", at = @At(value = "HEAD"), cancellable = true)
     private void alumite$displayScoreboardSidebar(GuiGraphicsExtractor graphics, Objective objective, CallbackInfo ci) {
-        ci.cancel();
+        if (ModuleRegistry.INSTANCE.getModule(ScoreboardModule.class).filter(Module::isEnabled).isPresent()) {
+            ci.cancel();
+        }
     }
 }

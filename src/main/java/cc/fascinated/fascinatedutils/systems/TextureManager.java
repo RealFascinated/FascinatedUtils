@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.systems;
 import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
-import cc.fascinated.fascinatedutils.gui2.core.PixelSize;
+import cc.fascinated.fascinatedutils.gui.core.PixelSize;
 
 import com.mojang.blaze3d.platform.NativeImage;
 
@@ -89,7 +89,7 @@ public class TextureManager {
      * @return cached identifier, or {@code null} while still loading
      */
     public LoadedTexture get(String url, int maxHeight, Runnable onLoad) {
-        String id = hashOf(url) + (maxHeight > 0 ? "@" + maxHeight : "");
+        String id = hashOf(url) + (maxHeight > 0 ? "_" + maxHeight : "");
         return getOrSchedule(id, () -> download(id, url, maxHeight, onLoad));
     }
 
@@ -264,6 +264,7 @@ public class TextureManager {
                     Identifier identifier = Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, safePath);
                     registerTexture(id, identifier, finalImage, (long) finalImage.getWidth() * finalImage.getHeight() * finalImage.format().components(), onLoad);
                 } catch (RuntimeException exception) {
+                    finalImage.close();
                     markFailed(id);
                     LOGGER.error("Failed to register local attachment {}", path, exception);
                 } finally {
@@ -344,6 +345,7 @@ public class TextureManager {
                     Identifier identifier = Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "attachment/" + id);
                     registerTexture(id, identifier, finalImage, decodedBytes, onLoad);
                 } catch (RuntimeException exception) {
+                    finalImage.close();
                     markFailed(id);
                     LOGGER.error("Failed to register attachment {}", id, exception);
                 } finally {

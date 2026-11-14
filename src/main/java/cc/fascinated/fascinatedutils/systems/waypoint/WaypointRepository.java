@@ -3,14 +3,17 @@ package cc.fascinated.fascinatedutils.systems.waypoint;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
+import cc.fascinated.fascinatedutils.debug.perf.PerfMode;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.world.level.storage.LevelResource;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -39,7 +42,10 @@ public class WaypointRepository {
         try {
             String json = Files.readString(waypointsFile, StandardCharsets.UTF_8);
             JsonElement element = Constants.GSON.fromJson(json, JsonElement.class);
-            if (element != null && element.isJsonArray()) {
+            if (element != null && !element.isJsonArray()) {
+                throw new JsonParseException("waypoints file is not a JSON array");
+            }
+            if (element != null) {
                 for (JsonElement entry : element.getAsJsonArray()) {
                     try {
                         loaded.add(Waypoint.defaults().deserialize(entry, Constants.GSON));
@@ -79,7 +85,36 @@ public class WaypointRepository {
      * @return matching waypoints
      */
     public static List<Waypoint> getForCurrentWorldKey() {
-        return WAYPOINTS.stream().filter(waypoint -> waypoint.getWorldKey().equals(getWorldKey())).toList();
+        String worldKey = getWorldKey();
+        migrateLegacySingleplayerKey(worldKey);
+        return WAYPOINTS.stream().filter(waypoint -> waypoint.getWorldKey().equals(worldKey)).toList();
+    }
+
+    /**
+     * Moves waypoints stored under the old display-name based singleplayer key to the save-folder based key,
+     * but only when nothing is stored under the new key yet.
+     *
+     * @param worldKey the current world key
+     */
+    private static void migrateLegacySingleplayerKey(String worldKey) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.getSingleplayerServer() == null || WAYPOINTS.stream().anyMatch(waypoint -> waypoint.getWorldKey().equals(worldKey))) {
+            return;
+        }
+        String legacyKey = "sp:" + minecraft.getSingleplayerServer().getWorldData().getLevelName();
+        if (legacyKey.equals(worldKey)) {
+            return;
+        }
+        boolean migrated = false;
+        for (Waypoint waypoint : WAYPOINTS) {
+            if (waypoint.getWorldKey().equals(legacyKey)) {
+                waypoint.setWorldKey(worldKey);
+                migrated = true;
+            }
+        }
+        if (migrated) {
+            save();
+        }
     }
 
     /**
@@ -95,11 +130,17 @@ public class WaypointRepository {
         Minecraft minecraft = Minecraft.getInstance();
         String worldKey;
         if (minecraft.getSingleplayerServer() != null) {
-            worldKey = "sp:" + minecraft.getSingleplayerServer().getWorldData().getLevelName();
+            Path saveFolder = minecraft.getSingleplayerServer().getWorldPath(LevelResource.ROOT).toAbsolutePath().normalize().getFileName();
+            worldKey = "sp:" + (saveFolder != null ? saveFolder.toString() : minecraft.getSingleplayerServer().getWorldData().getLevelName());
         }
         else {
             ServerData serverData = minecraft.getCurrentServer();
-            worldKey = "mp:" + (serverData != null ? serverData.ip : "unknown");
+            String address = serverData != null ? serverData.ip : null;
+            if (address == null && minecraft.getConnection() != null) {
+                SocketAddress remoteAddress = minecraft.getConnection().getConnection().getRemoteAddress();
+                address = remoteAddress != null ? remoteAddress.toString() : null;
+            }
+            worldKey = "mp:" + (address != null ? address : "unknown");
         }
 
         return worldKey;
@@ -144,7 +185,7 @@ public class WaypointRepository {
      * Persists all cached waypoints to disk.
      */
     public static void save() {
-        if (saveBlocked) {
+        if (saveBlocked || PerfMode.isWorldScenario()) {
             return;
         }
         JsonArray array = new JsonArray();

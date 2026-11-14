@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.NumberUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
-import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
@@ -18,7 +18,9 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CoordinatesHudPanel extends HudPanel {
@@ -28,13 +30,18 @@ public class CoordinatesHudPanel extends HudPanel {
     private static final String[] COMPASS_DIRECTIONS = {"S", "SE", "E", "NE", "N", "NW", "W", "SW"};
 
     private final CoordinatesWidget coordinatesWidget;
+    private final Map<String, String> biomeMiniMessageCache = new HashMap<>();
 
     public CoordinatesHudPanel(CoordinatesWidget coordinatesWidget) {
         super(coordinatesWidget, "coordinates", HudHostModule.UTILITY_WIDGET_MIN_WIDTH);
         this.coordinatesWidget = coordinatesWidget;
     }
 
-    private static String biomeColoredMiniMessage(String biomeIdRaw) {
+    private String biomeColoredMiniMessage(String biomeIdRaw) {
+        return biomeMiniMessageCache.computeIfAbsent(biomeIdRaw, CoordinatesHudPanel::buildBiomeColoredMiniMessage);
+    }
+
+    private static String buildBiomeColoredMiniMessage(String biomeIdRaw) {
         Identifier biomeId = Identifier.tryParse(biomeIdRaw);
         String path = biomeId == null ? biomeIdRaw : biomeId.getPath();
         String label = Arrays.stream(path.replace("_", " ").split(" ")).map(StringUtils::capitalize).collect(Collectors.joining(" "));
@@ -92,7 +99,7 @@ public class CoordinatesHudPanel extends HudPanel {
             String xPart = "X: " + NumberUtils.formatNumber(coordX, decimals);
             String yPart = "Y: " + NumberUtils.formatNumber(coordY, decimals);
             String zPart = "Z: " + NumberUtils.formatNumber(coordZ, decimals);
-            float lineHeight = glRenderer.getFontHeight();
+            float lineHeight = glRenderer.fontHeight();
             float xWidth = glRenderer.measureMiniMessageTextWidth(xPart);
             float yWidth = glRenderer.measureMiniMessageTextWidth(yPart);
             float zWidth = glRenderer.measureMiniMessageTextWidth(zPart);
@@ -123,7 +130,7 @@ public class CoordinatesHudPanel extends HudPanel {
             };
         }
         List<String> leftLines = List.of("X: " + NumberUtils.formatNumber(coordX, decimals), "Y: " + NumberUtils.formatNumber(coordY, decimals), "Z: " + NumberUtils.formatNumber(coordZ, decimals), "Biome: " + biomeMini);
-        float lineHeight = glRenderer.getFontHeight();
+        float lineHeight = glRenderer.fontHeight();
         float leftColumnWidth = 0f;
         for (String line : leftLines) {
             leftColumnWidth = Math.max(leftColumnWidth, glRenderer.measureMiniMessageTextWidth(line));

@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.systems.config;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.Constants;
+import cc.fascinated.fascinatedutils.debug.perf.PerfMode;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.systems.config.impl.config.ConfigRepository;
@@ -51,6 +52,9 @@ public class ModConfig {
 
     @EventHandler
     private void alumite$onClientStopping(ClientStoppingEvent event) {
+        if (PerfMode.isWorldScenario()) {
+            return;
+        }
         profileRepository.saveActiveProfile();
         configRepository.save();
     }

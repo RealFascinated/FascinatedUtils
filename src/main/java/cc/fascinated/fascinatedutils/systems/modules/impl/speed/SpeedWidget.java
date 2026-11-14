@@ -11,6 +11,7 @@ import cc.fascinated.fascinatedutils.systems.modules.impl.speed.hud.SpeedHudPane
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.phys.Vec3;
 
@@ -18,6 +19,7 @@ import net.minecraft.world.phys.Vec3;
 public class SpeedWidget extends HudHostModule {
 
     private static final int BUFFER_SIZE = 20;
+    private static final double MAX_TICK_DISTANCE = 16.0;
 
     private final BooleanSetting includeVertical = BooleanSetting.builder().id("include_vertical").defaultValue(false).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final BooleanSetting showPeak = BooleanSetting.builder().id("show_peak").defaultValue(false).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
@@ -27,6 +29,8 @@ public class SpeedWidget extends HudHostModule {
     private int bufferHead = 0;
     private int bufferCount = 0;
     private Vec3 lastPosition = null;
+    private LocalPlayer lastPlayer = null;
+    private ClientLevel lastLevel = null;
     private float currentSpeed = Float.NaN;
 
     private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
@@ -71,6 +75,12 @@ public class SpeedWidget extends HudHostModule {
             return;
         }
         Vec3 position = player.position();
+        if (player != lastPlayer || minecraftClient.level != lastLevel) {
+            // New player instance (respawn) or level (dimension change): the position delta is not movement.
+            lastPlayer = player;
+            lastLevel = minecraftClient.level;
+            lastPosition = null;
+        }
         if (lastPosition == null) {
             lastPosition = position;
             return;
@@ -78,7 +88,12 @@ public class SpeedWidget extends HudHostModule {
         double dx = position.x - lastPosition.x;
         double dy = includeVertical.isEnabled() ? (position.y - lastPosition.y) : 0.0;
         double dz = position.z - lastPosition.z;
+        double fullDeltaSquared = dx * dx + (position.y - lastPosition.y) * (position.y - lastPosition.y) + dz * dz;
         lastPosition = position;
+        if (fullDeltaSquared > MAX_TICK_DISTANCE * MAX_TICK_DISTANCE) {
+            // Teleport: ignore this sample.
+            return;
+        }
         float speed = (float) (Math.sqrt(dx * dx + dy * dy + dz * dz) * 20.0);
         currentSpeed = speed;
         speedBuffer[bufferHead] = speed;
@@ -90,6 +105,8 @@ public class SpeedWidget extends HudHostModule {
 
     private void reset() {
         lastPosition = null;
+        lastPlayer = null;
+        lastLevel = null;
         currentSpeed = Float.NaN;
         bufferCount = 0;
         bufferHead = 0;

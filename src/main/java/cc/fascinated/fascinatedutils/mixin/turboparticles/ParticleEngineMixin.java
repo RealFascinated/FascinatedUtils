@@ -1,11 +1,9 @@
 package cc.fascinated.fascinatedutils.mixin.turboparticles;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
 import cc.fascinated.fascinatedutils.systems.turboparticles.ParticleCullTask;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.particle.ParticleGroup;
 import net.minecraft.client.particle.ParticleRenderType;
@@ -16,8 +14,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 @Mixin(ParticleEngine.class)
@@ -25,7 +21,7 @@ public class ParticleEngineMixin {
 
     @Inject(method = "extract", at = @At("HEAD"))
     private void alumite$onExtractHead(ParticlesRenderState particlesRenderState, Frustum frustum, Camera camera, float partialTickTime, CallbackInfo ci) {
-        if (!SettingsRegistry.INSTANCE.getSettings().getTurboParticles().isEnabled()) {
+        if (!Client.TURBO_PARTICLES.isEnabled()) {
             return;
         }
 
@@ -43,17 +39,11 @@ public class ParticleEngineMixin {
 
         cullTask.setInGame(true);
         cullTask.setCamera(camera.position());
-        cullTask.setFrustum(frustum);
+        // Hand the cull thread a private copy; the render thread keeps mutating the live frustum.
+        cullTask.setFrustum(new Frustum(frustum));
 
         Map<ParticleRenderType, ParticleGroup<?>> map = ((ParticleEngineAccessor) this).getParticles();
-        List<Particle> allParticles = new ArrayList<>();
-        for (ParticleGroup<?> group : map.values()) {
-            try {
-                allParticles.addAll(group.getAll());
-            } catch (Exception ignored) {
-            }
-        }
-        cullTask.publishParticleCullSnapshot(allParticles);
+        cullTask.publishParticleCullSnapshotFromGroups(map.values());
 
         cullTask.requestCull();
     }

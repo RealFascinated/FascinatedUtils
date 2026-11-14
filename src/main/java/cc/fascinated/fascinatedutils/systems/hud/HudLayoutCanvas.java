@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import cc.fascinated.fascinatedutils.gui2.core.UIScale;
+import cc.fascinated.fascinatedutils.gui.core.UIScale;
 
 public class HudLayoutCanvas {
 

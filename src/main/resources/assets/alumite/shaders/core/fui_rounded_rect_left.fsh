@@ -35,7 +35,7 @@ void main() {
     vec4 rCorners = vec4(rPx, 0.0, 0.0, rPx);
     float signedDistance = sdRoundedRectCornersYDown(pointPx, halfSizePx, rCorners);
     float edgeWidth = max(fwidth(signedDistance), 1e-4);
-    float coverage = 1.0 - smoothstep(-edgeWidth, edgeWidth, signedDistance);
+    float coverage = clamp(0.5 - signedDistance / edgeWidth, 0.0, 1.0);
     if (coverage <= 0.001) {
         discard;
     }

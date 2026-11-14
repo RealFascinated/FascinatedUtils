@@ -2,9 +2,8 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.waypoint;
 
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.render.ClientFovEvent;
-import cc.fascinated.fascinatedutils.gui2.core.UIScale;
-import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.oldgui.themes.FascinatedGuiTheme;
+import cc.fascinated.fascinatedutils.gui.core.UIScale;
+import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.waypoint.Waypoint;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.waypoint.WaypointRepository;
@@ -75,9 +74,9 @@ public class WaypointLabelHudElement implements HudElement {
         boolean showBorder = module.getShowBorder().isEnabled();
         float labelPad = module.getLabelPadding().getValue().floatValue();
 
-        GuiRenderer guiRenderer = new GuiRenderer(graphics, FascinatedGuiTheme.INSTANCE);
-        guiRenderer.begin(uiWidth, uiHeight);
-        float fontHeight = guiRenderer.getFontHeight();
+        GuiRenderer guiRenderer = new GuiRenderer(graphics);
+        guiRenderer.beginFrame(uiWidth, uiHeight);
+        float fontHeight = guiRenderer.fontHeight();
 
         for (Waypoint waypoint : waypoints) {
             if (!waypoint.isVisible() || !waypoint.getDimension().equals(dimension)) {
@@ -140,6 +139,6 @@ public class WaypointLabelHudElement implements HudElement {
             guiRenderer.drawText(label, bgX + labelPad, bgY + labelPad, 0xFFFFFFFF, false, false);
         }
 
-        guiRenderer.end();
+        guiRenderer.endFrame();
     }
 }

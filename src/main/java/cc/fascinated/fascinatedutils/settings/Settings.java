@@ -5,7 +5,7 @@ import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
-import cc.fascinated.fascinatedutils.gui2.screens.impl.screenshot.ScreenshotScreen;
+import cc.fascinated.fascinatedutils.gui.screens.impl.screenshot.ScreenshotScreen;
 import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import com.google.gson.Gson;

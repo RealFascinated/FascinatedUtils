@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.titlemenu;
 
-import cc.fascinated.fascinatedutils.gui2.screens.impl.ActionsOverlayScreen;
+import cc.fascinated.fascinatedutils.gui.screens.impl.ActionsOverlayScreen;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.MouseButtonEvent;

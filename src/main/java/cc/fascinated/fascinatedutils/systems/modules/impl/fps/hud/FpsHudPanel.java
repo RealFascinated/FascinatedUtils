@@ -3,8 +3,7 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.fps.hud;
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.FrameCounter;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.oldgui.theme.UITheme;
-import cc.fascinated.fascinatedutils.oldgui.theme.UiColor;
+import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.impl.fps.FpsWidget;
@@ -29,7 +28,7 @@ public class FpsHudPanel extends MiniMessageHudPanel {
 
     private static int fpsColorArgb(int fps) {
         if (fps >= 55) {
-            return UITheme.COLOR_TEXT_PRIMARY;
+            return 0xFFFFFFFF;
         }
         if (fps >= 40) {
             return FPS_COLOR_YELLOW;

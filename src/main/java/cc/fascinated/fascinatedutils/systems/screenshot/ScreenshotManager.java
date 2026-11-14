@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.screenshot;
 
+import cc.fascinated.fascinatedutils.client.Client;
 import net.minecraft.client.Minecraft;
 
 import java.io.File;
@@ -10,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 public class ScreenshotManager {
     private static final List<Screenshot> SCREENSHOTS = new ArrayList<>();
@@ -26,7 +28,19 @@ public class ScreenshotManager {
         }
 
         for (File file : screenshotFiles) {
-            addScreenshot(new Screenshot(file.toPath()));
+            Path filePath = file.toPath();
+            if (!Files.isRegularFile(filePath)) {
+                continue;
+            }
+            String lowerName = file.getName().toLowerCase(Locale.ROOT);
+            if (!lowerName.endsWith(".png") && !lowerName.endsWith(".jpg") && !lowerName.endsWith(".jpeg")) {
+                continue;
+            }
+            try {
+                addScreenshot(new Screenshot(filePath));
+            } catch (Exception exception) {
+                Client.LOG.warn("Failed to load screenshot {}: {}", filePath, exception.toString());
+            }
         }
     }
 

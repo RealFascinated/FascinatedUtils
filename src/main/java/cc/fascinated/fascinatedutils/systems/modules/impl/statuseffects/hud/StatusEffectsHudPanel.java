@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.hud;
 
 import cc.fascinated.fascinatedutils.common.DateUtils;
-import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
@@ -86,7 +86,7 @@ public class StatusEffectsHudPanel extends HudPanel {
             return null;
         }
 
-        float fontHeight = glRenderer.getFontHeight();
+        float fontHeight = glRenderer.fontHeight();
         boolean showDurationValue = statusEffectsModule.effectsShowDurationSetting();
         boolean detailedLayout = statusEffectsModule.effectsDisplayMode() == DisplayMode.DETAILED && showDurationValue;
         float textBlockHeight = detailedLayout ? fontHeight * 2f + TEXT_LINE_GAP : fontHeight;

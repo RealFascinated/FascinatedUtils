@@ -1,9 +1,9 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.wawla.hud;
 
 import cc.fascinated.fascinatedutils.common.Colors;
-import cc.fascinated.fascinatedutils.oldgui.hooks.FadeInAnim;
-import cc.fascinated.fascinatedutils.oldgui.renderer.GuiRenderer;
-import cc.fascinated.fascinatedutils.oldgui.theme.UiColor;
+import cc.fascinated.fascinatedutils.gui.anim.FadeInAnim;
+import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
@@ -68,7 +68,7 @@ public class WawlaHudPanel extends HudPanel {
             return null;
         }
 
-        float lineHeight = glRenderer.getFontHeight();
+        float lineHeight = glRenderer.fontHeight();
         List<String> subtitleLines = target.subtitleLines();
         int extraLines = subtitleLines.size();
         int totalLines = 2 + extraLines;
