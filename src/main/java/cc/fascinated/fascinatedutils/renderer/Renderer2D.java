@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.renderer;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
-import cc.fascinated.fascinatedutils.common.LRUCache;
 import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.renderer.text.TextRenderer;
 import cc.fascinated.fascinatedutils.renderer.text.VanillaTextRenderer;
@@ -28,6 +27,8 @@ import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
 import org.joml.Vector2f;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 /**
@@ -38,8 +39,9 @@ import java.util.function.Supplier;
 public class Renderer2D {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
-    private static final LRUCache<String, net.minecraft.network.chat.Component> MINI_MESSAGE_CACHE = new LRUCache<>(1024);
-    private static final LRUCache<String, Integer> MINI_MESSAGE_WIDTH_CACHE = new LRUCache<>(1024);
+    private static final int MINI_MESSAGE_CACHE_LIMIT = 1024;
+    private static final Map<String, net.minecraft.network.chat.Component> MINI_MESSAGE_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, Integer> MINI_MESSAGE_WIDTH_CACHE = new ConcurrentHashMap<>();
     private static volatile int cachedFontOptionsKey;
     private final GuiGraphicsExtractor graphics;
     private final TextRenderer guiTextRenderer;
@@ -227,7 +229,7 @@ public class Renderer2D {
     }
 
     public net.minecraft.network.chat.Component parseMiniMessage(String miniMessageText) {
-        net.minecraft.network.chat.Component component = MINI_MESSAGE_CACHE.get(miniMessageText);
+        net.minecraft.network.chat.Component component = miniMessageText == null ? null : MINI_MESSAGE_CACHE.get(miniMessageText);
         if (component != null) {
             return component;
         }
@@ -237,7 +239,12 @@ public class Renderer2D {
         try {
             Component adventure = MINI_MESSAGE.deserialize(miniMessageText == null ? "" : miniMessageText);
             net.minecraft.network.chat.Component nativeComponent = MinecraftClientAudiences.of().asNative(adventure);
-            MINI_MESSAGE_CACHE.put(miniMessageText, nativeComponent);
+            if (miniMessageText != null) {
+                if (MINI_MESSAGE_CACHE.size() >= MINI_MESSAGE_CACHE_LIMIT) {
+                    MINI_MESSAGE_CACHE.clear();
+                }
+                MINI_MESSAGE_CACHE.put(miniMessageText, nativeComponent);
+            }
             return nativeComponent;
         } catch (Exception exception) {
             Client.LOG.debug("MiniMessage parse failed for UI text \"{}\", falling back to literal", miniMessageText, exception);
@@ -260,12 +267,17 @@ public class Renderer2D {
             cachedFontOptionsKey = fontOptionsKey;
             MINI_MESSAGE_WIDTH_CACHE.clear();
         }
-        Integer cachedWidth = MINI_MESSAGE_WIDTH_CACHE.get(miniMessageText);
+        Integer cachedWidth = miniMessageText == null ? null : MINI_MESSAGE_WIDTH_CACHE.get(miniMessageText);
         if (cachedWidth != null) {
             return cachedWidth;
         }
         int width = measureTextWidth(parseMiniMessage(miniMessageText));
-        MINI_MESSAGE_WIDTH_CACHE.put(miniMessageText, width);
+        if (miniMessageText != null) {
+            if (MINI_MESSAGE_WIDTH_CACHE.size() >= MINI_MESSAGE_CACHE_LIMIT) {
+                MINI_MESSAGE_WIDTH_CACHE.clear();
+            }
+            MINI_MESSAGE_WIDTH_CACHE.put(miniMessageText, width);
+        }
         return width;
     }
 

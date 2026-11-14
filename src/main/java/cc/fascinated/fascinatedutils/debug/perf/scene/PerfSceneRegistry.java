@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.debug.perf.scene;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.CameraPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.EntitiesPerfScene;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.TurboWorldPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.HudOverlaysPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.IdlePerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.InteractPerfScene;
@@ -63,6 +64,9 @@ public class PerfSceneRegistry {
 
         register(new IdlePerfScene());
         register(new EntitiesPerfScene());
+        register(new TurboWorldPerfScene(TurboWorldPerfScene.RAIN, "Rain over the default terrain, to time weather extraction"));
+        register(new TurboWorldPerfScene(TurboWorldPerfScene.DISPLAYS, "75 block, text and item displays at 50 to 60 blocks"));
+        register(new TurboWorldPerfScene(TurboWorldPerfScene.NAMETAGS, "100 named sheep at 42 to 60 blocks"));
         register(new ParticlesPerfScene());
         register(new HudOverlaysPerfScene());
         register(new CameraPerfScene());

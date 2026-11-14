@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.node;
 
+import cc.fascinated.fascinatedutils.common.Colors;
+import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import net.minecraft.util.Mth;
@@ -18,6 +20,7 @@ public class SliderNode extends PositionedNode<SliderNode> {
     private final Consumer<Float> onChange;
     private Runnable onCommit = () -> {};
     private Supplier<Boolean> disabled = () -> false;
+    private final AnimHandle activeAnim = new AnimHandle(0f);
     private boolean dragging;
     private boolean hovered;
 
@@ -120,7 +123,12 @@ public class SliderNode extends PositionedNode<SliderNode> {
 
         renderFrame.drawRoundedRect(positionX, trackY, width, TRACK_HEIGHT, TRACK_HEIGHT / 2, renderFrame.theme().inputFill());
         renderFrame.drawRoundedRect(positionX, trackY, thumbX - positionX + THUMB_SIZE / 2, TRACK_HEIGHT, TRACK_HEIGHT / 2, accent);
-        int thumbColor = dragging || hovered ? renderFrame.theme().buttonBorderHover() : renderFrame.theme().textPrimary();
-        renderFrame.drawRoundedRect(thumbX, thumbY, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE / 2, isDisabled ? renderFrame.theme().textSubtle() : thumbColor);
+        activeAnim.target((dragging || hovered) && !isDisabled ? 1f : 0f);
+        activeAnim.tick(deltaSeconds);
+        float active = activeAnim.value();
+        int thumbColor = Colors.mixArgb(active, renderFrame.theme().textPrimary(), renderFrame.theme().buttonBorderHover());
+        float thumbSize = THUMB_SIZE + 3f * active + (dragging ? 1f : 0f);
+        float thumbOffset = (THUMB_SIZE - thumbSize) / 2f;
+        renderFrame.drawRoundedRect(thumbX + thumbOffset, thumbY + thumbOffset, thumbSize, thumbSize, thumbSize / 2f, isDisabled ? renderFrame.theme().textSubtle() : thumbColor);
     }
 }

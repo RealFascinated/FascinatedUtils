@@ -30,18 +30,23 @@ import cc.fascinated.fascinatedutils.systems.modules.impl.systemcpu.SystemCpuUsa
 import cc.fascinated.fascinatedutils.systems.modules.impl.tps.TpsWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.waypoint.WaypointsModule;
+import lombok.AccessLevel;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Getter
 public class ModuleRegistry {
     public static final ModuleRegistry INSTANCE = new ModuleRegistry();
     private final List<Module> modules = new ArrayList<>();
+    @Getter(AccessLevel.NONE)
+    private final Map<Class<?>, Module> modulesByClass = new HashMap<>();
     private final List<Module> enabledModules = new ArrayList<>();
     private final List<HudPanel> hudPanels = new ArrayList<>();
     private boolean initialized;
@@ -62,6 +67,7 @@ public class ModuleRegistry {
         modules.add(new StatusEffectsModule());
         modules.add(new MovementModule());
         modules.add(new TitlesModule());
+        modules.add(new ChatModule());
         modules.add(new ZoomModule());
         modules.add(new FreelookModule());
         modules.add(new TabModule());
@@ -136,7 +142,15 @@ public class ModuleRegistry {
      * @return the registered module instance, or an empty optional when none match
      */
     public <T extends Module> Optional<T> getModule(Class<T> moduleClass) {
-        return modules.stream().filter(module -> moduleClass.equals(module.getClass())).map(moduleClass::cast).findFirst();
+        Module module = modulesByClass.get(moduleClass);
+        if (module == null || modulesByClass.size() != modules.size()) {
+            modulesByClass.clear();
+            for (Module candidate : modules) {
+                modulesByClass.putIfAbsent(candidate.getClass(), candidate);
+            }
+            module = modulesByClass.get(moduleClass);
+        }
+        return Optional.ofNullable(module).map(moduleClass::cast);
     }
 
     public void setModuleEnabled(Module module, boolean enabled) {

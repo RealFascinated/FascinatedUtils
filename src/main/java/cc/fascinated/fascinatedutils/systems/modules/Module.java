@@ -16,8 +16,10 @@ import lombok.Getter;
 import net.minecraft.client.resources.language.I18n;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 @Getter
@@ -33,6 +35,7 @@ public abstract class Module implements GsonSerializable<Module> {
         return translated.equals(key) ? displayName : translated;
     }
     private final List<Setting<?>> settings = new ArrayList<>();
+    private final Map<String, Setting<?>> settingsByKey = new HashMap<>();
     private final ModuleCategory category;
 
     private final ModuleDefaults defaults;
@@ -86,6 +89,7 @@ public abstract class Module implements GsonSerializable<Module> {
     public void addSetting(Setting<?> setting) {
         applyTranslationPrefix(setting);
         this.settings.add(setting);
+        this.settingsByKey.putIfAbsent(setting.getSettingKey(), setting);
     }
 
     private void applyTranslationPrefix(Setting<?> setting) {
@@ -132,10 +136,9 @@ public abstract class Module implements GsonSerializable<Module> {
      */
     @SuppressWarnings("unchecked")
     public <S extends Setting<?>> Optional<S> getSetting(Class<S> settingType, String settingId) {
-        for (Setting<?> setting : settings) {
-            if (settingType.isInstance(setting) && settingId.equals(setting.getSettingKey())) {
-                return Optional.of((S) setting);
-            }
+        Setting<?> setting = settingsByKey.get(settingId);
+        if (setting != null && settingType.isInstance(setting)) {
+            return Optional.of((S) setting);
         }
         return Optional.empty();
     }

@@ -17,12 +17,14 @@ public class ScrollColumnNode extends UiNode {
     private static final float SMOOTHING_RATE = 18f;
     private static final float MAX_FRAME_SECONDS = 0.05f;
     private static final String VISUAL_KEY_SUFFIX = "#visual";
+    private static final String TIME_KEY_SUFFIX = "#time";
     private static final int SCROLLBAR_TOTAL = SCROLLBAR_LEFT_MARGIN + SCROLLBAR_WIDTH + SCROLLBAR_RIGHT_MARGIN;
 
     private int gap;
     private int scrollOffset;
     private float visualOffset;
-    private long lastLayoutNanos;
+    private int lastLayoutMicros;
+    private boolean hasLastLayout;
     private int contentHeight;
     private Consumer<Integer> onScrollOffsetChanged = ignored -> {};
     private String scrollPersistKey;
@@ -70,7 +72,12 @@ public class ScrollColumnNode extends UiNode {
             if (saved != null) {
                 scrollOffset = Math.max(0, saved);
                 Integer savedVisual = ctx.get(key + VISUAL_KEY_SUFFIX);
-                visualOffset = savedVisual != null ? savedVisual : scrollOffset;
+                visualOffset = savedVisual != null ? Float.intBitsToFloat(savedVisual) : scrollOffset;
+                Integer savedMicros = ctx.get(key + TIME_KEY_SUFFIX);
+                if (savedMicros != null) {
+                    lastLayoutMicros = savedMicros;
+                    hasLastLayout = true;
+                }
             }
         }
         return this;
@@ -235,9 +242,10 @@ public class ScrollColumnNode extends UiNode {
      * @param maxScroll the largest valid offset for the current content
      */
     private void advanceVisualOffset(int maxScroll) {
-        long nowNanos = System.nanoTime();
-        float frameSeconds = lastLayoutNanos == 0L ? 1f / 60f : Math.min(MAX_FRAME_SECONDS, (nowNanos - lastLayoutNanos) / 1_000_000_000f);
-        lastLayoutNanos = nowNanos;
+        int nowMicros = (int) (System.nanoTime() / 1000L);
+        float frameSeconds = hasLastLayout ? Math.min(MAX_FRAME_SECONDS, Math.max(0, nowMicros - lastLayoutMicros) / 1_000_000f) : 1f / 60f;
+        lastLayoutMicros = nowMicros;
+        hasLastLayout = true;
         visualOffset = Math.max(0f, Math.min(maxScroll, visualOffset));
         float distance = scrollOffset - visualOffset;
         if (scrollbarDragging || Math.abs(distance) < 0.5f) {
@@ -246,7 +254,8 @@ public class ScrollColumnNode extends UiNode {
             visualOffset += distance * (1f - (float) Math.exp(-SMOOTHING_RATE * frameSeconds));
         }
         if (scrollPersistMap != null) {
-            scrollPersistMap.put(scrollPersistKey + VISUAL_KEY_SUFFIX, Math.round(visualOffset));
+            scrollPersistMap.put(scrollPersistKey + VISUAL_KEY_SUFFIX, Float.floatToIntBits(visualOffset));
+            scrollPersistMap.put(scrollPersistKey + TIME_KEY_SUFFIX, lastLayoutMicros);
         }
     }
 

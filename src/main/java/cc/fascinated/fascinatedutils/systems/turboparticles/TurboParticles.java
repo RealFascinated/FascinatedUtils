@@ -73,6 +73,10 @@ public class TurboParticles {
         stopParticleCullThread();
     }
 
+    public boolean isParticleCullThreadAlive() {
+        return particleCullThread != null && particleCullThread.isAlive();
+    }
+
     private void startParticleCullThread() {
         if (particleCullThread != null && particleCullThread.isAlive()) {
             return;

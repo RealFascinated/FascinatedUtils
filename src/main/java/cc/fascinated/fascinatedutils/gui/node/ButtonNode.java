@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.node;
 
+import cc.fascinated.fascinatedutils.common.Colors;
+import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
@@ -27,6 +29,7 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
     private Supplier<String> labelSupplier;
     private Runnable onPress = () -> {};
     private Supplier<Boolean> disabledSupplier = () -> false;
+    private final AnimHandle hoverAnim = new AnimHandle(0f);
     private boolean hovered;
     private boolean focused;
     private boolean rounded;
@@ -222,6 +225,9 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
         UiTheme theme = renderFrame.theme();
         ButtonVariant resolvedVariant = variantSupplier.get();
         boolean active = !isDisabled && hovered;
+        hoverAnim.target(active || (focused && !isDisabled) ? 1f : 0f);
+        hoverAnim.tick(deltaSeconds);
+        float hover = hoverAnim.value();
         int defaultTextColor = switch (resolvedVariant) {
             case PRIMARY -> theme.onAccent();
             case DANGER, SUCCESS -> theme.onDanger();
@@ -238,18 +244,18 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
                 renderFrame.fillRoundedRectFrame(bx, by, bw, bh, cornerRadius, theme.borderSubtle(), 0, 1, 1, cornerMask);
             }
         } else if (resolvedVariant == ButtonVariant.GHOST) {
-            if (hovered || focused) {
-                renderFrame.fillRoundedRect(bx, by, bw, bh, cornerRadius, theme.surfaceRaised(), cornerMask);
+            if (hover > 0.01f) {
+                renderFrame.fillRoundedRect(bx, by, bw, bh, cornerRadius, Colors.mixArgb(hover, theme.surfaceRaised() & 0x00FFFFFF, theme.surfaceRaised()), cornerMask);
             }
         } else if (resolvedVariant == ButtonVariant.PRIMARY) {
-            renderFrame.fillRoundedRect(bx, by, bw, bh, cornerRadius, active ? theme.accentHover() : theme.accent(), cornerMask);
+            renderFrame.fillRoundedRect(bx, by, bw, bh, cornerRadius, Colors.mixArgb(hover, theme.accent(), theme.accentHover()), cornerMask);
         } else if (resolvedVariant == ButtonVariant.SUCCESS) {
-            renderFrame.fillRoundedRect(bx, by, bw, bh, cornerRadius, active ? theme.successFillHover() : theme.successFill(), cornerMask);
+            renderFrame.fillRoundedRect(bx, by, bw, bh, cornerRadius, Colors.mixArgb(hover, theme.successFill(), theme.successFillHover()), cornerMask);
         } else if (resolvedVariant == ButtonVariant.DANGER) {
-            renderFrame.fillRoundedRect(bx, by, bw, bh, cornerRadius, active ? theme.dangerFillHover() : theme.dangerFill(), cornerMask);
+            renderFrame.fillRoundedRect(bx, by, bw, bh, cornerRadius, Colors.mixArgb(hover, theme.dangerFill(), theme.dangerFillHover()), cornerMask);
         } else {
-            renderFrame.fillRoundedRect(bx, by, bw, bh, cornerRadius, active ? theme.buttonFillHover() : theme.buttonFill(), cornerMask);
-            renderFrame.fillRoundedRectFrame(bx, by, bw, bh, cornerRadius, active ? theme.buttonBorderHover() : theme.buttonBorder(), 0, 1, 1, cornerMask);
+            renderFrame.fillRoundedRect(bx, by, bw, bh, cornerRadius, Colors.mixArgb(hover, theme.buttonFill(), theme.buttonFillHover()), cornerMask);
+            renderFrame.fillRoundedRectFrame(bx, by, bw, bh, cornerRadius, Colors.mixArgb(hover, theme.buttonBorder(), theme.buttonBorderHover()), 0, 1, 1, cornerMask);
         }
         if (focused && !isDisabled) {
             int ringOffset = FOCUS_RING_GAP + FOCUS_RING_THICKNESS;

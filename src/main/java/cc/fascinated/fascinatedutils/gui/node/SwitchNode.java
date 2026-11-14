@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.node;
 
+import cc.fascinated.fascinatedutils.common.Colors;
+import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
@@ -17,6 +19,9 @@ public class SwitchNode extends PositionedNode<SwitchNode> {
 
     private static final int KNOB_INSET = 2;
     private static final float SLIDE_SPEED = 14f;
+    private static final float KNOB_STRETCH = 5f;
+
+    private final AnimHandle hoverAnim = new AnimHandle(0f);
 
     private boolean checked;
     private boolean hovered;
@@ -116,19 +121,26 @@ public class SwitchNode extends PositionedNode<SwitchNode> {
                 knobProgress = target;
             }
         }
+        hoverAnim.target(hovered ? 1f : 0f);
+        hoverAnim.tick(deltaSeconds);
+        float hover = hoverAnim.value();
+        float travelStretch = 1f - Math.abs(2f * knobProgress - 1f);
         int trackX = bounds().positionX() + (bounds().width() - TRACK_WIDTH) / 2;
         int trackY = bounds().positionY() + (bounds().height() - TRACK_HEIGHT) / 2;
         int radius = TRACK_HEIGHT / 2;
-        if (checked) {
-            renderFrame.drawRoundedRect(trackX, trackY, TRACK_WIDTH, TRACK_HEIGHT, radius, hovered ? theme.accentHover() : theme.accent());
-        } else {
-            renderFrame.drawRoundedRect(trackX, trackY, TRACK_WIDTH, TRACK_HEIGHT, radius, hovered ? theme.surfaceActive() : theme.surfaceRaised());
-            renderFrame.drawRoundedRectFrame(trackX, trackY, TRACK_WIDTH, TRACK_HEIGHT, radius, theme.borderStrong(), 0, 1);
+        int offTrack = Colors.mixArgb(hover, theme.surfaceRaised(), theme.surfaceActive());
+        int onTrack = Colors.mixArgb(hover, theme.accent(), theme.accentHover());
+        renderFrame.drawRoundedRect(trackX, trackY, TRACK_WIDTH, TRACK_HEIGHT, radius, Colors.mixArgb(knobProgress, offTrack, onTrack));
+        if (knobProgress < 1f) {
+            int borderColor = Colors.mixArgb(knobProgress, theme.borderStrong(), theme.borderStrong() & 0x00FFFFFF);
+            renderFrame.drawRoundedRectFrame(trackX, trackY, TRACK_WIDTH, TRACK_HEIGHT, radius, borderColor, 0, 1);
         }
-        int knobSize = TRACK_HEIGHT - KNOB_INSET * 2;
+        int knobSize = TRACK_HEIGHT - KNOB_INSET * 2 + Math.round(hover);
+        float knobWidth = knobSize + KNOB_STRETCH * travelStretch + hover;
         float knobTravel = TRACK_WIDTH - KNOB_INSET * 2 - knobSize;
-        float knobX = trackX + KNOB_INSET + knobTravel * knobProgress;
-        renderFrame.drawRoundedRect(knobX, trackY + KNOB_INSET, knobSize, knobSize, knobSize / 2f, checked ? theme.onAccent() : theme.textMuted());
+        float knobX = trackX + KNOB_INSET + (knobTravel - (knobWidth - knobSize)) * knobProgress;
+        float knobY = trackY + (TRACK_HEIGHT - knobSize) / 2f;
+        renderFrame.drawRoundedRect(knobX, knobY, knobWidth, knobSize, knobSize / 2f, Colors.mixArgb(knobProgress, theme.textMuted(), theme.onAccent()));
         if (focused) {
             renderFrame.drawRoundedRectFrame(trackX - 3, trackY - 3, TRACK_WIDTH + 6, TRACK_HEIGHT + 6, radius + 3, theme.focusRing(), 0, 2);
         }

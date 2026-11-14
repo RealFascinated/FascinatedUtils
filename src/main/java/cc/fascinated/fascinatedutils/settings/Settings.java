@@ -72,6 +72,11 @@ public class Settings implements GsonSerializable<Settings> {
             .categoryDisplayKey("alumite.setting.category.performance")
             .build();
 
+    private final BooleanSetting turboWeather = BooleanSetting.builder().id("turbo_weather")
+            .defaultValue(true)
+            .categoryDisplayKey("alumite.setting.category.performance")
+            .build();
+
     public Settings() {
         addSetting(shellOpenKeybind);
         addSetting(screenshotsKeybind);
@@ -81,6 +86,7 @@ public class Settings implements GsonSerializable<Settings> {
         addSetting(reduceMacOSResolution);
         addSetting(turboEntities);
         addSetting(turboParticles);
+        addSetting(turboWeather);
 
         // ensure it's only enabled on macOS
         if (!ClientUtils.isMacOS() && reduceMacOSResolution.isEnabled()) {

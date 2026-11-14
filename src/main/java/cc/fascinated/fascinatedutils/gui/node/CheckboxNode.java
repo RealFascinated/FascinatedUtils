@@ -1,6 +1,9 @@
 package cc.fascinated.fascinatedutils.gui.node;
 
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
+import cc.fascinated.fascinatedutils.common.Colors;
+import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
+import cc.fascinated.fascinatedutils.gui.anim.Easing;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
@@ -15,6 +18,8 @@ public class CheckboxNode extends PositionedNode<CheckboxNode> {
     private static final int CORNER_RADIUS = 4;
     private static final int LABEL_GAP = 6;
 
+    private final AnimHandle hoverAnim = new AnimHandle(0f);
+    private final AnimHandle checkAnim = new AnimHandle(Float.NaN);
     private boolean checked;
     private boolean hovered;
     private boolean focused;
@@ -109,12 +114,26 @@ public class CheckboxNode extends PositionedNode<CheckboxNode> {
         int boxY = by + (bh - BOX_SIZE) / 2;
 
         UiTheme theme = renderFrame.theme();
-        if (checked) {
-            renderFrame.drawRoundedRect(bx, boxY, BOX_SIZE, BOX_SIZE, CORNER_RADIUS, hovered ? theme.accentHover() : theme.accent());
-            renderFrame.drawTexture(ModUiTextures.CHECK.getId(), bx + 1, boxY + 1, BOX_SIZE - 2, BOX_SIZE - 2, theme.onAccent());
-        } else {
-            int borderColor = hovered ? theme.buttonBorderHover() : theme.borderStrong();
-            renderFrame.drawRoundedRectFrame(bx, boxY, BOX_SIZE, BOX_SIZE, CORNER_RADIUS, borderColor, theme.inputFill(), 1);
+        hoverAnim.target(hovered ? 1f : 0f);
+        hoverAnim.tick(deltaSeconds);
+        if (Float.isNaN(checkAnim.value())) {
+            checkAnim.snap(checked ? 1f : 0f);
+        }
+        checkAnim.target(checked ? 1f : 0f);
+        checkAnim.tick(deltaSeconds);
+        float hover = hoverAnim.value();
+        float check = checkAnim.value();
+        int borderColor = Colors.mixArgb(hover, theme.borderStrong(), theme.buttonBorderHover());
+        renderFrame.drawRoundedRectFrame(bx, boxY, BOX_SIZE, BOX_SIZE, CORNER_RADIUS, borderColor, theme.inputFill(), 1);
+        if (check > 0.01f) {
+            float fillSize = BOX_SIZE * Easing.easeOutCubic(check);
+            float fillOffset = (BOX_SIZE - fillSize) / 2f;
+            int fillColor = Colors.mixArgb(hover, theme.accent(), theme.accentHover());
+            renderFrame.drawRoundedRect(bx + fillOffset, boxY + fillOffset, fillSize, fillSize, CORNER_RADIUS * check, fillColor);
+            float checkSize = (BOX_SIZE - 2) * Easing.easeOutBack(check);
+            float checkOffset = (BOX_SIZE - checkSize) / 2f;
+            int checkColor = Colors.mixArgb(check, theme.onAccent() & 0x00FFFFFF, theme.onAccent());
+            renderFrame.drawTexture(ModUiTextures.CHECK.getId(), bx + checkOffset, boxY + checkOffset, checkSize, checkSize, checkColor);
         }
         if (focused) {
             renderFrame.drawRoundedRectFrame(bx - 3, boxY - 3, BOX_SIZE + 6, BOX_SIZE + 6, CORNER_RADIUS + 3, theme.focusRing(), 0, 2);

@@ -23,6 +23,7 @@ public class DebugWidget extends HudHostModule {
     private final ValueSmoother hudRenderMs = new ValueSmoother(500);
     private final ValueSmoother cullPassMs = new ValueSmoother(500);
     private final ValueSmoother particleCullPassMs = new ValueSmoother(500);
+    private final ValueSmoother snapshotCaptureMs = new ValueSmoother(500);
 
     private final EnumSetting<DebugStatsFormat> turboStatsFormat = EnumSetting.<DebugStatsFormat>builder().id("turbo_stats_format").defaultValue(DebugStatsFormat.RATIO).valueFormatter(debugStatsFormat -> debugStatsFormat.displayName).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 

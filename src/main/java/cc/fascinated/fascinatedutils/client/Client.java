@@ -19,6 +19,7 @@ import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.screenshot.ScreenshotManager;
 import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
 import cc.fascinated.fascinatedutils.systems.turboparticles.TurboParticles;
+import cc.fascinated.fascinatedutils.systems.turboweather.TurboWeather;
 import cc.fascinated.fascinatedutils.systems.waypoint.WaypointRepository;
 import cc.fascinated.fascinatedutils.updater.Updater;
 import net.fabricmc.api.ClientModInitializer;
@@ -38,6 +39,7 @@ public class Client implements ClientModInitializer {
 
     public static final TurboEntities TURBO_ENTITIES = new TurboEntities();
     public static final TurboParticles TURBO_PARTICLES = new TurboParticles();
+    public static final TurboWeather TURBO_WEATHER = new TurboWeather();
     private static final PerfProbe.Section CLIENT_TICK_SECTION = PerfProbe.INSTANCE.section("client.tick");
 
     /**

@@ -75,7 +75,7 @@ public class HUDManager {
             }
             widget.applyHudAnchorToPosition(canvasWidth, canvasHeight);
             if (draw != null) {
-                renderer.pushTranslate(widget.getHudState().getPositionX(), widget.getHudState().getPositionY());
+                renderer.pushTranslate(Math.round(widget.getHudState().getPositionX()), Math.round(widget.getHudState().getPositionY()));
                 renderer.pushScale(widget.getHudState().getScale());
                 draw.run();
                 renderer.endRenderSegment();

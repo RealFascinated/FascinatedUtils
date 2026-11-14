@@ -29,12 +29,21 @@ public class TurboEntities {
     private static final int CULL_SNAPSHOT_CAPTURE_RATE_TICKS = 5;
     private static final PerfProbe.Section SNAPSHOT_SECTION = PerfProbe.INSTANCE.section("turbo_entities.snapshot");
 
+    @Getter
+    private final BlockModelCache blockModelCache = new BlockModelCache();
+
     public final CullCounters itemFrameCounters = new CullCounters();
     public final CullCounters signCounters = new CullCounters();
 
     @Getter
     private EntitiesCullTask cullTask;
     private Thread cullThread;
+
+    /**
+     * Duration of the most recent cull snapshot capture on the client thread.
+     */
+    @Getter
+    private volatile long lastSnapshotNanos = 0L;
 
     /**
      * Snapshot of the Turbo Entities setting for hot paths (render thread); refreshed each client tick.
@@ -57,6 +66,10 @@ public class TurboEntities {
      */
     public boolean isTurboEntitiesCullEnabled() {
         return turboEntitiesCullEnabledMirror;
+    }
+
+    public boolean isCullThreadAlive() {
+        return cullThread != null && cullThread.isAlive();
     }
 
     public void incrementTickedEntities() {
@@ -104,10 +117,12 @@ public class TurboEntities {
         if (cullTask != null && enabled) {
             if (cullSnapshotTickCounter++ % CULL_SNAPSHOT_CAPTURE_RATE_TICKS == 0) {
                 Minecraft client = Minecraft.getInstance();
+                long snapshotNanosStart = System.nanoTime();
                 long snapshotStart = SNAPSHOT_SECTION.begin();
                 cullTask.publishEntityCullSnapshotFromWorld(client);
                 cullTask.publishBlockEntityCullSnapshotFromWorld(client, BLOCK_ENTITY_CULL_CHUNK_RADIUS_CAP);
                 SNAPSHOT_SECTION.end(snapshotStart);
+                lastSnapshotNanos = System.nanoTime() - snapshotNanosStart;
             }
         }
     }

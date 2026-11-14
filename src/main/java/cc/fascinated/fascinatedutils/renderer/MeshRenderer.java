@@ -80,6 +80,7 @@ public class MeshRenderer {
             texture.close();
         }
         disposableCornerRadiiLuts.clear();
+        RoundedRectCornerRadiiTexture.trimCachedLuts();
     }
 
     public void flush(@NonNull GuiGraphicsExtractor drawContext) {
@@ -136,8 +137,7 @@ public class MeshRenderer {
         int y1 = Mth.ceil(positionY + height);
         float halfMinPixelSide = Math.min(x1 - x0, y1 - y0) * 0.5f;
         int packedCornerRadii = RectCornerRoundMask.packedCornerRadiiBytes(cornerRadius, RectCornerRoundMask.ALL, halfMinPixelSide);
-        DynamicTexture cornerRadiiLut = RoundedRectCornerRadiiTexture.createDisposableRadiiLut(packedCornerRadii, 0f);
-        disposableCornerRadiiLuts.add(cornerRadiiLut);
+        DynamicTexture cornerRadiiLut = RoundedRectCornerRadiiTexture.cachedRadiiLut(packedCornerRadii, 0f, 0f);
         TextureSetup textureSetup = TextureSetup.doubleTexture(texture.getTextureView(), linearSampler(), cornerRadiiLut.getTextureView(), cornerRadiiLut.getSampler());
         pendingTextured.add(new RoundedRectTexRenderState(FascinatedUiPipelines.ROUNDED_RECT_TEX_LUT, textureSetup, pose, x0, y0, x1, y1, tintArgb, tintArgb, tintArgb, tintArgb, scissor, packedCornerRadii, 0f));
     }
@@ -214,8 +214,7 @@ public class MeshRenderer {
         else {
             roundedPipeline = FascinatedUiPipelines.ROUNDED_RECT_TEX_LUT;
             TextureSetup white = whiteSetup();
-            DynamicTexture cornerRadiiLut = RoundedRectCornerRadiiTexture.createDisposableRadiiLut(packedCornerRadii, lutOuterRingStrokePx, lutExpansionShaderPx);
-            disposableCornerRadiiLuts.add(cornerRadiiLut);
+            DynamicTexture cornerRadiiLut = RoundedRectCornerRadiiTexture.cachedRadiiLut(packedCornerRadii, lutOuterRingStrokePx, lutExpansionShaderPx);
             roundedTextureSetup = TextureSetup.doubleTexture(white.texure0(), white.sampler0(), cornerRadiiLut.getTextureView(), cornerRadiiLut.getSampler());
             topLeft = colorTop;
             bottomLeft = colorBottom;

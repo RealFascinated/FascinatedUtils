@@ -9,12 +9,16 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.Identifier;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class RoundedRectCornerRadiiTexture {
     public static final RoundedRectCornerRadiiTexture INSTANCE = new RoundedRectCornerRadiiTexture();
     private static final Identifier TEXTURE_ID = Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "gpu/rounded_corner_radii_lut");
     private static final AtomicLong DISPOSABLE_LUT_SEQUENCE = new AtomicLong();
+    private static final int MAX_CACHED_LUTS = 256;
+    private static final Map<Long, DynamicTexture> CACHED_LUTS = new HashMap<>();
     private DynamicTexture backing;
 
     private RoundedRectCornerRadiiTexture() {
@@ -34,6 +38,42 @@ public class RoundedRectCornerRadiiTexture {
         return texture;
     }
 
+    /**
+     * Returns a shared radii LUT for the given parameters, creating it on first use. The texture stays alive across
+     * frames; callers must not close it. Identical parameters always produce identical pixels, so sharing is safe.
+     *
+     * @param packedCornerRadii    packed corner radius bytes
+     * @param lutRingStrokePx      logical stroke thickness in pixels
+     * @param lutExpansionShaderPx shader expansion in pixels
+     * @return the cached texture
+     */
+    public static DynamicTexture cachedRadiiLut(int packedCornerRadii, float lutRingStrokePx, float lutExpansionShaderPx) {
+        long key = ((long) packedCornerRadii << 16) | ((long) lutByte(lutRingStrokePx) << 8) | lutByte(lutExpansionShaderPx);
+        DynamicTexture texture = CACHED_LUTS.get(key);
+        if (texture == null) {
+            texture = createDisposableRadiiLut(packedCornerRadii, lutRingStrokePx, lutExpansionShaderPx);
+            CACHED_LUTS.put(key, texture);
+        }
+        return texture;
+    }
+
+    /**
+     * Closes every cached LUT when the cache has grown past its limit. Call only after the GUI render pass finished.
+     */
+    public static void trimCachedLuts() {
+        if (CACHED_LUTS.size() <= MAX_CACHED_LUTS) {
+            return;
+        }
+        for (DynamicTexture texture : CACHED_LUTS.values()) {
+            texture.close();
+        }
+        CACHED_LUTS.clear();
+    }
+
+    private static int lutByte(float pixels) {
+        return pixels > 0f ? Math.max(1, Math.min(255, Math.round(pixels))) : 0;
+    }
+
     public static DynamicTexture createDisposableRadiiLut(int packedCornerRadii, float lutRingStrokePx) {
         return createDisposableRadiiLut(packedCornerRadii, lutRingStrokePx, 0f);
     }
@@ -47,9 +87,9 @@ public class RoundedRectCornerRadiiTexture {
         image.setPixel(1, 0, 0xFF000000 | (topRight << 16) | (topRight << 8) | topRight);
         image.setPixel(2, 0, 0xFF000000 | (bottomRight << 16) | (bottomRight << 8) | bottomRight);
         image.setPixel(3, 0, 0xFF000000 | (bottomLeft << 16) | (bottomLeft << 8) | bottomLeft);
-        int strokeByte = lutRingStrokePx > 0f ? Math.max(1, Math.min(255, Math.round(lutRingStrokePx))) : 0;
+        int strokeByte = lutByte(lutRingStrokePx);
         image.setPixel(4, 0, 0xFF000000 | (strokeByte << 16) | (strokeByte << 8) | strokeByte);
-        int expansionByte = lutExpansionShaderPx > 0f ? Math.max(1, Math.min(255, Math.round(lutExpansionShaderPx))) : 0;
+        int expansionByte = lutByte(lutExpansionShaderPx);
         image.setPixel(5, 0, 0xFF000000 | (expansionByte << 16) | (expansionByte << 8) | expansionByte);
     }
 
