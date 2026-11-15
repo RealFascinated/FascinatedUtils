@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import org.jspecify.annotations.Nullable;
 
@@ -44,5 +44,5 @@ public interface HudRenderablePanel {
      * @param editorMode   true inside the HUD layout editor preview
      * @return deferred draw runnable, or {@code null} to skip this frame
      */
-    @Nullable Runnable prepareAndDraw(GuiRenderer glRenderer, float deltaSeconds, boolean editorMode);
+    @Nullable Runnable prepareAndDraw(AlumiteGuiRenderer glRenderer, float deltaSeconds, boolean editorMode);
 }

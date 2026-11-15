@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 public class TextPromptPopupNode extends PopupNode<TextPromptPopupNode> {
 
     private static final int POPUP_WIDTH = 240;
-    private static final int POPUP_HEIGHT = 96;
+    private static final int POPUP_HEIGHT = 110;
     private static final int PAD_SIDE = 16;
     private static final int PAD_TOP = 14;
     private static final int PAD_BOTTOM = 12;
@@ -18,10 +18,12 @@ public class TextPromptPopupNode extends PopupNode<TextPromptPopupNode> {
     private static final int BUTTON_HEIGHT = UiMetrics.CONTROL_HEIGHT;
     private static final int BUTTON_GAP = 8;
     private static final int BUTTON_WIDTH = 76;
+    private static final int ERROR_GAP = 4;
 
     private final TextInputNode<String> input;
     private Runnable onCancel = () -> {};
     private Runnable onConfirm = () -> {};
+    private Supplier<String> errorSupplier = () -> null;
 
     /**
      * Creates a popup asking for a single line of text.
@@ -43,6 +45,13 @@ public class TextPromptPopupNode extends PopupNode<TextPromptPopupNode> {
         inputHost.addChild(input);
         addPopupChild(inputHost);
 
+        TextNode errorText = new TextNode(() -> {
+            String error = errorSupplier.get();
+            return error == null ? "" : error;
+        });
+        errorText.setColorResolver(theme -> theme.danger()).alignX(0.5f).top(INPUT_TOP + UiMetrics.CONTROL_HEIGHT + ERROR_GAP);
+        addPopupChild(errorText);
+
         ButtonNode cancelButton = new ButtonNode(() -> Component.translatable("alumite.common.cancel").getString())
                 .setOnPress(() -> onCancel.run());
         cancelButton.left(0).size(BUTTON_WIDTH, BUTTON_HEIGHT);
@@ -56,6 +65,17 @@ public class TextPromptPopupNode extends PopupNode<TextPromptPopupNode> {
         buttonRow.addChild(cancelButton);
         buttonRow.addChild(confirmButton);
         addPopupChild(buttonRow);
+    }
+
+    /**
+     * Sets the validation message shown under the input.
+     *
+     * @param errorSupplier supplies the message, or null or blank when the input is valid
+     * @return this popup
+     */
+    public TextPromptPopupNode setErrorSupplier(Supplier<String> errorSupplier) {
+        this.errorSupplier = errorSupplier == null ? () -> null : errorSupplier;
+        return this;
     }
 
     public TextPromptPopupNode setOnCancel(Runnable onCancel) {

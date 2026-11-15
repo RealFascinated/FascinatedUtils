@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.node;
 
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiThemeRepository;
 
@@ -51,7 +51,7 @@ public class RectNode extends PositionedNode<RectNode> {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         int posX = bounds().positionX();
         int posY = bounds().positionY();
         int width = bounds().width();

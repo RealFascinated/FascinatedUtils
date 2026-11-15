@@ -1,10 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.itemtooltip;
 
-import cc.fascinated.fascinatedutils.common.ByteUtils;
-import cc.fascinated.fascinatedutils.common.ItemStackSizeCalculator;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.ItemTooltipModule;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,16 +24,11 @@ public class ItemStackTooltipMixin {
 
         ItemStack stack = (ItemStack) (Object) this;
 
-        if (module.getShowItemSize().isEnabled()) {
-            long byteSize = ItemStackSizeCalculator.INSTANCE.getStackSize(stack);
-            if (byteSize > 0) {
-                List<Component> mutable = new ArrayList<>(cir.getReturnValue());
-                if (module.getGapAboveInfo().isEnabled()) {
-                    mutable.add(Component.literal(""));
-                }
-                mutable.add(Component.literal(I18n.get("alumite.module.itemtooltip.item_size", ByteUtils.formatBytes(byteSize, 2))).withStyle(style -> style.withColor(0xAAAAAA)));
-                cir.setReturnValue(mutable);
-            }
+        List<Component> sizeLines = module.itemSizeLines(stack);
+        if (!sizeLines.isEmpty()) {
+            List<Component> mutable = new ArrayList<>(cir.getReturnValue());
+            mutable.addAll(sizeLines);
+            cir.setReturnValue(mutable);
         }
     }
 }

@@ -19,7 +19,7 @@ public class MovementModule extends HudHostModule {
 
     private final BooleanSetting enableFlightSpeedModifier = BooleanSetting.builder().id("enable_flight_speed_modifier").defaultValue(false).categoryDisplayKey("alumite.setting.category.flight_speed").build();
 
-    private final SliderSetting flightSpeedModifier = SliderSetting.builder().id("flight_speed_modifier").defaultValue(2f).minValue(2f).maxValue(10f).step(1f).categoryDisplayKey("alumite.setting.category.flight_speed").build();
+    private final SliderSetting flightSpeedModifier = SliderSetting.builder().id("flight_speed_modifier").defaultValue(2f).minValue(1f).maxValue(10f).step(1f).categoryDisplayKey("alumite.setting.category.flight_speed").build();
 
 
     public MovementModule() {
@@ -27,6 +27,7 @@ public class MovementModule extends HudHostModule {
         addAppearanceSettings(true);
         addSetting(enableFlightSpeedModifier);
         addSetting(flightSpeedModifier);
+        enableFlightSpeedModifier.addSubSetting(flightSpeedModifier);
         registerHudPanel(new MovementHudPanel(this));
     }
 

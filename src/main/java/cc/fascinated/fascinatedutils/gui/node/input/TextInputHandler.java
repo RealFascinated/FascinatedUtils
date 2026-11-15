@@ -25,7 +25,7 @@ public class TextInputHandler {
     private boolean inTypingRun;
     private Consumer<String> onSubmit = ignored -> {};
     private Consumer<String> onChange = ignored -> {};
-    private Runnable onCancel = () -> {};
+    private Runnable onCancel;
 
     public TextInputHandler setMaxLength(int maxLength) {
         this.maxLength = Math.max(0, maxLength);
@@ -47,7 +47,7 @@ public class TextInputHandler {
     }
 
     public TextInputHandler setOnCancel(Runnable onCancel) {
-        this.onCancel = onCancel == null ? () -> {} : onCancel;
+        this.onCancel = onCancel;
         return this;
     }
 
@@ -390,6 +390,9 @@ public class TextInputHandler {
         boolean shift = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
         switch (keyCode) {
             case GLFW.GLFW_KEY_ESCAPE -> {
+                if (onCancel == null) {
+                    return false;
+                }
                 onCancel.run();
                 return true;
             }
@@ -473,7 +476,9 @@ public class TextInputHandler {
      * Fires the cancel callback.
      */
     public void cancel() {
-        onCancel.run();
+        if (onCancel != null) {
+            onCancel.run();
+        }
     }
 
     private void fireChange() {

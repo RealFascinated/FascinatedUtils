@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.debug.perf.tests.hud;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.HudOverlaysPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.IdlePerfScene;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
@@ -22,7 +22,7 @@ public class HudPanelPerfTest extends PerfTest {
 
     private final String panelId;
     private final GuiRenderState renderState = new GuiRenderState();
-    private GuiRenderer renderer;
+    private AlumiteGuiRenderer renderer;
     private HudPanel panel;
     private int drawn;
 
@@ -34,7 +34,7 @@ public class HudPanelPerfTest extends PerfTest {
     @Override
     public void setup() {
         panel = HUDManager.INSTANCE.getWidgets().stream().filter(widget -> widget.getId().equals(panelId)).findFirst().orElse(null);
-        renderer = new GuiRenderer(new GuiGraphicsExtractor(Minecraft.getInstance(), renderState, 0, 0));
+        renderer = new AlumiteGuiRenderer(new GuiGraphicsExtractor(Minecraft.getInstance(), renderState, 0, 0));
     }
 
     @Override

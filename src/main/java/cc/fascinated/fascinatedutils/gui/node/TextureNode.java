@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.gui.core.PixelSize;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.core.UIScale;
 import cc.fascinated.fascinatedutils.gui.render.ClipRegion;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiThemeRepository;
 import cc.fascinated.fascinatedutils.systems.TextureManager;
@@ -85,7 +85,7 @@ public class TextureNode extends PositionedNode<TextureNode> {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         Identifier textureId = textureSupplier != null ? textureSupplier.get() : null;
         if (showLoader && spinnerNode != null) {
             spinnerNode.setVisible(textureId == null);

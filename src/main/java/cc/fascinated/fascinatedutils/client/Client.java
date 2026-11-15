@@ -16,7 +16,7 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.gui.ModUiClientEntry;
 import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.renderer.Renderer2D;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.screenshot.ScreenshotManager;
@@ -68,7 +68,7 @@ public class Client implements ClientModInitializer {
         Identifier listenerId = Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "mini_message_width_cache");
         resourceLoader.registerReloadListener(listenerId, (sharedState, prepareExecutor, barrier, applyExecutor) -> barrier.wait(null).thenRunAsync(() -> {
             Renderer2D.clearMiniMessageWidthCache();
-            GuiRenderer.clearTextWidthCache();
+            AlumiteGuiRenderer.clearTextWidthCache();
         }, applyExecutor));
         resourceLoader.addListenerOrdering(ResourceReloaderKeys.Client.FONTS, listenerId);
         resourceLoader.addListenerOrdering(ResourceReloaderKeys.Client.LANGUAGES, listenerId);

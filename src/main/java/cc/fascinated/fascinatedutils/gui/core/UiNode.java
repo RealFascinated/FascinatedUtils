@@ -1,11 +1,12 @@
 package cc.fascinated.fascinatedutils.gui.core;
 
 import cc.fascinated.fascinatedutils.gui.render.ClipRegion;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 public abstract class UiNode {
     private final List<UiNode> children = new ArrayList<>();
@@ -18,6 +19,7 @@ public abstract class UiNode {
     private boolean inViewport = false;
     private Runnable pointerEnterCallback;
     private Runnable pointerLeaveCallback;
+    private Supplier<String> tooltipSupplier;
 
     public UiNode parent() {
         return parent;
@@ -103,7 +105,7 @@ public abstract class UiNode {
         }
     }
 
-    public void layout(GuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
+    public void layout(AlumiteGuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
         bounds.set(positionX, positionY, width, height);
         for (UiNode childNode : children) {
             childNode.layout(renderFrame, positionX, positionY, width, height);
@@ -134,7 +136,7 @@ public abstract class UiNode {
     protected void onTranslated(int deltaX, int deltaY) {
     }
 
-    public void render(GuiRenderer renderFrame, float deltaSeconds) {
+    public void render(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         if (!visible) {
             return;
         }
@@ -182,6 +184,50 @@ public abstract class UiNode {
 
     public boolean focusable() {
         return false;
+    }
+
+    /**
+     * Whether keyboard focus must stay inside this node's subtree while it is visible, as for modal popups.
+     *
+     * @return true when Tab navigation and key input are confined to this subtree
+     */
+    public boolean trapsFocus() {
+        return false;
+    }
+
+    /**
+     * Sets the tooltip shown after the pointer rests on this node.
+     *
+     * @param tooltipSupplier supplies the tooltip text, or null to remove the tooltip
+     * @return this node
+     */
+    public UiNode setTooltip(Supplier<String> tooltipSupplier) {
+        this.tooltipSupplier = tooltipSupplier;
+        return this;
+    }
+
+    /**
+     * Sets a fixed tooltip text.
+     *
+     * @param tooltipText the tooltip text, or null to remove the tooltip
+     * @return this node
+     */
+    public UiNode setTooltip(String tooltipText) {
+        this.tooltipSupplier = tooltipText == null ? null : () -> tooltipText;
+        return this;
+    }
+
+    public Supplier<String> tooltip() {
+        return tooltipSupplier;
+    }
+
+    /**
+     * Called on each ancestor when a descendant gains focus through keyboard navigation, so scrolling containers can
+     * bring it into view.
+     *
+     * @param descendant the node that gained focus
+     */
+    public void revealDescendant(UiNode descendant) {
     }
 
     public void onFocusGained() {
@@ -254,7 +300,7 @@ public abstract class UiNode {
         return false;
     }
 
-    protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
     }
 
     /**

@@ -5,9 +5,8 @@ import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.core.UiKeys;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
-import cc.fascinated.fascinatedutils.gui.render.UiText;
 import cc.fascinated.fascinatedutils.gui.theme.UiMetrics;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import net.minecraft.resources.Identifier;
@@ -129,22 +128,34 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
         return this;
     }
 
+    @Override
+    public ButtonNode setTooltip(Supplier<String> tooltipSupplier) {
+        super.setTooltip(tooltipSupplier);
+        return this;
+    }
+
+    @Override
+    public ButtonNode setTooltip(String tooltipText) {
+        super.setTooltip(tooltipText);
+        return this;
+    }
+
     public ButtonNode setIconSize(int iconSize) {
         this.iconSize = Math.max(1, iconSize);
         return this;
     }
 
     @Override
-    protected int intrinsicWidth(GuiRenderer renderFrame, int parentWidth) {
+    protected int intrinsicWidth(AlumiteGuiRenderer renderFrame, int parentWidth) {
         return Math.max((int) minimumWidth(renderFrame), intrinsicHeight(renderFrame, parentWidth, 0));
     }
 
     @Override
-    protected int intrinsicHeight(GuiRenderer renderFrame, int parentHeight, int resolvedWidth) {
+    protected int intrinsicHeight(AlumiteGuiRenderer renderFrame, int parentHeight, int resolvedWidth) {
         return UiMetrics.CONTROL_HEIGHT;
     }
 
-    public float minimumWidth(GuiRenderer renderFrame) {
+    public float minimumWidth(AlumiteGuiRenderer renderFrame) {
         int textWidth = renderFrame.measureTextWidth(label(), false);
         int leftWidth = leftIcon != null ? ICON_PADDING + iconSize + ICON_TEXT_GAP : ICON_PADDING;
         int rightWidth = rightIcon != null ? ICON_TEXT_GAP + iconSize + ICON_PADDING : ICON_PADDING;
@@ -210,7 +221,7 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         int bx = bounds().positionX();
         int by = bounds().positionY();
         int bw = bounds().width();
@@ -225,7 +236,8 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
         float hover = hoverAnim.value();
         int defaultTextColor = switch (resolvedVariant) {
             case PRIMARY -> theme.onAccent();
-            case DANGER, SUCCESS -> theme.onDanger();
+            case DANGER -> theme.onDanger();
+            case SUCCESS -> theme.onSuccess();
             default -> theme.textPrimary();
         };
         int textColor = isDisabled ? theme.textSubtle()
@@ -256,8 +268,8 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
             renderFrame.drawRoundedRectFrame(bx - FOCUS_RING_OFFSET, by - FOCUS_RING_OFFSET, bw + FOCUS_RING_OFFSET * 2, bh + FOCUS_RING_OFFSET * 2, cornerRadius + FOCUS_RING_OFFSET, theme.focusRing(), 0, FOCUS_RING_THICKNESS);
         }
 
-        UiText labelText = UiText.of(label()).color(textColor);
-        int textWidth = labelText.width(renderFrame);
+        String labelString = label();
+        int textWidth = renderFrame.measureTextWidth(labelString == null ? "" : labelString, false);
         int iconY = by + (bh - iconSize) / 2;
         if (centerIcon != null) {
             int iconTint = renderFrame.theme().textPrimary();
@@ -280,7 +292,9 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
             textX = textAreaX + (textAreaWidth - textWidth) / 2;
         }
         int textY = by + (bh - renderFrame.fontHeight()) / 2;
-        labelText.draw(renderFrame, textX, textY);
+        if (labelString != null && !labelString.isEmpty()) {
+            renderFrame.drawText(labelString, textX, textY, textColor, false, false);
+        }
 
         if (rightIcon != null) {
             int iconTint = renderFrame.theme().textPrimary();

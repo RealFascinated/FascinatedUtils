@@ -134,6 +134,10 @@ public class HudEditorPointerSession {
         float pointerDistance = Math.max(HudEditorChrome.SCALE_DRAG_MIN_REFERENCE_DISTANCE, (float) Math.hypot(pointerX - dragOriginX, pointerY - dragOriginY));
         float nextScale = Math.max(HudEditorChrome.MIN_WIDGET_SCALE, scaleDragStartScale * (pointerDistance / scaleDragReferenceDistance));
         scalingWidget.getHudState().setScale(HudEditorChrome.snapScaleNearUnity(nextScale));
+        float shiftX = dragOriginX - HudEditorChrome.scaleDragOriginX(scalingWidget);
+        float shiftY = dragOriginY - HudEditorChrome.scaleDragOriginY(scalingWidget);
+        scalingWidget.getHudState().setPositionX(scalingWidget.getHudState().getPositionX() + shiftX);
+        scalingWidget.getHudState().setPositionY(scalingWidget.getHudState().getPositionY() + shiftY);
     }
 
     /**

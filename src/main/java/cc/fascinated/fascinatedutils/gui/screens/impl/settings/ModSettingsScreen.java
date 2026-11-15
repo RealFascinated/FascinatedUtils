@@ -38,6 +38,7 @@ import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.Nullable;
@@ -178,12 +179,18 @@ public class ModSettingsScreen extends RootScreen {
         UiState<Boolean> createOpen = stateStore.state("profile.create", false);
         UiState<UUID> renameId = stateStore.state("profile.rename", (UUID) null);
         UiState<UUID> deleteId = stateStore.state("profile.delete", (UUID) null);
+        UiState<Boolean> resetOpen = stateStore.state("module.reset", false);
+        UiState<Module> openModule = stateStore.state("module", navigateToModule);
         if (colorTarget.get() != null) {
             colorTarget.set(null);
+        } else if (resetOpen.get()) {
+            resetOpen.set(false);
         } else if (createOpen.get() || renameId.get() != null || deleteId.get() != null) {
             createOpen.set(false);
             renameId.set(null);
             deleteId.set(null);
+        } else if (stateStore.state("tab", lastTabKey).get().equals(TAB_MODULES) && openModule.get() != null) {
+            openModule.set(null);
         } else {
             closeShell();
         }
@@ -281,7 +288,8 @@ public class ModSettingsScreen extends RootScreen {
                 .setIconCenter(ModUiTextures.CLOSE.getId())
                 .setVariant(ButtonNode.ButtonVariant.GHOST)
                 .size(CONTROL_HEIGHT, CONTROL_HEIGHT)
-                .setOnPress(this::closeShell));
+                .setOnPress(this::closeShell)
+                .setTooltip(() -> Component.translatable("alumite.common.close").getString()));
         return header;
     }
 
@@ -326,7 +334,8 @@ public class ModSettingsScreen extends RootScreen {
                 .setIconCenter(ModUiTextures.BACK.getId())
                 .setVariant(ButtonNode.ButtonVariant.GHOST)
                 .size(CONTROL_HEIGHT, CONTROL_HEIGHT)
-                .setOnPress(() -> openModule.set(null)));
+                .setOnPress(() -> openModule.set(null))
+                .setTooltip(() -> Component.translatable("alumite.common.back").getString()));
         header.addChild(new TextNode(module::getDisplayName).setBold(true).alignY(0.5f));
         SwitchNode enabledSwitch = new SwitchNode().setChecked(module.isEnabled());
         enabledSwitch.alignY(0.5f);
@@ -341,11 +350,8 @@ public class ModSettingsScreen extends RootScreen {
                 .setIconCenter(ModUiTextures.RESET.getId())
                 .setVariant(ButtonNode.ButtonVariant.GHOST)
                 .size(CONTROL_HEIGHT, CONTROL_HEIGHT)
-                .setOnPress(() -> {
-                    module.resetToDefault();
-                    ModConfig.profiles().saveModule(module);
-                    refresh.run();
-                }));
+                .setOnPress(() -> stateStore.state("module.reset", false).set(true))
+                .setTooltip(() -> Component.translatable("alumite.setting.ui.reset.tooltip").getString()));
     }
 
     private void buildModuleGrid(PositionedNode<?> contents, UiState<Module> openModule) {
@@ -355,7 +361,8 @@ public class ModSettingsScreen extends RootScreen {
         String searchLower = search.get().toLowerCase(Locale.ROOT);
         List<Module> modules = new ArrayList<>(ModuleRegistry.INSTANCE.getModules().stream()
                 .filter(module -> filter.get() == null || module.getCategory() == filter.get())
-                .filter(module -> module.getDisplayName().toLowerCase(Locale.ROOT).contains(searchLower))
+                .filter(module -> searchLower.isEmpty() || module.getDisplayName().toLowerCase(Locale.ROOT).contains(searchLower)
+                        || moduleHasMatchingSetting(module, searchLower))
                 .toList());
         modules.sort((left, right) -> String.CASE_INSENSITIVE_ORDER.compare(left.getDisplayName(), right.getDisplayName()));
 
@@ -371,6 +378,31 @@ public class ModSettingsScreen extends RootScreen {
             list.addChild(row);
         }
         contents.addChild(scrollHost(list, contentHeight));
+    }
+
+    private static boolean settingMatches(Setting<?> setting, String searchLower) {
+        if (setting.getName().toLowerCase(Locale.ROOT).contains(searchLower)) {
+            return true;
+        }
+        String tooltip = setting.getTooltipProvider().get();
+        return tooltip != null && tooltip.toLowerCase(Locale.ROOT).contains(searchLower);
+    }
+
+    private static boolean categoryNameMatches(SettingCategory category, String searchLower) {
+        String key = category.displayNameKey();
+        return key != null && !key.isBlank() && I18n.get(key).toLowerCase(Locale.ROOT).contains(searchLower);
+    }
+
+    private static boolean moduleHasMatchingSetting(Module module, String searchLower) {
+        if (module.getSettings().stream().anyMatch(setting -> settingMatches(setting, searchLower))) {
+            return true;
+        }
+        for (SettingCategory category : module.getSettingCategories()) {
+            if (categoryNameMatches(category, searchLower) || category.settings().stream().anyMatch(setting -> settingMatches(setting, searchLower))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private PositionedNode<?> noResultsState(UiState<String> search, UiState<ModuleCategory> filter) {
@@ -449,14 +481,15 @@ public class ModSettingsScreen extends RootScreen {
         UiState<String> search = stateStore.state("detail.search", "");
 
         String searchLower = search.get().toLowerCase(Locale.ROOT);
-        boolean filtering = !searchLower.isBlank();
+        boolean filtering = !searchLower.isBlank() && !module.getDisplayName().toLowerCase(Locale.ROOT).contains(searchLower);
         List<Setting<?>> topLevel = module.getSettings().stream()
-                .filter(setting -> !filtering || setting.getName().toLowerCase(Locale.ROOT).contains(searchLower))
+                .filter(setting -> !filtering || settingMatches(setting, searchLower))
                 .toList();
         List<SettingCategory> categories = new ArrayList<>();
         for (SettingCategory category : module.getSettingCategories()) {
+            boolean categoryMatches = filtering && categoryNameMatches(category, searchLower);
             List<Setting<?>> matching = category.settings().stream()
-                    .filter(setting -> !filtering || setting.getName().toLowerCase(Locale.ROOT).contains(searchLower))
+                    .filter(setting -> !filtering || categoryMatches || settingMatches(setting, searchLower))
                     .toList();
             categories.add(new SettingCategory(category.displayNameKey(), matching));
         }
@@ -465,7 +498,7 @@ public class ModSettingsScreen extends RootScreen {
                 () -> ModConfig.profiles().saveModule(module), refresh, setting -> openColorPicker(setting, colorTarget, () -> ModConfig.profiles().saveModule(module)));
         PositionedNode<?> sectionsNode = sections.build(topLevel, categories);
 
-        ScrollColumnNode list = new ScrollColumnNode().setGap(GAP).persistScroll("module.detail." + module.getDisplayName());
+        ScrollColumnNode list = new ScrollColumnNode().setGap(GAP).persistScroll("module.detail." + module.getModuleKey());
         list.addChild(sectionsNode != null ? sectionsNode : emptyLabel(module.getAllSettings().isEmpty()
                 ? "alumite.setting.shell.no_settings" : "alumite.setting.shell.no_matching_settings"));
         contents.addChild(scrollHost(list, contentHeight));
@@ -534,13 +567,15 @@ public class ModSettingsScreen extends RootScreen {
                                 profileName.set(profile.getProfileName());
                                 prepareProfileInput(profileName, profile.getProfileName());
                                 renameId.set(profileId);
-                            }));
+                            })
+                            .setTooltip(() -> Component.translatable("alumite.setting.shell.profile_rename_tooltip").getString()));
                     row.addChild(new ButtonNode()
                             .setIconCenter(ModUiTextures.TRASH.getId())
                             .setVariant(ButtonNode.ButtonVariant.DANGER)
                             .size(CONTROL_HEIGHT, CONTROL_HEIGHT)
                             .alignY(0.5f)
-                            .setOnPress(() -> deleteId.set(profileId)));
+                            .setOnPress(() -> deleteId.set(profileId))
+                            .setTooltip(() -> Component.translatable("alumite.setting.shell.profile_delete_button").getString()));
                 }
             });
             list.addChild(profileCard);
@@ -571,6 +606,8 @@ public class ModSettingsScreen extends RootScreen {
                     profileNameInput,
                     () -> Component.translatable("alumite.setting.shell.profile_popup_create").getString(),
                     () -> profileName.get().isBlank() || ModConfig.profiles().profileNameExists(profileName.get()))
+                    .setErrorSupplier(() -> !profileName.get().isBlank() && ModConfig.profiles().profileNameExists(profileName.get())
+                            ? Component.translatable("alumite.setting.shell.profile_name_error_duplicate_create").getString() : null)
                     .setOnCancel(() -> createOpen.set(false))
                     .setOnConfirm(() -> {
                         String requestedName = profileName.get().trim();
@@ -584,17 +621,46 @@ public class ModSettingsScreen extends RootScreen {
         }
         UUID renaming = renameId.get();
         if (renaming != null && profileNameInput != null) {
+            String currentName = ModConfig.profiles().listProfiles().stream()
+                    .filter(profile -> profile.getProfileId().equals(renaming))
+                    .map(Profile::getProfileName)
+                    .findFirst().orElse("");
             root.addChild(new TextPromptPopupNode(
                     () -> Component.translatable("alumite.setting.shell.profile_rename_popup_title").getString(),
                     profileNameInput,
                     () -> Component.translatable("alumite.setting.shell.profile_rename_popup_confirm").getString(),
                     () -> profileName.get().isBlank() || ModConfig.profiles().profileNameExists(profileName.get()))
+                    .setErrorSupplier(() -> {
+                        if (profileName.get().isBlank()) {
+                            return Component.translatable("alumite.setting.shell.profile_name_error_empty").getString();
+                        }
+                        if (!profileName.get().trim().equalsIgnoreCase(currentName.trim()) && ModConfig.profiles().profileNameExists(profileName.get())) {
+                            return Component.translatable("alumite.setting.shell.profile_name_error_duplicate_rename").getString();
+                        }
+                        return null;
+                    })
                     .setOnCancel(() -> renameId.set(null))
                     .setOnConfirm(() -> {
                         if (ModConfig.profiles().renameProfile(renaming, profileName.get())) {
                             renameId.set(null);
                             refresh.run();
                         }
+                    }));
+        }
+        UiState<Boolean> resetOpen = stateStore.state("module.reset", false);
+        Module resetting = stateStore.state("module", navigateToModule).get();
+        if (resetOpen.get() && resetting != null) {
+            root.addChild(new ConfirmPopupNode()
+                    .setTitle(Component.translatable("alumite.setting.shell.module_reset_popup_title").getString())
+                    .setDescription(Component.translatable("alumite.setting.shell.module_reset_popup_message", resetting.getDisplayName()).getString())
+                    .setConfirmLabel(Component.translatable("alumite.setting.shell.module_reset_popup_confirm").getString())
+                    .setConfirmLabelColorResolver(UiTheme::danger)
+                    .setOnCancel(() -> resetOpen.set(false))
+                    .setOnConfirm(() -> {
+                        resetOpen.set(false);
+                        resetting.resetToDefault();
+                        ModConfig.profiles().saveModule(resetting);
+                        refresh.run();
                     }));
         }
         UUID deleting = deleteId.get();

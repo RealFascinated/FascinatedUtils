@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.node;
 
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 
 public class LoadingSpinnerNode extends UiNode {
 
@@ -10,7 +10,7 @@ public class LoadingSpinnerNode extends UiNode {
     private static final int DOT_SIZE = 6;
 
     @Override
-    protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         int cx = bounds().positionX() + bounds().width() / 2;
         int cy = bounds().positionY() + bounds().height() / 2;
         float progress = (System.nanoTime() % 1_000_000_000L) / 1_000_000_000.0f;

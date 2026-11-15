@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.hud.content;
 
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HUDPanelBackground;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
@@ -21,17 +21,18 @@ public class HudContentRenderer {
      * @param host       module supplying padding, chrome colors, shadows
      * @param panel      panel receiving layout commits
      * @param textLinesPainter per-panel painter reused for text-line content
+     * @param itemRowsPainter per-panel painter reused for item-row content
      * @return a draw callback, or {@code null} when there is nothing to draw
      */
-    public static Runnable prepare(GuiRenderer glRenderer, HudContent content, HudHostModule host, HudPanel panel, boolean editorMode, TextLinesPainter textLinesPainter) {
+    public static Runnable prepare(AlumiteGuiRenderer glRenderer, HudContent content, HudHostModule host, HudPanel panel, boolean editorMode, TextLinesPainter textLinesPainter, ItemRowsPainter itemRowsPainter) {
         return switch (content) {
             case HudContent.TextLines textLines ->
                     prepareTextLines(glRenderer, textLines.miniMessageLines(), host, panel, editorMode, textLinesPainter);
-            case HudContent.ItemRows itemRows -> prepareItemRows(glRenderer, itemRows.rows(), host, panel, editorMode);
+            case HudContent.ItemRows itemRows -> prepareItemRows(glRenderer, itemRows.rows(), host, panel, editorMode, itemRowsPainter);
         };
     }
 
-    private static TextLinesPainter prepareTextLines(GuiRenderer glRenderer, List<String> rawLines, HudHostModule host, HudPanel panel, boolean editorMode, TextLinesPainter painter) {
+    private static TextLinesPainter prepareTextLines(AlumiteGuiRenderer glRenderer, List<String> rawLines, HudHostModule host, HudPanel panel, boolean editorMode, TextLinesPainter painter) {
         List<String> lines = rawLines == null || rawLines.isEmpty() ? BLANK_LINES : rawLines;
 
         float lineHeight = glRenderer.fontHeight();
@@ -81,7 +82,7 @@ public class HudContentRenderer {
      * so preparing a text-line panel allocates no callback or width buffer once the buffer has grown.
      */
     public static class TextLinesPainter implements Runnable {
-        private GuiRenderer glRenderer;
+        private AlumiteGuiRenderer glRenderer;
         private HudHostModule host;
         private HudPanel panel;
         private List<String> lines = BLANK_LINES;
@@ -120,7 +121,7 @@ public class HudContentRenderer {
         }
     }
 
-    private static Runnable prepareItemRows(GuiRenderer glRenderer, List<HudContent.ItemRow> rows, HudHostModule host, HudPanel panel, boolean editorMode) {
+    private static ItemRowsPainter prepareItemRows(AlumiteGuiRenderer glRenderer, List<HudContent.ItemRow> rows, HudHostModule host, HudPanel panel, boolean editorMode, ItemRowsPainter painter) {
         if (rows == null || rows.isEmpty()) {
             panel.recordHudContentSkipped();
             return null;
@@ -135,8 +136,12 @@ public class HudContentRenderer {
         float lineGapPx = 1f;
 
         float maxStripWidth = 0f;
-        float[] textWidths = new float[rows.size()];
-        float[] iconBandWidths = new float[rows.size()];
+        if (painter.textWidths.length < rows.size()) {
+            painter.textWidths = new float[rows.size()];
+            painter.iconBandWidths = new float[rows.size()];
+        }
+        float[] textWidths = painter.textWidths;
+        float[] iconBandWidths = painter.iconBandWidths;
 
         for (int index = 0; index < rows.size(); index++) {
             HudContent.ItemRow row = rows.get(index);
@@ -157,7 +162,55 @@ public class HudContentRenderer {
 
         panel.commitLayout(layoutWidth, layoutHeight);
 
-        return () -> {
+        painter.glRenderer = glRenderer;
+        painter.host = host;
+        painter.panel = panel;
+        painter.rows = rows;
+        painter.lineHeight = lineHeight;
+        painter.horizontalPadding = horizontalPadding;
+        painter.verticalPadding = verticalPadding;
+        painter.rowHeight = rowHeight;
+        painter.itemIconSize = itemIconSize;
+        painter.iconTextGap = iconTextGap;
+        painter.itemGapPx = itemGapPx;
+        painter.lineGapPx = lineGapPx;
+        painter.innerContentHeight = innerContentHeight;
+        painter.topTrim = topTrim;
+        painter.leftTrim = leftTrim;
+        painter.layoutWidth = layoutWidth;
+        painter.layoutHeight = layoutHeight;
+        painter.editorMode = editorMode;
+        return painter;
+    }
+
+    /**
+     * Draw callback for item-row content. Each panel owns one instance and refills it every frame,
+     * so preparing an item-row panel allocates no callback or width buffers once the buffers have grown.
+     */
+    public static class ItemRowsPainter implements Runnable {
+        private AlumiteGuiRenderer glRenderer;
+        private HudHostModule host;
+        private HudPanel panel;
+        private List<HudContent.ItemRow> rows = List.of();
+        private float[] textWidths = new float[0];
+        private float[] iconBandWidths = new float[0];
+        private float lineHeight;
+        private float horizontalPadding;
+        private float verticalPadding;
+        private float rowHeight;
+        private float itemIconSize;
+        private float iconTextGap;
+        private float itemGapPx;
+        private float lineGapPx;
+        private float innerContentHeight;
+        private float topTrim;
+        private float leftTrim;
+        private float layoutWidth;
+        private float layoutHeight;
+        private boolean editorMode;
+
+        @Override
+        public void run() {
             host.drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
 
             float innerHeight = layoutHeight - 2f * verticalPadding + topTrim;
@@ -198,7 +251,7 @@ public class HudContentRenderer {
                     cursorY += lineGapPx;
                 }
             }
-        };
+        }
     }
 
     private static float recordTopTrim(HudPanel panel, float verticalPadding, boolean editorMode) {
@@ -213,7 +266,7 @@ public class HudContentRenderer {
         return leftTrim;
     }
 
-    private static float itemRowTextWidthPx(GuiRenderer glRenderer, String miniMessageText) {
+    private static float itemRowTextWidthPx(AlumiteGuiRenderer glRenderer, String miniMessageText) {
         // Blank side text must not reserve the icon gap (measurement clamps empty components to 1px).
         if (miniMessageText == null || miniMessageText.isBlank()) {
             return 0f;
@@ -241,7 +294,7 @@ public class HudContentRenderer {
         return itemCountOverlayLeftOverflowPx(stack) + 16f + itemCountOverlayRightOverflowPx(stack);
     }
 
-    private static void drawItemRowIcons(GuiRenderer glRenderer, Minecraft minecraftClient, HudContent.ItemRow row, float bandLeft, float iconY, float itemGapPx) {
+    private static void drawItemRowIcons(AlumiteGuiRenderer glRenderer, Minecraft minecraftClient, HudContent.ItemRow row, float bandLeft, float iconY, float itemGapPx) {
         float cursorX = bandLeft;
         boolean hasPreviousStack = false;
         for (HudContent.HudItemSpec leadingSpec : row.leadingSpecs()) {
@@ -257,7 +310,7 @@ public class HudContentRenderer {
         drawItemRowIcon(glRenderer, minecraftClient, row.spec().toStack(), cursorX, iconY);
     }
 
-    private static float drawItemRowIcon(GuiRenderer glRenderer, Minecraft minecraftClient, net.minecraft.world.item.ItemStack stack, float bandLeft, float iconY) {
+    private static float drawItemRowIcon(AlumiteGuiRenderer glRenderer, Minecraft minecraftClient, net.minecraft.world.item.ItemStack stack, float bandLeft, float iconY) {
         float iconX = bandLeft + itemCountOverlayLeftOverflowPx(stack);
         if (minecraftClient.player != null) {
             glRenderer.drawGuiItem(minecraftClient.player, stack, iconX, iconY);

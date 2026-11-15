@@ -27,6 +27,10 @@ public class LevelRendererMixin {
     @Unique
     private static final EntityRenderState ALUMITE$INVISIBLE_STATE = alumite$createInvisibleState();
 
+    // Camera position of the frame being extracted, so each entity does not re-read it through the game renderer.
+    @Unique
+    private Vec3 alumite$frameCameraPos;
+
     @Inject(method = "extractEntity", at = @At("HEAD"), cancellable = true)
     private void alumite$extractEntity(Entity entity, float partialTickTime, CallbackInfoReturnable<EntityRenderState> info) {
         if (!Client.TURBO_ENTITIES.isEnabled()) {
@@ -35,8 +39,10 @@ public class LevelRendererMixin {
 
         Double maxDistSq = TurboEntities.RENDER_DISTANCE_CAPS.get(entity.getType());
         if (maxDistSq != null) {
-            Minecraft client = Minecraft.getInstance();
-            Vec3 cameraPos = client.gameRenderer.getMainCamera().position();
+            Vec3 cameraPos = alumite$frameCameraPos;
+            if (cameraPos == null) {
+                cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().position();
+            }
             if (entity.distanceToSqr(cameraPos.x, cameraPos.y, cameraPos.z) > maxDistSq) {
                 info.setReturnValue(ALUMITE$INVISIBLE_STATE);
                 return;
@@ -54,6 +60,7 @@ public class LevelRendererMixin {
 
     @Inject(method = "extractVisibleEntities", at = @At("HEAD"))
     private void alumite$extractVisibleEntities(Camera camera, Frustum frustum, DeltaTracker deltaTracker, LevelRenderState output, CallbackInfo info) {
+        alumite$frameCameraPos = camera.position();
         if (!Client.TURBO_ENTITIES.isEnabled()) {
             return;
         }

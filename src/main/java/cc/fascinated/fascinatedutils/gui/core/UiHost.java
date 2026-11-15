@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.core;
 
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import lombok.Setter;
 
@@ -11,7 +11,7 @@ public class UiHost {
     private final UiInputRouter inputRouter = new UiInputRouter();
     private final UiStateStore stateStore = new UiStateStore(this::markDirty);
     private final Map<String, Integer> persistedScrollOffsets = new HashMap<>();
-    private static final long RECOMPOSE_INTERVAL_NANOS = 100_000_000L;
+    private static final long RECOMPOSE_INTERVAL_NANOS = 1_000_000_000L;
 
     private static final PerfProbe.Section COMPOSE_SECTION = PerfProbe.INSTANCE.section("ui.compose");
     private static final PerfProbe.Section LAYOUT_SECTION = PerfProbe.INSTANCE.section("ui.layout");
@@ -31,7 +31,7 @@ public class UiHost {
         return stateStore;
     }
 
-    public void layout(int positionX, int positionY, int width, int height, GuiRenderer renderFrame) {
+    public void layout(int positionX, int positionY, int width, int height, AlumiteGuiRenderer renderFrame) {
         long composeToken = COMPOSE_SECTION.begin();
         long composeAllocationToken = PerfProbe.INSTANCE.beginAllocation();
         recompose();
@@ -47,13 +47,14 @@ public class UiHost {
         LAYOUT_SECTION.endAllocation(layoutAllocationToken);
     }
 
-    public void render(GuiRenderer renderFrame, float deltaSeconds) {
+    public void render(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         if (root == null) {
             return;
         }
         long renderToken = RENDER_SECTION.begin();
         long renderAllocationToken = PerfProbe.INSTANCE.beginAllocation();
         root.render(renderFrame, deltaSeconds);
+        UiTooltips.INSTANCE.render(renderFrame, root.bounds().positionX() + root.bounds().width(), root.bounds().positionY() + root.bounds().height());
         RENDER_SECTION.end(renderToken);
         RENDER_SECTION.endAllocation(renderAllocationToken);
     }

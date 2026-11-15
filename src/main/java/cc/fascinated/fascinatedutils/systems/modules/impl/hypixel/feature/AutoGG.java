@@ -78,7 +78,7 @@ public class AutoGG extends Feature<HypixelModule> {
 
     @EventHandler
     public void onChatMessage(ChatMessageEvent event) {
-        if (getModule().getAutoGG().isDisabled() || !getModule().isOnHypixel()) {
+        if (!getModule().isEnabled() || getModule().getAutoGG().isDisabled() || !getModule().isOnHypixel()) {
             return;
         }
         // The cooldown only limits sending our own "gg"; other players' gg messages must still be filtered during it.

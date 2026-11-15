@@ -1,12 +1,13 @@
 package cc.fascinated.fascinatedutils.api;
 
 import cc.fascinated.fascinatedutils.client.Client;
+import cc.fascinated.fascinatedutils.systems.config.AtomicFiles;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.PosixFilePermissions;
 
 class AlumiteTokenStore {
 
@@ -49,9 +50,20 @@ class AlumiteTokenStore {
             Path path = storePath(accountKey);
             Files.createDirectories(path.getParent());
             String content = refreshToken + "\n" + (accessToken != null ? accessToken : "") + "\n" + (accessExpiresAt != null ? accessExpiresAt : "");
-            Files.writeString(path, content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            AtomicFiles.INSTANCE.writeAtomically(path, content);
+            restrictToOwner(path);
         } catch (IOException ioException) {
             Client.LOG.warn("[Alumite] Failed to save session: {}", ioException.getMessage());
+        }
+    }
+
+    private void restrictToOwner(Path path) {
+        try {
+            if (Files.exists(path)) {
+                Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rw-------"));
+            }
+        } catch (UnsupportedOperationException | IOException ignored) {
+            // Non-POSIX file system: nothing to restrict.
         }
     }
 

@@ -43,6 +43,11 @@ public class EntitiesCullTask extends AbstractCullTask {
     }
 
     @Override
+    protected boolean usesFrustum() {
+        return false;
+    }
+
+    @Override
     protected void cullSnapshots() {
         List<Entity> entities = entitySnapshots.acquire();
         List<BlockEntity> blockEntities = blockEntitySnapshots.acquire();

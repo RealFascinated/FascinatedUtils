@@ -54,6 +54,8 @@ public class ChatModule extends Module {
         addSetting(mentionColor);
         addSetting(chatSearch);
         addSetting(saveHistory);
+        timestamps.addSubSetting(twentyFourHourTime);
+        highlightMentions.addSubSetting(mentionColor);
     }
 
     /**

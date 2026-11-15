@@ -10,7 +10,7 @@ public class FascinatedEventBus {
     public static final FascinatedEventBus INSTANCE = new FascinatedEventBus();
 
     private final EventBus bus = new EventBus();
-    private boolean setupDone;
+    private volatile boolean setupDone;
 
     private FascinatedEventBus() {
     }
@@ -23,14 +23,19 @@ public class FascinatedEventBus {
         if (setupDone) {
             return;
         }
-        setupDone = true;
-        bus.registerLambdaFactory("cc.fascinated.fascinatedutils", (lookupInMethod, klass) -> {
-            try {
-                return (MethodHandles.Lookup) lookupInMethod.invoke(null, klass, MethodHandles.lookup());
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
+        synchronized (this) {
+            if (setupDone) {
+                return;
             }
-        });
+            bus.registerLambdaFactory("cc.fascinated.fascinatedutils", (lookupInMethod, klass) -> {
+                try {
+                    return (MethodHandles.Lookup) lookupInMethod.invoke(null, klass, MethodHandles.lookup());
+                } catch (Throwable throwable) {
+                    throw new RuntimeException(throwable);
+                }
+            });
+            setupDone = true;
+        }
     }
 
     /**
@@ -39,6 +44,7 @@ public class FascinatedEventBus {
      * @param subscriber object whose annotated methods should receive events
      */
     public void subscribe(Object subscriber) {
+        ensureSetup();
         bus.subscribe(subscriber);
     }
 
@@ -48,6 +54,7 @@ public class FascinatedEventBus {
      * @param klass class whose static annotated methods should receive events
      */
     public void subscribe(Class<?> klass) {
+        ensureSetup();
         bus.subscribe(klass);
     }
 

@@ -45,6 +45,7 @@ public abstract class Module implements GsonSerializable<Module> {
         this.displayName = displayName;
         this.category = category;
         this.defaultEnabled = defaultEnabled;
+        this.enabled = defaultEnabled;
     }
 
     public Module(String displayName, ModuleCategory category) {
@@ -153,6 +154,15 @@ public abstract class Module implements GsonSerializable<Module> {
         }
     }
 
+    /**
+     * Hook for upgrading stored data written by an older module version. Runs before settings are loaded.
+     *
+     * @param storedVersion the version recorded with the stored data
+     * @param data          the stored module JSON, which may be modified in place
+     */
+    protected void migrate(int storedVersion, JsonObject data) {
+    }
+
     @Override
     public JsonElement serialize(Gson gson) {
         JsonObject root = new JsonObject();
@@ -167,6 +177,8 @@ public abstract class Module implements GsonSerializable<Module> {
             return this;
         }
         JsonObject root = data.getAsJsonObject();
+        int storedVersion = root.has("version") && root.get("version").isJsonPrimitive() ? root.get("version").getAsInt() : 1;
+        migrate(storedVersion, root);
         if (root.has("enabled")) {
             JsonElement enabledEl = root.get("enabled");
             if (enabledEl.isJsonPrimitive()) {

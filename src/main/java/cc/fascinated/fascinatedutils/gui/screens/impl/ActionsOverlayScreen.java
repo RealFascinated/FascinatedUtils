@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.node.ButtonNode;
 import cc.fascinated.fascinatedutils.gui.node.CardNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.screens.impl.screenshot.ScreenshotScreen;
 import cc.fascinated.fascinatedutils.gui.theme.UiMetrics;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
@@ -83,7 +83,7 @@ public class ActionsOverlayScreen {
         float pointerX = UIScale.screenPointerX();
         float pointerY = UIScale.screenPointerY();
 
-        GuiRenderer renderFrame = new GuiRenderer(graphics);
+        AlumiteGuiRenderer renderFrame = new AlumiteGuiRenderer(graphics);
         renderFrame.beginFrame(uiWidth, uiHeight);
         renderFrame.setPointer(pointerX, pointerY);
         host.layout(0, 0, Math.round(uiWidth), Math.round(uiHeight), renderFrame);
@@ -98,10 +98,10 @@ public class ActionsOverlayScreen {
     public boolean mouseClicked(MouseButtonEvent event) {
         float pointerX = UIScale.screenPointerX();
         float pointerY = UIScale.screenPointerY();
-        boolean hitRegion = GuiRenderer.recordPressedRegion(pointerX, pointerY, event.button());
+        boolean hitRegion = AlumiteGuiRenderer.recordPressedRegion(pointerX, pointerY, event.button());
         boolean pressed = hitRegion || host.dispatch(new UiEvent.PointerPress(pointerX, pointerY, event.button()));
         host.dispatch(new UiEvent.PointerRelease(pointerX, pointerY, event.button()));
-        GuiRenderer.fireAndClearPressedRegion(pointerX, pointerY);
+        AlumiteGuiRenderer.fireAndClearPressedRegion(pointerX, pointerY);
         return pressed;
     }
 

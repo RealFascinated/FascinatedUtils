@@ -17,23 +17,23 @@ public class UiText {
     private record Segment(String text, int colorArgb, boolean shadow, boolean bold, float scale,
                            Integer hoverColorArgb, Runnable onClick) {
 
-        int width(GuiRenderer frame) {
+        int width(AlumiteGuiRenderer frame) {
             return widthOf(frame, text);
         }
 
-        int widthOf(GuiRenderer frame, String str) {
+        int widthOf(AlumiteGuiRenderer frame, String str) {
             return Math.round(frame.measureTextWidth(str, bold) * scale);
         }
 
-        int height(GuiRenderer frame) {
+        int height(AlumiteGuiRenderer frame) {
             return Math.round(frame.fontHeight() * scale);
         }
 
-        void draw(GuiRenderer frame, int positionX, int positionY) {
+        void draw(AlumiteGuiRenderer frame, int positionX, int positionY) {
             draw(frame, text, positionX, positionY);
         }
 
-        void draw(GuiRenderer frame, String str, int positionX, int positionY) {
+        void draw(AlumiteGuiRenderer frame, String str, int positionX, int positionY) {
             if (str.isEmpty()) {
                 return;
             }
@@ -46,11 +46,11 @@ public class UiText {
             }
         }
 
-        void drawInteractive(GuiRenderer frame, int positionX, int positionY, int w, int h) {
+        void drawInteractive(AlumiteGuiRenderer frame, int positionX, int positionY, int w, int h) {
             drawInteractive(frame, text, positionX, positionY, w, h);
         }
 
-        void drawInteractive(GuiRenderer frame, String str, int positionX, int positionY, int w, int h) {
+        void drawInteractive(AlumiteGuiRenderer frame, String str, int positionX, int positionY, int w, int h) {
             boolean hovered = hoverColorArgb != null && isPointerOver(frame, positionX, positionY, w, h);
             Segment effective = hovered ? withColor(hoverColorArgb) : this;
             effective.draw(frame, str, positionX, positionY);
@@ -178,7 +178,7 @@ public class UiText {
     /**
      * Returns a copy with the root segment rendered at the given scale factor.
      *
-     * <p>Scale is applied via {@link GuiRenderer#pushTransform} at draw time so the segment
+     * <p>Scale is applied via {@link AlumiteGuiRenderer#pushTransform} at draw time so the segment
      * renders at the correct logical position regardless of scale.
      *
      * @param scale
@@ -255,7 +255,7 @@ public class UiText {
      *
      * @return the combined width in logical pixels
      */
-    public int width(GuiRenderer frame) {
+    public int width(AlumiteGuiRenderer frame) {
         int total = 0;
         for (Segment segment : segments) {
             total += segment.width(frame);
@@ -271,7 +271,7 @@ public class UiText {
      *
      * @return the maximum segment height in logical pixels
      */
-    public int height(GuiRenderer frame) {
+    public int height(AlumiteGuiRenderer frame) {
         int max = 0;
         for (Segment segment : segments) {
             max = Math.max(max, segment.height(frame));
@@ -290,7 +290,7 @@ public class UiText {
      * @param positionY
      *         the top edge in logical pixels
      */
-    public void draw(GuiRenderer frame, int positionX, int positionY) {
+    public void draw(AlumiteGuiRenderer frame, int positionX, int positionY) {
         int lineHeight = height(frame);
         int cursorX = positionX;
         for (Segment segment : segments) {
@@ -319,7 +319,7 @@ public class UiText {
         return new UiText(updated);
     }
 
-    private static boolean isPointerOver(GuiRenderer frame, int x, int y, int w, int h) {
+    private static boolean isPointerOver(AlumiteGuiRenderer frame, int x, int y, int w, int h) {
         float px = frame.pointerX();
         float py = frame.pointerY();
         return !Float.isNaN(px) && !Float.isNaN(py) && px >= x && px < x + w && py >= y && py < y + h;

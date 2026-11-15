@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import net.minecraft.network.chat.Component;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
@@ -31,10 +32,10 @@ public class Toast {
 
         private static String defaultTitle(Type type) {
             return switch (type) {
-                case SUCCESS -> "Success";
-                case ERROR -> "Error";
-                case WARNING -> "Warning";
-                case INFO -> "Info";
+                case SUCCESS -> Component.translatable("alumite.toast.title.success").getString();
+                case ERROR -> Component.translatable("alumite.toast.title.error").getString();
+                case WARNING -> Component.translatable("alumite.toast.title.warning").getString();
+                case INFO -> Component.translatable("alumite.toast.title.info").getString();
             };
         }
 

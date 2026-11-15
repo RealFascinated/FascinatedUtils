@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.node;
 
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 
 import java.util.function.Supplier;
 
@@ -17,7 +17,7 @@ public class AlphaNode extends PositionedNode<AlphaNode> {
     }
 
     @Override
-    public void render(GuiRenderer renderFrame, float deltaSeconds) {
+    public void render(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         float alpha = alphaSupplier.get();
         if (alpha <= 0.01f) {
             return;

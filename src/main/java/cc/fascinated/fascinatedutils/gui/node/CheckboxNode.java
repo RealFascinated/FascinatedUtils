@@ -7,7 +7,7 @@ import cc.fascinated.fascinatedutils.gui.anim.Easing;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.core.UiKeys;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 
 import java.util.function.Consumer;
@@ -59,7 +59,7 @@ public class CheckboxNode extends PositionedNode<CheckboxNode> {
     }
 
     @Override
-    protected int intrinsicHeight(GuiRenderer renderFrame, int parentHeight, int resolvedWidth) {
+    protected int intrinsicHeight(AlumiteGuiRenderer renderFrame, int parentHeight, int resolvedWidth) {
         return Math.max(BOX_SIZE, renderFrame.fontHeight());
     }
 
@@ -117,7 +117,7 @@ public class CheckboxNode extends PositionedNode<CheckboxNode> {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         int bx = bounds().positionX();
         int by = bounds().positionY();
         int bh = bounds().height();

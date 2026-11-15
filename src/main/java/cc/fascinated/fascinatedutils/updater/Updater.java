@@ -11,6 +11,7 @@ import net.fabricmc.loader.api.ModContainer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -35,6 +36,9 @@ public class Updater {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
     private static final Duration DOWNLOAD_TIMEOUT = Duration.ofMinutes(2);
     private static final int WINDOWS_MOVE_ATTEMPTS = 600;
+    private static final int MAX_REDIRECTS = 5;
+    private static final long MAX_DOWNLOAD_BYTES = 50L * 1024 * 1024;
+    private static final Set<Integer> REDIRECT_STATUSES = Set.of(301, 302, 303, 307, 308);
     private static final String STAGED_PREFIX = "FascinatedUtils-update-";
     private static final String STAGED_SUFFIX = ".staged";
     private static final String DOWNLOAD_PREFIX = "FascinatedUtils-download-";
@@ -47,7 +51,7 @@ public class Updater {
     private Updater() {
         this.client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
-                .followRedirects(HttpClient.Redirect.NORMAL)
+                .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
     }
 
@@ -146,6 +150,7 @@ public class Updater {
             UpdateCheckResult result = Constants.GSON.fromJson(res.body(), UpdateCheckResult.class);
             if (result == null || result.isUpToDate()) {
                 log.info("Already on latest version");
+                hasUpdate = false;
                 return;
             }
 
@@ -166,39 +171,83 @@ public class Updater {
                 return;
             }
 
-            hasUpdate = true;
             Path modsDir = modsDirectory();
             if (Files.exists(stagedPathFor(modsDir, latestVersion))) {
                 log.info("Update {} is already staged", latestVersion);
+                hasUpdate = true;
                 return;
             }
-            downloadToStaged(downloadUrl, latestVersion);
+            if (downloadToStaged(downloadUrl, latestVersion)) {
+                hasUpdate = true;
+            }
         } catch (Throwable throwable) {
             log.warn("Update check failed", throwable);
         }
     }
 
-    private void downloadToStaged(String downloadUrl, String tagName) throws Exception {
+    /**
+     * Downloads the update to a staged file. Redirects are followed manually so every hop is checked against the
+     * host allowlist, and the download is capped in size and total time. The update API response carries no checksum,
+     * so no hash verification is done.
+     *
+     * @param downloadUrl the trusted download URL from the update API
+     * @param tagName     the version being staged
+     * @return true if the update was staged
+     * @throws Exception if the download or staging failed
+     */
+    private boolean downloadToStaged(String downloadUrl, String tagName) throws Exception {
         Path modsDir = modsDirectory();
         Files.createDirectories(modsDir);
 
         Path temp = Files.createTempFile(modsDir, DOWNLOAD_PREFIX, DOWNLOAD_SUFFIX);
         try {
-            HttpRequest req = HttpRequest.newBuilder()
-                    .uri(URI.create(downloadUrl))
-                    .header("User-Agent", AlumiteEnvironment.USER_AGENT)
-                    .timeout(DOWNLOAD_TIMEOUT)
-                    .GET()
-                    .build();
+            long deadlineNanos = System.nanoTime() + DOWNLOAD_TIMEOUT.toNanos();
+            String currentUrl = downloadUrl;
+            HttpResponse<InputStream> res = null;
+            for (int hop = 0; hop <= MAX_REDIRECTS; hop++) {
+                if (!isTrustedDownloadUrl(currentUrl)) {
+                    log.warn("Refusing to follow update download to untrusted URL: {}", currentUrl);
+                    Files.deleteIfExists(temp);
+                    return false;
+                }
+                Duration remaining = Duration.ofNanos(deadlineNanos - System.nanoTime());
+                if (remaining.isNegative() || remaining.isZero()) {
+                    throw new IOException("Update download timed out");
+                }
+                HttpRequest req = HttpRequest.newBuilder()
+                        .uri(URI.create(currentUrl))
+                        .header("User-Agent", AlumiteEnvironment.USER_AGENT)
+                        .timeout(remaining)
+                        .GET()
+                        .build();
+                res = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
+                if (!REDIRECT_STATUSES.contains(res.statusCode())) {
+                    break;
+                }
+                String location = res.headers().firstValue("Location").orElse(null);
+                res.body().close();
+                if (location == null || hop == MAX_REDIRECTS) {
+                    log.warn("Update download redirect missing or exceeded {} hops", MAX_REDIRECTS);
+                    Files.deleteIfExists(temp);
+                    return false;
+                }
+                currentUrl = URI.create(currentUrl).resolve(location).toString();
+                res = null;
+            }
 
-            HttpResponse<InputStream> res = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
             try (InputStream inputStream = res.body()) {
                 if (res.statusCode() != 200) {
                     log.warn("Failed to download release asset: HTTP {}", res.statusCode());
                     Files.deleteIfExists(temp);
-                    return;
+                    return false;
                 }
-                Files.copy(inputStream, temp, StandardCopyOption.REPLACE_EXISTING);
+                long declaredLength = res.headers().firstValueAsLong("Content-Length").orElse(-1L);
+                if (declaredLength > MAX_DOWNLOAD_BYTES) {
+                    log.warn("Update download is too large: {} bytes", declaredLength);
+                    Files.deleteIfExists(temp);
+                    return false;
+                }
+                copyBounded(inputStream, temp, deadlineNanos);
             }
 
             deleteModsFiles(modsDir, name -> name.startsWith(STAGED_PREFIX), "old staged update");
@@ -206,6 +255,7 @@ public class Updater {
             Path staged = stagedPathFor(modsDir, tagName);
             Files.move(temp, staged, StandardCopyOption.REPLACE_EXISTING);
             log.info("Staged update {} -> {}", tagName, staged);
+            return true;
         } catch (Exception exception) {
             try {
                 Files.deleteIfExists(temp);
@@ -213,6 +263,24 @@ public class Updater {
                 log.warn("Could not delete partial download {}", temp, cleanupException);
             }
             throw exception;
+        }
+    }
+
+    private void copyBounded(InputStream inputStream, Path target, long deadlineNanos) throws IOException {
+        byte[] buffer = new byte[64 * 1024];
+        long total = 0;
+        try (OutputStream outputStream = Files.newOutputStream(target)) {
+            int read;
+            while ((read = inputStream.read(buffer)) != -1) {
+                total += read;
+                if (total > MAX_DOWNLOAD_BYTES) {
+                    throw new IOException("Update download exceeded " + MAX_DOWNLOAD_BYTES + " bytes");
+                }
+                if (System.nanoTime() > deadlineNanos) {
+                    throw new IOException("Update download timed out");
+                }
+                outputStream.write(buffer, 0, read);
+            }
         }
     }
 
@@ -283,10 +351,31 @@ public class Updater {
         }
     }
 
+    private String escapeBatchPath(String path) {
+        return path.replace("%", "%%");
+    }
+
     private void runWindowsUpdater(Path staged, Path current) {
-        String inner = String.format("for /L %%i in (1,1,%d) do ( move /Y \"%s\" \"%s\" >nul 2>&1 && exit /b 0 || timeout /t 2 /nobreak >nul )", WINDOWS_MOVE_ATTEMPTS, staged, current);
+        String stagedText = staged.toString();
+        String currentText = current.toString();
+        if (stagedText.indexOf('"') >= 0 || currentText.indexOf('"') >= 0) {
+            log.error("Refusing to run Windows update helper for path containing a quote");
+            return;
+        }
+        String script = "@echo off\r\n"
+                + "set /a attempts=0\r\n"
+                + ":retry\r\n"
+                + "move /Y \"" + escapeBatchPath(stagedText) + "\" \"" + escapeBatchPath(currentText) + "\" >nul 2>&1 && goto done\r\n"
+                + "set /a attempts+=1\r\n"
+                + "if %attempts% geq " + WINDOWS_MOVE_ATTEMPTS + " goto done\r\n"
+                + "timeout /t 2 /nobreak >nul\r\n"
+                + "goto retry\r\n"
+                + ":done\r\n"
+                + "(goto) 2>nul & del \"%~f0\"\r\n";
         try {
-            new ProcessBuilder("cmd", "/c", "start \"\" /min cmd /c \"" + inner + "\"").start();
+            Path batchFile = Files.createTempFile("FascinatedUtils-update-", ".bat");
+            Files.writeString(batchFile, script, StandardCharsets.UTF_8);
+            new ProcessBuilder("cmd", "/c", "start", "", "/min", batchFile.toString()).start();
             log.info("Spawned detached update helper: {} -> {}", staged, current);
         } catch (Exception exception) {
             log.error("Failed to spawn Windows update helper", exception);

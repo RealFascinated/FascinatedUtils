@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.gui.node;
 
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.theme.UiMetrics;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiThemeRepository;
 
@@ -96,7 +96,7 @@ public class ConfirmPopupNode extends PopupNode<ConfirmPopupNode> {
     }
 
     @Override
-    protected void configurePopup(GuiRenderer renderFrame) {
+    protected void configurePopup(AlumiteGuiRenderer renderFrame) {
         boolean hasDescription = description != null && !description.isBlank();
         setPopupHeight(hasDescription ? POPUP_HEIGHT + renderFrame.fontHeight() + MESSAGE_TITLE_GAP : POPUP_HEIGHT);
         if (hasDescription) {

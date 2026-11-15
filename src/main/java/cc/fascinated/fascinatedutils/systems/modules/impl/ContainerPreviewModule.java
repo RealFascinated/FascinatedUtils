@@ -1,7 +1,5 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
-import cc.fascinated.fascinatedutils.common.ByteUtils;
-import cc.fascinated.fascinatedutils.common.ItemStackSizeCalculator;
 import cc.fascinated.fascinatedutils.mixin.inventorytweaks.GuiGraphicsExtractorTooltipInvoker;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
@@ -12,7 +10,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -58,13 +55,8 @@ public class ContainerPreviewModule extends Module {
         lines.add(ClientTooltipComponent.create(stack.getStyledHoverName().getVisualOrderText()));
         lines.add(new ClientContainerPreviewTooltip(contents));
         ItemTooltipModule itemTooltipModule = ModuleRegistry.INSTANCE.getModule(ItemTooltipModule.class).orElse(null);
-        if (itemTooltipModule != null && itemTooltipModule.isEnabled() && itemTooltipModule.getShowItemSize().isEnabled()) {
-            long byteSize = ItemStackSizeCalculator.INSTANCE.getStackSize(stack);
-            if (byteSize > 0) {
-                if (itemTooltipModule.getGapAboveInfo().isEnabled()) {
-                    lines.add(ClientTooltipComponent.create(Component.empty().getVisualOrderText()));
-                }
-                Component sizeLine = Component.literal(I18n.get("alumite.module.itemtooltip.item_size", ByteUtils.formatBytes(byteSize, 2))).withStyle(style -> style.withColor(0xAAAAAA));
+        if (itemTooltipModule != null && itemTooltipModule.isEnabled()) {
+            for (Component sizeLine : itemTooltipModule.itemSizeLines(stack)) {
                 lines.add(ClientTooltipComponent.create(sizeLine.getVisualOrderText()));
             }
         }

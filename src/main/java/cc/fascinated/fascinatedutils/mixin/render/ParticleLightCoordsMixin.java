@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.render;
 
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
@@ -25,7 +26,7 @@ public class ParticleLightCoordsMixin {
     @Unique
     private static final BlockPos.MutableBlockPos alumite$blockPos = new BlockPos.MutableBlockPos();
     @Unique
-    private static BlockAndLightGetter alumite$cachedLevel;
+    private static WeakReference<BlockAndLightGetter> alumite$cachedLevel = new WeakReference<>(null);
     @Unique
     private static long alumite$cachedFrame = Long.MIN_VALUE;
 
@@ -41,9 +42,9 @@ public class ParticleLightCoordsMixin {
     @Redirect(method = "getLightCoords", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;getLightCoords(Lnet/minecraft/world/level/BlockAndLightGetter;Lnet/minecraft/core/BlockPos;)I"))
     private static int alumite$cachedLightCoords(BlockAndLightGetter level, BlockPos pos) {
         long frame = Minecraft.getInstance().getFrameTimeNs();
-        if (frame != alumite$cachedFrame || level != alumite$cachedLevel) {
+        if (frame != alumite$cachedFrame || level != alumite$cachedLevel.get()) {
             alumite$cachedFrame = frame;
-            alumite$cachedLevel = level;
+            alumite$cachedLevel = new WeakReference<>(level);
             Arrays.fill(alumite$lightValues, -1);
         }
 

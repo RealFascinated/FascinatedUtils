@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.gui.node;
 
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +63,11 @@ public class PopupNode<T extends PopupNode<T>> extends PositionedNode<T> {
     }
 
     @Override
+    public boolean trapsFocus() {
+        return true;
+    }
+
+    @Override
     public boolean onClick(float pointerX, float pointerY, int button) {
         if (button == 0 && !isInPopup(pointerX, pointerY)) {
             onDismiss.run();
@@ -71,10 +76,10 @@ public class PopupNode<T extends PopupNode<T>> extends PositionedNode<T> {
         return false;
     }
 
-    protected void configurePopup(GuiRenderer renderFrame) {}
+    protected void configurePopup(AlumiteGuiRenderer renderFrame) {}
 
     @Override
-    public void layout(GuiRenderer renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
+    public void layout(AlumiteGuiRenderer renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
         configurePopup(renderFrame);
         bounds().set(parentX, parentY, parentWidth, parentHeight);
         popupX = parentX + (parentWidth - popupWidth) / 2;

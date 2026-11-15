@@ -2,7 +2,8 @@ package cc.fascinated.fascinatedutils.gui.node;
 
 import cc.fascinated.fascinatedutils.gui.core.NodeScrollContext;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,9 @@ import java.util.function.Consumer;
 
 public class ScrollColumnNode extends UiNode {
     private static final int SCROLLBAR_WIDTH = 3;
+    private static final int SCROLLBAR_HOVER_WIDTH = 6;
+    private static final int FOCUS_REVEAL_MARGIN = 4;
+    private static final float PAGE_SCROLL_FRACTION = 0.9f;
     private static final int SCROLLBAR_LEFT_MARGIN = 4;
     private static final int SCROLLBAR_RIGHT_MARGIN = 2;
     private static final int SCROLLBAR_VERTICAL_PADDING = 2;
@@ -33,6 +37,7 @@ public class ScrollColumnNode extends UiNode {
     private Map<String, Integer> scrollPersistMap;
 
     private boolean scrollbarDragging;
+    private boolean scrollbarHovered;
     private float scrollbarDragStartY;
     private int scrollbarDragStartOffset;
 
@@ -108,24 +113,73 @@ public class ScrollColumnNode extends UiNode {
     }
 
     @Override
-    public void render(GuiRenderer renderFrame, float deltaSeconds) {
+    public boolean onKeyPress(int keyCode, int modifiers) {
+        int viewportHeight = bounds().height();
+        int pageDistance = Math.max(1, Math.round(viewportHeight * PAGE_SCROLL_FRACTION));
+        int targetOffset;
+        switch (keyCode) {
+            case GLFW.GLFW_KEY_PAGE_UP -> targetOffset = scrollOffset - pageDistance;
+            case GLFW.GLFW_KEY_PAGE_DOWN -> targetOffset = scrollOffset + pageDistance;
+            case GLFW.GLFW_KEY_HOME -> targetOffset = 0;
+            case GLFW.GLFW_KEY_END -> targetOffset = maxScrollOffset();
+            default -> {
+                return false;
+            }
+        }
+        return scrollTo(targetOffset);
+    }
+
+    @Override
+    public void revealDescendant(UiNode descendant) {
+        int viewportTop = bounds().positionY();
+        int viewportBottom = bounds().bottom();
+        int descendantTop = descendant.bounds().positionY();
+        int descendantBottom = descendant.bounds().bottom();
+        if (descendantTop < viewportTop + FOCUS_REVEAL_MARGIN) {
+            scrollTo(scrollOffset - (viewportTop + FOCUS_REVEAL_MARGIN - descendantTop));
+        }
+        else if (descendantBottom > viewportBottom - FOCUS_REVEAL_MARGIN) {
+            scrollTo(scrollOffset + (descendantBottom - (viewportBottom - FOCUS_REVEAL_MARGIN)));
+        }
+    }
+
+    private boolean scrollTo(int targetOffset) {
+        int clampedOffset = Math.max(0, Math.min(maxScrollOffset(), targetOffset));
+        if (clampedOffset == scrollOffset) {
+            return false;
+        }
+        updateScrollOffset(clampedOffset);
+        return true;
+    }
+
+    @Override
+    public boolean onPointerLeave(float pointerX, float pointerY) {
+        scrollbarHovered = false;
+        return super.onPointerLeave(pointerX, pointerY);
+    }
+
+    @Override
+    public void render(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         super.render(renderFrame, deltaSeconds);
         if (maxScrollOffset() > 0) {
             renderScrollbar(renderFrame);
         }
     }
 
-    private void renderScrollbar(GuiRenderer renderFrame) {
-        int trackX = bounds().right() - SCROLLBAR_WIDTH - SCROLLBAR_RIGHT_MARGIN;
+    private void renderScrollbar(AlumiteGuiRenderer renderFrame) {
+        boolean emphasised = scrollbarHovered || scrollbarDragging;
+        int barWidth = emphasised ? SCROLLBAR_HOVER_WIDTH : SCROLLBAR_WIDTH;
+        int trackX = bounds().right() - barWidth - SCROLLBAR_RIGHT_MARGIN;
         int trackY = bounds().positionY() + SCROLLBAR_VERTICAL_PADDING;
         int trackH = bounds().height() - 2 * SCROLLBAR_VERTICAL_PADDING;
 
-        renderFrame.drawRoundedRect(trackX, trackY, SCROLLBAR_WIDTH, trackH, SCROLLBAR_WIDTH / 2, renderFrame.theme().scrollbarTrack());
+        renderFrame.drawRoundedRect(trackX, trackY, barWidth, trackH, barWidth / 2, renderFrame.theme().scrollbarTrack());
 
         int thumbH = thumbHeight(trackH, bounds().height());
         int thumbY = trackY + thumbOffset(trackH, thumbH);
-        int thumbColor = scrollbarDragging ? renderFrame.theme().accent() : renderFrame.theme().scrollbarThumb();
-        renderFrame.drawRoundedRect(trackX, thumbY, SCROLLBAR_WIDTH, thumbH, SCROLLBAR_WIDTH / 2, thumbColor);
+        int thumbColor = scrollbarDragging ? renderFrame.theme().accent()
+                : scrollbarHovered ? renderFrame.theme().textMuted() : renderFrame.theme().scrollbarThumb();
+        renderFrame.drawRoundedRect(trackX, thumbY, barWidth, thumbH, barWidth / 2, thumbColor);
     }
 
     private int thumbHeight(int trackH, int viewportH) {
@@ -138,12 +192,12 @@ public class ScrollColumnNode extends UiNode {
         return maxScroll > 0 ? Math.round(visualOffset / maxScroll * trackRange) : 0;
     }
 
+    private boolean isOverTrack(float pointerX) {
+        return maxScrollOffset() > 0 && pointerX >= bounds().right() - SCROLLBAR_HOVER_WIDTH - SCROLLBAR_RIGHT_MARGIN && pointerX <= bounds().right();
+    }
+
     private boolean isOverThumb(float pointerX, float pointerY) {
-        if (maxScrollOffset() <= 0) {
-            return false;
-        }
-        int trackX = bounds().right() - SCROLLBAR_WIDTH - SCROLLBAR_RIGHT_MARGIN;
-        if (pointerX < trackX || pointerX > bounds().right()) {
+        if (!isOverTrack(pointerX)) {
             return false;
         }
         int trackY = bounds().positionY() + SCROLLBAR_VERTICAL_PADDING;
@@ -161,11 +215,20 @@ public class ScrollColumnNode extends UiNode {
             scrollbarDragStartOffset = scrollOffset;
             return true;
         }
+        if (button == 0 && isOverTrack(pointerX)) {
+            int pageDistance = Math.max(1, Math.round(bounds().height() * PAGE_SCROLL_FRACTION));
+            int trackY = bounds().positionY() + SCROLLBAR_VERTICAL_PADDING;
+            int trackH = bounds().height() - 2 * SCROLLBAR_VERTICAL_PADDING;
+            int thumbY = trackY + thumbOffset(trackH, thumbHeight(trackH, bounds().height()));
+            scrollTo(pointerY < thumbY ? scrollOffset - pageDistance : scrollOffset + pageDistance);
+            return true;
+        }
         return false;
     }
 
     @Override
     public boolean onPointerMove(float pointerX, float pointerY) {
+        scrollbarHovered = isOverTrack(pointerX);
         if (!scrollbarDragging) {
             return false;
         }
@@ -190,7 +253,7 @@ public class ScrollColumnNode extends UiNode {
     }
 
     @Override
-    public void layout(GuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
+    public void layout(AlumiteGuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
         bounds().set(positionX, positionY, width, height);
 
         visibleChildrenScratch.clear();

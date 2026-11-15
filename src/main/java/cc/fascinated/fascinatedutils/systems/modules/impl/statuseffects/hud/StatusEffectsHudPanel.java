@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.hud;
 
 import cc.fascinated.fascinatedutils.common.DateUtils;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
@@ -35,6 +35,11 @@ public class StatusEffectsHudPanel extends HudPanel {
 
     private final StatusEffectsModule statusEffectsModule;
     private final Minecraft minecraft = Minecraft.getInstance();
+
+    private List<EffectRow> cachedRows = List.of();
+    private long cachedRowsSignature;
+    private boolean cachedRowsValid;
+    private float[] textWidthBuffer = new float[0];
 
     public StatusEffectsHudPanel(StatusEffectsModule statusEffectsModule) {
         super(statusEffectsModule, "status_effects", 56f);
@@ -80,7 +85,7 @@ public class StatusEffectsHudPanel extends HudPanel {
     }
 
     @Override
-    public @Nullable Runnable prepareAndDraw(GuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
+    public @Nullable Runnable prepareAndDraw(AlumiteGuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
         List<EffectRow> effectRows = resolveEffectRows(editorMode);
         if (effectRows.isEmpty()) {
             return null;
@@ -92,7 +97,10 @@ public class StatusEffectsHudPanel extends HudPanel {
         float textBlockHeight = detailedLayout ? fontHeight * 2f + TEXT_LINE_GAP : fontHeight;
         float rowHeight = Math.max(ICON_SIZE, textBlockHeight);
         float maxRowWidth = 0f;
-        float[] textWidths = new float[effectRows.size()];
+        if (textWidthBuffer.length < effectRows.size()) {
+            textWidthBuffer = new float[effectRows.size()];
+        }
+        float[] textWidths = textWidthBuffer;
 
         for (int rowIndex = 0; rowIndex < effectRows.size(); rowIndex++) {
             EffectRow effectRow = effectRows.get(rowIndex);
@@ -196,10 +204,31 @@ public class StatusEffectsHudPanel extends HudPanel {
         return (remainingSeconds % 2 == 0) ? 1f : 0f;
     }
 
+    private long effectsSignature(boolean includeAmplifier) {
+        long signature = includeAmplifier ? 1L : 0L;
+        signature = signature * 31L + statusEffectsModule.effectsSortMode().ordinal();
+        for (MobEffectInstance effectInstance : minecraft.player.getActiveEffects()) {
+            if (!effectInstance.showIcon()) {
+                continue;
+            }
+            signature = signature * 31L + effectInstance.getEffect().hashCode();
+            signature = signature * 31L + effectInstance.getAmplifier();
+            signature = signature * 31L + (effectInstance.isInfiniteDuration() ? -1 : effectInstance.getDuration() / 20);
+            signature = signature * 31L + Float.floatToIntBits(durationFlashAlpha(effectInstance));
+        }
+        return signature;
+    }
+
     private List<EffectRow> resolveEffectRows(boolean editorMode) {
         boolean includeAmplifier = statusEffectsModule.effectsShowAmplifier();
 
         if (minecraft.player != null) {
+            long signature = effectsSignature(includeAmplifier);
+            if (cachedRowsValid && signature == cachedRowsSignature) {
+                if (!cachedRows.isEmpty()) {
+                    return cachedRows;
+                }
+            }
             List<MobEffectInstance> activeEffects = new ArrayList<>(minecraft.player.getActiveEffects());
             activeEffects.removeIf(effectInstance -> !effectInstance.showIcon());
             if (!activeEffects.isEmpty()) {
@@ -215,8 +244,15 @@ public class StatusEffectsHudPanel extends HudPanel {
                     String durationText = effectInstance.isInfiniteDuration() ? Component.translatable("effect.duration.infinite").getString() : DateUtils.formatDuration(effectInstance.getDuration());
                     rows.add(new EffectRow(spriteForMobEffect(effectInstance.getEffect()), effectName, durationText, durationFlashAlpha(effectInstance)));
                 }
+                cachedRows = rows;
+                cachedRowsSignature = signature;
+                cachedRowsValid = true;
                 return rows;
             }
+            cachedRowsValid = false;
+        }
+        else {
+            cachedRowsValid = false;
         }
 
         if (editorMode) {

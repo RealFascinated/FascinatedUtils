@@ -8,7 +8,7 @@ import lombok.Getter;
 @Getter
 public class TimeChangerModule extends Module {
 
-    private final SliderSetting worldTime = SliderSetting.builder().id("world_time").defaultValue(8000f).minValue(0f).maxValue(23000f).step(500f).valueFormatter((value) -> {
+    private final SliderSetting worldTime = SliderSetting.builder().id("world_time").defaultValue(8000f).minValue(0f).maxValue(23999f).step(500f).valueFormatter((value) -> {
         int ticks = value.intValue();
         // Minecraft day time 0 is 06:00, not midnight.
         int totalMinutes = ((int) ((ticks / 24000.0) * 24 * 60) + 6 * 60) % (24 * 60);

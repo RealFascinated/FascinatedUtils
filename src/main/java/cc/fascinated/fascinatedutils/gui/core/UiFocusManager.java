@@ -63,8 +63,42 @@ public class UiFocusManager {
         else {
             nextIndex = (currentIndex - 1 + focusableNodes.size()) % focusableNodes.size();
         }
-        focus(focusableNodes.get(nextIndex));
+        UiNode nextNode = focusableNodes.get(nextIndex);
+        focus(nextNode);
+        for (UiNode ancestor = nextNode.parent(); ancestor != null; ancestor = ancestor.parent()) {
+            ancestor.revealDescendant(nextNode);
+        }
         return true;
+    }
+
+    /**
+     * Checks whether the focused node lies inside the given subtree.
+     *
+     * @param scopeNode the subtree root
+     * @return true when a node is focused and it is the scope node or one of its descendants
+     */
+    public boolean isWithin(UiNode scopeNode) {
+        for (UiNode cursor = focusedNode; cursor != null; cursor = cursor.parent()) {
+            if (cursor == scopeNode) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Focuses the first focusable node in the given subtree.
+     *
+     * @param scopeNode the subtree root
+     */
+    public void focusFirst(UiNode scopeNode) {
+        List<UiNode> focusableNodes = new ArrayList<>();
+        collectFocusable(scopeNode, focusableNodes);
+        if (focusableNodes.isEmpty()) {
+            clearFocus();
+            return;
+        }
+        focus(focusableNodes.get(0));
     }
 
     private static void collectFocusable(UiNode node, List<UiNode> output) {

@@ -6,7 +6,7 @@ import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.screens.impl.hudeditor.HUDEditorScreen;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
@@ -59,7 +59,7 @@ public class HUDManager {
         initialized = true;
     }
 
-    public void renderHUD(GuiRenderer renderer, float canvasWidth, float canvasHeight, float deltaSeconds, boolean editorMode) {
+    public void renderHUD(AlumiteGuiRenderer renderer, float canvasWidth, float canvasHeight, float deltaSeconds, boolean editorMode) {
         if (this.editMode || Minecraft.getInstance().debugEntries.isOverlayVisible()) {
             return;
         }

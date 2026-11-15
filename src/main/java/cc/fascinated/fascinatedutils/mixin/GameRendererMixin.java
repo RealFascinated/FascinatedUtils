@@ -3,9 +3,11 @@ package cc.fascinated.fascinatedutils.mixin;
 import cc.fascinated.fascinatedutils.common.FrameCounter;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.gui.core.UIScale;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.screens.WidgetScreen;
 import cc.fascinated.fascinatedutils.gui.toast.ToastManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -20,8 +22,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Objects;
 
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
@@ -64,11 +64,14 @@ public abstract class GameRendererMixin {
             widgetScreen.renderCustom(drawContext, mouseX * scale, mouseY * scale, deltaTracker.getRealtimeDeltaTicks());
         }
 
-        cc.fascinated.fascinatedutils.gui.render.GuiRenderer toastRenderer = new cc.fascinated.fascinatedutils.gui.render.GuiRenderer(drawContext);
+        AlumiteGuiRenderer toastRenderer = new AlumiteGuiRenderer(drawContext);
         toastRenderer.beginFrame(uiWidth, uiHeight);
         ToastManager.INSTANCE.render(toastRenderer, uiWidth, uiHeight, UIScale.uiPointerX(), UIScale.uiPointerY(), deltaSeconds);
         toastRenderer.endFrame();
-        RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(Objects.requireNonNull(minecraft.getMainRenderTarget().getDepthTexture()), 1.0);
+        GpuTexture depthTexture = minecraft.getMainRenderTarget().getDepthTexture();
+        if (depthTexture != null) {
+            RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(depthTexture, 1.0);
+        }
         guiRenderer.render(fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
         ALUMITE$OVERLAY_PASS.end(overlayStart);
     }

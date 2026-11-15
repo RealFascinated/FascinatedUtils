@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.NumberUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HUDPanelBackground;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
@@ -13,6 +13,7 @@ import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.CoordinatesWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.CoordinatesWidget.CoordinatesLayout;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
@@ -21,6 +22,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -28,6 +30,7 @@ public class CoordinatesHudPanel extends HudPanel {
 
     private static final float COLUMN_GAP = 4f;
     private static final String[] COMPASS_DIRECTIONS = {"S", "SE", "E", "NE", "N", "NW", "W", "SW"};
+    private static final String COMPASS_TRANSLATION_PREFIX = "alumite.module.coordinates.compass.";
 
     private final CoordinatesWidget coordinatesWidget;
     private final Map<String, String> biomeMiniMessageCache = new HashMap<>();
@@ -40,6 +43,9 @@ public class CoordinatesHudPanel extends HudPanel {
     private String yPart;
     private String zPart;
     private List<String> verticalLines = List.of();
+    private String[] compassLabels = new String[0];
+    private float compassColumnWidth;
+    private String compassWidthLanguage;
 
     public CoordinatesHudPanel(CoordinatesWidget coordinatesWidget) {
         super(coordinatesWidget, "coordinates", HudHostModule.UTILITY_WIDGET_MIN_WIDTH);
@@ -64,10 +70,31 @@ public class CoordinatesHudPanel extends HudPanel {
         cachedCoordZ = coordZ;
         cachedDecimals = decimals;
         cachedBiomeMini = biomeMini;
-        xPart = "X: " + NumberUtils.formatNumber(coordX, decimals);
-        yPart = "Y: " + NumberUtils.formatNumber(coordY, decimals);
-        zPart = "Z: " + NumberUtils.formatNumber(coordZ, decimals);
-        verticalLines = List.of(xPart, yPart, zPart, "Biome: " + biomeMini);
+        xPart = I18n.get("alumite.module.coordinates.label.x") + NumberUtils.formatNumber(coordX, decimals);
+        yPart = I18n.get("alumite.module.coordinates.label.y") + NumberUtils.formatNumber(coordY, decimals);
+        zPart = I18n.get("alumite.module.coordinates.label.z") + NumberUtils.formatNumber(coordZ, decimals);
+        verticalLines = List.of(xPart, yPart, zPart, I18n.get("alumite.module.coordinates.label.biome") + biomeMini);
+    }
+
+    /**
+     * Returns the widest compass label width, measured once and re-measured only when the language changes.
+     *
+     * @param glRenderer renderer used for measuring
+     * @return the width of the widest compass label
+     */
+    private float compassColumnWidth(AlumiteGuiRenderer glRenderer) {
+        String language = Minecraft.getInstance().getLanguageManager().getSelected();
+        if (compassWidthLanguage == null || !compassWidthLanguage.equals(language)) {
+            compassLabels = new String[COMPASS_DIRECTIONS.length];
+            float widest = 0f;
+            for (int index = 0; index < COMPASS_DIRECTIONS.length; index++) {
+                compassLabels[index] = I18n.get(COMPASS_TRANSLATION_PREFIX + COMPASS_DIRECTIONS[index].toLowerCase(Locale.ROOT));
+                widest = Math.max(widest, glRenderer.measureMiniMessageTextWidth(compassLabels[index]));
+            }
+            compassColumnWidth = widest;
+            compassWidthLanguage = language;
+        }
+        return compassColumnWidth;
     }
 
     private String biomeColoredMiniMessage(String biomeIdRaw) {
@@ -82,7 +109,7 @@ public class CoordinatesHudPanel extends HudPanel {
         return "<color:" + Colors.rgbHex(biomeColorArgb) + ">" + label + "</color>";
     }
 
-    private static String compassFromLook(Vec3 look) {
+    private String compassFromLook(Vec3 look) {
         double horizontalX = look.x;
         double horizontalZ = look.z;
         if (Math.hypot(horizontalX, horizontalZ) < 1e-5d) {
@@ -93,7 +120,7 @@ public class CoordinatesHudPanel extends HudPanel {
             degrees += 360d;
         }
         int sector = (int) Math.floor((degrees + 22.5d) / 45d) & 7;
-        return COMPASS_DIRECTIONS[sector];
+        return compassLabels.length == COMPASS_DIRECTIONS.length ? compassLabels[sector] : COMPASS_DIRECTIONS[sector];
     }
 
     @Override
@@ -102,7 +129,8 @@ public class CoordinatesHudPanel extends HudPanel {
     }
 
     @Override
-    public @Nullable Runnable prepareAndDraw(GuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
+    public @Nullable Runnable prepareAndDraw(AlumiteGuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
+        float compassWidth = compassColumnWidth(glRenderer);
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
         final double coordX;
@@ -122,7 +150,7 @@ public class CoordinatesHudPanel extends HudPanel {
             coordY = 64.0625;
             coordZ = -8.254;
             biomeMini = biomeColoredMiniMessage("minecraft:river");
-            facingKey = "E";
+            facingKey = compassLabels.length == COMPASS_DIRECTIONS.length ? compassLabels[2] : "E";
         }
         else {
             return null;
@@ -137,11 +165,7 @@ public class CoordinatesHudPanel extends HudPanel {
             float xWidth = glRenderer.measureMiniMessageTextWidth(xPart);
             float yWidth = glRenderer.measureMiniMessageTextWidth(yPart);
             float zWidth = glRenderer.measureMiniMessageTextWidth(zPart);
-            float maxFacingWidth = 0f;
-            for (String directionLabel : COMPASS_DIRECTIONS) {
-                maxFacingWidth = Math.max(maxFacingWidth, glRenderer.measureMiniMessageTextWidth(directionLabel));
-            }
-            final float facingColumnBandWidth = maxFacingWidth;
+            final float facingColumnBandWidth = compassWidth;
             float innerWidth = xWidth + COLUMN_GAP + yWidth + COLUMN_GAP + zWidth + COLUMN_GAP + facingColumnBandWidth;
             float padding = hudHostModule().getPaddingValue();
             float layoutWidth = Math.max(1f, Math.max(getMinWidth(), innerWidth + 2f * padding));
@@ -167,10 +191,7 @@ public class CoordinatesHudPanel extends HudPanel {
             leftColumnWidth = Math.max(leftColumnWidth, glRenderer.measureMiniMessageTextWidth(line));
         }
         int lineCount = leftLines.size();
-        float facingWidth = 0f;
-        for (String directionLabel : COMPASS_DIRECTIONS) {
-            facingWidth = Math.max(facingWidth, glRenderer.measureMiniMessageTextWidth(directionLabel));
-        }
+        float facingWidth = compassWidth;
         final float leftColumnCommitWidth = leftColumnWidth;
         final float facingCommitWidth = facingWidth;
         float innerHeight = lineCount * lineHeight + Math.max(0, lineCount - 1) * HUDPanelBackground.LINE_GAP_PX;

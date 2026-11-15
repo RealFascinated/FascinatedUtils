@@ -42,6 +42,12 @@ public class Renderer2D {
     private static final LRUCache<String, Component> MINI_MESSAGE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
     private static final LRUCache<String, Integer> MINI_MESSAGE_WIDTH_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
     private static final LRUCache<String, FormattedCharSequence> MINI_MESSAGE_VISUAL_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
+    private static final LRUCache<String, FormattedCharSequence> LITERAL_SEQUENCE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
+    private static final LRUCache<String, FormattedCharSequence> BOLD_LITERAL_SEQUENCE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
+    private static final Matrix3x2f POSE_SCRATCH = new Matrix3x2f();
+    private static final Vector2f ORIGIN_SCRATCH = new Vector2f();
+    private static final Vector2f UNIT_X_SCRATCH = new Vector2f();
+    private static final Vector2f UNIT_Y_SCRATCH = new Vector2f();
     private static volatile int cachedFontOptionsKey;
     private final GuiGraphicsExtractor graphics;
     private final TextRenderer guiTextRenderer;
@@ -82,9 +88,9 @@ public class Renderer2D {
      * framebuffer pixels, so callers pass logical stroke and multiply by this before LUT upload.
      */
     private static float linearUniformScaleFromModelPose(Matrix3x2f pose) {
-        Vector2f origin = new Vector2f(0f, 0f);
-        Vector2f unitX = new Vector2f(1f, 0f);
-        Vector2f unitY = new Vector2f(0f, 1f);
+        Vector2f origin = ORIGIN_SCRATCH.set(0f, 0f);
+        Vector2f unitX = UNIT_X_SCRATCH.set(1f, 0f);
+        Vector2f unitY = UNIT_Y_SCRATCH.set(0f, 1f);
         pose.transformPosition(origin);
         pose.transformPosition(unitX);
         pose.transformPosition(unitY);
@@ -117,7 +123,7 @@ public class Renderer2D {
 
     /**
      * Apply the current text alpha multiplier for queued deferred draws (see {@link
-     * GuiRenderer}).
+     * AlumiteGuiRenderer}).
      *
      * @param color packed ARGB input color
      * @return packed ARGB color with text alpha multiplier applied
@@ -207,7 +213,7 @@ public class Renderer2D {
      * @param positionX left origin in logical pixels
      * @param positionY layout line top in logical pixels (top of the nominal line box; converted to vanilla {@code drawString}-compatible baseline coordinates before drawing)
      * @param color     packed ARGB color (already multiplied when queued from {@link
-     *                  GuiRenderer})
+     *                  AlumiteGuiRenderer})
      * @param shadow    whether to draw vanilla text shadow
      */
     public void drawTextImmediate(Component text, float positionX, float positionY, int color, boolean shadow) {
@@ -475,9 +481,9 @@ public class Renderer2D {
         if (width < 1e-3f || height < 1e-3f || ringStrokeLogicalPx <= 0f) {
             return;
         }
-        Matrix3x2f poseSnapshot = new Matrix3x2f(graphics.pose());
+        Matrix3x2f poseSnapshot = POSE_SCRATCH.set(graphics.pose());
         float poseScale = Math.max(0.001f, linearUniformScaleFromModelPose(poseSnapshot));
-        // The pose base scale from GuiRenderer.begin() is 2/guiScale; multiply by guiScale to cancel it,
+        // The pose base scale from AlumiteGuiRenderer.begin() is 2/guiScale; multiply by guiScale to cancel it,
         // leaving widgetUserScale * 2 (since 1 logical px = 2 framebuffer pixels on the fixed scale-2 canvas).
         Minecraft mc = Minecraft.getInstance();
         float guiScale = mc.getWindow().getWidth() / Math.max(1f, (float) mc.getWindow().getGuiScaledWidth());
@@ -490,7 +496,13 @@ public class Renderer2D {
     }
 
     private FormattedCharSequence styledLiteralSequence(String raw, boolean bold) {
-        Style style = bold ? Style.EMPTY.withBold(true) : Style.EMPTY;
-        return FormattedCharSequence.forward(raw == null ? "" : raw, style);
+        String text = raw == null ? "" : raw;
+        LRUCache<String, FormattedCharSequence> cache = bold ? BOLD_LITERAL_SEQUENCE_CACHE : LITERAL_SEQUENCE_CACHE;
+        FormattedCharSequence cached = cache.get(text);
+        if (cached == null) {
+            cached = FormattedCharSequence.forward(text, bold ? Style.EMPTY.withBold(true) : Style.EMPTY);
+            cache.put(text, cached);
+        }
+        return cached;
     }
 }

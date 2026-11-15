@@ -2,7 +2,9 @@ package cc.fascinated.fascinatedutils.gui.node;
 
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.node.input.TextInputNode;
+import cc.fascinated.fascinatedutils.gui.node.input.TextParser;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
@@ -36,7 +38,7 @@ public class ColorPickerPopupNode extends PopupNode<ColorPickerPopupNode> {
     private final HueBarNode hueBar;
     private final TextNode hashNode;
     private final PositionedNode<?> hexWrapper;
-    private final cc.fascinated.fascinatedutils.gui.node.input.TextInputNode<String> hexInput;
+    private final TextInputNode<String> hexInput;
     private final RectNode previewRect;
     private final CheckboxNode rainbowCheckbox;
     private final ButtonNode applyButton;
@@ -68,8 +70,7 @@ public class ColorPickerPopupNode extends PopupNode<ColorPickerPopupNode> {
 
         hashNode = new TextNode(() -> "#");
 
-        hexInput = new cc.fascinated.fascinatedutils.gui.node.input.TextInputNode<>(
-                cc.fascinated.fascinatedutils.gui.node.input.TextParser.STRING)
+        hexInput = new TextInputNode<>(TextParser.STRING)
                 .setMaxLength(6)
                 .setPlaceholder("RRGGBB")
                 .setOnChange(this::onHexChanged);
@@ -109,7 +110,7 @@ public class ColorPickerPopupNode extends PopupNode<ColorPickerPopupNode> {
     }
 
     @Override
-    protected void configurePopup(GuiRenderer renderFrame) {
+    protected void configurePopup(AlumiteGuiRenderer renderFrame) {
         int fh = renderFrame.fontHeight();
         int hexInputH = 10 + fh;
         int svTop = PAD_V + fh + TITLE_GAP;
@@ -240,7 +241,7 @@ public class ColorPickerPopupNode extends PopupNode<ColorPickerPopupNode> {
         }
 
         @Override
-        protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+        protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
             int posX = bounds().positionX();
             int posY = bounds().positionY();
             int width = bounds().width();
@@ -319,7 +320,7 @@ public class ColorPickerPopupNode extends PopupNode<ColorPickerPopupNode> {
         }
 
         @Override
-        protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+        protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
             int posX = bounds().positionX();
             int posY = bounds().positionY();
             int width = bounds().width();

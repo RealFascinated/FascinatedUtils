@@ -39,10 +39,21 @@ public class ParticleFilterModule extends Module {
         return toggle != null && !toggle.getValue();
     }
 
+    /**
+     * Checks whether the user has switched off the given particle type.
+     *
+     * @param particleType the particle type about to be created
+     * @return true when particles of this type should be suppressed
+     */
+    public boolean isParticleTypeBlocked(ParticleType<?> particleType) {
+        BooleanSetting toggle = togglesByType.get(particleType);
+        return toggle != null && !toggle.getValue();
+    }
+
     private void initParticleToggles() {
         for (Identifier identifier : BuiltInRegistries.PARTICLE_TYPE.keySet()) {
             String id = identifier.getNamespace() + ":" + identifier.getPath();
-            BooleanSetting particleToggle = BooleanSetting.builder().categoryDisplayKey("alumite.setting.category.particle_filter").id(id).displayName(() -> id).tooltip(() -> I18n.get("alumite.module.particlefilter.toggle.description")).defaultValue(true).build();
+            BooleanSetting particleToggle = BooleanSetting.builder().categoryDisplayKey(identifier.getNamespace()).id(id).displayName(() -> id).tooltip(() -> I18n.get("alumite.module.particlefilter.toggle.description")).defaultValue(true).build();
             particleToggles.add(particleToggle);
             togglesByType.put(BuiltInRegistries.PARTICLE_TYPE.getValue(identifier), particleToggle);
             addSetting(particleToggle);

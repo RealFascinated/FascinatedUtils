@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(TextureSetup.class)
 public class TextureSetupMixin {
     @Unique
-    private static TextureSetup alumite$lastSetup;
+    private static volatile TextureSetup alumite$lastSetup;
 
     // Every glyph of a text asks for the same setup, so hand back the previous one instead of building it again.
     @Inject(method = "singleTextureWithLightmap", at = @At("HEAD"), cancellable = true)

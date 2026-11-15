@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.hud;
 
 import cc.fascinated.fascinatedutils.mixin.scoreboard.GuiScoreDisplayOrderAccessor;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.ScoreboardModule;
@@ -49,7 +49,7 @@ public class ScoreboardHudPanel extends HudPanel {
     }
 
     @Override
-    public @Nullable Runnable prepareAndDraw(GuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
+    public @Nullable Runnable prepareAndDraw(AlumiteGuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
         Minecraft minecraft = Minecraft.getInstance();
         Font font = minecraft.font;
         if (minecraft.level == null) {
@@ -150,7 +150,7 @@ public class ScoreboardHudPanel extends HudPanel {
         return new Snapshot(PREVIEW_TITLE, font.width(PREVIEW_TITLE), widest, List.copyOf(rows));
     }
 
-    private Runnable buildScoreboardDraw(GuiRenderer glRenderer, float lineHeight, Snapshot snapshot, boolean editorMode) {
+    private Runnable buildScoreboardDraw(AlumiteGuiRenderer glRenderer, float lineHeight, Snapshot snapshot, boolean editorMode) {
         float padX = hudHostModule().getPaddingValue();
         float padY = hudHostModule().getPaddingValue();
         float layoutWidth = Math.max(getMinWidth(), (float) snapshot.widest() + 2f * padX);

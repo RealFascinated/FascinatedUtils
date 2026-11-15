@@ -17,6 +17,13 @@ public interface UiTheme {
 
     int onDanger();
 
+    /**
+     * Text and icon colour drawn on top of {@link #successFill()}.
+     *
+     * @return packed ARGB
+     */
+    int onSuccess();
+
     int inputFill();
 
     int inputBorder();
@@ -127,4 +134,11 @@ public interface UiTheme {
      * @return packed ARGB color
      */
     int success();
+
+    /**
+     * Cautionary status tone for text and icons.
+     *
+     * @return packed ARGB color
+     */
+    int warning();
 }

@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.gui.core;
 
 import cc.fascinated.fascinatedutils.gui.layout.AxisConstraints;
 import cc.fascinated.fascinatedutils.gui.layout.BoxLayoutSpec;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 
 public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
     private final BoxLayoutSpec boxLayout = new BoxLayoutSpec();
@@ -166,16 +166,16 @@ public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
         return self();
     }
 
-    protected int intrinsicWidth(GuiRenderer renderFrame, int parentWidth) {
+    protected int intrinsicWidth(AlumiteGuiRenderer renderFrame, int parentWidth) {
         return 0;
     }
 
-    protected int intrinsicHeight(GuiRenderer renderFrame, int parentHeight, int resolvedWidth) {
+    protected int intrinsicHeight(AlumiteGuiRenderer renderFrame, int parentHeight, int resolvedWidth) {
         return 0;
     }
 
     @Override
-    public void layout(GuiRenderer renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
+    public void layout(AlumiteGuiRenderer renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
         AxisConstraints horizontal = boxLayout.horizontal();
         AxisConstraints vertical = boxLayout.vertical();
         int resolvedWidth = horizontal.hasDefinedSize() ? horizontal.resolveSize(parentWidth) : intrinsicWidth(renderFrame, parentWidth);
@@ -201,7 +201,7 @@ public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
      * Lays out a vertical stack. Each child is laid out exactly once, then shifted into its final slot, so nesting depth
      * does not multiply the work. A column without a fixed height is as tall as its children and gaps (spacers collapse).
      */
-    private void layoutColumn(GuiRenderer renderFrame, int parentX, int parentY, int parentWidth, int parentHeight, int resolvedWidth) {
+    private void layoutColumn(AlumiteGuiRenderer renderFrame, int parentX, int parentY, int parentWidth, int parentHeight, int resolvedWidth) {
         AxisConstraints vertical = boxLayout.vertical();
         boolean fixedHeight = vertical.hasDefinedSize();
         int fixedResolvedHeight = fixedHeight ? vertical.resolveSize(parentHeight) : parentHeight;
@@ -239,7 +239,7 @@ public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
         }
     }
 
-    private void layoutRow(GuiRenderer renderFrame, int resolvedX, int resolvedY, int resolvedWidth, int resolvedHeight) {
+    private void layoutRow(AlumiteGuiRenderer renderFrame, int resolvedX, int resolvedY, int resolvedWidth, int resolvedHeight) {
         int visibleCount = 0;
         int spacerCount = 0;
         int totalFixed = 0;

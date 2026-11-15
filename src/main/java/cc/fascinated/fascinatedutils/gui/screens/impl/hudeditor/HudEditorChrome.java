@@ -20,7 +20,7 @@ public class HudEditorChrome {
      * Half-width of the band around 1.0 where scale snaps to exactly default.
      */
     public static final float SCALE_SNAP_TO_UNITY_BAND = 0.07f;
-    public static final int ACTION_BUTTON_SIZE = 13;
+    public static final int ACTION_BUTTON_SIZE = 16;
     public static final int ACTION_BUTTON_PAD = 3;
     public static final int SELECTED_COLOR = UiColor.argb("#913de2");
     public static final int SCALE_HANDLE_FILL = UiColor.argb("#ede4fa");

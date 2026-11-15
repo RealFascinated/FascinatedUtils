@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.waypoint;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.render.ClientFovEvent;
 import cc.fascinated.fascinatedutils.gui.core.UIScale;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.systems.waypoint.Waypoint;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.waypoint.WaypointRepository;
@@ -74,7 +74,7 @@ public class WaypointLabelHudElement implements HudElement {
         boolean showBorder = module.getShowBorder().isEnabled();
         float labelPad = module.getLabelPadding().getValue().floatValue();
 
-        GuiRenderer guiRenderer = new GuiRenderer(graphics);
+        AlumiteGuiRenderer guiRenderer = new AlumiteGuiRenderer(graphics);
         guiRenderer.beginFrame(uiWidth, uiHeight);
         float fontHeight = guiRenderer.fontHeight();
 

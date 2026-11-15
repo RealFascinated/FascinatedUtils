@@ -32,7 +32,7 @@ import java.util.Map;
  * when the current segment flushes. Pose transforms that must apply to queued text have to still be on the stack when
  * {@link #endRenderSegment()}, {@link #flushText()} or {@link #endFrame()} runs.
  */
-public class GuiRenderer {
+public class AlumiteGuiRenderer {
     private static final List<ClickRegion> FRAME_CLICK_REGIONS = new ArrayList<>();
     private static ClickRegion pressedClickRegion = null;
     private static final int TEXT_WIDTH_CACHE_LIMIT = 4096;
@@ -52,7 +52,7 @@ public class GuiRenderer {
     private float pointerX = Float.NaN;
     private float pointerY = Float.NaN;
 
-    public GuiRenderer(GuiGraphicsExtractor drawContext) {
+    public AlumiteGuiRenderer(GuiGraphicsExtractor drawContext) {
         this.drawContext = drawContext;
         this.minecraftClient = Minecraft.getInstance();
         this.backend = new Renderer2D(drawContext, this::currentScissorArea);
@@ -396,9 +396,14 @@ public class GuiRenderer {
             return null;
         }
         ClipLayer top = clipStack.peek();
-        int left = Mth.floor(top.positionX);
-        int topEdge = Mth.floor(top.positionY);
-        return new ClipRegion(left, topEdge, Mth.ceil(top.positionX + top.width) - left, Mth.ceil(top.positionY + top.height) - topEdge);
+        ClipRegion region = top.region;
+        if (region == null) {
+            int left = Mth.floor(top.positionX);
+            int topEdge = Mth.floor(top.positionY);
+            region = new ClipRegion(left, topEdge, Mth.ceil(top.positionX + top.width) - left, Mth.ceil(top.positionY + top.height) - topEdge);
+            top.region = region;
+        }
+        return region;
     }
 
     public void setPointer(float x, float y) {
@@ -533,6 +538,8 @@ public class GuiRenderer {
         private final float height;
         @Nullable
         private ScreenRectangle scissorArea;
+        @Nullable
+        private ClipRegion region;
 
         private ClipLayer(float positionX, float positionY, float width, float height) {
             this.positionX = positionX;

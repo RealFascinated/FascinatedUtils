@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.node;
 
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 
 public class GridNode extends UiNode {
     private int cols = 1;
@@ -62,7 +62,7 @@ public class GridNode extends UiNode {
     }
 
     @Override
-    public void layout(GuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
+    public void layout(AlumiteGuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
         int visibleCount = 0;
         for (UiNode childNode : childrenView()) {
             if (childNode.visible()) {

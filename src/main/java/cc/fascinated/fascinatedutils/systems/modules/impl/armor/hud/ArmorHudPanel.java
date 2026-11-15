@@ -10,12 +10,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ArmorHudPanel extends HudPanel {
 
@@ -24,6 +27,10 @@ public class ArmorHudPanel extends HudPanel {
     private static final int MAIN_HAND_ROW_INDEX = ARMOR_SLOTS.length + 1;
 
     private final ArmorModule armorModule;
+    private final List<HudContent.ItemRow> rowsBuffer = new ArrayList<>(ArmorModule.ARMOR_HUD_ROW_COUNT);
+    private final Map<Item, Integer> inventoryTotals = new HashMap<>();
+    private int inventoryTotalsTick = -1;
+    private Player inventoryTotalsPlayer;
 
     public ArmorHudPanel(ArmorModule armorModule) {
         super(armorModule, "armor_hud", 0f);
@@ -57,7 +64,8 @@ public class ArmorHudPanel extends HudPanel {
 
     @Override
     protected @Nullable HudContent produceHudContent(float deltaSeconds, boolean editorMode) {
-        List<HudContent.ItemRow> rows = new ArrayList<>(ArmorModule.ARMOR_HUD_ROW_COUNT);
+        List<HudContent.ItemRow> rows = rowsBuffer;
+        rows.clear();
         Player player = Minecraft.getInstance().player;
         boolean hasVisibleEquippedStack = player != null && hasAnyVisibleEquippedStack(player);
         boolean showEditorPreview = editorMode && !hasVisibleEquippedStack;
@@ -96,19 +104,28 @@ public class ArmorHudPanel extends HudPanel {
         }
         ItemStack stack = real.stack();
         if (armorModule.armorHudShowTotalInventoryCount() && stack.getMaxDamage() <= 0 && stack.getMaxStackSize() > 1) {
-            int count = 0;
-            var inventory = player.getInventory();
-            for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
-                ItemStack slotStack = inventory.getItem(slot);
-                if (!slotStack.isEmpty() && slotStack.getItem() == stack.getItem()) {
-                    count += slotStack.getCount();
-                }
-            }
+            int count = inventoryTotal(player, stack.getItem());
             if (count > 0) {
                 return new HudItemSpec.Real(stack.copyWithCount(count));
             }
         }
         return spec;
+    }
+
+    private int inventoryTotal(Player player, Item item) {
+        if (inventoryTotalsPlayer != player || inventoryTotalsTick != player.tickCount) {
+            inventoryTotals.clear();
+            var inventory = player.getInventory();
+            for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+                ItemStack slotStack = inventory.getItem(slot);
+                if (!slotStack.isEmpty()) {
+                    inventoryTotals.merge(slotStack.getItem(), slotStack.getCount(), Integer::sum);
+                }
+            }
+            inventoryTotalsPlayer = player;
+            inventoryTotalsTick = player.tickCount;
+        }
+        return inventoryTotals.getOrDefault(item, 0);
     }
 
     private boolean shouldColorRow(int rowIndex) {

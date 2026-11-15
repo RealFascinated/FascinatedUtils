@@ -3,7 +3,6 @@ package cc.fascinated.fascinatedutils.api;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.api.auth.json.*;
 import cc.fascinated.fascinatedutils.api.internal.AlumiteHttpClient;
-import cc.fascinated.fascinatedutils.api.user.json.PublicUserDTO;
 import cc.fascinated.fascinatedutils.api.user.json.UserDTO;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import lombok.Getter;
@@ -27,10 +26,6 @@ public class Alumite {
         INSTANCE = this;
         this.authManager = new AlumiteAuthManager(new AlumiteTokenStore(), this);
         this.http = new AlumiteHttpClient(httpClient, Constants.GSON, authManager::accessToken, authManager::tryRefreshActive);
-    }
-
-    public PublicUserDTO fetchUser(String userId) throws AlumiteApiException {
-        return http.get("/users/" + userId).execute(PublicUserDTO.class);
     }
 
     public RefreshResponseDTO refreshTokens(String refreshToken) {

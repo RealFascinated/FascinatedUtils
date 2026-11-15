@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.gui.node.input;
 
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.render.ClipRegion;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.render.UiText;
 import cc.fascinated.fascinatedutils.gui.theme.UiMetrics;
 import org.lwjgl.glfw.GLFW;
@@ -26,7 +26,7 @@ public class TextInputNode<V> extends PositionedNode<TextInputNode<V>> {
     private int scrollOffsetX;
 
     // Layout / render cache
-    private GuiRenderer lastRenderFrame;
+    private AlumiteGuiRenderer lastRenderFrame;
     private int lastTextX;
     private int lastTextY;
     private int lastTextAreaWidth;
@@ -98,7 +98,7 @@ public class TextInputNode<V> extends PositionedNode<TextInputNode<V>> {
     }
 
     @Override
-    public void layout(GuiRenderer frame, int parentX, int parentY, int parentWidth, int parentHeight) {
+    public void layout(AlumiteGuiRenderer frame, int parentX, int parentY, int parentWidth, int parentHeight) {
         lastRenderFrame = frame;
         int lineH = frame.fontHeight();
         int intrinsicHeight = PADDING_V * 2 + lineH;
@@ -220,7 +220,7 @@ public class TextInputNode<V> extends PositionedNode<TextInputNode<V>> {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer frame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer frame, float deltaSeconds) {
         lastRenderFrame = frame;
         int posX = bounds().positionX();
         int posY = bounds().positionY();
@@ -231,7 +231,7 @@ public class TextInputNode<V> extends PositionedNode<TextInputNode<V>> {
 
         frame.drawRoundedRect(posX, posY, width, height, CORNER_RADIUS, frame.theme().inputFill());
         int borderColor = !handler.value().isEmpty() && !parser.isValid(handler.value())
-                ? BORDER_INVALID : frame.theme().inputBorder();
+                ? BORDER_INVALID : handler.isFocused() ? frame.theme().focusRing() : frame.theme().inputBorder();
         frame.drawRoundedRectFrame(posX, posY, width, height, CORNER_RADIUS, borderColor, 0, 1);
 
         if (text.isEmpty()) {
@@ -265,7 +265,7 @@ public class TextInputNode<V> extends PositionedNode<TextInputNode<V>> {
         }
     }
 
-    private void drawCaret(GuiRenderer frame, int caretX, int caretY, int lineH) {
+    private void drawCaret(AlumiteGuiRenderer frame, int caretX, int caretY, int lineH) {
         int clipTop = bounds().positionY() + PADDING_V;
         int clipBottom = bounds().positionY() + bounds().height() - PADDING_V;
         int drawTop = Math.max(clipTop, caretY);

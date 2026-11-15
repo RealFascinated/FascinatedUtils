@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.hudeditor;
 
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 
 /**
@@ -18,13 +18,13 @@ public class HudScaleHandleNode extends PositionedNode<HudScaleHandleNode> {
     }
 
     @Override
-    public void layout(GuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
+    public void layout(AlumiteGuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
         int handleSize = Math.round(HudEditorChrome.scaleHandleSize());
         bounds().set(Math.round(HudEditorChrome.scaleHandleLeft(panel)), Math.round(HudEditorChrome.scaleHandleTop(panel)), handleSize, handleSize);
     }
 
     @Override
-    protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         renderFrame.drawRect(bounds().positionX(), bounds().positionY(), bounds().width(), bounds().height(), HudEditorChrome.SCALE_HANDLE_FILL);
         renderFrame.drawBorder(bounds().positionX(), bounds().positionY(), bounds().width(), bounds().height(), 1f, HudEditorChrome.SELECTED_COLOR);
     }

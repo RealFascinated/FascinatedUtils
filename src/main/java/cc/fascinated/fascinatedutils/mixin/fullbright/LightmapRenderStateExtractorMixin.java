@@ -36,7 +36,8 @@ public class LightmapRenderStateExtractorMixin {
         boolean enabled = ModuleRegistry.INSTANCE.isEnabled(FullbrightModule.class);
 
         if (enabled) {
-            renderState.ambientColor = new Vector3f(1.0F, 1.0F, 1.0F);
+            float brightness = ModuleRegistry.INSTANCE.getModule(FullbrightModule.class).map(module -> module.getBrightness().getValue().floatValue()).orElse(1.0F);
+            renderState.ambientColor = new Vector3f(brightness, brightness, brightness);
             renderState.darknessEffectScale = 0.0F;
             renderState.needsUpdate = true;
         }

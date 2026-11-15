@@ -9,7 +9,7 @@ import lombok.Getter;
 
 public class MemoryWidget extends HudHostModule {
 
-    private final EnumSetting<Format> memoryFormat = EnumSetting.<Format>builder().id("memory_format").defaultValue(Format.FULL).valueFormatter(Format::name).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
+    private final EnumSetting<Format> memoryFormat = EnumSetting.<Format>builder().id("memory_format").defaultValue(Format.FULL).valueFormatter(Format::getName).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
 
 
     public MemoryWidget() {

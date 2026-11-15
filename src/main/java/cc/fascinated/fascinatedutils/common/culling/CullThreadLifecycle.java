@@ -11,6 +11,8 @@ import java.util.function.Supplier;
  * @param <T> the cull task type run on the thread
  */
 public class CullThreadLifecycle<T extends AbstractCullTask> {
+    private static final long WORKER_EXIT_TIMEOUT_MILLIS = 100L;
+
     private final BooleanSupplier settingEnabled;
     private final Supplier<T> taskFactory;
     private final String threadName;
@@ -25,7 +27,7 @@ public class CullThreadLifecycle<T extends AbstractCullTask> {
     private volatile boolean enabled = false;
 
     @Getter
-    private T task;
+    private volatile T task;
 
     public CullThreadLifecycle(BooleanSupplier settingEnabled, Supplier<T> taskFactory, String threadName, Runnable onThreadStarted) {
         this.settingEnabled = settingEnabled;
@@ -35,14 +37,14 @@ public class CullThreadLifecycle<T extends AbstractCullTask> {
     }
 
     public boolean isThreadAlive() {
-        return thread != null && thread.isAlive();
+        return task != null && thread != null && thread.isAlive();
     }
 
     public void onClientStarted() {
         previousEnabledState = settingEnabled.getAsBoolean();
         enabled = previousEnabledState;
-        if (previousEnabledState) {
-            startThread();
+        if (previousEnabledState && !startThread()) {
+            previousEnabledState = false;
         }
     }
 
@@ -55,7 +57,10 @@ public class CullThreadLifecycle<T extends AbstractCullTask> {
 
         previousEnabledState = nowEnabled;
         if (nowEnabled) {
-            startThread();
+            if (!startThread()) {
+                // The previous worker has not exited yet; retry on the next tick.
+                previousEnabledState = false;
+            }
         }
         else {
             stopThread();
@@ -67,22 +72,34 @@ public class CullThreadLifecycle<T extends AbstractCullTask> {
         stopThread();
     }
 
-    private void startThread() {
+    private boolean startThread() {
         if (thread != null && thread.isAlive()) {
-            return;
+            if (task != null) {
+                return true;
+            }
+            // A stopped worker may still be finishing its pass; never run two cull threads at once.
+            try {
+                thread.join(WORKER_EXIT_TIMEOUT_MILLIS);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+            if (thread.isAlive()) {
+                return false;
+            }
         }
         task = taskFactory.get();
         onThreadStarted.run();
         thread = new Thread(task, threadName);
         thread.setDaemon(true);
         thread.start();
+        return true;
     }
 
     private void stopThread() {
         if (task != null) {
             task.stop();
         }
-        thread = null;
         task = null;
     }
 }

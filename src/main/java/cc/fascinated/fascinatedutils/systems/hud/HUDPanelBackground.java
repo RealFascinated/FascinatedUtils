@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 
 public class HUDPanelBackground {
 
@@ -15,7 +15,7 @@ public class HUDPanelBackground {
      * @param backgroundArgb packed ARGB fill color
      * @param borderArgb     packed ARGB border color
      */
-    public static void drawPanelChrome(GuiRenderer glRenderer, float width, float height, boolean showBackground, float borderThickness, boolean showBorder, float cornerRadius, int roundedCornerMask, int backgroundArgb, int borderArgb, boolean editorMode) {
+    public static void drawPanelChrome(AlumiteGuiRenderer glRenderer, float width, float height, boolean showBackground, float borderThickness, boolean showBorder, float cornerRadius, int roundedCornerMask, int backgroundArgb, int borderArgb, boolean editorMode) {
         if (!showBackground && !showBorder) {
             if (editorMode) {
                 drawDottedOutline(glRenderer, width, height);
@@ -46,7 +46,7 @@ public class HUDPanelBackground {
         }
     }
 
-    private static void drawDottedOutline(GuiRenderer glRenderer, float width, float height) {
+    private static void drawDottedOutline(AlumiteGuiRenderer glRenderer, float width, float height) {
         if (width < DOTTED_OUTLINE_DOT_SIZE || height < DOTTED_OUTLINE_DOT_SIZE) {
             return;
         }

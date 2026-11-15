@@ -55,6 +55,15 @@ public class CreateEditWaypointScreen extends RootScreen {
     }
 
     @Override
+    protected void onEscapePressed() {
+        if (stateStore.state("waypoint.colorpicker.open", false).get()) {
+            stateStore.state("waypoint.colorpicker.open", false).set(false);
+        } else {
+            Minecraft.getInstance().setScreen(new WaypointsScreen());
+        }
+    }
+
+    @Override
     protected UiNode createRootNode() {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
@@ -114,7 +123,8 @@ public class CreateEditWaypointScreen extends RootScreen {
                     header.addChild(new ButtonNode()
                             .setIconCenter(ModUiTextures.BACK.getId())
                             .setVariant(ButtonNode.ButtonVariant.GHOST)
-                            .setOnPress(() -> Minecraft.getInstance().setScreen(new WaypointsScreen())));
+                            .setOnPress(() -> Minecraft.getInstance().setScreen(new WaypointsScreen()))
+                            .setTooltip(() -> Component.translatable("alumite.common.back").getString()));
                 })
                 .setContents(content -> {
                     content.margin(CONTENT_PADDING);

@@ -6,7 +6,7 @@ import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
@@ -191,7 +191,7 @@ public abstract class HudHostModule extends Module {
         return roundingRadius.getValue().floatValue();
     }
 
-    public void drawHUDPanelBackground(GuiRenderer glRenderer, float layoutWidth, float layoutHeight, boolean editorMode) {
+    public void drawHUDPanelBackground(AlumiteGuiRenderer glRenderer, float layoutWidth, float layoutHeight, boolean editorMode) {
         float cornerRadius = getCornerRadius();
         HUDPanelBackground.drawPanelChrome(glRenderer, layoutWidth, layoutHeight, showBackground.isEnabled(), borderThickness.getValue().floatValue(), showBorder.isEnabled(), cornerRadius, RectCornerRoundMask.ALL & ~squaredCornerMask, backgroundColor.getResolvedArgb(), borderColor.getResolvedArgb(), editorMode);
     }

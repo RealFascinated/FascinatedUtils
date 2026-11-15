@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Builds the scrollable list of setting rows (top-level settings followed by category sections) used by the
@@ -161,7 +162,17 @@ public class SettingSectionsBuilder {
                     .alignY(0.5f));
             row.addChild(colorControl(colorSetting));
         }
+        row.setTooltip(() -> rowTooltip(setting));
         return row;
+    }
+
+    private String rowTooltip(Setting<?> setting) {
+        if (setting.isLocked()) {
+            Supplier<String> lockedReason = setting.getLockedReason();
+            String reason = lockedReason != null ? lockedReason.get() : null;
+            return reason != null && !reason.isBlank() ? reason : I18n.get("alumite.setting.ui.lock_reason.default");
+        }
+        return setting.getTooltipProvider().get();
     }
 
     private SwitchNode booleanControl(BooleanSetting setting) {

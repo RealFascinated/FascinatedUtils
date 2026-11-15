@@ -48,8 +48,7 @@ public class PlayerListHudMixin {
                 Font textRenderer = Minecraft.getInstance().font;
                 int latency = info.getLatency();
                 Component pingLabel = tabModuleOptional.get().millisecondsPingComponent(latency);
-                int textX = slotWidth + xo - textRenderer.width(pingLabel) - 13;
-                textX += 12;
+                int textX = slotWidth + xo - textRenderer.width(pingLabel) - 1;
                 graphics.text(textRenderer, pingLabel, textX, yo, tabModuleOptional.get().pingColor(latency), true);
             }
         }

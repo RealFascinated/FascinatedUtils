@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.screens;
 
 import cc.fascinated.fascinatedutils.gui.core.*;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiThemeRepository;
 import cc.fascinated.fascinatedutils.gui.theme.impl.DefaultUiTheme;
@@ -93,7 +93,7 @@ public abstract class RootScreen extends WidgetScreen {
         float pointerY = canvasPointerY();
 
         float deltaSeconds = delta / 20f;
-        GuiRenderer renderFrame = new GuiRenderer(drawContext);
+        AlumiteGuiRenderer renderFrame = new AlumiteGuiRenderer(drawContext);
         renderFrame.beginFrame(uiWidth, uiHeight);
         renderFrame.setPointer(pointerX, pointerY);
         host.layout(0, 0, Math.round(uiWidth), Math.round(uiHeight), renderFrame);
@@ -112,7 +112,7 @@ public abstract class RootScreen extends WidgetScreen {
         ensureInitialized();
         float pointerX = canvasPointerX();
         float pointerY = canvasPointerY();
-        boolean hitRegion = GuiRenderer.recordPressedRegion(pointerX, pointerY, event.button());
+        boolean hitRegion = AlumiteGuiRenderer.recordPressedRegion(pointerX, pointerY, event.button());
         boolean handled = hitRegion || host.dispatch(new UiEvent.PointerPress(pointerX, pointerY, event.button()));
         return handled || super.mouseClicked(event, doubled);
     }
@@ -123,7 +123,7 @@ public abstract class RootScreen extends WidgetScreen {
         float pointerX = canvasPointerX();
         float pointerY = canvasPointerY();
         host.dispatch(new UiEvent.PointerRelease(pointerX, pointerY, event.button()));
-        GuiRenderer.fireAndClearPressedRegion(pointerX, pointerY);
+        AlumiteGuiRenderer.fireAndClearPressedRegion(pointerX, pointerY);
         return super.mouseReleased(event);
     }
 

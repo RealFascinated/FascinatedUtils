@@ -5,7 +5,7 @@ import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.core.UiKeys;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 
 import java.util.function.Consumer;
@@ -52,12 +52,12 @@ public class SwitchNode extends PositionedNode<SwitchNode> {
     }
 
     @Override
-    protected int intrinsicWidth(GuiRenderer renderFrame, int parentWidth) {
+    protected int intrinsicWidth(AlumiteGuiRenderer renderFrame, int parentWidth) {
         return TRACK_WIDTH;
     }
 
     @Override
-    protected int intrinsicHeight(GuiRenderer renderFrame, int parentHeight, int resolvedWidth) {
+    protected int intrinsicHeight(AlumiteGuiRenderer renderFrame, int parentHeight, int resolvedWidth) {
         return TRACK_HEIGHT;
     }
 
@@ -117,7 +117,7 @@ public class SwitchNode extends PositionedNode<SwitchNode> {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         UiTheme theme = renderFrame.theme();
         float target = checked ? 1f : 0f;
         if (Float.isNaN(knobProgress)) {

@@ -19,6 +19,7 @@ import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.HudPanelMerger;
 import cc.fascinated.fascinatedutils.updater.Updater;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -48,6 +49,7 @@ public class HUDEditorScreen extends RootScreen {
     private static final int LABEL_HEIGHT = 10;
 
     private final HudEditorPointerSession pointerSession = new HudEditorPointerSession();
+    private final HudPanelMerger panelMerger = new HudPanelMerger();
     private final FadeInAnim screenAnim = new FadeInAnim(200f);
     private final FadeInAnim brandingAnim = new FadeInAnim(450f);
     private float deltaSeconds;
@@ -100,16 +102,23 @@ public class HUDEditorScreen extends RootScreen {
         }
 
         List<HudPanel> panels = HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets());
-        HudPanel hoverOwner = null;
-        for (int index = panels.size() - 1; index >= 0; index--) {
+        HudPanel selectedPanel = pointerSession.selected();
+        HudPanel actionOwner = null;
+        if (selectedPanel != null && panels.contains(selectedPanel) && HudEditorChrome.isInActionZone(selectedPanel, pointerX, pointerY)) {
+            actionOwner = selectedPanel;
+        }
+        for (int index = panels.size() - 1; index >= 0 && actionOwner == null; index--) {
             if (HudEditorChrome.isInActionZone(panels.get(index), pointerX, pointerY)) {
-                hoverOwner = panels.get(index);
-                break;
+                actionOwner = panels.get(index);
             }
         }
+        if (actionOwner == null && selectedPanel != null && panels.contains(selectedPanel)) {
+            actionOwner = selectedPanel;
+        }
+        HudEditorMergeGroup mergeGroup = new HudEditorMergeGroup(panelMerger);
         for (HudPanel panel : panels) {
             boolean repositionFromAnchor = panel != pointerSession.dragging() && panel != pointerSession.scalingWidget();
-            root.addChild(new HudPanelNode(panel, pointerSession, this, deltaSeconds, repositionFromAnchor, panel == hoverOwner, panel == pointerSession.selected()));
+            root.addChild(new HudPanelNode(panel, pointerSession, this, deltaSeconds, repositionFromAnchor, panel == actionOwner, panel == pointerSession.selected(), mergeGroup));
         }
 
         addSnapGuides(root, canvasWidth, canvasHeight);

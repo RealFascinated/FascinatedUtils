@@ -1,8 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.node;
 
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
-import cc.fascinated.fascinatedutils.gui.render.UiText;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 
 import java.util.function.Function;
@@ -50,17 +49,17 @@ public class TextNode extends PositionedNode<TextNode> {
     }
 
     @Override
-    protected int intrinsicWidth(GuiRenderer renderFrame, int parentWidth) {
+    protected int intrinsicWidth(AlumiteGuiRenderer renderFrame, int parentWidth) {
         return measureTextWidth(renderFrame);
     }
 
     @Override
-    protected int intrinsicHeight(GuiRenderer renderFrame, int parentHeight, int resolvedWidth) {
+    protected int intrinsicHeight(AlumiteGuiRenderer renderFrame, int parentHeight, int resolvedWidth) {
         return renderFrame.fontHeight();
     }
 
     @Override
-    protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         String text = currentText();
         int textColor = colorResolver != null ? colorResolver.apply(renderFrame.theme())
                 : colorOverrideArgb != null ? colorOverrideArgb
@@ -68,10 +67,19 @@ public class TextNode extends PositionedNode<TextNode> {
         int textWidth = Math.round(renderFrame.measureTextWidth(text, bold) * scale);
         int textPositionX = bounds().positionX() + Math.round((bounds().width() - textWidth) * horizontalAlign);
         int textPositionY = bounds().positionY() + Math.round((bounds().height() - renderFrame.fontHeight() * scale) * verticalAlign);
-        UiText.of(text).color(textColor).bold(bold).scale(scale).draw(renderFrame, textPositionX, textPositionY);
+        if (text.isEmpty()) {
+            return;
+        }
+        if (scale != 1.0f) {
+            renderFrame.pushTransform(textPositionX, textPositionY, scale, scale);
+            renderFrame.drawText(text, 0, 0, textColor, false, bold);
+            renderFrame.popTransform();
+        } else {
+            renderFrame.drawText(text, textPositionX, textPositionY, textColor, false, bold);
+        }
     }
 
-    private int measureTextWidth(GuiRenderer renderFrame) {
+    private int measureTextWidth(AlumiteGuiRenderer renderFrame) {
         return renderFrame.measureTextWidth(currentText(), bold);
     }
 

@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PauseScreen.class)
 public abstract class GameMenuScreenMixin {
     @Inject(method = "createPauseMenu", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/chat/CommonComponents;disconnectButtonLabel(Z)Lnet/minecraft/network/chat/Component;", shift = At.Shift.BEFORE))
-    private void alumite$addServerListRowBeforeDisconnect(CallbackInfo callbackInfo, @Local(name = "helper") GridLayout.RowHelper helper) {
+    private void alumite$addServerListRowBeforeDisconnect(CallbackInfo callbackInfo, @Local(ordinal = 0) GridLayout.RowHelper helper) {
         if (Settings.INSTANCE.getShowServerListInPauseMenu().isEnabled()) {
             PauseScreen self = (PauseScreen) (Object) this;
             Minecraft client = Minecraft.getInstance();

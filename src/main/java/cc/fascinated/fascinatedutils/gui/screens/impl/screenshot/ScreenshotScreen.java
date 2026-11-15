@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.common.NumberUtils;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.core.SpacerNode;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
+import cc.fascinated.fascinatedutils.gui.core.UiKeys;
 import cc.fascinated.fascinatedutils.gui.core.UiState;
 import cc.fascinated.fascinatedutils.gui.node.ButtonNode;
 import cc.fascinated.fascinatedutils.gui.node.CardNode;
@@ -37,6 +38,8 @@ public class ScreenshotScreen extends RootScreen {
     private static final int CELL_BTN_HEIGHT = 18;
     private static final int CELL_FOOTER_HEIGHT = LABEL_HEIGHT + 4;
 
+    private PositionedNode<?> focusedButtonRow;
+
     public ScreenshotScreen() {
         super(Component.translatable("alumite.screenshot.screen.title"));
     }
@@ -64,7 +67,8 @@ public class ScreenshotScreen extends RootScreen {
                     header.addChild(new ButtonNode()
                             .setIconCenter(ModUiTextures.CLOSE.getId())
                             .setVariant(ButtonNode.ButtonVariant.GHOST)
-                            .setOnPress(() -> mc.setScreen(null)));
+                            .setOnPress(() -> mc.setScreen(null))
+                            .setTooltip(() -> Component.translatable("alumite.common.close").getString()));
                 })
                 .setContents(contents -> {
                     contents.margin(GRID_PADDING);
@@ -81,17 +85,19 @@ public class ScreenshotScreen extends RootScreen {
                             final int screenshotIndex = i;
                             Screenshot screenshot = screenshots.get(i);
 
-                            // Buttons are hidden by default and shown on hover, overlaid on the thumbnail.
+                            // Buttons are hidden by default and shown on hover or keyboard focus, overlaid on the thumbnail.
                             // Defined before the texture so the hover callbacks can reference them.
                             PositionedNode<?> buttonRow = new PositionedNode<>()
                                     .fullWidth().height(CELL_BTN_HEIGHT).bottom(4).left(4)
                                     .rowGap(4);
                             buttonRow.setVisible(false);
+                            Runnable openViewer = () -> Minecraft.getInstance().setScreen(new ScreenshotViewerScreen(screenshotIndex));
 
                             buttonRow.addChild(new ButtonNode()
                                     .size(BUTTON_SIZE, CELL_BTN_HEIGHT)
                                     .setIconCenter(ModUiTextures.COPY.getId())
                                     .setOnPress(screenshot::copyToClipboard)
+                                    .setTooltip(() -> Component.translatable("alumite.screenshot.viewer.copy").getString())
                                     );
 
                             buttonRow.addChild(new ButtonNode()
@@ -99,6 +105,7 @@ public class ScreenshotScreen extends RootScreen {
                                     .setIconCenter(ModUiTextures.TRASH.getId())
                                     .setVariant(ButtonNode.ButtonVariant.DANGER)
                                     .setOnPress(() -> confirmDeleteIndex.set(screenshotIndex))
+                                    .setTooltip(() -> Component.translatable("alumite.screenshot.viewer.delete").getString())
                                     );
 
                             TextureNode texture = new TextureNode()
@@ -106,12 +113,32 @@ public class ScreenshotScreen extends RootScreen {
                                     .setCornerRadius(6)
                                     .setShowLoader(true)
                                     .fullWidth().top(0).bottom(CELL_FOOTER_HEIGHT);
-                            texture.addChild(new ClickOverlayNode(() -> Minecraft.getInstance().setScreen(new ScreenshotViewerScreen(screenshotIndex))).full());
+                            texture.addChild(new ClickOverlayNode(openViewer) {
+                                @Override
+                                public boolean focusable() {
+                                    return true;
+                                }
+
+                                @Override
+                                public boolean onKeyPress(int keyCode, int modifiers) {
+                                    if (UiKeys.isActivationKey(keyCode)) {
+                                        openViewer.run();
+                                        return true;
+                                    }
+                                    return false;
+                                }
+                            }.full());
                             texture.addChild(buttonRow);
 
-                            PositionedNode<?> cell = new PositionedNode<>().full();
+                            PositionedNode<?> cell = new FocusRevealCellNode(() -> {
+                                if (focusedButtonRow != null && focusedButtonRow != buttonRow) {
+                                    focusedButtonRow.setVisible(false);
+                                }
+                                focusedButtonRow = buttonRow;
+                                buttonRow.setVisible(true);
+                            }).full();
                             cell.setOnPointerEnter(() -> buttonRow.setVisible(true));
-                            cell.setOnPointerLeave(() -> buttonRow.setVisible(false));
+                            cell.setOnPointerLeave(() -> buttonRow.setVisible(buttonRow == focusedButtonRow));
 
                             cell.addChild(texture);
 
@@ -147,4 +174,20 @@ public class ScreenshotScreen extends RootScreen {
         return root;
     }
 
+    /**
+     * Thumbnail cell that notifies a callback when keyboard focus lands on one of its descendants.
+     */
+    private static class FocusRevealCellNode extends PositionedNode<FocusRevealCellNode> {
+
+        private final Runnable onDescendantFocused;
+
+        FocusRevealCellNode(Runnable onDescendantFocused) {
+            this.onDescendantFocused = onDescendantFocused;
+        }
+
+        @Override
+        public void revealDescendant(UiNode descendant) {
+            onDescendantFocused.run();
+        }
+    }
 }

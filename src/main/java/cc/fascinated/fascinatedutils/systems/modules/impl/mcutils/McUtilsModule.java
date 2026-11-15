@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.Client;
+import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.event.impl.packet.PacketReceiveEvent;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
@@ -39,12 +40,15 @@ public class McUtilsModule extends HudHostModule {
     private final ConcurrentLinkedQueue<String> toSubmit = new ConcurrentLinkedQueue<>();
     private final LinkedHashSet<String> submittedNames = new LinkedHashSet<>(MAX_NAMES * 2);
 
+    private final BooleanSetting submitPlayers = BooleanSetting.builder().id("submit_players").defaultValue(true).build();
+
     private volatile long initialCount = -1;
     private volatile long currentCount = -1;
 
 
     public McUtilsModule() {
         super("mcutils", "McUtils", HudDefaults.builder().defaultState(true).alwaysShowPanelToggles(true).build());
+        addSetting(submitPlayers);
         addAppearanceSettings(true);
         registerHudPanel(new McUtilsHudPanel(this));
 
@@ -65,7 +69,7 @@ public class McUtilsModule extends HudHostModule {
     }
 
     private void submitPending() {
-        if (!isEnabled()) {
+        if (!isEnabled() || !submitPlayers.getValue()) {
             return;
         }
         // Names whose Mojang lookup succeeded; they are marked as submitted and re-queued if the submit fails.
@@ -210,7 +214,7 @@ public class McUtilsModule extends HudHostModule {
 
     @EventHandler
     public void onPacket(PacketReceiveEvent event) {
-        if (!isEnabled()) {
+        if (!isEnabled() || !submitPlayers.getValue()) {
             return;
         }
         Packet<?> packet = event.packet();

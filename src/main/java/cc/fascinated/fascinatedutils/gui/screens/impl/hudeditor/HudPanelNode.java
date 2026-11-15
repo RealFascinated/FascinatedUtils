@@ -3,12 +3,14 @@ package cc.fascinated.fascinatedutils.gui.screens.impl.hudeditor;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
 import cc.fascinated.fascinatedutils.gui.node.ButtonNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.screens.impl.settings.ModSettingsScreen;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -17,9 +19,10 @@ import org.jspecify.annotations.Nullable;
  */
 public class HudPanelNode extends UiNode {
 
-    private static final int ACTION_ICON_SIZE = 9;
+    private static final int ACTION_ICON_SIZE = 10;
 
     private final HudPanel panel;
+    private final HudEditorMergeGroup mergeGroup;
     private final HudEditorPointerSession session;
     private final float deltaSeconds;
     private final boolean repositionFromAnchor;
@@ -39,9 +42,12 @@ public class HudPanelNode extends UiNode {
      * @param repositionFromAnchor whether the panel should follow its anchor before drawing
      * @param showActions          whether the settings and close buttons are shown
      * @param showScaleHandle      whether the scale handle is shown
+     * @param mergeGroup           group that merges the corners of touching panels
      */
-    public HudPanelNode(HudPanel panel, HudEditorPointerSession session, Screen returnScreen, float deltaSeconds, boolean repositionFromAnchor, boolean showActions, boolean showScaleHandle) {
+    public HudPanelNode(HudPanel panel, HudEditorPointerSession session, Screen returnScreen, float deltaSeconds, boolean repositionFromAnchor, boolean showActions, boolean showScaleHandle, HudEditorMergeGroup mergeGroup) {
         this.panel = panel;
+        this.mergeGroup = mergeGroup;
+        mergeGroup.register(this);
         this.session = session;
         this.deltaSeconds = deltaSeconds;
         this.repositionFromAnchor = repositionFromAnchor;
@@ -49,13 +55,15 @@ public class HudPanelNode extends UiNode {
             settingsButton = new ButtonNode()
                     .setIconCenter(ModUiTextures.SETTINGS.getId())
                     .setIconSize(ACTION_ICON_SIZE)
-                    .setOnPress(() -> Minecraft.getInstance().setScreen(new ModSettingsScreen(panel.hudSettingsNavigationTarget(), returnScreen)));
+                    .setOnPress(() -> Minecraft.getInstance().setScreen(new ModSettingsScreen(panel.hudSettingsNavigationTarget(), returnScreen)))
+                    .setTooltip(() -> Component.translatable("alumite.hud_editor.panel_settings").getString());
             settingsButton.size(HudEditorChrome.ACTION_BUTTON_SIZE);
             closeButton = new ButtonNode()
                     .setIconCenter(ModUiTextures.CLOSE.getId())
                     .setIconSize(ACTION_ICON_SIZE)
                     .setVariant(ButtonNode.ButtonVariant.DANGER)
-                    .setOnPress(() -> session.disable(panel));
+                    .setOnPress(() -> session.disable(panel))
+                    .setTooltip(() -> Component.translatable("alumite.hud_editor.panel_disable").getString());
             closeButton.size(HudEditorChrome.ACTION_BUTTON_SIZE);
             addChild(settingsButton);
             addChild(closeButton);
@@ -74,7 +82,7 @@ public class HudPanelNode extends UiNode {
     }
 
     @Override
-    public void layout(GuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
+    public void layout(AlumiteGuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
         drawPreview = panel.prepareAndDraw(renderFrame, deltaSeconds, true);
         if (drawPreview == null) {
             panel.recordHudContentSkipped();
@@ -105,16 +113,37 @@ public class HudPanelNode extends UiNode {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         if (drawPreview == null) {
             return;
         }
-        renderFrame.pushTranslate(panel.getHudState().getPositionX(), panel.getHudState().getPositionY());
+        mergeGroup.updateIfLeader(this);
+        panel.hudHostModule().setSquaredCornerMask(panel.getHudState().getSquaredCornerMask());
+        renderFrame.pushTranslate(Math.round(panel.getHudState().getPositionX()), Math.round(panel.getHudState().getPositionY()));
         renderFrame.pushScale(panel.getHudState().getScale());
         drawPreview.run();
         renderFrame.endRenderSegment();
         renderFrame.popScale();
         renderFrame.popTranslate();
+        panel.hudHostModule().setSquaredCornerMask(RectCornerRoundMask.NONE);
+    }
+
+    /**
+     * Whether this node produced a preview during the latest layout.
+     *
+     * @return true when the panel has something to draw
+     */
+    public boolean hasPreview() {
+        return drawPreview != null;
+    }
+
+    /**
+     * Panel edited by this node.
+     *
+     * @return the HUD panel
+     */
+    public HudPanel getPanel() {
+        return panel;
     }
 
     @Override

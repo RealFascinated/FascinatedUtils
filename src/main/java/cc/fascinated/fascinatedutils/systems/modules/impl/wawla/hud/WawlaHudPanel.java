@@ -1,8 +1,9 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.wawla.hud;
 
 import cc.fascinated.fascinatedutils.common.Colors;
+import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.gui.anim.FadeInAnim;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
@@ -47,7 +48,7 @@ public class WawlaHudPanel extends HudPanel {
     }
 
     @Override
-    public @Nullable Runnable prepareAndDraw(GuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
+    public @Nullable Runnable prepareAndDraw(AlumiteGuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
         CrosshairTarget displayTarget = wawlaWidget.resolveCrosshairTarget(editorMode);
 
         fadeAnim.tick(deltaSeconds);
@@ -76,7 +77,7 @@ public class WawlaHudPanel extends HudPanel {
         float contentHeight = Math.max(ICON_SIZE, textBlockHeight);
 
         String rawDisplayName = target.displayName();
-        String strippedDisplayName = rawDisplayName == null ? "" : rawDisplayName.replaceAll("§.", "").trim();
+        String strippedDisplayName = rawDisplayName == null ? "" : StringUtils.stripColors(rawDisplayName).trim();
         String titleMini = "<color:" + Colors.rgbHex(TITLE_COLOR) + ">" + (strippedDisplayName.isEmpty() ? target.entityName() : rawDisplayName) + "</color>";
         List<String> subtitleMinis = subtitleLines.stream().map(line -> "<color:" + Colors.rgbHex(SUBTITLE_COLOR) + ">" + line + "</color>").toList();
         float[] subtitleWidths = new float[subtitleMinis.size()];

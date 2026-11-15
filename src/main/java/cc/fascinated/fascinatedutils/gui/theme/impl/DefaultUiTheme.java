@@ -44,11 +44,16 @@ public class DefaultUiTheme implements UiTheme {
 
     @Override
     public int danger() {
-        return 0xFFC73A52;
+        return 0xFFFF6B80;
     }
 
     @Override
     public int onDanger() {
+        return 0xFFFFFFFF;
+    }
+
+    @Override
+    public int onSuccess() {
         return 0xFFFFFFFF;
     }
 
@@ -203,5 +208,10 @@ public class DefaultUiTheme implements UiTheme {
     @Override
     public int success() {
         return 0xFF5ED39A;
+    }
+
+    @Override
+    public int warning() {
+        return 0xFFFFC857;
     }
 }

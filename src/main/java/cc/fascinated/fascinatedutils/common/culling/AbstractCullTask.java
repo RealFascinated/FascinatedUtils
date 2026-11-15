@@ -170,10 +170,26 @@ public abstract class AbstractCullTask implements Runnable {
 
     public void stop() {
         this.running = false;
+        Thread worker = cullThread;
+        if (worker != null) {
+            LockSupport.unpark(worker);
+        }
     }
 
     protected Vec3 getLastCameraPos() {
         return lastCameraPos;
+    }
+
+    /**
+     * Whether this task culls against the frustum copied from the render thread.
+     *
+     * <p>The copy lags the camera, so a subject outside it stays hidden until the next pass after the camera turns back.
+     * Tasks whose subjects vanilla already frustum-tests on the render thread should return false.
+     *
+     * @return true when {@link #isVisible(AABB)} should apply the frustum test
+     */
+    protected boolean usesFrustum() {
+        return true;
     }
 
     /**
@@ -191,7 +207,7 @@ public abstract class AbstractCullTask implements Runnable {
             return true;
         }
 
-        if (frustum != null && !frustum.isVisible(box)) {
+        if (usesFrustum() && frustum != null && !frustum.isVisible(box)) {
             return false;
         }
 

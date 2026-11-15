@@ -17,6 +17,15 @@ public class UiInputRouter {
 
     public boolean dispatch(UiNode root, UiEvent event) {
         focusManager.ensureValid(root);
+        UiNode focusTrap = findFocusTrap(root);
+        if (focusTrap != null && !(event instanceof UiEvent.PointerPress) && !focusManager.isWithin(focusTrap)) {
+            focusManager.focusFirst(focusTrap);
+            boolean typingEvent = event instanceof UiEvent.CharType
+                    || event instanceof UiEvent.KeyPress keyPress && keyPress.keyCode() != GLFW.GLFW_KEY_ESCAPE;
+            if (typingEvent) {
+                return true;
+            }
+        }
         if (event instanceof UiEvent.PointerMove pointerMove) {
             return handlePointerMove(root, pointerMove);
         }
@@ -42,6 +51,7 @@ public class UiInputRouter {
         // Always update hover state so that nodes rebuilt each frame (recompose) still receive
         // onPointerEnter/Leave even while a mouse button is held down.
         UiNode nextHoverLeaf = hitLeaf(root, pointerMove.pointerX(), pointerMove.pointerY());
+        UiTooltips.INSTANCE.pointerMoved(nextHoverLeaf, pointerMove.pointerX(), pointerMove.pointerY());
         if (nextHoverLeaf != hoverLeaf) {
             transitionHover(hoverLeaf, nextHoverLeaf, pointerMove.pointerX(), pointerMove.pointerY());
             hoverLeaf = nextHoverLeaf;
@@ -58,6 +68,7 @@ public class UiInputRouter {
     private boolean handlePointerPress(UiNode root, UiEvent.PointerPress pointerPress) {
         UiNode hitLeaf = hitLeaf(root, pointerPress.pointerX(), pointerPress.pointerY());
         pressedLeaf = hitLeaf;
+        UiTooltips.INSTANCE.reset();
         if (hitLeaf != null && hitLeaf.focusable()) {
             focusManager.focus(hitLeaf);
         }
@@ -103,17 +114,23 @@ public class UiInputRouter {
         UiNode focusedNode = focusManager.focusedNode();
         if (keyPress.keyCode() == GLFW.GLFW_KEY_TAB) {
             boolean backwards = (keyPress.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0;
-            if (backwards) {
-                return focusManager.focusPrevious(root);
+            UiNode focusScope = findFocusTrap(root);
+            if (focusScope == null) {
+                focusScope = root;
             }
-            return focusManager.focusNext(root);
+            if (backwards) {
+                return focusManager.focusPrevious(focusScope);
+            }
+            return focusManager.focusNext(focusScope);
         }
         if (focusedNode == null) {
             return false;
         }
         List<UiNode> chain = pathToRoot(focusedNode);
         for (int index = chain.size() - 1; index >= 0; index--) {
-            if (chain.get(index).capturesKeyPress(keyPress.keyCode(), keyPress.modifiers())) {
+            UiNode capturingNode = chain.get(index);
+            if (capturingNode.capturesKeyPress(keyPress.keyCode(), keyPress.modifiers())) {
+                capturingNode.onKeyPress(keyPress.keyCode(), keyPress.modifiers());
                 return true;
             }
         }
@@ -143,6 +160,20 @@ public class UiInputRouter {
             }
         }
         return false;
+    }
+
+    private static UiNode findFocusTrap(UiNode node) {
+        if (node == null || !node.visible()) {
+            return null;
+        }
+        List<UiNode> childNodes = node.childrenView();
+        for (int childIndex = childNodes.size() - 1; childIndex >= 0; childIndex--) {
+            UiNode trap = findFocusTrap(childNodes.get(childIndex));
+            if (trap != null) {
+                return trap;
+            }
+        }
+        return node.trapsFocus() ? node : null;
     }
 
     private static UiNode hitLeaf(UiNode root, float pointerX, float pointerY) {

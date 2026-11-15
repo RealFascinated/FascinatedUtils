@@ -2,8 +2,8 @@ package cc.fascinated.fascinatedutils.gui.node;
 
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
-import cc.fascinated.fascinatedutils.gui.render.ClipRegion;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiMetrics;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiThemeRepository;
@@ -100,7 +100,7 @@ public class CardNode extends PositionedNode<CardNode> {
     }
 
     @Override
-    protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         int posX = bounds().positionX();
         int posY = bounds().positionY();
         int width = bounds().width();
@@ -127,9 +127,7 @@ public class CardNode extends PositionedNode<CardNode> {
 
         if (headerNode != null) {
             if (accentFill != 0) {
-                renderFrame.pushClip(new ClipRegion(posX, posY, width, HEADER_HEIGHT));
-                renderFrame.drawRoundedRect(posX, posY, width, height, cornerRadius, accentFill);
-                renderFrame.popClip();
+                renderFrame.fillRoundedRect(posX, posY, width, HEADER_HEIGHT, cornerRadius, accentFill, RectCornerRoundMask.TOP);
             }
             if (divider != 0) {
                 renderFrame.drawRect(posX, posY + HEADER_HEIGHT, width, sepThickness, divider);
@@ -138,9 +136,7 @@ public class CardNode extends PositionedNode<CardNode> {
 
         if (footerNode != null) {
             if (accentFill != 0) {
-                renderFrame.pushClip(new ClipRegion(posX, posY + height - FOOTER_HEIGHT, width, FOOTER_HEIGHT));
-                renderFrame.drawRoundedRect(posX, posY, width, height, cornerRadius, accentFill);
-                renderFrame.popClip();
+                renderFrame.fillRoundedRect(posX, posY + height - FOOTER_HEIGHT, width, FOOTER_HEIGHT, cornerRadius, accentFill, RectCornerRoundMask.BOTTOM);
             }
             if (divider != 0) {
                 renderFrame.drawRect(posX, posY + height - FOOTER_HEIGHT, width, sepThickness, divider);

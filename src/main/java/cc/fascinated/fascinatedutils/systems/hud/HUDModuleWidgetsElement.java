@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
 import cc.fascinated.fascinatedutils.gui.core.UIScale;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.toast.ToastManager;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.minecraft.client.DeltaTracker;
@@ -29,7 +29,7 @@ public class HUDModuleWidgetsElement implements HudElement {
             return;
         }
 
-        GuiRenderer guiRenderer = new GuiRenderer(graphics);
+        AlumiteGuiRenderer guiRenderer = new AlumiteGuiRenderer(graphics);
         ProfilerFiller profiler = Profiler.get();
         profiler.push("futils_hud_elements");
         float deltaSeconds = tickCounter.getGameTimeDeltaTicks() / 20f;

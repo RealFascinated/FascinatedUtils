@@ -1,8 +1,10 @@
 package cc.fascinated.fascinatedutils.gui.toast;
 
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
+import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
+import cc.fascinated.fascinatedutils.gui.theme.UiThemeRepository;
 import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
@@ -31,29 +33,21 @@ public class ToastManager {
     private static final float LINE_GAP = 2f;
     private static final int MAX_LINES = 4;
 
-    private static final int SUCCESS_ACCENT_COLOR = 0xFF44CC77;
-    private static final int ERROR_ACCENT_COLOR = 0xFFFF4444;
-    private static final int WARNING_ACCENT_COLOR = 0xFFFFAA33;
-    private static final int INFO_ACCENT_COLOR = 0xFF5599EE;
-    private static final int CARD_FILL_COLOR = 0xF01A1E24;
-    private static final int CARD_FILL_HOVERED_COLOR = 0xF5222833;
-    private static final int CARD_BORDER_COLOR = 0x30FFFFFF;
-    private static final int MESSAGE_TEXT_COLOR = 0xFFCCCCCC;
-    private static final int PROGRESS_TRACK_COLOR = 0x20FFFFFF;
+    private static final int PROGRESS_TRACK_ALPHA = 0x20000000;
 
     private final ConcurrentLinkedQueue<Toast> pending = new ConcurrentLinkedQueue<>();
     private final List<Entry> entries = new ArrayList<>();
 
-    private static int accentColor(Toast.Type type) {
+    private static int accentColor(UiTheme theme, Toast.Type type) {
         return switch (type) {
-            case SUCCESS -> SUCCESS_ACCENT_COLOR;
-            case ERROR -> ERROR_ACCENT_COLOR;
-            case WARNING -> WARNING_ACCENT_COLOR;
-            case INFO -> INFO_ACCENT_COLOR;
+            case SUCCESS -> theme.success();
+            case ERROR -> theme.danger();
+            case WARNING -> theme.warning();
+            case INFO -> theme.accent();
         };
     }
 
-    private static List<String> wrapText(GuiRenderer renderer, String text, float maxWidth) {
+    private static List<String> wrapText(AlumiteGuiRenderer renderer, String text, float maxWidth) {
         List<String> lines = new ArrayList<>();
         String[] words = text.split(" ", -1);
         StringBuilder current = new StringBuilder();
@@ -103,14 +97,14 @@ public class ToastManager {
      * <p>Call this between {@code renderer.begin()} and {@code renderer.end()} in any
      * screen's {@code renderCustom} method.
      *
-     * @param renderer     the active {@link GuiRenderer}
+     * @param renderer     the active {@link AlumiteGuiRenderer}
      * @param uiWidth      logical UI canvas width
      * @param uiHeight     logical UI canvas height
      * @param mouseX       UI-space pointer X
      * @param mouseY       UI-space pointer Y
      * @param deltaSeconds elapsed seconds since last frame
      */
-    public void render(GuiRenderer renderer, float uiWidth, float uiHeight, float mouseX, float mouseY, float deltaSeconds) {
+    public void render(AlumiteGuiRenderer renderer, float uiWidth, float uiHeight, float mouseX, float mouseY, float deltaSeconds) {
         tick(deltaSeconds);
         for (Entry entry : entries) {
             float renderX = uiWidth - TOAST_W - MARGIN_R + entry.slideOffset;
@@ -167,7 +161,7 @@ public class ToastManager {
         }
     }
 
-    private void renderEntry(GuiRenderer renderer, Entry entry, float renderX, float mouseX, float mouseY) {
+    private void renderEntry(AlumiteGuiRenderer renderer, Entry entry, float renderX, float mouseX, float mouseY) {
         float renderY = entry.renderY;
 
         // Text area geometry (after accent stripe + icon slot)
@@ -186,12 +180,13 @@ public class ToastManager {
         float effectiveH = entry.effectiveHeight;
 
         boolean hovered = mouseX >= renderX && mouseX < renderX + TOAST_W && mouseY >= renderY && mouseY < renderY + effectiveH;
-        int accentColor = accentColor(entry.toast.type());
+        UiTheme theme = UiThemeRepository.get();
+        int accentColor = accentColor(theme, entry.toast.type());
 
         renderer.setMultiplyAlpha(entry.alpha);
 
-        int cardFill = hovered ? CARD_FILL_HOVERED_COLOR : CARD_FILL_COLOR;
-        renderer.fillRoundedRectFrame(renderX, renderY, TOAST_W, effectiveH, CORNER_R, CARD_BORDER_COLOR, cardFill, 1f, 1f, RectCornerRoundMask.ALL);
+        int cardFill = hovered ? theme.surfaceActive() : theme.surfaceRaised();
+        renderer.fillRoundedRectFrame(renderX, renderY, TOAST_W, effectiveH, CORNER_R, theme.borderSubtle(), cardFill, 1f, 1f, RectCornerRoundMask.ALL);
 
         // Left accent stripe — left corners match card radius, right corners square
         renderer.fillRoundedRect(renderX, renderY, ACCENT_W, effectiveH, CORNER_R, accentColor, RectCornerRoundMask.LEFT);
@@ -218,7 +213,7 @@ public class ToastManager {
 
         for (int lineIdx = 0; lineIdx < entry.wrappedLines.size(); lineIdx++) {
             float lineY = msgY + lineIdx * (lineH + LINE_GAP);
-            renderer.drawText(entry.wrappedLines.get(lineIdx), textStartX, lineY, MESSAGE_TEXT_COLOR, false, false);
+            renderer.drawText(entry.wrappedLines.get(lineIdx), textStartX, lineY, theme.textMuted(), false, false);
         }
         renderer.popClip();
 
@@ -227,7 +222,7 @@ public class ToastManager {
         float barY = renderY + effectiveH - PROGRESS_H;
         float barContentW = TOAST_W - ACCENT_W;
         float progress = Math.max(0f, 1f - entry.age / entry.toast.durationSeconds());
-        renderer.drawRect(barX, barY, barContentW, PROGRESS_H, PROGRESS_TRACK_COLOR);
+        renderer.drawRect(barX, barY, barContentW, PROGRESS_H, (theme.textPrimary() & 0x00FFFFFF) | PROGRESS_TRACK_ALPHA);
         if (progress > 0f) {
             float filledW = progress * barContentW;
             renderer.drawRect(barX, barY, filledW, PROGRESS_H, (accentColor & 0x00FFFFFF) | 0xBB000000);

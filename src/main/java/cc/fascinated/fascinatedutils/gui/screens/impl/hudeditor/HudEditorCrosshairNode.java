@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.hudeditor;
 
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 
 /**
@@ -18,7 +18,7 @@ public class HudEditorCrosshairNode extends PositionedNode<HudEditorCrosshairNod
     }
 
     @Override
-    protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
+    protected void renderSelf(AlumiteGuiRenderer renderFrame, float deltaSeconds) {
         float totalWidth = bounds().width();
         float totalHeight = bounds().height();
         float centerX = (float) Math.floor(totalWidth * 0.5f);

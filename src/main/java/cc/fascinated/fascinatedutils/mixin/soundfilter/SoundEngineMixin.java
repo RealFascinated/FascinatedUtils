@@ -18,20 +18,23 @@ public class SoundEngineMixin {
     @Unique
     private static final PerfProbe.Section ALUMITE$PLAY = PerfProbe.INSTANCE.section("soundfilter.play");
 
+    @Unique
+    private SoundFilterModule alumite$soundFilter;
+
     @Inject(method = "play", at = @At("HEAD"), cancellable = true)
     private void alumite$onPlay(SoundInstance instance, CallbackInfoReturnable<SoundEngine.PlayResult> cir) {
+        if (alumite$soundFilter == null) {
+            alumite$soundFilter = ModuleRegistry.INSTANCE.getModule(SoundFilterModule.class).orElse(null);
+        }
+        if (alumite$soundFilter == null || !alumite$soundFilter.isEnabled()) {
+            return;
+        }
         long start = ALUMITE$PLAY.begin();
         try {
-            ModuleRegistry.INSTANCE.getModule(SoundFilterModule.class).ifPresent(module -> {
-                if (!module.isEnabled()) {
-                    return;
-                }
-                String id = instance.getIdentifier().getNamespace() + ":" + instance.getIdentifier().getPath();
-                BooleanSetting toggle = module.getTogglesById().get(id);
-                if (toggle != null && !toggle.getValue()) {
-                    cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
-                }
-            });
+            BooleanSetting toggle = alumite$soundFilter.getTogglesById().get(instance.getIdentifier().toString());
+            if (toggle != null && !toggle.getValue()) {
+                cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
+            }
         } finally {
             ALUMITE$PLAY.end(start);
         }

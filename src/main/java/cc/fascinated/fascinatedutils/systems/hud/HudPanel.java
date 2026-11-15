@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
@@ -19,6 +19,7 @@ public abstract class HudPanel implements HudRenderablePanel {
     @Getter
     private final ModuleHudState hudState = new ModuleHudState();
     private final HudContentRenderer.TextLinesPainter textLinesPainter = new HudContentRenderer.TextLinesPainter();
+    private final HudContentRenderer.ItemRowsPainter itemRowsPainter = new HudContentRenderer.ItemRowsPainter();
 
     protected HudPanel(HudHostModule hostModule, String panelId, float minWidth) {
         this.host = hostModule;
@@ -67,12 +68,12 @@ public abstract class HudPanel implements HudRenderablePanel {
     }
 
     @Override
-    public @Nullable Runnable prepareAndDraw(GuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
+    public @Nullable Runnable prepareAndDraw(AlumiteGuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
         HudContent content = produceHudContent(deltaSeconds, editorMode);
         if (content == null) {
             return null;
         }
-        return HudContentRenderer.prepare(glRenderer, content, host, this, editorMode, textLinesPainter);
+        return HudContentRenderer.prepare(glRenderer, content, host, this, editorMode, textLinesPainter, itemRowsPainter);
     }
 
     /**
@@ -266,7 +267,10 @@ public abstract class HudPanel implements HudRenderablePanel {
 
     void deserializeHudState(JsonObject hudJson, Gson gson) {
         if (hudJson.has("scale")) {
-            hudState.setScale(hudJson.get("scale").getAsFloat());
+            float storedScale = hudJson.get("scale").getAsFloat();
+            if (Float.isFinite(storedScale)) {
+                hudState.setScale(Math.clamp(storedScale, 0.25f, 4.0f));
+            }
         }
         if (hudJson.has("anchor")) {
             try {
@@ -276,10 +280,16 @@ public abstract class HudPanel implements HudRenderablePanel {
             }
         }
         if (hudJson.has("anchor_offset_x")) {
-            hudState.setAnchorOffsetX(hudJson.get("anchor_offset_x").getAsFloat());
+            float storedOffsetX = hudJson.get("anchor_offset_x").getAsFloat();
+            if (Float.isFinite(storedOffsetX)) {
+                hudState.setAnchorOffsetX(storedOffsetX);
+            }
         }
         if (hudJson.has("anchor_offset_y")) {
-            hudState.setAnchorOffsetY(hudJson.get("anchor_offset_y").getAsFloat());
+            float storedOffsetY = hudJson.get("anchor_offset_y").getAsFloat();
+            if (Float.isFinite(storedOffsetY)) {
+                hudState.setAnchorOffsetY(storedOffsetY);
+            }
         }
         if (hudJson.has("bottom_anchor_right_aligned")) {
             hudState.setBottomAnchorRightAligned(hudJson.get("bottom_anchor_right_aligned").getAsBoolean());

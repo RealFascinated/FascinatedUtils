@@ -14,20 +14,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GlyphRenderState.class)
 public abstract class GlyphRenderStateMixin {
+    // The glyph cache is per thread so concurrent buildVertices calls never share a scratch matrix.
     @Unique
-    private static final Matrix4f ALUMITE$LAST_MATRIX = new Matrix4f();
+    private static final ThreadLocal<Matrix4f> ALUMITE$LAST_MATRIX = ThreadLocal.withInitial(Matrix4f::new);
+    // Last pose as m00, m01, m10, m11, m20, m21; NaN in the first slot marks an empty cache.
     @Unique
-    private static float alumite$lastM00 = Float.NaN;
-    @Unique
-    private static float alumite$lastM01;
-    @Unique
-    private static float alumite$lastM10;
-    @Unique
-    private static float alumite$lastM11;
-    @Unique
-    private static float alumite$lastM20;
-    @Unique
-    private static float alumite$lastM21;
+    private static final ThreadLocal<float[]> ALUMITE$LAST_POSE = ThreadLocal.withInitial(() -> new float[]{Float.NaN, 0f, 0f, 0f, 0f, 0f});
 
     @Shadow
     public abstract Matrix3x2fc pose();
@@ -39,16 +31,18 @@ public abstract class GlyphRenderStateMixin {
     @Inject(method = "buildVertices", at = @At("HEAD"), cancellable = true)
     private void alumite$buildWithSharedMatrix(VertexConsumer vertexConsumer, CallbackInfo info) {
         Matrix3x2fc pose = pose();
-        if (pose.m00() != alumite$lastM00 || pose.m01() != alumite$lastM01 || pose.m10() != alumite$lastM10 || pose.m11() != alumite$lastM11 || pose.m20() != alumite$lastM20 || pose.m21() != alumite$lastM21) {
-            ALUMITE$LAST_MATRIX.identity().mul(pose);
-            alumite$lastM00 = pose.m00();
-            alumite$lastM01 = pose.m01();
-            alumite$lastM10 = pose.m10();
-            alumite$lastM11 = pose.m11();
-            alumite$lastM20 = pose.m20();
-            alumite$lastM21 = pose.m21();
+        Matrix4f matrix = ALUMITE$LAST_MATRIX.get();
+        float[] lastPose = ALUMITE$LAST_POSE.get();
+        if (pose.m00() != lastPose[0] || pose.m01() != lastPose[1] || pose.m10() != lastPose[2] || pose.m11() != lastPose[3] || pose.m20() != lastPose[4] || pose.m21() != lastPose[5]) {
+            matrix.identity().mul(pose);
+            lastPose[0] = pose.m00();
+            lastPose[1] = pose.m01();
+            lastPose[2] = pose.m10();
+            lastPose[3] = pose.m11();
+            lastPose[4] = pose.m20();
+            lastPose[5] = pose.m21();
         }
-        renderable().render(ALUMITE$LAST_MATRIX, vertexConsumer, 15728880, true);
+        renderable().render(matrix, vertexConsumer, 15728880, true);
         info.cancel();
     }
 }

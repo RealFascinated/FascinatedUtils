@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.bossbar.hud;
 
 import cc.fascinated.fascinatedutils.mixin.bossbar.BossHealthOverlayEventsAccessor;
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.bossbar.BossbarModule;
@@ -44,7 +44,7 @@ public class BossbarHudPanel extends HudPanel {
     }
 
     @Override
-    public @Nullable Runnable prepareAndDraw(GuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
+    public @Nullable Runnable prepareAndDraw(AlumiteGuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
         List<BossRow> rows = resolveRows(editorMode);
         if (rows == null) {
             return null;
