@@ -11,6 +11,7 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleGroup;
 import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,14 +31,6 @@ public class ParticleCullTask extends AbstractCullTask {
 
     public ParticleCullTask(OcclusionCullingInstance culling) {
         super(culling, SLEEP_DELAY, FRUSTUM_COPY_INTERVAL_NANOS, CULL_PASS_SECTION);
-    }
-
-    private static AABB cullingBoxForParticle(Particle particle) {
-        AABB box = particle.getBoundingBox();
-        double centerX = (box.minX + box.maxX) * 0.5;
-        double centerY = (box.minY + box.maxY) * 0.5;
-        double centerZ = (box.minZ + box.maxZ) * 0.5;
-        return new AABB(centerX - 0.1, centerY - 0.1, centerZ - 0.1, centerX + 0.1, centerY + 0.1, centerZ + 0.1);
     }
 
     @Override
@@ -91,15 +84,25 @@ public class ParticleCullTask extends AbstractCullTask {
     }
 
     private void cullParticles(List<Particle> snapshot) {
+        Vec3 camera = getLastCameraPos();
+        double cameraX = camera.x;
+        double cameraY = camera.y;
+        double cameraZ = camera.z;
         CullTally tally = cullSnapshot(snapshot, "Particle", (particle, cullable) -> {
-            double distSq = particle.getBoundingBox().getCenter().distanceToSqr(getLastCameraPos());
-            if (distSq > CullDistances.PARTICLE_FORCE_CULL_DISTANCE_SQ) {
+            AABB bounds = particle.getBoundingBox();
+            double centerX = (bounds.minX + bounds.maxX) * 0.5;
+            double centerY = (bounds.minY + bounds.maxY) * 0.5;
+            double centerZ = (bounds.minZ + bounds.maxZ) * 0.5;
+            double offsetX = centerX - cameraX;
+            double offsetY = centerY - cameraY;
+            double offsetZ = centerZ - cameraZ;
+            if (offsetX * offsetX + offsetY * offsetY + offsetZ * offsetZ > CullDistances.PARTICLE_FORCE_CULL_DISTANCE_SQ) {
                 cullable.alumite$setCulled(true);
+                return true;
             }
-            else {
-                AABB box = cullingBoxForParticle(particle);
-                cullable.alumite$setCulled(!isVisible(box));
-            }
+
+            AABB box = new AABB(centerX - 0.1, centerY - 0.1, centerZ - 0.1, centerX + 0.1, centerY + 0.1, centerZ + 0.1);
+            cullable.alumite$setCulled(!isVisible(box));
             return true;
         });
         consideredParticleCount = tally.considered();
