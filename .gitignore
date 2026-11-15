@@ -5,7 +5,7 @@ out/
 temp-build.gradle
 
 # Loom / Minecraft dev
-run/
+/run/
 
 # Eclipse
 .settings/
