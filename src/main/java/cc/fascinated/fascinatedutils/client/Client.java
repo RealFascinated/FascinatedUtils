@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.client;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.api.Alumite;
 import cc.fascinated.fascinatedutils.client.command.ClientCommandBootstrap;
 import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
@@ -76,9 +77,11 @@ public class Client implements ClientModInitializer {
     public void onInitializeClient() {
         PerfStartup.INSTANCE.markInitStart();
         System.setProperty("java.awt.headless", "false");
+        new Alumite(); // Init the api and auth system
 
         FascinatedEventBus eventBus = FascinatedEventBus.INSTANCE;
         eventBus.ensureSetup();
+        eventBus.subscribe(Alumite.INSTANCE);
         eventBus.subscribe(TURBO_PARTICLES);
         eventBus.subscribe(TURBO_ENTITIES);
         ClientCommandBootstrap.register(PerfCommand.class);
