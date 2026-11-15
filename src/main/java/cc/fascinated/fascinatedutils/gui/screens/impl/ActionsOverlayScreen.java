@@ -4,7 +4,6 @@ import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.gui.core.*;
 import cc.fascinated.fascinatedutils.gui.node.ButtonNode;
 import cc.fascinated.fascinatedutils.gui.node.CardNode;
-import cc.fascinated.fascinatedutils.gui.node.TextNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.screens.impl.screenshot.ScreenshotScreen;
 import cc.fascinated.fascinatedutils.gui.theme.UiMetrics;
@@ -22,14 +21,14 @@ public class ActionsOverlayScreen {
 
     public static final ActionsOverlayScreen INSTANCE = new ActionsOverlayScreen();
 
-    private static final int BUTTON_WIDTH = 124;
+    private static final int BUTTON_WIDTH = 112;
     private static final int BUTTON_HEIGHT = UiMetrics.CONTROL_HEIGHT;
-    private static final int PANEL_PADDING = 6;
-    private static final int BUTTON_GAP = 4;
+    private static final int PANEL_PADDING = 3;
+    private static final int BUTTON_GAP = 2;
     private static final int RIGHT_MARGIN = 6;
-    private static final int HEADER_HEIGHT = 12;
 
     private final UiHost host = new UiHost();
+    private long lastRenderNanos;
 
     private static final List<Button> BUTTONS = List.of(
             new Button(
@@ -54,8 +53,7 @@ public class ActionsOverlayScreen {
         PositionedNode<?> rootNode = new PositionedNode<>().full();
         rootNode.setNodeId("title-root");
 
-        int groupHeight = BUTTON_HEIGHT * BUTTONS.size() + BUTTON_GAP * (BUTTONS.size() - 1) + 2 * PANEL_PADDING
-                + HEADER_HEIGHT + BUTTON_GAP;
+        int groupHeight = BUTTON_HEIGHT * BUTTONS.size() + BUTTON_GAP * (BUTTONS.size() - 1) + 2 * PANEL_PADDING;
         CardNode panel = new CardNode()
                 .size(BUTTON_WIDTH + 2 * PANEL_PADDING, groupHeight)
                 .right(RIGHT_MARGIN).alignY(0.5f);
@@ -64,12 +62,6 @@ public class ActionsOverlayScreen {
         panel.setContents(group -> {
             group.margin(PANEL_PADDING);
             group.columnGap(BUTTON_GAP);
-            group.addChild(new TextNode(() -> Component.translatable("alumite.actions.title").getString())
-                    .setBold(true)
-                    .setColorResolver(UiTheme::textMuted)
-                    .setTextAlign(0f, 0.5f)
-                    .fullWidth()
-                    .height(HEADER_HEIGHT));
             for (Button button : BUTTONS) {
                 ButtonNode node = new ButtonNode(() -> Component.translatable(button.translationKey()).getString());
                 node.setNodeId(button.id());
@@ -96,7 +88,10 @@ public class ActionsOverlayScreen {
         renderFrame.setPointer(pointerX, pointerY);
         host.layout(0, 0, Math.round(uiWidth), Math.round(uiHeight), renderFrame);
         host.dispatch(new UiEvent.PointerMove(pointerX, pointerY));
-        host.render(renderFrame, 0f);
+        long now = System.nanoTime();
+        float deltaSeconds = lastRenderNanos == 0L ? 0f : Math.min((now - lastRenderNanos) / 1_000_000_000f, 0.1f);
+        lastRenderNanos = now;
+        host.render(renderFrame, deltaSeconds);
         renderFrame.endFrame();
     }
 

@@ -13,7 +13,6 @@ import cc.fascinated.fascinatedutils.systems.modules.impl.clock.ClockWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.CoordinatesWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.cps.CpsWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.days.DaysCounterWidget;
-import cc.fascinated.fascinatedutils.systems.modules.impl.debug.DebugWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.fps.FpsWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.hypixel.HypixelModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.mcutils.McUtilsModule;
@@ -76,7 +75,6 @@ public class ModuleRegistry {
         modules.add(new HypixelModule());
         modules.add(new FogCustomizerModule());
         modules.add(new FpsWidget());
-        modules.add(new DebugWidget());
         modules.add(new CpsWidget());
         modules.add(new TpsWidget());
         modules.add(new SystemCpuUsageWidget());

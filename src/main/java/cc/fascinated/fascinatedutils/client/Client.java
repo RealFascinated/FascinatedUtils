@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.client;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.api.Alumite;
+import cc.fascinated.fascinatedutils.debug.AlumiteDebugScreenEntry;
 import cc.fascinated.fascinatedutils.client.command.ClientCommandBootstrap;
 import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
@@ -76,6 +77,7 @@ public class Client implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         PerfStartup.INSTANCE.markInitStart();
+        AlumiteDebugScreenEntry.register();
         System.setProperty("java.awt.headless", "false");
         new Alumite(); // Init the api and auth system
 

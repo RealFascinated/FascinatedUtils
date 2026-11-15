@@ -8,6 +8,7 @@
     "chat.ChatScreenMixin",
     "ClientPlayerInteractionManagerAccessorMixin",
     "ConnectionMixin",
+    "DebugScreenEntriesInvokerMixin",
     "ContainerEventHandlerMixin",
     "GameMenuScreenMixin",
     "GameRendererMixin",
