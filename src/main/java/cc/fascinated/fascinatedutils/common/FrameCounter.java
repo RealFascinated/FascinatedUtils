@@ -8,7 +8,8 @@ public class FrameCounter {
     private static final FrameCounter INSTANCE = new FrameCounter();
     private final Deque<FrameSample> samples = new ArrayDeque<>();
     private final long smoothWindow = 500_000_000L; // 0.5 seconds in nanoseconds
-    private final long windowNanos = 5_000_000_000L;    // 5 seconds in nanoseconds
+    private final long windowNanos = 30_000_000_000L;   // 30 seconds in nanoseconds, so 0.1% low averages more than one frame
+    private final long maxFrameDeltaNanos = 1_000_000_000L; // longer gaps (minimized, loading, alt-tab) are not real frames
     private final long updateIntervalNanos = 500_000_000L; // 0.5 seconds in nanoseconds
     private long lastFrameTime = -1;
     private long lastUpdateTime = 0;
@@ -27,7 +28,9 @@ public class FrameCounter {
         // Record new frame delta
         if (this.lastFrameTime != -1) {
             long delta = now - this.lastFrameTime;
-            this.samples.addLast(new FrameSample(now, delta));
+            if (delta <= this.maxFrameDeltaNanos) {
+                this.samples.addLast(new FrameSample(now, delta));
+            }
         }
         this.lastFrameTime = now;
 
