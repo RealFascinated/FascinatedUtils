@@ -1,8 +1,12 @@
 package cc.fascinated.fascinatedutils.debug.perf.coverage;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
+import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.client.command.annotation.ClientCommand;
 import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
+import cc.fascinated.fascinatedutils.debug.perf.PerfIds;
+import cc.fascinated.fascinatedutils.debug.perf.PerfOut;
+import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTestRegistry;
 import cc.fascinated.fascinatedutils.debug.perf.report.PerfResult;
@@ -58,7 +62,6 @@ public class PerfCoverage {
     private static final String MIXIN_PACKAGE = ROOT_PACKAGE + ".mixin";
     private static final String MIXIN_CONFIG = "/alumite.mixins.json";
     private static final String CLASS_SUFFIX = ".class";
-    private static final String PREFIX = "ALUMITE_PERF ";
 
     /**
      * The only place an inventory id may be skipped, each with the reason it cannot be measured headlessly.
@@ -80,9 +83,7 @@ public class PerfCoverage {
             Map.entry(common("ClientUtils"), "only used for macOS checks"),
             Map.entry(common("AlumiteEnvironment"), "only used by the updater and texture downloads"),
             Map.entry(common("SystemUtils"), "only used by the updater"),
-            Map.entry(common("MathUtils"), "not referenced anywhere in the mod"),
             Map.entry(common("TimeUtils"), "not referenced anywhere in the mod"),
-            Map.entry(common("sound"), "not referenced anywhere in the mod"),
             Map.entry(system("updater"), "checks and downloads releases over the network at exit"),
             Map.entry(listener("ModConfig"), "only handles ClientStoppingEvent, once per launch"),
             Map.entry(listener("HUDManager"), "only handles ClientStarted/ClientStopping events, once per launch"),
@@ -220,12 +221,12 @@ public class PerfCoverage {
         Map<String, List<String>> declared = new TreeMap<>();
         for (PerfTest test : PerfTestRegistry.INSTANCE.getTests()) {
             for (String entryId : test.covers()) {
-                declared.computeIfAbsent(entryId, key -> new ArrayList<>()).add("test " + test.getId());
+                declared.computeIfAbsent(entryId, key -> new ArrayList<>()).add(PerfIds.testCoverer(test.getId()));
             }
         }
         for (PerfScene scene : PerfSceneRegistry.INSTANCE.getScenes()) {
             for (String entryId : scene.covers()) {
-                declared.computeIfAbsent(entryId, key -> new ArrayList<>()).add("scene " + scene.getId());
+                declared.computeIfAbsent(entryId, key -> new ArrayList<>()).add(PerfIds.sceneCoverer(scene.getId()));
             }
         }
         Map<String, List<String>> coveredBy = new TreeMap<>();
@@ -277,7 +278,7 @@ public class PerfCoverage {
      * @param report the report to print
      */
     public void printToStdout(Report report) {
-        print(report, line -> System.out.println(PREFIX + line));
+        print(report, PerfOut.INSTANCE::print);
     }
 
     /**
@@ -342,7 +343,8 @@ public class PerfCoverage {
         Class<?> type;
         try {
             type = Class.forName(className, false, PerfCoverage.class.getClassLoader());
-        } catch (Throwable throwable) {
+        } catch (ReflectiveOperationException | LinkageError exception) {
+            Client.LOG.debug("[perf] coverage skipped {}: {}", className, exception.toString());
             return;
         }
         String outerName = className.contains("$") ? className.substring(className.lastIndexOf('.') + 1, className.indexOf('$')) : type.getSimpleName();
@@ -360,8 +362,8 @@ public class PerfCoverage {
             if (clientCommand != null) {
                 inventory.add(command(clientCommand.value()));
             }
-        } catch (Throwable ignored) {
-            // A class whose members cannot be resolved is not part of the runtime inventory.
+        } catch (LinkageError exception) {
+            Client.LOG.debug("[perf] coverage skipped {}: {}", className, exception.toString());
         }
     }
 
@@ -380,7 +382,7 @@ public class PerfCoverage {
                 }
             }
         } catch (IOException exception) {
-            System.out.println(PREFIX + "coverage could not read " + MIXIN_CONFIG + ": " + exception);
+            PerfOut.INSTANCE.print("coverage could not read " + MIXIN_CONFIG + ": " + exception);
         }
         return entries;
     }
@@ -397,7 +399,7 @@ public class PerfCoverage {
                 roots.add(codeSource);
             }
         } catch (URISyntaxException | RuntimeException exception) {
-            System.out.println(PREFIX + "coverage could not resolve the class location: " + exception);
+            PerfOut.INSTANCE.print("coverage could not resolve the class location: " + exception);
         }
         for (Path root : roots) {
             Path packageRoot = root.resolve(packagePath);
@@ -407,10 +409,10 @@ public class PerfCoverage {
             try (Stream<Path> files = Files.walk(packageRoot)) {
                 files.map(path -> root.relativize(path).toString().replace('\\', '/')).filter(path -> path.endsWith(CLASS_SUFFIX)).map(path -> path.substring(0, path.length() - CLASS_SUFFIX.length()).replace('/', '.')).forEach(names::add);
             } catch (IOException exception) {
-                System.out.println(PREFIX + "coverage could not scan " + packageRoot + ": " + exception);
+                PerfOut.INSTANCE.print("coverage could not scan " + packageRoot + ": " + exception);
             }
         }
-        System.out.println(PREFIX + "coverage scanned classes=" + names.size() + " roots=" + roots);
+        PerfOut.INSTANCE.print("coverage scanned classes=" + names.size() + " roots=" + roots);
         return names;
     }
 
@@ -434,7 +436,7 @@ public class PerfCoverage {
         report.coveredBy().forEach((entryId, coverers) -> coverersByArea.computeIfAbsent(area(entryId), key -> new TreeSet<>()).addAll(coverers));
         sink.accept("summary area tests scenes medianMs allocBytesPerCall");
         coverersByArea.forEach((area, coverers) -> {
-            long tests = coverers.stream().filter(coverer -> coverer.startsWith("test ")).count();
+            long tests = coverers.stream().filter(PerfIds::isTestCoverer).count();
             long scenes = coverers.size() - tests;
             double[] medians = coverers.stream().map(headline::get).filter(result -> result != null).mapToDouble(PerfResult::medianMs).sorted().toArray();
             double alloc = coverers.stream().map(headline::get).filter(result -> result != null && result.allocBytesPerCall() >= 0).mapToDouble(PerfResult::allocBytesPerCall).average().orElse(-1);
@@ -445,19 +447,19 @@ public class PerfCoverage {
     }
 
     private String covererOf(String resultId) {
-        if (resultId.startsWith("scene.")) {
+        if (resultId.startsWith(PerfIds.SCENE_RESULT_PREFIX)) {
             int slash = resultId.indexOf('/');
             if (slash < 0) {
                 return null;
             }
-            String sceneId = resultId.substring("scene.".length(), slash);
+            String sceneId = resultId.substring(PerfIds.SCENE_RESULT_PREFIX.length(), slash);
             String rest = resultId.substring(slash + 1);
-            return PerfTestRegistry.INSTANCE.getTests().stream().anyMatch(test -> test.getId().equals(rest)) ? "test " + rest : "scene " + sceneId;
+            return PerfTestRegistry.INSTANCE.getTests().stream().anyMatch(test -> test.getId().equals(rest)) ? PerfIds.testCoverer(rest) : PerfIds.sceneCoverer(sceneId);
         }
-        return "test " + resultId;
+        return PerfIds.testCoverer(resultId);
     }
 
     private boolean isHeadline(String resultId) {
-        return resultId.endsWith("/frame.cpu");
+        return resultId.endsWith("/" + PerfProbe.FRAME_CPU_SECTION);
     }
 }

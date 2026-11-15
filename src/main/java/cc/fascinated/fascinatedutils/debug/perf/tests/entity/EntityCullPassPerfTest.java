@@ -1,12 +1,11 @@
 package cc.fascinated.fascinatedutils.debug.perf.tests.entity;
 
-import cc.fascinated.fascinatedutils.common.culling.OcclusionProvider;
+import cc.fascinated.fascinatedutils.common.culling.AbstractCullTask;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.EntitiesPerfScene;
 import cc.fascinated.fascinatedutils.systems.turboentities.EntitiesCullTask;
 import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
-import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
-import com.logisticscraft.occlusionculling.cache.ArrayOcclusionCache;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.phys.Vec3;
 
@@ -17,9 +16,6 @@ import java.util.List;
  * {@link EntitiesCullTask} so the live cull thread's state is not shared. Settings match TurboEntities.
  */
 public class EntityCullPassPerfTest extends PerfTest {
-    private static final int OCCLUSION_RANGE = 128;
-    private static final double AABB_EXPANSION = 0.0;
-
     private EntitiesCullTask cullTask;
     private Vec3 cameraPosition;
 
@@ -30,7 +26,7 @@ public class EntityCullPassPerfTest extends PerfTest {
     @Override
     public void setup() {
         Minecraft minecraft = Minecraft.getInstance();
-        cullTask = new EntitiesCullTask(new OcclusionCullingInstance(OCCLUSION_RANGE, new OcclusionProvider(), new ArrayOcclusionCache(OCCLUSION_RANGE), AABB_EXPANSION));
+        cullTask = new EntitiesCullTask(AbstractCullTask.createOcclusionCulling());
         cullTask.publishEntityCullSnapshotFromWorld(minecraft);
         cullTask.publishBlockEntityCullSnapshotFromWorld(minecraft, TurboEntities.BLOCK_ENTITY_CULL_CHUNK_RADIUS_CAP);
         cameraPosition = minecraft.gameRenderer.getMainCamera().position();
@@ -48,7 +44,7 @@ public class EntityCullPassPerfTest extends PerfTest {
 
     @Override
     public List<String> sceneIds() {
-        return List.of("entities");
+        return List.of(EntitiesPerfScene.ID, "entities_x9", "turbo_nametags", "turbo_displays");
     }
 
     @Override

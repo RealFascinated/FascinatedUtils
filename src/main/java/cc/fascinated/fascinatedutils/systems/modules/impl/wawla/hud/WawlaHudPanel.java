@@ -108,10 +108,7 @@ public class WawlaHudPanel extends HudPanel {
         boolean renderBreakBar = breakBarAnim.isVisible();
         float layoutWidth = Math.max(getMinWidth(), panelPadding * 2f + ICON_SIZE + ICON_TEXT_GAP + textBlockWidth);
         float layoutHeight = panelPadding * 2f + contentHeight;
-        getHudState().setLastLayoutWidth(layoutWidth);
-        getHudState().setLastLayoutHeight(layoutHeight);
-        getHudState().setCommittedLayoutWidth(layoutWidth);
-        getHudState().setCommittedLayoutHeight(layoutHeight);
+        commitLayout(layoutWidth, layoutHeight);
 
         float fadeAlpha = fadeAnim.progress().value();
         float breakBarAlpha = breakBarAnim.progress().value();

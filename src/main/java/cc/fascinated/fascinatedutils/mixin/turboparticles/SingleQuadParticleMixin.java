@@ -9,9 +9,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * Skips extract for particles marked culled by the background particle cull task.
- */
 @Mixin(SingleQuadParticle.class)
 public abstract class SingleQuadParticleMixin {
 
@@ -22,16 +19,8 @@ public abstract class SingleQuadParticleMixin {
         }
 
         Particle particle = (Particle) (Object) this;
-        if (!(particle instanceof Cullable cullable)) {
-            return;
-        }
-
-        if (cullable.alumite$isCulled()) {
-            Client.TURBO_PARTICLES.incrementConsidered(true);
+        if (particle instanceof Cullable cullable && cullable.alumite$isCulled()) {
             ci.cancel();
-            return;
         }
-
-        Client.TURBO_PARTICLES.incrementConsidered(false);
     }
 }

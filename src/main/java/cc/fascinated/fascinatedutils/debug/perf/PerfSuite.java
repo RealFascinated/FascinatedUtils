@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.debug.perf;
 
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfRunner;
-import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTestRegistry;
 import cc.fascinated.fascinatedutils.debug.perf.report.PerfComparison;
 import cc.fascinated.fascinatedutils.debug.perf.report.PerfReport;
@@ -93,23 +92,6 @@ public class PerfSuite {
      * @return the comparison, or empty when either report is missing
      */
     public Optional<PerfComparison.Result> compare(String beforeLabel, String afterLabel) {
-        return compareReports(beforeLabel, afterLabel);
-    }
-
-    /**
-     * Runs the given tests on the calling thread, naming results {@code <idPrefix><test id>}.
-     *
-     * @param tests       the tests to run
-     * @param idPrefix    the result id prefix
-     * @param failureSink receives one message per test that threw
-     * @param gcMeta      receives per-test GC deltas
-     * @return one result per test that completed
-     */
-    public List<PerfResult> runTests(List<PerfTest> tests, String idPrefix, Consumer<String> failureSink, Map<String, String> gcMeta) {
-        return runner.run(tests, idPrefix, failureSink, gcMeta);
-    }
-
-    private Optional<PerfComparison.Result> compareReports(String beforeLabel, String afterLabel) {
         Optional<PerfReport> before = PerfReportStore.INSTANCE.load(beforeLabel);
         Optional<PerfReport> after = PerfReportStore.INSTANCE.load(afterLabel);
         if (before.isEmpty() || after.isEmpty()) {

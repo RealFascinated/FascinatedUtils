@@ -5,11 +5,13 @@ import cc.fascinated.fascinatedutils.gui.theme.UiThemeRepository;
 import cc.fascinated.fascinatedutils.renderer.MeshBuilder;
 import cc.fascinated.fascinatedutils.renderer.Renderer2D;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenPosition;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -18,7 +20,9 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The single GUI renderer: nested clips with segment flushes, deferred text, alpha and transform stacks, click
@@ -31,13 +35,18 @@ import java.util.List;
 public class GuiRenderer {
     private static final List<ClickRegion> FRAME_CLICK_REGIONS = new ArrayList<>();
     private static ClickRegion pressedClickRegion = null;
+    private static final int TEXT_WIDTH_CACHE_LIMIT = 4096;
+    private static final Map<String, Integer> plainTextWidthCache = new HashMap<>();
+    private static final Map<String, Integer> boldTextWidthCache = new HashMap<>();
+    private static Font textWidthCacheFont;
 
     private final GuiGraphicsExtractor drawContext;
     private final Minecraft minecraftClient;
     private final Renderer2D backend;
     private final Deque<ClipLayer> clipStack = new ArrayDeque<>();
     private final Deque<Float> alphaStack = new ArrayDeque<>();
-    private final List<QueuedTextDraw> queuedTextDraws = new ArrayList<>();
+    private final List<QueuedTextDraw> queuedTextDrawPool = new ArrayList<>();
+    private int queuedTextDrawCount;
     private float logicalToVanillaScaleX = 1f;
     private float logicalToVanillaScaleY = 1f;
     private float pointerX = Float.NaN;
@@ -76,7 +85,6 @@ public class GuiRenderer {
         drawContext.pose().scale(logicalToVanillaScaleX, logicalToVanillaScaleY);
 
         MeshBuilder.INSTANCE.beginFrame(drawContext, minecraftClient);
-        MeshBuilder.INSTANCE.beginSegment(drawContext);
 
         ClipLayer rootLayer = new ClipLayer(0, 0, logicalWidth, logicalHeight);
         clipStack.push(rootLayer);
@@ -124,7 +132,6 @@ public class GuiRenderer {
         }
         clipStack.push(nextLayer);
         enableScissor(nextLayer);
-        MeshBuilder.INSTANCE.beginSegment(drawContext);
     }
 
     public void popClip() {
@@ -135,7 +142,6 @@ public class GuiRenderer {
         drawContext.nextStratum();
         clipStack.pop();
         drawContext.disableScissor();
-        MeshBuilder.INSTANCE.beginSegment(drawContext);
     }
 
     public void pushAlpha(float alphaFactor) {
@@ -203,6 +209,10 @@ public class GuiRenderer {
         backend.drawRect(positionX, positionY, width, height, argbColor);
     }
 
+    public void drawDottedOutline(float width, float height, float dotSize, float step, int argbColor) {
+        backend.drawDottedOutline(width, height, dotSize, step, argbColor);
+    }
+
     public void drawLine(float startX, float startY, float endX, float endY, float thickness, int argbColor) {
         backend.drawLine(startX, startY, endX, endY, thickness, argbColor);
     }
@@ -251,16 +261,16 @@ public class GuiRenderer {
     }
 
     public void drawText(String text, float positionX, float positionY, int argbColor, boolean shadow, boolean bold) {
-        queuedTextDraws.add(new QueuedTextDraw(text, null, positionX, positionY, backend.withQueuedTextColor(argbColor), shadow, bold));
+        nextQueuedTextDraw().setLiteral(text, positionX, positionY, backend.withQueuedTextColor(argbColor), shadow, bold);
     }
 
     public void drawCenteredText(String text, float centerX, float positionY, int argbColor, boolean shadow, boolean bold) {
         float left = centerX - backend.measureTextWidth(text, bold) * 0.5f;
-        queuedTextDraws.add(new QueuedTextDraw(text, null, left, positionY, backend.withQueuedTextColor(argbColor), shadow, bold));
+        nextQueuedTextDraw().setLiteral(text, left, positionY, backend.withQueuedTextColor(argbColor), shadow, bold);
     }
 
     public void drawMiniMessageText(String miniMessageText, float positionX, float positionY, boolean shadow) {
-        queuedTextDraws.add(new QueuedTextDraw(null, backend.parseMiniMessage(miniMessageText), positionX, positionY, backend.withQueuedTextColor(0xFFFFFFFF), shadow, false));
+        nextQueuedTextDraw().setVisual(backend.miniMessageVisualOrder(miniMessageText), positionX, positionY, backend.withQueuedTextColor(0xFFFFFFFF), shadow);
     }
 
     public int measureMiniMessageTextWidth(String miniMessageText) {
@@ -285,17 +295,48 @@ public class GuiRenderer {
      * Draws all queued text now, for call sites that need text layered before later geometry.
      */
     public void flushText() {
-        if (queuedTextDraws.isEmpty()) {
+        if (queuedTextDrawCount == 0) {
             return;
         }
         MeshBuilder.INSTANCE.endSegment(drawContext);
         drawQueuedText();
         drawContext.nextStratum();
-        MeshBuilder.INSTANCE.beginSegment(drawContext);
     }
 
+    /**
+     * Drops cached plain and bold text widths so they are re-measured after a font or language reload.
+     */
+    public static void clearTextWidthCache() {
+        plainTextWidthCache.clear();
+        boldTextWidthCache.clear();
+    }
+
+    /**
+     * Measures plain text width with the vanilla font. Results are cached across frames because layout re-measures the
+     * same labels every frame; the cache is dropped when the font instance changes or resources reload.
+     *
+     * @param text the text to measure
+     * @param bold whether the text is measured bold
+     * @return the width in logical pixels
+     */
     public int measureTextWidth(String text, boolean bold) {
-        return backend.measureTextWidth(text, bold);
+        Font font = minecraftClient.font;
+        if (font != textWidthCacheFont) {
+            plainTextWidthCache.clear();
+            boldTextWidthCache.clear();
+            textWidthCacheFont = font;
+        }
+        Map<String, Integer> cache = bold ? boldTextWidthCache : plainTextWidthCache;
+        Integer cachedWidth = cache.get(text);
+        if (cachedWidth != null) {
+            return cachedWidth;
+        }
+        int width = backend.measureTextWidth(text, bold);
+        if (cache.size() >= TEXT_WIDTH_CACHE_LIMIT) {
+            cache.clear();
+        }
+        cache.put(text, width);
+        return width;
     }
 
     public int measureTextWidth(Component text) {
@@ -430,19 +471,20 @@ public class GuiRenderer {
     private void flushCurrentSegment() {
         MeshBuilder.INSTANCE.endSegment(drawContext);
         drawQueuedText();
-        MeshBuilder.INSTANCE.beginSegment(drawContext);
     }
 
     private void drawQueuedText() {
-        for (QueuedTextDraw queued : queuedTextDraws) {
-            if (queued.component() != null) {
-                backend.drawTextImmediate(queued.component(), queued.positionX(), queued.positionY(), queued.argbColor(), queued.shadow());
+        for (int index = 0; index < queuedTextDrawCount; index++) {
+            QueuedTextDraw queued = queuedTextDrawPool.get(index);
+            if (queued.visualText != null) {
+                backend.drawTextImmediate(queued.visualText, queued.positionX, queued.positionY, queued.argbColor, queued.shadow);
             }
             else {
-                backend.drawTextImmediate(queued.text(), queued.positionX(), queued.positionY(), queued.argbColor(), queued.shadow(), queued.bold());
+                backend.drawTextImmediate(queued.text, queued.positionX, queued.positionY, queued.argbColor, queued.shadow, queued.bold);
             }
+            queued.release();
         }
-        queuedTextDraws.clear();
+        queuedTextDrawCount = 0;
     }
 
     private void enableScissor(ClipLayer clipLayer) {
@@ -462,11 +504,18 @@ public class GuiRenderer {
             return null;
         }
         ClipLayer clipLayer = clipStack.peek();
+        ScreenRectangle scissorArea = clipLayer.scissorArea;
+        if (scissorArea != null) {
+            return scissorArea;
+        }
+
         int scaledX = Mth.floor(clipLayer.positionX * logicalToVanillaScaleX);
         int scaledY = Mth.floor(clipLayer.positionY * logicalToVanillaScaleY);
         int scaledRight = Math.max(scaledX, Mth.ceil((clipLayer.positionX + clipLayer.width) * logicalToVanillaScaleX));
         int scaledBottom = Math.max(scaledY, Mth.ceil((clipLayer.positionY + clipLayer.height) * logicalToVanillaScaleY));
-        return new ScreenRectangle(new ScreenPosition(scaledX, scaledY), Math.max(0, scaledRight - scaledX), Math.max(0, scaledBottom - scaledY));
+        scissorArea = new ScreenRectangle(new ScreenPosition(scaledX, scaledY), Math.max(0, scaledRight - scaledX), Math.max(0, scaledBottom - scaledY));
+        clipLayer.scissorArea = scissorArea;
+        return scissorArea;
     }
 
     private static ClipLayer intersect(ClipLayer parentLayer, float positionX, float positionY, float width, float height) {
@@ -482,6 +531,8 @@ public class GuiRenderer {
         private final float positionY;
         private final float width;
         private final float height;
+        @Nullable
+        private ScreenRectangle scissorArea;
 
         private ClipLayer(float positionX, float positionY, float width, float height) {
             this.positionX = positionX;
@@ -491,6 +542,49 @@ public class GuiRenderer {
         }
     }
 
-    private record QueuedTextDraw(String text, Component component, float positionX, float positionY, int argbColor, boolean shadow, boolean bold) {
+    private QueuedTextDraw nextQueuedTextDraw() {
+        if (queuedTextDrawCount == queuedTextDrawPool.size()) {
+            queuedTextDrawPool.add(new QueuedTextDraw());
+        }
+        return queuedTextDrawPool.get(queuedTextDrawCount++);
+    }
+
+    /**
+     * A text draw waiting for the next text flush. Instances are pooled and reused across frames, so they are only
+     * valid between queueing and {@link #drawQueuedText()}.
+     */
+    private static class QueuedTextDraw {
+        private String text;
+        private FormattedCharSequence visualText;
+        private float positionX;
+        private float positionY;
+        private int argbColor;
+        private boolean shadow;
+        private boolean bold;
+
+        private void setLiteral(String text, float positionX, float positionY, int argbColor, boolean shadow, boolean bold) {
+            this.text = text;
+            this.visualText = null;
+            this.positionX = positionX;
+            this.positionY = positionY;
+            this.argbColor = argbColor;
+            this.shadow = shadow;
+            this.bold = bold;
+        }
+
+        private void setVisual(FormattedCharSequence visualText, float positionX, float positionY, int argbColor, boolean shadow) {
+            this.text = null;
+            this.visualText = visualText;
+            this.positionX = positionX;
+            this.positionY = positionY;
+            this.argbColor = argbColor;
+            this.shadow = shadow;
+            this.bold = false;
+        }
+
+        private void release() {
+            text = null;
+            visualText = null;
+        }
     }
 }

@@ -9,26 +9,6 @@ import java.math.RoundingMode;
 @UtilityClass
 public class NumberUtils {
 
-    public static String toRomanNumeral(int value) {
-        if (value <= 0) {
-            return "I";
-        }
-        if (value > 20) {
-            return Integer.toString(value);
-        }
-        int[] arabicValues = {10, 9, 5, 4, 1};
-        String[] romanSymbols = {"X", "IX", "V", "IV", "I"};
-        int remainingValue = value;
-        StringBuilder romanBuilder = new StringBuilder();
-        for (int symbolIndex = 0; symbolIndex < arabicValues.length; symbolIndex++) {
-            while (remainingValue >= arabicValues[symbolIndex]) {
-                romanBuilder.append(romanSymbols[symbolIndex]);
-                remainingValue -= arabicValues[symbolIndex];
-            }
-        }
-        return romanBuilder.toString();
-    }
-
     /**
      * Rounds a numeric value to a fixed number of fractional digits and returns a plain decimal string.
      *

@@ -69,20 +69,6 @@ public class BuiltinArgSpecs {
         };
     }
 
-    public static ArgSpec<Integer> integer(int min, int max) {
-        return new ArgSpec<>() {
-            @Override
-            public com.mojang.brigadier.arguments.ArgumentType<?> argumentType() {
-                return IntegerArgumentType.integer(min, max);
-            }
-
-            @Override
-            public Integer read(CommandContext<FabricClientCommandSource> context, String name) {
-                return IntegerArgumentType.getInteger(context, name);
-            }
-        };
-    }
-
     public static ArgSpec<Long> longArg() {
         return new ArgSpec<>() {
             @Override

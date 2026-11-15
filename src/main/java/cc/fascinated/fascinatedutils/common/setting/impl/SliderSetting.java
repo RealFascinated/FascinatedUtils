@@ -5,7 +5,6 @@ import cc.fascinated.fascinatedutils.common.setting.Setting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import lombok.Getter;
-import lombok.Setter;
 import net.minecraft.util.Mth;
 import org.jspecify.annotations.Nullable;
 
@@ -16,7 +15,6 @@ public class SliderSetting extends Setting<Number> {
     private final float min;
     private final float max;
     private final float step;
-    @Setter
     private @Nullable Function<Number, String> valueFormatter;
 
     private SliderSetting(SliderSetting.Builder builder) {

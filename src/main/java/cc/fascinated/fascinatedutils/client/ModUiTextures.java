@@ -23,17 +23,12 @@ public enum ModUiTextures {
     TRASH("ui/trash"),
     CHECK("ui/check"),
     SETTINGS("ui/settings"),
-    CHEVRON_DOWN("ui/keyboard_arrow_down"),
     CHEVRON_RIGHT("ui/keyboard_arrow_right"),
     CHEVRON_LEFT("ui/keyboard_arrow_left"),
     EDIT("ui/edit"),
-    VISIBILITY("ui/visibility"),
-    VISIBILITY_OFF("ui/visibility_off"),
-    SEARCH("ui/search"),
     SUNNY("ui/sunny"),
     ADD("ui/add"),
     WARNING("ui/warning"),
-    MORE_VERT("ui/more_vert"),
     COPY("ui/copy"),
     IMAGE("ui/image"),
     SAVE("ui/save"),
@@ -95,14 +90,6 @@ public enum ModUiTextures {
 
     /**
      * Draw a GUI sprite with a packed ARGB tint.
-     *
-     * @param graphics  draw context for the current GUI frame
-     * @param textureId sprite identifier registered in the GUI sprite atlas
-     * @param x         destination left in screen pixels
-     * @param y         destination top in screen pixels
-     * @param width     destination width in screen pixels
-     * @param height    destination height in screen pixels
-     * @param tintArgb  packed ARGB tint (including alpha)
      */
     public static void drawTinted(GuiGraphicsExtractor graphics, Identifier textureId, int x, int y, int width, int height, int tintArgb) {
         graphics.blitSprite(RenderPipelines.GUI_TEXTURED, textureId, x, y, width, height, tintArgb);

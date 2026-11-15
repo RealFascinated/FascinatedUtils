@@ -13,7 +13,6 @@ public class KeybindNode extends ButtonNode {
     public KeybindNode(KeybindSetting keybindSetting) {
         super();
         this.keybindSetting = keybindSetting;
-        setRounded(true);
         setLabel(() -> listening ? "..." : keybindSetting.currentBindingLabel());
         setDisabled(keybindSetting::isLocked);
         setOnPress(() -> listening = !listening);

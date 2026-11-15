@@ -1,12 +1,10 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
 import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.hud.StatusEffectsHudPanel;
 
 public class StatusEffectsModule extends HudHostModule {
@@ -19,31 +17,10 @@ public class StatusEffectsModule extends HudHostModule {
     }).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final EnumSetting<SortMode> sortMode = EnumSetting.<SortMode>builder().id("sort_mode").defaultValue(SortMode.REMAINING_TIME).valueFormatter(SortMode::label).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
     private final EnumSetting<DisplayMode> displayMode = EnumSetting.<DisplayMode>builder().id("display_mode").defaultValue(DisplayMode.DETAILED).valueFormatter(DisplayMode::label).categoryDisplayKey(APPEARANCE_CATEGORY_DISPLAY_KEY).build();
-    private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
-    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
-    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
-    private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
-    private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
-    private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
-    private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
-    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
-    private final BooleanSetting textShadow = HudWidgetAppearanceBuilders.textShadow().build();
 
     public StatusEffectsModule() {
         super("status_effects", "Status Effects", HudDefaults.builder().build());
-        addSetting(showBackground);
-        addSetting(roundedCorners);
-        addSetting(showBorder);
-        addSetting(roundingRadius);
-        addSetting(borderThickness);
-        addSetting(backgroundColor);
-        addSetting(borderColor);
-        showBackground.addSubSetting(backgroundColor);
-        roundedCorners.addSubSetting(roundingRadius);
-        showBorder.addSubSetting(borderThickness);
-        showBorder.addSubSetting(borderColor);
-        addSetting(padding);
-        addSetting(textShadow);
+        addAppearanceSettings(false);
         addSetting(showAmplifier);
         addSetting(showDuration);
         addSetting(flashTimeWhenEnding);

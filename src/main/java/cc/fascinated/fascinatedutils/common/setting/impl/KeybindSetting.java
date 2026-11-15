@@ -46,9 +46,7 @@ public class KeybindSetting extends Setting<String> {
             return;
         }
         this.keyMapping.setKey(nextKey);
-        KeyMapping.resetMapping();
-        Minecraft minecraftClient = Minecraft.getInstance();
-        minecraftClient.options.save();
+        saveBinding();
     }
 
     /**
@@ -57,16 +55,15 @@ public class KeybindSetting extends Setting<String> {
     @Override
     public void resetToDefault() {
         if (this.keyMapping != null) {
-            InputConstants.Key defaultKey = this.keyMapping.getDefaultKey();
-            this.keyMapping.setKey(defaultKey);
-            KeyMapping.resetMapping();
-            Minecraft minecraftClient = Minecraft.getInstance();
-            //noinspection ConstantValue
-            if (minecraftClient != null && minecraftClient.options != null) {
-                minecraftClient.options.save();
-            }
+            this.keyMapping.setKey(this.keyMapping.getDefaultKey());
+            saveBinding();
         }
         super.resetToDefault();
+    }
+
+    private void saveBinding() {
+        KeyMapping.resetMapping();
+        Minecraft.getInstance().options.save();
     }
 
     public static class Builder extends Setting.Builder<String, Builder> {

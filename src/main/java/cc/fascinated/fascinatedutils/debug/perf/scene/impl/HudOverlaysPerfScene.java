@@ -17,11 +17,12 @@ import java.util.List;
  * lines and the held tab list.
  */
 public class HudOverlaysPerfScene extends PerfScene {
+    public static final String ID = "hud_overlays";
     private static final int CHAT_EVERY_TICKS = 10;
     private static final int TITLE_EVERY_TICKS = 40;
 
     public HudOverlaysPerfScene() {
-        super("hud_overlays", "Scoreboard, boss bar, effects, armor, titles, chat and the tab list on screen together");
+        super(ID, "Scoreboard, boss bar, effects, armor, titles, chat and the tab list on screen together");
     }
 
     @Override

@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.settings;
 
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
@@ -193,7 +194,6 @@ public class SettingSectionsBuilder {
 
     private ButtonNode enumControl(EnumSetting<?> setting) {
         ButtonNode button = new ButtonNode(setting::formatValueForDisplay)
-                .setRounded(true)
                 .setDisabled(setting::isLocked)
                 .setOnPress(() -> {
                     setting.cycleNextConstant();
@@ -204,8 +204,7 @@ public class SettingSectionsBuilder {
     }
 
     private ButtonNode colorControl(ColorSetting setting) {
-        ButtonNode button = new ButtonNode(() -> "#" + String.format("%06X", setting.getValue().getPackedArgb() & 0xFFFFFF))
-                .setRounded(true)
+        ButtonNode button = new ButtonNode(() -> Colors.rgbHex(setting.getValue().getPackedArgb()))
                 .setDisabled(setting::isLocked)
                 .setOnPress(() -> openColorPicker.accept(setting));
         button.size(HEX_BUTTON_WIDTH, CONTROL_HEIGHT).alignY(0.5f);

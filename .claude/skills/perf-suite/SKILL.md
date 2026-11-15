@@ -71,6 +71,9 @@ All are `-D` on the gradle command; `build.gradle` forwards every `alumite.perf.
 | `alumite.perf.coverage=true` | Print the coverage check (see below), then finish |
 | `alumite.perf.reportDir=<path>` | Read and write reports there instead of `run/config/alumite/perf/` |
 | `alumite.perf.exit=true` | Close the game when finished |
+| `alumite.perf.allocProfile=true` | World runs: record JFR `jdk.ObjectAllocationSample` over each scene's measure window, saved to `alloc/<label>/<scene>.jfr` under the report directory, and print the top allocation sites |
+| `alumite.perf.spark=cpu\|alloc` | World runs: Spark client profiler (`sparkc profiler start` at the measure start, `stop --save-to-file` at the end, never uploaded). The profile is moved to `spark/<label>/<scene>-<cpu\|alloc>.sparkprofile` under the report directory. Replaces `allocProfile` for that run. Decode with `scripts/spark-dump.sh <file> [topN]` |
+| `alumite.perf.deep=true` | World runs: enable deep checks. Currently the soak leak check: after the scene list completes once, repeat it until `alumite.perf.soakMinutes` (default 10) have passed, printing retained heap per cycle (soak repeats print only soak lines and save no report). `soakMinutes` is ignored without `deep` |
 
 Presets: `default` = idle, entities, particles, hud_overlays, camera (5s settle, 10s measure). `quick` = idle,
 entities, particles (2s/3s). `gui` = every `screen.*` scene plus inventory (2s/5s). `full` = every scene (5s/10s)
@@ -84,8 +87,14 @@ so the player's files are safe. VSync is off, the frame rate is unlimited and th
 ## Output
 
 ```
-ALUMITE_PERF <id> medianMs=… perCallMs=… totalMs=… calls=… p95Ms=… maxMs=… cvPercent=… allocBytesPerCall=…
+ALUMITE_PERF <id> medianMs=… perCallMs=… totalMs=… calls=… p95Ms=… maxMs=… cvPercent=… allocBytesPerCall=… p99Ms=… p999Ms=… stutters=…
 ALUMITE_PERF gc <test or scene.id> count=… timeMs=…
+ALUMITE_PERF heap scene.<id> retainedMb=…     (used heap after a full GC once the scene is torn down)
+ALUMITE_PERF alloc scene.<id> mod|top|thread <rank> <mb>MB <percent>% <site>     (allocProfile only: top 15 mod-package sites, top 15 allocating methods, top 5 threads)
+ALUMITE_PERF FAILED allocProfile: <reason>     (JFR unavailable; the run continues)
+ALUMITE_PERF soak cycle <n> retainedMb=…     (deep only, after a full GC at the end of each pass)
+ALUMITE_PERF soak cycles=<n> firstMb=… lastMb=… growthMbPerCycle=…     (least-squares slope over all cycles)
+ALUMITE_PERF FAILED soak: retained heap grew <slope> MB per cycle     (slope over cycles 2..n above 5 MB)
 ALUMITE_PERF compare <before>-><after> <id> beforeMedianMs=… afterMedianMs=… deltaPercent=… noisePercent=… significant=…
 ALUMITE_PERF compare warning REFUSED: scenario differs (…)
 ALUMITE_PERF summary <area> tests=… scenes=… medianMs=… allocBytesPerCall=…     (full preset only)
@@ -100,6 +109,13 @@ ALUMITE_PERF summary <area> tests=… scenes=… medianMs=… allocBytesPerCall=
 - Check `calibration.cpu_loop` first: if it moved, the machine was noisy; rerun both sides.
 - Live world sections (`frame.cpu`, `tick.full`, `hud.render`, ...) vary 10-40% between single launches. Use
   several launches (the compare script merges `<label>-runN` reports) before claiming a world-level change.
+- `stutters` counts samples over 2x the median; read it for `frame`, `frame.cpu` and `tick.full` (sub-microsecond sections are timer noise).
+- `heap` lines should stay flat from scene to scene; steady growth after teardown points at a leak.
+- `turbo_*.cull_pass_cpu` is the cull thread's CPU time per pass (compare with `cull_pass` wall time).
+- `packet_flood` (world scene) sends about 120 server packets per tick, mostly block updates, scoreboard and entity moves.
+  Its commands bypass the context queue, so the burst is not capped at four per tick.
+- `scripts/perf-gate.sh ... --world --turbo-check` also fails when a Turbo-on scene's AFTER `frame` median is not at
+  least 2% below its `<id>_turbo_off` twin (entities_x9, turbo_nametags, turbo_displays, turbo_rain, particles, worst_case).
 - `gc` lines show collections during a test or scene; a jump there usually explains an outlier.
 - Always quote the numbers for the tests your change should affect, not only a summary.
 
@@ -237,3 +253,7 @@ client with `alumite.perf.shots` (plus `shots.guiScale` / `shots.size`) and writ
 prefixed `screen.` (pause, settings, settings_detail, settings_profiles, settings_global, hud_editor, screenshots,
 waypoints, waypoint_edit, select_world, title); `inventory` is also captured. Use it to check layouts at GUI scales 1-6
 and 720p/1080p/1440p windows.
+
+## Deep checks
+
+`scripts/perf-deep.sh [launches] [soakMinutes]` runs the checks too slow for every run: the soak leak check (`alumite.perf.deep=true`) and startup timing as the median of several launches (`startup <name> medianMs=… minMs=… maxMs=… launches=…` for mod_init, resource_reload, client_ready, world_join). Single-launch one-off timings vary 7-13% between identical runs, so compare startup only through this script. Exit 1 on soak growth, 3 on a failed launch.

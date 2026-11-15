@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
+import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
@@ -23,44 +24,48 @@ public class HudWidgetAppearanceBuilders {
         };
     }
 
+    private static <T, B extends Setting.Builder<T, B>> B appearance(B builder, String id, String translationKey) {
+        return builder.id(id).displayName(displayName(translationKey)).tooltip(tooltip(translationKey)).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
+    }
+
     public static BooleanSetting.Builder showBackground() {
-        return BooleanSetting.builder().id(HudHostModule.SETTING_BACKGROUND).defaultValue(true).displayName(displayName("alumite.module.background")).tooltip(tooltip("alumite.module.background")).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
+        return appearance(BooleanSetting.builder(), HudHostModule.SETTING_BACKGROUND, "alumite.module.background");
     }
 
     public static ColorSetting.Builder backgroundColor() {
-        return ColorSetting.builder().id(HudHostModule.SETTING_BACKGROUND_COLOR).defaultValue(new SettingColor(0, 0, 0, 85)).displayName(displayName("alumite.module.hud_background_color")).tooltip(tooltip("alumite.module.hud_background_color")).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
+        return appearance(ColorSetting.builder(), HudHostModule.SETTING_BACKGROUND_COLOR, "alumite.module.hud_background_color").defaultValue(new SettingColor(0, 0, 0, 85));
     }
 
     public static BooleanSetting.Builder roundedCorners() {
-        return BooleanSetting.builder().id(HudHostModule.SETTING_ROUNDED_CORNERS).defaultValue(true).displayName(displayName("alumite.module.rounded_corners")).tooltip(tooltip("alumite.module.rounded_corners")).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
+        return appearance(BooleanSetting.builder(), HudHostModule.SETTING_ROUNDED_CORNERS, "alumite.module.rounded_corners").defaultValue(true);
     }
 
     public static SliderSetting.Builder roundingRadius() {
-        return SliderSetting.builder().id(HudHostModule.SETTING_ROUNDING_RADIUS).defaultValue(6f).minValue(1f).maxValue(12f).step(1f).displayName(displayName("alumite.module.rounding_radius")).tooltip(tooltip("alumite.module.rounding_radius")).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
+        return appearance(SliderSetting.builder(), HudHostModule.SETTING_ROUNDING_RADIUS, "alumite.module.rounding_radius").defaultValue(6f).minValue(1f).maxValue(12f).step(1f);
     }
 
     public static BooleanSetting.Builder showBorder() {
-        return BooleanSetting.builder().id(HudHostModule.SETTING_SHOW_BORDER).defaultValue(false).displayName(displayName("alumite.module.show_border")).tooltip(tooltip("alumite.module.show_border")).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
+        return appearance(BooleanSetting.builder(), HudHostModule.SETTING_SHOW_BORDER, "alumite.module.show_border").defaultValue(false);
     }
 
     public static SliderSetting.Builder borderThickness() {
-        return SliderSetting.builder().id(HudHostModule.SETTING_BORDER_THICKNESS).defaultValue(2f).minValue(1f).maxValue(3f).step(1f).displayName(displayName("alumite.module.border_thickness")).tooltip(tooltip("alumite.module.border_thickness")).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
+        return appearance(SliderSetting.builder(), HudHostModule.SETTING_BORDER_THICKNESS, "alumite.module.border_thickness").defaultValue(2f).minValue(1f).maxValue(3f).step(1f);
     }
 
     public static ColorSetting.Builder borderColor() {
-        return ColorSetting.builder().id(HudHostModule.SETTING_BORDER_COLOR).defaultValue(new SettingColor(208, 215, 225, 192)).displayName(displayName("alumite.module.hud_border_color")).tooltip(tooltip("alumite.module.hud_border_color")).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
+        return appearance(ColorSetting.builder(), HudHostModule.SETTING_BORDER_COLOR, "alumite.module.hud_border_color").defaultValue(new SettingColor(208, 215, 225, 192));
     }
 
     public static SliderSetting.Builder padding() {
-        return SliderSetting.builder().id(HudHostModule.SETTING_PADDING).defaultValue(5f).minValue(0f).maxValue(16f).step(1f).displayName(displayName("alumite.module.hud_padding")).tooltip(tooltip("alumite.module.hud_padding")).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
+        return appearance(SliderSetting.builder(), HudHostModule.SETTING_PADDING, "alumite.module.hud_padding").minValue(0f).maxValue(16f).step(1f);
     }
 
     public static BooleanSetting.Builder textShadow() {
-        return BooleanSetting.builder().id(HudHostModule.SETTING_TEXT_SHADOW).defaultValue(true).displayName(displayName("alumite.module.text_shadow")).tooltip(tooltip("alumite.module.text_shadow")).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
+        return appearance(BooleanSetting.builder(), HudHostModule.SETTING_TEXT_SHADOW, "alumite.module.text_shadow").defaultValue(true);
     }
 
     public static BooleanSetting.Builder removeMinimumWidth() {
-        return BooleanSetting.builder().id(HudHostModule.SETTING_REMOVE_MIN_WIDTH).defaultValue(false).displayName(displayName("alumite.module.remove_min_width")).tooltip(tooltip("alumite.module.remove_min_width")).categoryDisplayKey(Module.APPEARANCE_CATEGORY_DISPLAY_KEY);
+        return appearance(BooleanSetting.builder(), HudHostModule.SETTING_REMOVE_MIN_WIDTH, "alumite.module.remove_min_width").defaultValue(false);
     }
 
 }

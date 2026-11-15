@@ -5,7 +5,6 @@ import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.gui.core.UIScale;
 import cc.fascinated.fascinatedutils.gui.screens.WidgetScreen;
 import cc.fascinated.fascinatedutils.gui.toast.ToastManager;
-import cc.fascinated.fascinatedutils.mixininterface.IGameRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -25,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Objects;
 
 @Mixin(GameRenderer.class)
-public abstract class GameRendererMixin implements IGameRenderer {
+public abstract class GameRendererMixin {
     @Unique
     private static final PerfProbe.Section ALUMITE$OVERLAY_PASS = PerfProbe.INSTANCE.section("gui.overlay_pass");
 

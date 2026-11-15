@@ -8,16 +8,19 @@ import net.minecraft.client.renderer.state.MapRenderState;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MapRenderer.class)
 public class MapRendererBackCullingMixin {
+    @Unique
+    private static final float FACING_EPSILON = 0.01f;
 
     @Inject(method = "render*", at = @At("HEAD"), cancellable = true)
     private void alumite$cullBack(MapRenderState mapRenderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, boolean showOnlyFrame, int lightCoords, CallbackInfo info) {
-        if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
+        if (!Client.TURBO_ENTITIES.isEnabled()) {
             return;
         }
 
@@ -36,10 +39,8 @@ public class MapRendererBackCullingMixin {
 
         float dot = (mapRelX * worldNormal.x()) + (mapRelY * worldNormal.y()) + (mapRelZ * worldNormal.z());
 
-        Client.TURBO_ENTITIES.itemFrameCounters.considered++;
-
-        if (dot < -0.01f) {
-            Client.TURBO_ENTITIES.itemFrameCounters.culled++;
+        // Maps are counted with the item frames on purpose, so the item-frame counters include map back-face culls too.
+        if (Client.TURBO_ENTITIES.itemFrameCounters.cullIfFacingAway(dot, FACING_EPSILON)) {
             info.cancel();
         }
     }

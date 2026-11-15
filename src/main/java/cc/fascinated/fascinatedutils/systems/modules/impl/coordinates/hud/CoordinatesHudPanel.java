@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.common.NumberUtils;
 import cc.fascinated.fascinatedutils.common.StringUtils;
 import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.systems.hud.HUDPanelBackground;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
@@ -26,15 +27,47 @@ import java.util.stream.Collectors;
 public class CoordinatesHudPanel extends HudPanel {
 
     private static final float COLUMN_GAP = 4f;
-    private static final float LINE_GAP_PX = 1f;
     private static final String[] COMPASS_DIRECTIONS = {"S", "SE", "E", "NE", "N", "NW", "W", "SW"};
 
     private final CoordinatesWidget coordinatesWidget;
     private final Map<String, String> biomeMiniMessageCache = new HashMap<>();
+    private double cachedCoordX = Double.NaN;
+    private double cachedCoordY = Double.NaN;
+    private double cachedCoordZ = Double.NaN;
+    private int cachedDecimals = -1;
+    private String cachedBiomeMini;
+    private String xPart;
+    private String yPart;
+    private String zPart;
+    private List<String> verticalLines = List.of();
 
     public CoordinatesHudPanel(CoordinatesWidget coordinatesWidget) {
         super(coordinatesWidget, "coordinates", HudHostModule.UTILITY_WIDGET_MIN_WIDTH);
         this.coordinatesWidget = coordinatesWidget;
+    }
+
+    /**
+     * Rebuilds the coordinate strings only when a coordinate, the precision setting, or the biome changes.
+     *
+     * @param coordX    block X position shown
+     * @param coordY    block Y position shown
+     * @param coordZ    block Z position shown
+     * @param decimals  decimal places for the coordinates
+     * @param biomeMini biome label in MiniMessage form
+     */
+    private void refreshCoordinateText(double coordX, double coordY, double coordZ, int decimals, String biomeMini) {
+        if (coordX == cachedCoordX && coordY == cachedCoordY && coordZ == cachedCoordZ && decimals == cachedDecimals && biomeMini.equals(cachedBiomeMini)) {
+            return;
+        }
+        cachedCoordX = coordX;
+        cachedCoordY = coordY;
+        cachedCoordZ = coordZ;
+        cachedDecimals = decimals;
+        cachedBiomeMini = biomeMini;
+        xPart = "X: " + NumberUtils.formatNumber(coordX, decimals);
+        yPart = "Y: " + NumberUtils.formatNumber(coordY, decimals);
+        zPart = "Z: " + NumberUtils.formatNumber(coordZ, decimals);
+        verticalLines = List.of(xPart, yPart, zPart, "Biome: " + biomeMini);
     }
 
     private String biomeColoredMiniMessage(String biomeIdRaw) {
@@ -95,10 +128,11 @@ public class CoordinatesHudPanel extends HudPanel {
             return null;
         }
         int decimals = Math.round(coordinatesWidget.coordinatesHudBlockDecimals());
+        refreshCoordinateText(coordX, coordY, coordZ, decimals, biomeMini);
         if (coordinatesWidget.coordinatesHudLayout() == CoordinatesLayout.HORIZONTAL) {
-            String xPart = "X: " + NumberUtils.formatNumber(coordX, decimals);
-            String yPart = "Y: " + NumberUtils.formatNumber(coordY, decimals);
-            String zPart = "Z: " + NumberUtils.formatNumber(coordZ, decimals);
+            final String xPart = this.xPart;
+            final String yPart = this.yPart;
+            final String zPart = this.zPart;
             float lineHeight = glRenderer.fontHeight();
             float xWidth = glRenderer.measureMiniMessageTextWidth(xPart);
             float yWidth = glRenderer.measureMiniMessageTextWidth(yPart);
@@ -112,10 +146,7 @@ public class CoordinatesHudPanel extends HudPanel {
             float padding = hudHostModule().getPaddingValue();
             float layoutWidth = Math.max(1f, Math.max(getMinWidth(), innerWidth + 2f * padding));
             float layoutHeight = Math.max(1f, lineHeight + 2f * padding);
-            getHudState().setLastLayoutWidth(layoutWidth);
-            getHudState().setLastLayoutHeight(layoutHeight);
-            getHudState().setCommittedLayoutWidth(layoutWidth);
-            getHudState().setCommittedLayoutHeight(layoutHeight);
+            commitLayout(layoutWidth, layoutHeight);
             boolean textShadow = hudHostModule().isTextShadowEnabled();
             return () -> {
                 hudHostModule().drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
@@ -129,7 +160,7 @@ public class CoordinatesHudPanel extends HudPanel {
                 glRenderer.drawMiniMessageText(facingKey, facingColumnX + (facingColumnBandWidth - currentFacingHeadingWidth), padding, textShadow);
             };
         }
-        List<String> leftLines = List.of("X: " + NumberUtils.formatNumber(coordX, decimals), "Y: " + NumberUtils.formatNumber(coordY, decimals), "Z: " + NumberUtils.formatNumber(coordZ, decimals), "Biome: " + biomeMini);
+        List<String> leftLines = verticalLines;
         float lineHeight = glRenderer.fontHeight();
         float leftColumnWidth = 0f;
         for (String line : leftLines) {
@@ -142,15 +173,12 @@ public class CoordinatesHudPanel extends HudPanel {
         }
         final float leftColumnCommitWidth = leftColumnWidth;
         final float facingCommitWidth = facingWidth;
-        float innerHeight = lineCount * lineHeight + Math.max(0, lineCount - 1) * LINE_GAP_PX;
+        float innerHeight = lineCount * lineHeight + Math.max(0, lineCount - 1) * HUDPanelBackground.LINE_GAP_PX;
         float innerWidth = leftColumnWidth + COLUMN_GAP + facingWidth;
         float padding = hudHostModule().getPaddingValue();
         float layoutWidth = Math.max(1f, Math.max(getMinWidth(), innerWidth + 2f * padding));
         float layoutHeight = Math.max(1f, innerHeight + 2f * padding);
-        getHudState().setLastLayoutWidth(layoutWidth);
-        getHudState().setLastLayoutHeight(layoutHeight);
-        getHudState().setCommittedLayoutWidth(layoutWidth);
-        getHudState().setCommittedLayoutHeight(layoutHeight);
+        commitLayout(layoutWidth, layoutHeight);
 
         boolean textShadow = hudHostModule().isTextShadowEnabled();
         return () -> {
@@ -162,7 +190,7 @@ public class CoordinatesHudPanel extends HudPanel {
                 glRenderer.drawMiniMessageText(leftLines.get(index), blockStartX, cursorY, textShadow);
                 cursorY += lineHeight;
                 if (index < lineCount - 1) {
-                    cursorY += LINE_GAP_PX;
+                    cursorY += HUDPanelBackground.LINE_GAP_PX;
                 }
             }
             float facingColumnStartX = blockStartX + leftColumnCommitWidth + COLUMN_GAP;

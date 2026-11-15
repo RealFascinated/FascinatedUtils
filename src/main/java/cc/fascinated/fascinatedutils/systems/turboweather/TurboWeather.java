@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.turboweather;
 
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
+import cc.fascinated.fascinatedutils.settings.Settings;
 import net.minecraft.world.level.Level;
 
 import lombok.Getter;
@@ -29,7 +29,7 @@ public class TurboWeather {
      * @param level the level the weather is extracted for
      */
     public void beginFrame(Level level) {
-        enabled = SettingsRegistry.INSTANCE.getSettings().getTurboWeather().isEnabled();
+        enabled = Settings.INSTANCE.getTurboWeather().isEnabled();
         if (!enabled) {
             return;
         }

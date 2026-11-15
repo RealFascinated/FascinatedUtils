@@ -1,12 +1,12 @@
 package cc.fascinated.fascinatedutils.client;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
-import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.command.ClientCommandBootstrap;
 import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
 import cc.fascinated.fascinatedutils.debug.perf.command.PerfCommand;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
+import cc.fascinated.fascinatedutils.debug.perf.core.PerfStartup;
 import cc.fascinated.fascinatedutils.debug.perf.run.PerfAutoRun;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
@@ -14,6 +14,7 @@ import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.gui.ModUiClientEntry;
 import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
+import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.renderer.Renderer2D;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.screenshot.ScreenshotManager;
@@ -63,13 +64,17 @@ public class Client implements ClientModInitializer {
     private static void registerTextWidthCacheReloadListener() {
         ResourceLoader resourceLoader = ResourceLoader.get(PackType.CLIENT_RESOURCES);
         Identifier listenerId = Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "mini_message_width_cache");
-        resourceLoader.registerReloadListener(listenerId, (sharedState, prepareExecutor, barrier, applyExecutor) -> barrier.wait(null).thenRunAsync(Renderer2D::clearMiniMessageWidthCache, applyExecutor));
+        resourceLoader.registerReloadListener(listenerId, (sharedState, prepareExecutor, barrier, applyExecutor) -> barrier.wait(null).thenRunAsync(() -> {
+            Renderer2D.clearMiniMessageWidthCache();
+            GuiRenderer.clearTextWidthCache();
+        }, applyExecutor));
         resourceLoader.addListenerOrdering(ResourceReloaderKeys.Client.FONTS, listenerId);
         resourceLoader.addListenerOrdering(ResourceReloaderKeys.Client.LANGUAGES, listenerId);
     }
 
     @Override
     public void onInitializeClient() {
+        PerfStartup.INSTANCE.markInitStart();
         System.setProperty("java.awt.headless", "false");
 
         FascinatedEventBus eventBus = FascinatedEventBus.INSTANCE;
@@ -105,11 +110,10 @@ public class Client implements ClientModInitializer {
         RainbowColors.init();
         FascinatedWorldRenderTypes.registerWithIris();
         ModUiClientEntry.register();
-        new WaypointRepository();
+        WaypointRepository.init();
 
-        // Register updater shutdown hook; check and download will run on game exit
-        if (!Constants.DEBUG_MODE) {
-            Updater.INSTANCE.start();
-        }
+        // Starts the periodic update check; staged updates are applied on shutdown.
+        Updater.INSTANCE.start();
+        PerfStartup.INSTANCE.markInitEnd();
     }
 }

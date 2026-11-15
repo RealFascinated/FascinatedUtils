@@ -43,26 +43,25 @@ public class PerfAggregate {
             return results.getFirst();
         }
         double[] medians = results.stream().mapToDouble(PerfResult::medianMs).toArray();
-        double medianOfMedians = median(medians);
-        double mean = Arrays.stream(medians).average().orElse(0);
-        double squaredDeviation = Arrays.stream(medians).map(value -> (value - mean) * (value - mean)).sum();
-        double cvPercent = mean == 0 ? 0 : Math.sqrt(squaredDeviation / (medians.length - 1)) / mean * 100.0;
-        return new PerfResult(id, (long) median(results, result -> result.calls()), results.size(), median(results, PerfResult::totalMs), median(results, PerfResult::perCallMs), medianOfMedians, results.stream().mapToDouble(PerfResult::minMs).min().orElse(0), results.stream().mapToDouble(PerfResult::maxMs).max().orElse(0), median(results, PerfResult::p95Ms), cvPercent, mergeAllocation(results));
+        double medianOfMedians = PerfResult.median(medians);
+        double mean = PerfResult.mean(medians);
+        double cvPercent = PerfResult.cvPercent(mean, PerfResult.standardDeviation(medians, mean));
+        return new PerfResult(id, (long) median(results, result -> result.calls()), results.size(), median(results, PerfResult::totalMs), median(results, PerfResult::perCallMs), medianOfMedians, results.stream().mapToDouble(PerfResult::minMs).min().orElse(0), results.stream().mapToDouble(PerfResult::maxMs).max().orElse(0), median(results, PerfResult::p95Ms), cvPercent, mergeAllocation(results), median(results, PerfResult::p99Ms), median(results, PerfResult::p999Ms), (int) median(results, result -> result.stutters()), mergeQuantiles(results));
+    }
+
+    private double[] mergeQuantiles(List<PerfResult> results) {
+        // Pooling every launch's quantiles and re-picking evenly spaced ones approximates the distribution of all calls.
+        double[] pooled = results.stream().flatMapToDouble(result -> Arrays.stream(result.quantilesMs())).sorted().toArray();
+        return PerfResult.evenlySpacedQuantiles(pooled, 1.0);
     }
 
     private double mergeAllocation(List<PerfResult> results) {
         // -1 means "not measured" in that launch, so it must not drag the median down.
         double[] measured = results.stream().mapToDouble(PerfResult::allocBytesPerCall).filter(value -> value >= 0).toArray();
-        return measured.length == 0 ? -1 : median(measured);
+        return measured.length == 0 ? -1 : PerfResult.median(measured);
     }
 
     private double median(List<PerfResult> results, ToDoubleFunction<PerfResult> selector) {
-        return median(results.stream().mapToDouble(selector).toArray());
-    }
-
-    private double median(double[] values) {
-        double[] sorted = values.clone();
-        Arrays.sort(sorted);
-        return sorted.length % 2 == 1 ? sorted[sorted.length / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2.0;
+        return PerfResult.median(results.stream().mapToDouble(selector).toArray());
     }
 }

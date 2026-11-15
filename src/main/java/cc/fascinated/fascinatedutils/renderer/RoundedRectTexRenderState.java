@@ -2,10 +2,12 @@ package cc.fascinated.fascinatedutils.renderer;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenPosition;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
+import net.minecraft.util.Mth;
 import org.joml.Matrix3x2f;
 import org.jspecify.annotations.Nullable;
 
@@ -37,7 +39,7 @@ public class RoundedRectTexRenderState implements GuiElementRenderState {
     /**
      * @param pipeline             rounded pipeline (preset or {@link FascinatedUiPipelines#ROUNDED_RECT_TEX_LUT})
      * @param textureSetup         opaque white texture setup
-     * @param pose                 copy of the active {@link net.minecraft.client.gui.GuiGraphicsExtractor} matrix stack head
+     * @param pose                 copy of the active {@link GuiGraphicsExtractor} matrix stack head
      * @param x0                   first corner x (logical)
      * @param y0                   first corner y
      * @param x1                   opposite corner x
@@ -85,14 +87,55 @@ public class RoundedRectTexRenderState implements GuiElementRenderState {
     }
 
     public static ScreenRectangle clippedBounds(int x0, int y0, int x1, int y1, Matrix3x2f pose, @Nullable ScreenRectangle scissorArea) {
-        ScreenRectangle transformedBounds = axisBounds(x0, y0, x1, y1).transformMaxBounds(pose);
-        if (scissorArea == null) {
-            return transformedBounds;
+        float minX = Math.min(x0, x1);
+        float minY = Math.min(y0, y1);
+        float maxX = Math.max(x0, x1);
+        float maxY = Math.max(y0, y1);
+
+        float transformedMinX;
+        float transformedMaxX;
+        float transformedMinY;
+        float transformedMaxY;
+        if (pose.m01() == 0f && pose.m10() == 0f) {
+            // GUI poses are translations and scales, so each axis maps on its own and two corners cover the quad.
+            float left = pose.m00() * minX + pose.m20();
+            float right = pose.m00() * maxX + pose.m20();
+            float top = pose.m11() * minY + pose.m21();
+            float bottom = pose.m11() * maxY + pose.m21();
+            transformedMinX = Math.min(left, right);
+            transformedMaxX = Math.max(left, right);
+            transformedMinY = Math.min(top, bottom);
+            transformedMaxY = Math.max(top, bottom);
         }
-        if (!transformedBounds.intersects(scissorArea)) {
-            return ScreenRectangle.empty();
+        else {
+            float cornerX0 = pose.m00() * minX + pose.m10() * minY + pose.m20();
+            float cornerY0 = pose.m01() * minX + pose.m11() * minY + pose.m21();
+            float cornerX1 = pose.m00() * maxX + pose.m10() * minY + pose.m20();
+            float cornerY1 = pose.m01() * maxX + pose.m11() * minY + pose.m21();
+            float cornerX2 = pose.m00() * minX + pose.m10() * maxY + pose.m20();
+            float cornerY2 = pose.m01() * minX + pose.m11() * maxY + pose.m21();
+            float cornerX3 = pose.m00() * maxX + pose.m10() * maxY + pose.m20();
+            float cornerY3 = pose.m01() * maxX + pose.m11() * maxY + pose.m21();
+            transformedMinX = Math.min(Math.min(cornerX0, cornerX2), Math.min(cornerX1, cornerX3));
+            transformedMaxX = Math.max(Math.max(cornerX0, cornerX2), Math.max(cornerX1, cornerX3));
+            transformedMinY = Math.min(Math.min(cornerY0, cornerY2), Math.min(cornerY1, cornerY3));
+            transformedMaxY = Math.max(Math.max(cornerY0, cornerY2), Math.max(cornerY1, cornerY3));
         }
-        return transformedBounds.intersection(scissorArea);
+
+        int left = Mth.floor(transformedMinX);
+        int top = Mth.floor(transformedMinY);
+        int right = left + Mth.ceil(transformedMaxX - transformedMinX);
+        int bottom = top + Mth.ceil(transformedMaxY - transformedMinY);
+        if (scissorArea != null) {
+            left = Math.max(left, scissorArea.left());
+            top = Math.max(top, scissorArea.top());
+            right = Math.min(right, scissorArea.right());
+            bottom = Math.min(bottom, scissorArea.bottom());
+            if (left >= right || top >= bottom) {
+                return ScreenRectangle.empty();
+            }
+        }
+        return new ScreenRectangle(left, top, right - left, bottom - top);
     }
 
     public int packedCornerRadiiLut() {

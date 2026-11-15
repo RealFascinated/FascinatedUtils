@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.config.impl.profiles;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.debug.perf.PerfMode;
+import cc.fascinated.fascinatedutils.systems.config.AtomicFiles;
 import cc.fascinated.fascinatedutils.systems.config.ConfigManager;
 import cc.fascinated.fascinatedutils.systems.config.impl.config.FascinatedConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
@@ -15,10 +15,8 @@ import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -43,17 +41,15 @@ public class ProfileRepository {
         profileLoadInProgress = true;
         try {
             for (Module module : ModuleRegistry.INSTANCE.getModules()) {
-                module.batchEnabledStateEvents(() -> {
-                    module.resetToDefault();
-                    JsonElement element = moduleStates.get(module.getModuleKey());
-                    if (element != null && element.isJsonObject()) {
-                        try {
-                            module.deserialize(element, gson);
-                        } catch (Exception error) {
-                            Client.LOG.warn("Failed to apply module settings for {}: {}", module.getModuleKey(), error.toString());
-                        }
+                module.resetToDefault();
+                JsonElement element = moduleStates.get(module.getModuleKey());
+                if (element != null && element.isJsonObject()) {
+                    try {
+                        module.deserialize(element, gson);
+                    } catch (Exception error) {
+                        Client.LOG.warn("Failed to apply module settings for {}: {}", module.getModuleKey(), error.toString());
                     }
-                });
+                }
             }
         } finally {
             profileLoadInProgress = false;
@@ -108,12 +104,13 @@ public class ProfileRepository {
     public void refreshCache() {
         cachedProfiles = loadAllFromDisk();
         UUID activeId = getActiveProfileId().orElse(null);
-        if (activeId != null && cachedProfiles.stream().noneMatch(profile -> profile.getProfileId().equals(activeId)) && Files.exists(profilesDirectory.resolve(activeId + ".json"))) {
+        boolean activeMissing = activeId == null || cachedProfiles.stream().noneMatch(profile -> profile.getProfileId().equals(activeId));
+        if (activeMissing && activeId != null && Files.exists(profilesDirectory.resolve(activeId + ".json"))) {
             // The active profile file exists but failed to load; keep the file and the active id untouched.
             Client.LOG.error("Active profile {} exists on disk but could not be loaded; leaving it untouched", activeId);
             return;
         }
-        if (!cachedProfiles.isEmpty() && (activeId == null || cachedProfiles.stream().noneMatch(profile -> profile.getProfileId().equals(activeId)))) {
+        if (!cachedProfiles.isEmpty() && activeMissing) {
             setActiveProfileId(cachedProfiles.getFirst().getProfileId());
         }
     }
@@ -162,22 +159,8 @@ public class ProfileRepository {
     }
 
     public Profile createProfile(String requestedName) {
-        return createProfile(requestedName, false);
-    }
-
-    public Profile createProfile(String requestedName, boolean copyDefaultSettings) {
-        JsonObject initialSettings = new JsonObject();
-        if (copyDefaultSettings) {
-            cachedProfiles.stream().filter(profile -> DEFAULT_PROFILE_NAME.equals(profile.getProfileName())).findFirst().ifPresent(profile -> {
-                JsonObject settings = profile.getSettings();
-                initialSettings.entrySet().clear();
-                if (settings != null) {
-                    settings.entrySet().forEach(entry -> initialSettings.add(entry.getKey(), entry.getValue()));
-                }
-            });
-        }
         String profileName = requestedName == null || requestedName.isBlank() ? "Profile" : requestedName.trim();
-        Profile created = new Profile(UUID.randomUUID(), profileName, 1, initialSettings);
+        Profile created = new Profile(UUID.randomUUID(), profileName, 1, new JsonObject());
         saveProfile(created);
         UUID activeId = configManager.getCurrent().activeProfileId();
         if (activeId == null || cachedProfiles.stream().noneMatch(profile -> profile.getProfileId().equals(activeId))) {
@@ -226,29 +209,18 @@ public class ProfileRepository {
     }
 
     public void saveProfile(Profile profile) {
-        if (PerfMode.isWorldScenario()) {
-            return;
-        }
         writeProfile(profile, profilesDirectory);
     }
 
     /**
-     * Writes a profile atomically into a directory (temporary file, then move into place).
+     * Writes a profile atomically into a directory.
      *
      * @param profile   the profile to write
      * @param directory the directory that holds profile files
      */
     public void writeProfile(Profile profile, Path directory) {
         try {
-            Files.createDirectories(directory);
-            Path profilePath = profile.resolveFilePath(directory);
-            Path temporaryPath = profilePath.resolveSibling(profilePath.getFileName() + ".tmp");
-            Files.writeString(temporaryPath, gson.toJson(profile.serialize(gson)), StandardCharsets.UTF_8);
-            try {
-                Files.move(temporaryPath, profilePath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-            } catch (AtomicMoveNotSupportedException unsupported) {
-                Files.move(temporaryPath, profilePath, StandardCopyOption.REPLACE_EXISTING);
-            }
+            AtomicFiles.INSTANCE.writeAtomically(profile.resolveFilePath(directory), profile.serialize(gson), gson);
         } catch (IOException error) {
             Client.LOG.warn("Failed to save profile {}: {}", profile.getProfileId(), error.toString());
         }
@@ -267,7 +239,7 @@ public class ProfileRepository {
                     if (element == null || !element.isJsonObject()) {
                         throw new JsonParseException("Profile is not a JSON object: " + path);
                     }
-                    profiles.add(migrateAndSave(Profile.defaults().deserialize(element, gson)));
+                    profiles.add(Profile.defaults().deserialize(element, gson));
                 } catch (JsonParseException error) {
                     quarantineCorruptProfile(path, error);
                 } catch (Exception error) {
@@ -288,44 +260,12 @@ public class ProfileRepository {
      * @param error the parse failure
      */
     private void quarantineCorruptProfile(Path path, Exception error) {
-        Path corruptPath = path.resolveSibling(path.getFileName() + ".corrupt");
         try {
-            Files.move(path, corruptPath, StandardCopyOption.REPLACE_EXISTING);
+            Path corruptPath = AtomicFiles.INSTANCE.quarantine(path, false);
             Client.LOG.warn("Profile {} is corrupt ({}); moved to {}", path, error.toString(), corruptPath);
         } catch (IOException moveError) {
             Client.LOG.warn("Profile {} is corrupt ({}) and could not be moved aside: {}", path, error.toString(), moveError.toString());
         }
-    }
-
-    private Profile migrateAndSave(Profile profile) {
-        JsonObject settings = profile.getSettings();
-        if (settings == null || settings.isEmpty()) {
-            return profile;
-        }
-        JsonObject migrated = new JsonObject();
-        boolean anyMigrated = false;
-        for (Map.Entry<String, JsonElement> entry : settings.entrySet()) {
-            String key = entry.getKey();
-            JsonElement blob = entry.getValue();
-            if (!blob.isJsonObject()) {
-                migrated.add(key, blob);
-                continue;
-            }
-            JsonObject originalBlob = blob.getAsJsonObject();
-            int fileVersion = originalBlob.has("version") ? originalBlob.get("version").getAsInt() : 1;
-            JsonObject migratedBlob = configManager.migrateModuleBlob(key, originalBlob);
-            migrated.add(key, migratedBlob);
-            int newVersion = migratedBlob.has("version") ? migratedBlob.get("version").getAsInt() : 1;
-            if (newVersion != fileVersion) {
-                anyMigrated = true;
-            }
-        }
-        if (!anyMigrated) {
-            return profile;
-        }
-        profile.setSettings(migrated);
-        saveProfile(profile);
-        return profile;
     }
 }
 

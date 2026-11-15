@@ -27,12 +27,6 @@ public sealed interface HudContent {
         }
     }
 
-    record Custom(String id) implements HudContent {
-        public Custom {
-            Objects.requireNonNull(id, "id cannot be null");
-        }
-    }
-
     /**
      * Identifies an item to display in an {@link ItemRow}.
      *

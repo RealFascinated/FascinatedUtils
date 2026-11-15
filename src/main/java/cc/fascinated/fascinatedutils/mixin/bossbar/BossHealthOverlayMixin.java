@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.mixin.bossbar;
 
-import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.bossbar.BossbarModule;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -15,7 +14,7 @@ public class BossHealthOverlayMixin {
 
     @Inject(method = "extractRenderState", at = @At("HEAD"), cancellable = true)
     private void alumite$cancelVanillaBossBar(GuiGraphicsExtractor graphics, CallbackInfo ci) {
-        if (ModuleRegistry.INSTANCE.getModule(BossbarModule.class).filter(Module::isEnabled).isPresent()) {
+        if (ModuleRegistry.INSTANCE.isEnabled(BossbarModule.class)) {
             ci.cancel();
         }
     }

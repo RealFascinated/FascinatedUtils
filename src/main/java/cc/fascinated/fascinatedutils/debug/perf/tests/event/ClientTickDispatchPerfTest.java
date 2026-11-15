@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.color.RainbowColors;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.IdlePerfScene;
 import cc.fascinated.fascinatedutils.systems.modules.impl.FreelookModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.VibrancyModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.ZoomModule;
@@ -33,7 +34,7 @@ public class ClientTickDispatchPerfTest extends PerfTest {
 
     @Override
     public List<String> sceneIds() {
-        return List.of("idle");
+        return List.of(IdlePerfScene.ID);
     }
 
     @Override

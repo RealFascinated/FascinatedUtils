@@ -1,14 +1,14 @@
 package cc.fascinated.fascinatedutils.systems.turboentities;
 
+import cc.fascinated.fascinatedutils.common.culling.AbstractCullTask;
 import cc.fascinated.fascinatedutils.common.culling.CullCounters;
-import cc.fascinated.fascinatedutils.common.culling.OcclusionProvider;
+import cc.fascinated.fascinatedutils.common.culling.CullDistances;
+import cc.fascinated.fascinatedutils.common.culling.CullThreadLifecycle;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
-import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
-import com.logisticscraft.occlusionculling.cache.ArrayOcclusionCache;
+import cc.fascinated.fascinatedutils.settings.Settings;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
@@ -17,7 +17,7 @@ import net.minecraft.world.entity.EntityType;
 import java.util.Map;
 
 public class TurboEntities {
-    public static final Map<EntityType<?>, Double> RENDER_DISTANCE_CAPS = Map.of(EntityType.ITEM, 32.0 * 32.0, EntityType.EXPERIENCE_ORB, 32.0 * 32.0, EntityType.ARMOR_STAND, 48.0 * 48.0, EntityType.ITEM_DISPLAY, 48.0 * 48.0);
+    public static final Map<EntityType<?>, Double> RENDER_DISTANCE_CAPS = Map.of(EntityType.ITEM, CullDistances.ITEM_RENDER_DISTANCE_SQ, EntityType.EXPERIENCE_ORB, CullDistances.ITEM_RENDER_DISTANCE_SQ, EntityType.ARMOR_STAND, CullDistances.DECORATION_RENDER_DISTANCE_SQ, EntityType.ITEM_DISPLAY, CullDistances.DECORATION_RENDER_DISTANCE_SQ);
 
     /**
      * Block entities farther than this chunk radius from the player are not snapshotted for the cull worker
@@ -28,6 +28,12 @@ public class TurboEntities {
     // Rebuild entity + block-entity cull snapshots only every N client ticks to spread chunk/entity scan cost.
     private static final int CULL_SNAPSHOT_CAPTURE_RATE_TICKS = 5;
     private static final PerfProbe.Section SNAPSHOT_SECTION = PerfProbe.INSTANCE.section("turbo_entities.snapshot");
+    private static final PerfProbe.Counter ENTITIES_CONSIDERED_COUNTER = PerfProbe.INSTANCE.counter("turbo_entities.considered");
+    private static final PerfProbe.Counter ENTITIES_CULLED_COUNTER = PerfProbe.INSTANCE.counter("turbo_entities.culled");
+    private static final PerfProbe.Counter BLOCK_ENTITIES_CONSIDERED_COUNTER = PerfProbe.INSTANCE.counter("turbo_entities.block_considered");
+    private static final PerfProbe.Counter BLOCK_ENTITIES_CULLED_COUNTER = PerfProbe.INSTANCE.counter("turbo_entities.block_culled");
+    private static final PerfProbe.Counter BACKFACE_CONSIDERED_COUNTER = PerfProbe.INSTANCE.counter("turbo_entities.backface_considered");
+    private static final PerfProbe.Counter BACKFACE_CULLED_COUNTER = PerfProbe.INSTANCE.counter("turbo_entities.backface_culled");
 
     @Getter
     private final BlockModelCache blockModelCache = new BlockModelCache();
@@ -35,9 +41,8 @@ public class TurboEntities {
     public final CullCounters itemFrameCounters = new CullCounters();
     public final CullCounters signCounters = new CullCounters();
 
-    @Getter
-    private EntitiesCullTask cullTask;
-    private Thread cullThread;
+    private int cullSnapshotTickCounter;
+    private final CullThreadLifecycle<EntitiesCullTask> cullLifecycle = new CullThreadLifecycle<>(() -> Settings.INSTANCE.getTurboEntities().isEnabled(), () -> new EntitiesCullTask(AbstractCullTask.createOcclusionCulling()), "FascinatedUtils-TurboEntitiesCull", () -> cullSnapshotTickCounter = 0);
 
     /**
      * Duration of the most recent cull snapshot capture on the client thread.
@@ -45,14 +50,6 @@ public class TurboEntities {
     @Getter
     private volatile long lastSnapshotNanos = 0L;
 
-    /**
-     * Snapshot of the Turbo Entities setting for hot paths (render thread); refreshed each client tick.
-     */
-    private volatile boolean turboEntitiesCullEnabledMirror = false;
-
-    private boolean previousEnabledState = false;
-
-    private int cullSnapshotTickCounter;
     // Per-tick entity tick counters (snapshotted each tick for the debug widget)
     private volatile int tickedEntities = 0;
     private volatile int skippedEntityTicks = 0;
@@ -62,14 +59,18 @@ public class TurboEntities {
     private volatile int lastSkippedEntityTicks = 0;
 
     /**
-     * Fast gate for mixins: avoids walking {@link SettingsRegistry} on every block entity / entity call.
+     * Fast gate for mixins: avoids walking {@link Settings} on every block entity / entity call.
      */
-    public boolean isTurboEntitiesCullEnabled() {
-        return turboEntitiesCullEnabledMirror;
+    public boolean isEnabled() {
+        return cullLifecycle.isEnabled();
+    }
+
+    public EntitiesCullTask getCullTask() {
+        return cullLifecycle.getTask();
     }
 
     public boolean isCullThreadAlive() {
-        return cullThread != null && cullThread.isAlive();
+        return cullLifecycle.isThreadAlive();
     }
 
     public void incrementTickedEntities() {
@@ -83,16 +84,13 @@ public class TurboEntities {
     public void snapshotAndResetRenderFrameCounters() {
         itemFrameCounters.snapshotAndReset();
         signCounters.snapshotAndReset();
+        BACKFACE_CONSIDERED_COUNTER.add(itemFrameCounters.getLastConsidered() + signCounters.getLastConsidered());
+        BACKFACE_CULLED_COUNTER.add(itemFrameCounters.getLastCulled() + signCounters.getLastCulled());
     }
 
     @EventHandler
     private void alumite$onClientStarted(ClientStartedEvent event) {
-        boolean enabled = SettingsRegistry.INSTANCE.getSettings().getTurboEntities().isEnabled();
-        previousEnabledState = enabled;
-        turboEntitiesCullEnabledMirror = enabled;
-        if (enabled) {
-            startCullThread();
-        }
+        cullLifecycle.onClientStarted();
     }
 
     @EventHandler
@@ -102,19 +100,15 @@ public class TurboEntities {
         tickedEntities = 0;
         skippedEntityTicks = 0;
 
-        boolean enabled = SettingsRegistry.INSTANCE.getSettings().getTurboEntities().isEnabled();
-        turboEntitiesCullEnabledMirror = enabled;
-        if (enabled != previousEnabledState) {
-            previousEnabledState = enabled;
-            if (enabled) {
-                startCullThread();
-            }
-            else {
-                stopCullThread();
-            }
-        }
+        cullLifecycle.onClientTick();
 
-        if (cullTask != null && enabled) {
+        EntitiesCullTask cullTask = cullLifecycle.getTask();
+        if (cullTask != null && cullLifecycle.isEnabled()) {
+            // Gauges: each tick records the totals of the latest occlusion pass.
+            ENTITIES_CONSIDERED_COUNTER.add(cullTask.getConsideredEntityCount());
+            ENTITIES_CULLED_COUNTER.add(cullTask.getCulledEntityCount());
+            BLOCK_ENTITIES_CONSIDERED_COUNTER.add(cullTask.getConsideredBlockEntityCount());
+            BLOCK_ENTITIES_CULLED_COUNTER.add(cullTask.getCulledBlockEntityCount());
             if (cullSnapshotTickCounter++ % CULL_SNAPSHOT_CAPTURE_RATE_TICKS == 0) {
                 Minecraft client = Minecraft.getInstance();
                 long snapshotNanosStart = System.nanoTime();
@@ -123,35 +117,15 @@ public class TurboEntities {
                 cullTask.publishBlockEntityCullSnapshotFromWorld(client, BLOCK_ENTITY_CULL_CHUNK_RADIUS_CAP);
                 SNAPSHOT_SECTION.end(snapshotStart);
                 lastSnapshotNanos = System.nanoTime() - snapshotNanosStart;
+                // Only fresh snapshot data needs a pass; the worker picks up camera motion on its own, so asking
+                // every tick would just re-cull the same positions four times out of five.
+                cullTask.requestCull();
             }
         }
     }
 
     @EventHandler
     private void alumite$onClientStopping(ClientStoppingEvent event) {
-        turboEntitiesCullEnabledMirror = false;
-        stopCullThread();
-    }
-
-    private void startCullThread() {
-        if (cullThread != null && cullThread.isAlive()) {
-            return;
-        }
-        // aabbExpansion 0: default 0.5 widens single-block AABBs so the library's all-axis INSIDE fast-path
-        // treats the camera cell as inside the target for most adjacent block entities when buried in solids.
-        OcclusionCullingInstance culling = new OcclusionCullingInstance(128, new OcclusionProvider(), new ArrayOcclusionCache(128), 0.0);
-        cullTask = new EntitiesCullTask(culling);
-        cullSnapshotTickCounter = 0;
-        cullThread = new Thread(cullTask, "FascinatedUtils-TurboEntitiesCull");
-        cullThread.setDaemon(true);
-        cullThread.start();
-    }
-
-    private void stopCullThread() {
-        if (cullTask != null) {
-            cullTask.stop();
-        }
-        cullThread = null;
-        cullTask = null;
+        cullLifecycle.onClientStopping();
     }
 }

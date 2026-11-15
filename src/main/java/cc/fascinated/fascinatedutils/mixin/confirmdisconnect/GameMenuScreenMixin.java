@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.confirmdisconnect;
 
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
+import cc.fascinated.fascinatedutils.settings.Settings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -27,7 +27,7 @@ public abstract class GameMenuScreenMixin {
     private void alumite$wrapDisconnectWithConfirm(CallbackInfo ci) {
         // The pause menu is rebuilt on resize and gets a fresh button label, so a pending confirmation must not survive.
         this.awaitingConfirm = false;
-        if (!SettingsRegistry.INSTANCE.getSettings().getConfirmDisconnect().isEnabled() || Minecraft.getInstance().hasSingleplayerServer() || this.disconnectButton == null) {
+        if (!Settings.INSTANCE.getConfirmDisconnect().isEnabled() || Minecraft.getInstance().hasSingleplayerServer() || this.disconnectButton == null) {
             return;
         }
 

@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.common.color;
 
 import com.google.gson.JsonObject;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -42,20 +42,6 @@ public class SettingColor {
         this.blue = other.blue;
         this.alpha = other.alpha;
         this.rainbow = other.rainbow;
-    }
-
-    /**
-     * Creates a SettingColor from a packed ARGB integer.
-     *
-     * @param argb packed ARGB color
-     * @return a new SettingColor
-     */
-    public static SettingColor fromArgb(int argb) {
-        int alpha = (argb >>> 24) & 0xFF;
-        int red = (argb >> 16) & 0xFF;
-        int green = (argb >> 8) & 0xFF;
-        int blue = argb & 0xFF;
-        return new SettingColor(red, green, blue, alpha);
     }
 
     /**
@@ -107,7 +93,7 @@ public class SettingColor {
      * Randomizes this color's RGB values to random values with full opacity.
      */
     public void random() {
-        Random random = new Random();
+        ThreadLocalRandom random = ThreadLocalRandom.current();
         this.red = random.nextInt(256);
         this.green = random.nextInt(256);
         this.blue = random.nextInt(256);

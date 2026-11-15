@@ -13,9 +13,12 @@ import java.util.Map;
  * @param timeMs milliseconds spent collecting so far
  */
 public record PerfGcSnapshot(long count, long timeMs) {
+    private static final String KEY_PREFIX = "gc.";
+    private static final String COUNT_SUFFIX = ".count";
+    private static final String TIME_SUFFIX = ".timeMs";
 
     /**
-     * Reads the current totals.
+     * Reads the current totals across every collector.
      *
      * @return the snapshot
      */
@@ -30,7 +33,47 @@ public record PerfGcSnapshot(long count, long timeMs) {
     }
 
     /**
-     * Records the collections since this snapshot into report meta as {@code gc.<id>.count} and {@code gc.<id>.timeMs}.
+     * The report meta key that holds a result's collection count.
+     *
+     * @param resultId the test or scene id
+     * @return {@code gc.<id>.count}
+     */
+    public static String countKey(String resultId) {
+        return KEY_PREFIX + resultId + COUNT_SUFFIX;
+    }
+
+    /**
+     * The report meta key that holds a result's collection time.
+     *
+     * @param resultId the test or scene id
+     * @return {@code gc.<id>.timeMs}
+     */
+    public static String timeKey(String resultId) {
+        return KEY_PREFIX + resultId + TIME_SUFFIX;
+    }
+
+    /**
+     * Reports whether a report meta key is a collection count key.
+     *
+     * @param key the meta key
+     * @return true for {@code gc.<id>.count} keys
+     */
+    public static boolean isCountKey(String key) {
+        return key.startsWith(KEY_PREFIX) && key.endsWith(COUNT_SUFFIX);
+    }
+
+    /**
+     * Extracts the result id from a collection count key.
+     *
+     * @param countKey a key for which {@link #isCountKey} is true
+     * @return the test or scene id
+     */
+    public static String resultIdOfCountKey(String countKey) {
+        return countKey.substring(KEY_PREFIX.length(), countKey.length() - COUNT_SUFFIX.length());
+    }
+
+    /**
+     * Records the collections since this snapshot into report meta.
      *
      * @param resultId the test or scene id
      * @param meta     the meta map to write into
@@ -40,8 +83,8 @@ public record PerfGcSnapshot(long count, long timeMs) {
         PerfGcSnapshot current = now();
         long countDelta = current.count() - count;
         long timeDelta = current.timeMs() - timeMs;
-        meta.put("gc." + resultId + ".count", String.valueOf(countDelta));
-        meta.put("gc." + resultId + ".timeMs", String.valueOf(timeDelta));
+        meta.put(countKey(resultId), String.valueOf(countDelta));
+        meta.put(timeKey(resultId), String.valueOf(timeDelta));
         return String.format(Locale.ROOT, "gc %s count=%d timeMs=%d", resultId, countDelta, timeDelta);
     }
 }

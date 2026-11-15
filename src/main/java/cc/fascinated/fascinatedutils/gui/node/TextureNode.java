@@ -35,11 +35,6 @@ public class TextureNode extends PositionedNode<TextureNode> {
         return this;
     }
 
-    public TextureNode setTextureSupplier(Supplier<Identifier> textureSupplier) {
-        this.textureSupplier = textureSupplier;
-        return this;
-    }
-
     public TextureNode setLoadedTextureSupplier(Supplier<TextureManager.LoadedTexture> loadedSupplier) {
         textureSupplier = () -> {
             TextureManager.LoadedTexture tex = loadedSupplier != null ? loadedSupplier.get() : null;
@@ -49,21 +44,6 @@ public class TextureNode extends PositionedNode<TextureNode> {
             TextureManager.LoadedTexture tex = loadedSupplier != null ? loadedSupplier.get() : null;
             return tex != null ? tex.pixelSize() : null;
         };
-        return this;
-    }
-
-    public TextureNode setNaturalSizeSupplier(Supplier<PixelSize> naturalSizeSupplier) {
-        this.naturalSizeSupplier = naturalSizeSupplier;
-        return this;
-    }
-
-    public TextureNode setTintArgb(int tintArgb) {
-        tintSupplier = () -> tintArgb;
-        return this;
-    }
-
-    public TextureNode setTintSupplier(Supplier<Integer> tintSupplier) {
-        this.tintSupplier = tintSupplier == null ? () -> 0xFFFFFFFF : tintSupplier;
         return this;
     }
 

@@ -22,7 +22,7 @@ public class MusicManagerMixin {
     @Shadow
     private SoundInstance currentMusic;
 
-    private static void withMusicModule(Consumer<MusicModule> consumer) {
+    private static void alumite$withMusicModule(Consumer<MusicModule> consumer) {
         ModuleRegistry.INSTANCE.getModule(MusicModule.class).ifPresent(consumer);
     }
 
@@ -32,7 +32,7 @@ public class MusicManagerMixin {
         if (minecraft.level == null) {
             return;
         }
-        withMusicModule(module -> {
+        alumite$withMusicModule(module -> {
             if (module.isDisconnectMusicRetainActive()) {
                 module.clearDisconnectMusicRetain();
             }
@@ -42,7 +42,7 @@ public class MusicManagerMixin {
     @Inject(method = "stopPlaying()V", at = @At("HEAD"), cancellable = true)
     private void alumite$retainMusicSkipStopPlaying(CallbackInfo callbackInfo) {
         Minecraft minecraft = Minecraft.getInstance();
-        withMusicModule(module -> {
+        alumite$withMusicModule(module -> {
             if (!module.shouldSuppressStoppingCurrentMusicTrack(minecraft)) {
                 return;
             }

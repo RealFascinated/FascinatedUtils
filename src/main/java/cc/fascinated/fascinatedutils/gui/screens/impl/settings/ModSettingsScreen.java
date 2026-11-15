@@ -27,7 +27,7 @@ import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.screens.RootScreen;
 import cc.fascinated.fascinatedutils.gui.theme.UiMetrics;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
+import cc.fascinated.fascinatedutils.settings.Settings;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.profiles.Profile;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
@@ -232,7 +232,6 @@ public class ModSettingsScreen extends RootScreen {
             rail.addChild(navButton("alumite.setting.shell.tab_settings", TAB_SETTINGS, ModUiTextures.SETTINGS.getId(), tab, openModule));
         });
         ButtonNode hudEditor = new ButtonNode(() -> Component.translatable("alumite.setting.shell.edit_hud_layout").getString())
-                .setRounded(true)
                 .setVariant(ButtonNode.ButtonVariant.DEFAULT)
                 .setOnPress(this::openHudLayoutEditor);
         hudEditor.left(SIDEBAR_PADDING).right(SIDEBAR_PADDING).bottom(SIDEBAR_PADDING).height(CONTROL_HEIGHT);
@@ -243,7 +242,6 @@ public class ModSettingsScreen extends RootScreen {
     private ButtonNode navButton(String translationKey, String tabKey, Identifier icon, UiState<String> tab, UiState<Module> openModule) {
         ButtonNode button = new ButtonNode(() -> Component.translatable(translationKey).getString())
                 .setLeftIcon(icon)
-                .setRounded(true)
                 .setVariant(() -> tab.get().equals(tabKey) ? ButtonNode.ButtonVariant.PRIMARY : ButtonNode.ButtonVariant.GHOST)
                 .setOnPress(() -> {
                     lastTabKey = tabKey;
@@ -271,7 +269,6 @@ public class ModSettingsScreen extends RootScreen {
             UiState<String> profileName = stateStore.state("profile.name", "");
             header.addChild(new ButtonNode(() -> Component.translatable("alumite.setting.shell.new_profile_button").getString())
                     .setLeftIcon(ModUiTextures.ADD.getId())
-                    .setRounded(true)
                     .setVariant(ButtonNode.ButtonVariant.PRIMARY)
                     .height(CONTROL_HEIGHT)
                     .setOnPress(() -> {
@@ -282,7 +279,6 @@ public class ModSettingsScreen extends RootScreen {
         }
         header.addChild(new ButtonNode()
                 .setIconCenter(ModUiTextures.CLOSE.getId())
-                .setRounded(true)
                 .setVariant(ButtonNode.ButtonVariant.GHOST)
                 .size(CONTROL_HEIGHT, CONTROL_HEIGHT)
                 .setOnPress(this::closeShell));
@@ -328,7 +324,6 @@ public class ModSettingsScreen extends RootScreen {
         }
         header.addChild(new ButtonNode()
                 .setIconCenter(ModUiTextures.BACK.getId())
-                .setRounded(true)
                 .setVariant(ButtonNode.ButtonVariant.GHOST)
                 .size(CONTROL_HEIGHT, CONTROL_HEIGHT)
                 .setOnPress(() -> openModule.set(null)));
@@ -344,7 +339,6 @@ public class ModSettingsScreen extends RootScreen {
         header.addChild(inputHost(detailSearchInput, DETAIL_SEARCH_WIDTH));
         header.addChild(new ButtonNode()
                 .setIconCenter(ModUiTextures.RESET.getId())
-                .setRounded(true)
                 .setVariant(ButtonNode.ButtonVariant.GHOST)
                 .size(CONTROL_HEIGHT, CONTROL_HEIGHT)
                 .setOnPress(() -> {
@@ -389,7 +383,6 @@ public class ModSettingsScreen extends RootScreen {
                 .setColorResolver(UiTheme::textMuted)
                 .alignX(0.5f));
         state.addChild(new ButtonNode(() -> Component.translatable("alumite.setting.shell.clear_filters").getString())
-                .setRounded(true)
                 .alignX(0.5f)
                 .setOnPress(() -> {
                     moduleSearchInput.setValue("");
@@ -401,7 +394,6 @@ public class ModSettingsScreen extends RootScreen {
 
     private ButtonNode filterButton(Supplier<String> label, @Nullable ModuleCategory category, UiState<ModuleCategory> filter) {
         return new ButtonNode(label)
-                .setRounded(true)
                 .setVariant(() -> filter.get() == category ? ButtonNode.ButtonVariant.DEFAULT : ButtonNode.ButtonVariant.GHOST)
                 .setLabelColorResolver(theme -> filter.get() == category ? theme.textPrimary() : theme.textMuted())
                 .setOnPress(() -> filter.set(category));
@@ -480,7 +472,7 @@ public class ModSettingsScreen extends RootScreen {
     }
 
     private void buildSettingsTab(PositionedNode<?> contents, Runnable refresh, UiState<ColorSetting> colorTarget) {
-        List<Setting<?>> allSettings = SettingsRegistry.INSTANCE.getSettings().getSettings();
+        List<Setting<?>> allSettings = Settings.INSTANCE.getSettings();
         SettingSectionsBuilder sections = new SettingSectionsBuilder(
                 () -> ModConfig.config().save(), refresh, setting -> openColorPicker(setting, colorTarget, () -> ModConfig.config().save()));
         PositionedNode<?> sectionsNode = sections.build(
@@ -525,7 +517,6 @@ public class ModSettingsScreen extends RootScreen {
                 row.addChild(new SpacerNode());
                 if (!active) {
                     row.addChild(new ButtonNode(() -> Component.translatable("alumite.setting.shell.profile_use").getString())
-                            .setRounded(true)
                             .height(CONTROL_HEIGHT)
                             .alignY(0.5f)
                             .setOnPress(() -> {
@@ -537,7 +528,6 @@ public class ModSettingsScreen extends RootScreen {
                 if (!isDefault) {
                     row.addChild(new ButtonNode()
                             .setIconCenter(ModUiTextures.EDIT.getId())
-                            .setRounded(true)
                             .size(CONTROL_HEIGHT, CONTROL_HEIGHT)
                             .alignY(0.5f)
                             .setOnPress(() -> {
@@ -547,7 +537,6 @@ public class ModSettingsScreen extends RootScreen {
                             }));
                     row.addChild(new ButtonNode()
                             .setIconCenter(ModUiTextures.TRASH.getId())
-                            .setRounded(true)
                             .setVariant(ButtonNode.ButtonVariant.DANGER)
                             .size(CONTROL_HEIGHT, CONTROL_HEIGHT)
                             .alignY(0.5f)
@@ -588,7 +577,7 @@ public class ModSettingsScreen extends RootScreen {
                         if (requestedName.isEmpty() || ModConfig.profiles().profileNameExists(requestedName)) {
                             return;
                         }
-                        ModConfig.profiles().createProfile(requestedName, false);
+                        ModConfig.profiles().createProfile(requestedName);
                         createOpen.set(false);
                         refresh.run();
                     }));

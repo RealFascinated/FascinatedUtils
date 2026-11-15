@@ -13,7 +13,6 @@ public class FrameCounter {
     private long lastFrameTime = -1;
     private long lastUpdateTime = 0;
     private double cachedSmoothFps = 0;
-    private double cachedAverageFps = 0;
     private double cachedOnePercentLowFps = 0;
     private double cachedPointOnePercentLowFps = 0;
     private long[] sortedDeltaScratch = new long[0];
@@ -45,20 +44,17 @@ public class FrameCounter {
                 if (this.sortedDeltaScratch.length < sampleCount) {
                     this.sortedDeltaScratch = new long[sampleCount * 2];
                 }
-                long totalNanos = 0;
                 int fillIndex = 0;
                 for (FrameSample sample : this.samples) {
                     this.sortedDeltaScratch[fillIndex++] = sample.deltaNanos;
-                    totalNanos += sample.deltaNanos;
                 }
                 Arrays.sort(this.sortedDeltaScratch, 0, sampleCount);
-                this.cachedAverageFps = (double) (sampleCount * 1_000_000_000L) / totalNanos;
                 this.cachedOnePercentLowFps = this.computePercentileLow(1.0, sampleCount);
                 this.cachedPointOnePercentLowFps = this.computePercentileLow(0.1, sampleCount);
                 this.cachedSmoothFps = this.computeSmoothFpsFromRecentFrames(now);
             }
             else {
-                this.cachedAverageFps = this.cachedOnePercentLowFps = this.cachedPointOnePercentLowFps = this.cachedSmoothFps = 0;
+                this.cachedOnePercentLowFps = this.cachedPointOnePercentLowFps = this.cachedSmoothFps = 0;
             }
         }
     }
@@ -83,10 +79,6 @@ public class FrameCounter {
 
     public synchronized int getSmoothFps() {
         return (int) Math.round(this.cachedSmoothFps);
-    }
-
-    public synchronized int getAverageFps() {
-        return (int) Math.round(this.cachedAverageFps);
     }
 
     public synchronized int getOnePercentLowFps() {

@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.debug.perf.tests.text;
 
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.InventoryPerfScene;
 import cc.fascinated.fascinatedutils.systems.modules.impl.ItemTooltipModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -40,7 +41,7 @@ public class ItemTooltipPerfTest extends PerfTest {
 
     @Override
     public List<String> sceneIds() {
-        return List.of("inventory");
+        return List.of(InventoryPerfScene.ID);
     }
 
     @Override

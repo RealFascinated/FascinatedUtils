@@ -3,8 +3,8 @@ package cc.fascinated.fascinatedutils.gui.node.input;
 /**
  * Converts between raw input text and a typed value {@code V}.
  *
- * <p>Implement this interface to support custom value types in {@link TextInputNode} and
- * {@link TextboxInputNode}. Several common parsers are provided as interface constants.
+ * <p>Implement this interface to support custom value types in {@link TextInputNode}.
+ * Common parsers are provided as interface constants.
  *
  * @param <V> the value type produced by this parser
  */
@@ -54,54 +54,6 @@ public interface TextParser<V> {
         @Override
         public boolean isValid(String text) {
             return true;
-        }
-    };
-
-    TextParser<Integer> INTEGER = new TextParser<>() {
-        @Override
-        public Integer parse(String text) {
-            try {
-                return Integer.parseInt(text.trim());
-            } catch (NumberFormatException ignored) {
-                return null;
-            }
-        }
-
-        @Override
-        public String format(Integer value) {
-            return String.valueOf(value);
-        }
-    };
-
-    TextParser<Long> LONG = new TextParser<>() {
-        @Override
-        public Long parse(String text) {
-            try {
-                return Long.parseLong(text.trim());
-            } catch (NumberFormatException ignored) {
-                return null;
-            }
-        }
-
-        @Override
-        public String format(Long value) {
-            return String.valueOf(value);
-        }
-    };
-
-    TextParser<Float> FLOAT = new TextParser<>() {
-        @Override
-        public Float parse(String text) {
-            try {
-                return Float.parseFloat(text.trim());
-            } catch (NumberFormatException ignored) {
-                return null;
-            }
-        }
-
-        @Override
-        public String format(Float value) {
-            return String.valueOf(value);
         }
     };
 

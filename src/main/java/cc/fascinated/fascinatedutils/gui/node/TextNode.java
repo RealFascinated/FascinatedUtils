@@ -4,9 +4,7 @@ import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.render.UiText;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
-import cc.fascinated.fascinatedutils.gui.core.TextLineLayout;
 
-import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -15,24 +13,12 @@ public class TextNode extends PositionedNode<TextNode> {
     private Integer colorOverrideArgb;
     private Function<UiTheme, Integer> colorResolver;
     private float scale = 1.0f;
-    private boolean shadow;
     private boolean bold;
     private float horizontalAlign = 0.5f;
     private float verticalAlign = 0.5f;
-    private boolean wrap;
 
     public TextNode(Supplier<String> textSupplier) {
         this.textSupplier = textSupplier == null ? () -> "" : textSupplier;
-    }
-
-    public TextNode setText(String text) {
-        this.textSupplier = () -> text == null ? "" : text;
-        return this;
-    }
-
-    public TextNode setTextSupplier(Supplier<String> textSupplier) {
-        this.textSupplier = textSupplier == null ? () -> "" : textSupplier;
-        return this;
     }
 
     public TextNode setColorArgb(int colorArgb) {
@@ -52,11 +38,6 @@ public class TextNode extends PositionedNode<TextNode> {
         return this;
     }
 
-    public TextNode setShadow(boolean shadow) {
-        this.shadow = shadow;
-        return this;
-    }
-
     public TextNode setBold(boolean bold) {
         this.bold = bold;
         return this;
@@ -68,11 +49,6 @@ public class TextNode extends PositionedNode<TextNode> {
         return this;
     }
 
-    public TextNode setWrap(boolean wrap) {
-        this.wrap = wrap;
-        return this;
-    }
-
     @Override
     protected int intrinsicWidth(GuiRenderer renderFrame, int parentWidth) {
         return measureTextWidth(renderFrame);
@@ -80,10 +56,6 @@ public class TextNode extends PositionedNode<TextNode> {
 
     @Override
     protected int intrinsicHeight(GuiRenderer renderFrame, int parentHeight, int resolvedWidth) {
-        if (wrap) {
-            int lineCount = Math.max(1, TextLineLayout.wrapLines(currentText(), resolvedWidth, segment -> renderFrame.measureTextWidth(segment, bold)).size());
-            return lineCount * renderFrame.fontHeight();
-        }
         return renderFrame.fontHeight();
     }
 
@@ -93,23 +65,10 @@ public class TextNode extends PositionedNode<TextNode> {
         int textColor = colorResolver != null ? colorResolver.apply(renderFrame.theme())
                 : colorOverrideArgb != null ? colorOverrideArgb
                 : renderFrame.theme().textPrimary();
-        if (wrap) {
-            List<String> lines = TextLineLayout.wrapLines(text, bounds().width(), segment -> renderFrame.measureTextWidth(segment, bold));
-            int lineHeight = Math.round(renderFrame.fontHeight() * scale);
-            int totalHeight = lines.size() * lineHeight;
-            int cursorY = bounds().positionY() + Math.round((bounds().height() - totalHeight) * verticalAlign);
-            for (String line : lines) {
-                int lineWidth = Math.round(renderFrame.measureTextWidth(line, bold) * scale);
-                int lineX = bounds().positionX() + Math.round((bounds().width() - lineWidth) * horizontalAlign);
-                UiText.of(line).color(textColor).shadow(shadow).bold(bold).scale(scale).draw(renderFrame, lineX, cursorY);
-                cursorY += lineHeight;
-            }
-        } else {
-            int textWidth = Math.round(renderFrame.measureTextWidth(text, bold) * scale);
-            int textPositionX = bounds().positionX() + Math.round((bounds().width() - textWidth) * horizontalAlign);
-            int textPositionY = bounds().positionY() + Math.round((bounds().height() - renderFrame.fontHeight() * scale) * verticalAlign);
-            UiText.of(text).color(textColor).shadow(shadow).bold(bold).scale(scale).draw(renderFrame, textPositionX, textPositionY);
-        }
+        int textWidth = Math.round(renderFrame.measureTextWidth(text, bold) * scale);
+        int textPositionX = bounds().positionX() + Math.round((bounds().width() - textWidth) * horizontalAlign);
+        int textPositionY = bounds().positionY() + Math.round((bounds().height() - renderFrame.fontHeight() * scale) * verticalAlign);
+        UiText.of(text).color(textColor).bold(bold).scale(scale).draw(renderFrame, textPositionX, textPositionY);
     }
 
     private int measureTextWidth(GuiRenderer renderFrame) {

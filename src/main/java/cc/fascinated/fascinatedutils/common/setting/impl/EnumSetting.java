@@ -4,7 +4,6 @@ import cc.fascinated.fascinatedutils.common.EnumUtils;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
-import lombok.Setter;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
@@ -13,7 +12,6 @@ import java.util.function.Function;
 public class EnumSetting<T extends Enum<T>> extends Setting<T> {
 
     private final Class<T> enumType;
-    @Setter
     private @Nullable Function<T, String> valueFormatter;
 
     private EnumSetting(Builder<T> builder) {
@@ -45,10 +43,6 @@ public class EnumSetting<T extends Enum<T>> extends Setting<T> {
         return EnumUtils.formatEnumName(value);
     }
 
-    public String formatUntypedValueForDisplay(Enum<?> value) {
-        return formatValueForDisplay(enumType.cast(value));
-    }
-
     /**
      * Formats the current enum name for the UI to use.
      *
@@ -56,15 +50,6 @@ public class EnumSetting<T extends Enum<T>> extends Setting<T> {
      */
     public String formatValueForDisplay() {
         return formatValueForDisplay(getValue());
-    }
-
-    /**
-     * Enum class for deserialization from stored names.
-     *
-     * @return the enum class
-     */
-    public Class<T> enumType() {
-        return enumType;
     }
 
     /**
@@ -77,18 +62,6 @@ public class EnumSetting<T extends Enum<T>> extends Setting<T> {
         }
         int nextOrdinal = (getValue().ordinal() + 1) % constants.length;
         setValue(constants[nextOrdinal]);
-    }
-
-    /**
-     * Move the {@code getValue()} result to the previous enum constant in declaration order (wraps before the first).
-     */
-    public void cyclePreviousConstant() {
-        T[] constants = enumType.getEnumConstants();
-        if (constants.length == 0) {
-            return;
-        }
-        int previousOrdinal = (getValue().ordinal() - 1 + constants.length) % constants.length;
-        setValue(constants[previousOrdinal]);
     }
 
     /**

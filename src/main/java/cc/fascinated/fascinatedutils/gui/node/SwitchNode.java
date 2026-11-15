@@ -3,10 +3,10 @@ package cc.fascinated.fascinatedutils.gui.node;
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.core.UiKeys;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
@@ -104,7 +104,7 @@ public class SwitchNode extends PositionedNode<SwitchNode> {
 
     @Override
     public boolean onKeyPress(int keyCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_SPACE) {
+        if (UiKeys.isActivationKey(keyCode)) {
             toggle();
             return true;
         }
@@ -150,7 +150,8 @@ public class SwitchNode extends PositionedNode<SwitchNode> {
         float knobY = trackY + (TRACK_HEIGHT - knobSize) / 2f;
         renderFrame.drawRoundedRect(knobX, knobY, knobWidth, knobSize, knobSize / 2f, Colors.mixArgb(knobProgress, theme.textMuted(), theme.onAccent()));
         if (focused) {
-            renderFrame.drawRoundedRectFrame(trackX - 3, trackY - 3, TRACK_WIDTH + 6, TRACK_HEIGHT + 6, radius + 3, theme.focusRing(), 0, 2);
+            int ringOffset = ButtonNode.FOCUS_RING_OFFSET;
+            renderFrame.drawRoundedRectFrame(trackX - ringOffset, trackY - ringOffset, TRACK_WIDTH + ringOffset * 2, TRACK_HEIGHT + ringOffset * 2, radius + ringOffset, theme.focusRing(), 0, ButtonNode.FOCUS_RING_THICKNESS);
         }
     }
 }

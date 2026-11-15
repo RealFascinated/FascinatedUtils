@@ -14,7 +14,7 @@ import java.util.Optional;
 public class PlayerTabOverlayMixin {
 
     @ModifyConstant(constant = @Constant(longValue = 80L), method = "getPlayerInfos")
-    private long modifyCount(long count) {
+    private long alumite$modifyCount(long count) {
         Optional<TabModule> optionalTabModule = ModuleRegistry.INSTANCE.getModule(TabModule.class);
         if (optionalTabModule.isPresent()) {
             TabModule tabModule = optionalTabModule.get();

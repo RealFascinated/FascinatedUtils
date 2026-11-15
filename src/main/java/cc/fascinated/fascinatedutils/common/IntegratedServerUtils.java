@@ -1,11 +1,13 @@
 package cc.fascinated.fascinatedutils.common;
 
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import net.minecraft.client.Minecraft;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 
+@Slf4j
 @UtilityClass
 public class IntegratedServerUtils {
 
@@ -43,7 +45,8 @@ public class IntegratedServerUtils {
         try {
             Method method = target.getClass().getMethod(methodName);
             return method.invoke(target);
-        } catch (ReflectiveOperationException ignored) {
+        } catch (ReflectiveOperationException exception) {
+            log.debug("Integrated server method {} is unavailable", methodName, exception);
             return null;
         }
     }

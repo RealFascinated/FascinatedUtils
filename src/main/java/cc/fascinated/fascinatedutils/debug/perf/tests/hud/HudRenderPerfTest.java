@@ -2,6 +2,8 @@ package cc.fascinated.fascinatedutils.debug.perf.tests.hud;
 
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.HudOverlaysPerfScene;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.IdlePerfScene;
 import cc.fascinated.fascinatedutils.systems.hud.HUDModuleWidgetsElement;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -36,7 +38,7 @@ public class HudRenderPerfTest extends PerfTest {
 
     @Override
     public List<String> sceneIds() {
-        return List.of("idle", "hud_overlays");
+        return List.of(IdlePerfScene.ID, HudOverlaysPerfScene.ID);
     }
 
     @Override

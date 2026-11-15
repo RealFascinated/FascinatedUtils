@@ -10,7 +10,6 @@ import cc.fascinated.fascinatedutils.event.impl.render.ClientFovEvent;
 import cc.fascinated.fascinatedutils.event.impl.render.FirstPersonHeldItemRenderEvent;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
-import cc.fascinated.fascinatedutils.systems.modules.ModuleDefaults;
 import com.mojang.blaze3d.platform.InputConstants;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
@@ -39,17 +38,24 @@ public class ZoomModule extends Module {
     private float appliedZoomScaleTickStart = 1f;
 
     public ZoomModule() {
-        super("Zoom", ModuleCategory.GENERAL, ModuleDefaults.builder().defaultState(true).build());
+        super("Zoom", ModuleCategory.GENERAL, true);
         addSetting(zoomKeySetting);
         addSetting(zoomLevel);
         addSetting(scrollToZoom);
         addSetting(smoothZoom);
     }
 
-    private static float magnificationWithScrollOffset(int zoomTimes, int scrollOffset) {
-        float baseMagnification = Mth.clamp(zoomTimes, 1, (int) ZOOM_MAX_MAGNIFICATION);
+    private static float magnificationWithScrollOffset(int baseMagnification, int scrollOffset) {
         float fromScroll = (float) Math.pow(SCROLL_ZOOM_MAG_RATIO_PER_NOTCH, scrollOffset);
         return Math.max(1f, baseMagnification * fromScroll);
+    }
+
+    private static boolean isUnzoomed(float zoomScale) {
+        return zoomScale >= 1f - ZOOM_SCALE_EPSILON;
+    }
+
+    private int baseMagnification() {
+        return Mth.clamp(Math.round(zoomLevel.getValue().floatValue()), 1, (int) ZOOM_MAX_MAGNIFICATION);
     }
 
     /**
@@ -69,7 +75,7 @@ public class ZoomModule extends Module {
             return fovDegrees;
         }
         float displayScale = smoothZoom.isEnabled() ? Mth.lerp(Mth.clamp(tickProgress, 0f, 1f), appliedZoomScaleTickStart, appliedZoomScale) : appliedZoomScale;
-        if (displayScale >= 1f - ZOOM_SCALE_EPSILON) {
+        if (isUnzoomed(displayScale)) {
             return fovDegrees;
         }
         return fovDegrees * displayScale;
@@ -86,7 +92,7 @@ public class ZoomModule extends Module {
         if (!isEnabled()) {
             return 1f;
         }
-        if (appliedZoomScale >= 1f - ZOOM_SCALE_EPSILON) {
+        if (isUnzoomed(appliedZoomScale)) {
             return 1f;
         }
         return Mth.clamp(appliedZoomScale, ZOOM_MOUSE_LOOK_SCALE_MIN, 1f);
@@ -118,7 +124,7 @@ public class ZoomModule extends Module {
         if (zoomKeyBinding.isDown()) {
             return true;
         }
-        return appliedZoomScale < 1f - ZOOM_SCALE_EPSILON;
+        return !isUnzoomed(appliedZoomScale);
     }
 
     /**
@@ -153,8 +159,7 @@ public class ZoomModule extends Module {
      * @param delta {@code 1} to zoom in a notch, {@code -1} to zoom out a notch
      */
     private void nudgeScrollOffset(int delta) {
-        int baseMagnification = Mth.clamp(Math.round(zoomLevel.getValue().floatValue()), 1, (int) ZOOM_MAX_MAGNIFICATION);
-        float candidate = baseMagnification * (float) Math.pow(SCROLL_ZOOM_MAG_RATIO_PER_NOTCH, tempScrollZoomOffset + delta);
+        float candidate = baseMagnification() * (float) Math.pow(SCROLL_ZOOM_MAG_RATIO_PER_NOTCH, tempScrollZoomOffset + delta);
         if (delta > 0 ? candidate > ZOOM_SCROLL_MAX_MAGNIFICATION : candidate < 1f / SCROLL_ZOOM_MAG_RATIO_PER_NOTCH) {
             return;
         }
@@ -203,7 +208,7 @@ public class ZoomModule extends Module {
         }
         float targetScale = 1f;
         if (zoomKeyBinding.isDown()) {
-            float magnification = magnificationWithScrollOffset(Mth.clamp(Math.round(zoomLevel.getValue().floatValue()), 1, (int) ZOOM_MAX_MAGNIFICATION), tempScrollZoomOffset);
+            float magnification = magnificationWithScrollOffset(baseMagnification(), tempScrollZoomOffset);
             targetScale = 1f / magnification;
         }
         if (smoothZoom.isEnabled()) {
@@ -215,7 +220,7 @@ public class ZoomModule extends Module {
         else {
             appliedZoomScale = targetScale;
         }
-        if (appliedZoomScale >= 1f - ZOOM_SCALE_EPSILON) {
+        if (isUnzoomed(appliedZoomScale)) {
             appliedZoomScale = 1f;
         }
     }

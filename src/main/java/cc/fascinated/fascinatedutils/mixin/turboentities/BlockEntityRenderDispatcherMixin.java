@@ -21,7 +21,7 @@ public abstract class BlockEntityRenderDispatcherMixin {
 
     @Inject(method = "tryExtractRenderState", at = @At("HEAD"), cancellable = true)
     private void alumite$tryExtractRenderState(BlockEntity blockEntity, float partialTicks, CrumblingOverlay breakProgress, CallbackInfoReturnable<BlockEntityRenderState> info) {
-        if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
+        if (!Client.TURBO_ENTITIES.isEnabled()) {
             return;
         }
 
@@ -39,9 +39,6 @@ public abstract class BlockEntityRenderDispatcherMixin {
                 return;
             }
             info.setReturnValue(null);
-            return;
         }
-
-        cullable.alumite$setOutOfCamera(false);
     }
 }

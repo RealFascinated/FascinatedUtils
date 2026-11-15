@@ -55,7 +55,9 @@ public class ScreenshotManager {
     public static void delete(Screenshot screenshot) {
         try {
             Files.deleteIfExists(screenshot.getPath());
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Client.LOG.warn("Failed to delete screenshot {}: {}", screenshot.getPath(), exception.toString());
+            return;
         }
         removeScreenshot(screenshot);
     }

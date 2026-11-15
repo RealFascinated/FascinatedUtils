@@ -52,25 +52,9 @@ public class DefaultUiTheme implements UiTheme {
         return 0xFFFFFFFF;
     }
 
-    @Override
-    public int rowHoverFill() {
-        return 0x14FFFFFF;
-    }
 
-    @Override
-    public int rowSelectedFill() {
-        return 0x337352E8;
-    }
 
-    @Override
-    public int tabActiveFill() {
-        return 0x337352E8;
-    }
 
-    @Override
-    public int tabHoverFill() {
-        return 0x12FFFFFF;
-    }
 
     @Override
     public int inputFill() {
@@ -82,25 +66,13 @@ public class DefaultUiTheme implements UiTheme {
         return 0xFF34334A;
     }
 
-    @Override
-    public int inputPlaceholderFocused() {
-        return 0x669896AD;
-    }
 
     @Override
     public int caret() {
         return 0xFFB3A0FF;
     }
 
-    @Override
-    public int avatarFallbackFill() {
-        return 0xFF302F42;
-    }
 
-    @Override
-    public int avatarRing() {
-        return 0xFF16151F;
-    }
 
     @Override
     public int buttonFill() {
@@ -122,10 +94,6 @@ public class DefaultUiTheme implements UiTheme {
         return 0xFF47465F;
     }
 
-    @Override
-    public int buttonBorderFocus() {
-        return 0xFFB3A0FF;
-    }
 
     @Override
     public int textPrimary() {
@@ -172,15 +140,7 @@ public class DefaultUiTheme implements UiTheme {
         return 0xFFCC3E56;
     }
 
-    @Override
-    public int attachmentTint() {
-        return 0xFFFFFFFF;
-    }
 
-    @Override
-    public int attachmentPlaceholderFill() {
-        return 0x33FFFFFF;
-    }
 
     @Override
     public int popupBackdropFill() {
@@ -227,20 +187,8 @@ public class DefaultUiTheme implements UiTheme {
         return 0xFF7857EC;
     }
 
-    @Override
-    public int accentPressed() {
-        return 0xFF6244D2;
-    }
 
-    @Override
-    public int accentSubtle() {
-        return 0x337352E8;
-    }
 
-    @Override
-    public int accentText() {
-        return 0xFFB3A0FF;
-    }
 
     @Override
     public int onAccent() {
@@ -255,15 +203,5 @@ public class DefaultUiTheme implements UiTheme {
     @Override
     public int success() {
         return 0xFF5ED39A;
-    }
-
-    @Override
-    public int warning() {
-        return 0xFFEBBE5E;
-    }
-
-    @Override
-    public int dangerText() {
-        return 0xFFFF7D88;
     }
 }

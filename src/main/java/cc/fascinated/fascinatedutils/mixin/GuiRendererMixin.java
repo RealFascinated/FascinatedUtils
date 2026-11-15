@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin;
 
-import cc.fascinated.fascinatedutils.renderer.MeshRenderer;
+import cc.fascinated.fascinatedutils.renderer.RoundedRectCornerRadiiTexture;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.minecraft.client.gui.render.GuiRenderer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,12 +12,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class GuiRendererMixin {
 
     /**
-     * Per-LUT {@link net.minecraft.client.renderer.texture.DynamicTexture} instances are uploaded while queueing mesh
-     * work; release only after this pass has sampled them. Preparation runs earlier for all simple elements, so
-     * mutating one shared LUT during {@code prepareSimpleElement} cannot match per-draw sampling.
+     * Trims the cached corner-radius LUTs once this render pass has finished sampling them.
+     *
+     * @param fogBuffer the fog buffer passed to {@code GuiRenderer#render}
+     * @param callbackInfo the injection callback info
      */
     @Inject(method = "render(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;)V", at = @At("TAIL"))
     private void alumite$releaseRoundRectDisposableLuts(GpuBufferSlice fogBuffer, CallbackInfo callbackInfo) {
-        MeshRenderer.INSTANCE.releaseDisposableRadiiLutsAfterGuiRenderPass();
+        RoundedRectCornerRadiiTexture.trimCachedLuts();
     }
 }

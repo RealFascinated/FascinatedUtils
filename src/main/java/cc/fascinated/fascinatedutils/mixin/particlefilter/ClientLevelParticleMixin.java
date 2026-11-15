@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.particlefilter;
 
+import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.ParticleFilterModule;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -7,6 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -14,31 +17,50 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ClientLevel.class)
 public class ClientLevelParticleMixin {
 
+    @Unique
+    private static final PerfProbe.Section ALUMITE$BLOCK_EFFECT = PerfProbe.INSTANCE.section("particlefilter.block_effect");
+    @Unique
+    private static final String BLOCK_CRUMBLE_PARTICLE = "minecraft:block_crumble";
+    @Unique
+    private static final String BLOCK_PARTICLE = "minecraft:block";
+    @Unique
+    private ParticleFilterModule alumite$particleFilter;
+
     @Inject(method = "addDestroyBlockEffect", at = @At("HEAD"), cancellable = true)
-    private void onAddDestroyBlockEffect(BlockPos pos, BlockState state, CallbackInfo ci) {
-        ModuleRegistry.INSTANCE.getModule(ParticleFilterModule.class).ifPresent(module -> {
-            if (!module.isEnabled()) {
-                return;
-            }
-            module.getParticleToggles().stream().filter(toggle -> toggle.getNameProvider().get().equals("minecraft:block_crumble")).findFirst().ifPresent(toggle -> {
-                if (!toggle.getValue()) {
-                    ci.cancel();
-                }
-            });
-        });
+    private void alumite$onAddDestroyBlockEffect(BlockPos pos, BlockState state, CallbackInfo ci) {
+        long start = ALUMITE$BLOCK_EFFECT.begin();
+        try {
+            alumite$cancelIfParticleDisabled(BLOCK_CRUMBLE_PARTICLE, ci);
+        } finally {
+            ALUMITE$BLOCK_EFFECT.end(start);
+        }
     }
 
     @Inject(method = "addBreakingBlockEffect", at = @At("HEAD"), cancellable = true)
-    private void onAddBreakingBlockEffect(BlockPos pos, Direction direction, CallbackInfo ci) {
-        ModuleRegistry.INSTANCE.getModule(ParticleFilterModule.class).ifPresent(module -> {
-            if (!module.isEnabled()) {
-                return;
-            }
-            module.getParticleToggles().stream().filter(toggle -> toggle.getNameProvider().get().equals("minecraft:block")).findFirst().ifPresent(toggle -> {
+    private void alumite$onAddBreakingBlockEffect(BlockPos pos, Direction direction, CallbackInfo ci) {
+        long start = ALUMITE$BLOCK_EFFECT.begin();
+        try {
+            alumite$cancelIfParticleDisabled(BLOCK_PARTICLE, ci);
+        } finally {
+            ALUMITE$BLOCK_EFFECT.end(start);
+        }
+    }
+
+    @Unique
+    private void alumite$cancelIfParticleDisabled(String particleName, CallbackInfo ci) {
+        if (alumite$particleFilter == null) {
+            alumite$particleFilter = ModuleRegistry.INSTANCE.getModule(ParticleFilterModule.class).orElse(null);
+        }
+        if (alumite$particleFilter == null || !alumite$particleFilter.isEnabled()) {
+            return;
+        }
+        for (BooleanSetting toggle : alumite$particleFilter.getParticleToggles()) {
+            if (toggle.getNameProvider().get().equals(particleName)) {
                 if (!toggle.getValue()) {
                     ci.cancel();
                 }
-            });
-        });
+                return;
+            }
+        }
     }
 }

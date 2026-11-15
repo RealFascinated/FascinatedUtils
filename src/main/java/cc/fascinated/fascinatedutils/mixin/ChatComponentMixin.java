@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin;
 
+import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.chat.ChatMessageEvent;
 import cc.fascinated.fascinatedutils.mixininterface.ChatComponentAccess;
@@ -33,6 +34,13 @@ public abstract class ChatComponentMixin implements ChatComponentAccess {
     @Final
     private List<GuiMessage> allMessages;
 
+    @Shadow
+    @Final
+    private List<GuiMessage.Line> trimmedMessages;
+
+    @Unique
+    private static final PerfProbe.Section ALUMITE$ADD_MESSAGE = PerfProbe.INSTANCE.section("chat.add_message");
+
     @Unique
     private boolean alumite$reentry;
 
@@ -43,43 +51,53 @@ public abstract class ChatComponentMixin implements ChatComponentAccess {
     protected abstract void addMessage(Component contents, @Nullable MessageSignature signature, GuiMessageSource source, @Nullable GuiMessageTag tag);
 
     @Inject(method = "addMessage", at = @At("HEAD"), cancellable = true)
-    private void onAddMessage(Component contents, @Nullable MessageSignature signature, GuiMessageSource source, @Nullable GuiMessageTag tag, CallbackInfo ci) {
-        if (alumite$reentry || ChatHistory.INSTANCE.isReplaying()) {
-            ChatSearch.INSTANCE.setAddingMessage(true);
-            return;
-        }
+    private void alumite$onAddMessage(Component contents, @Nullable MessageSignature signature, GuiMessageSource source, @Nullable GuiMessageTag tag, CallbackInfo ci) {
+        long start = ALUMITE$ADD_MESSAGE.begin();
+        try {
+            if (alumite$reentry || ChatHistory.INSTANCE.isReplaying()) {
+                ChatSearch.INSTANCE.setAddingMessage(true);
+                return;
+            }
 
-        ChatHistory.INSTANCE.replayIfNewConnection(Minecraft.getInstance());
+            ChatHistory.INSTANCE.replayIfNewConnection(Minecraft.getInstance());
 
-        ChatMessageEvent event = new ChatMessageEvent(contents, source);
-        FascinatedEventBus.INSTANCE.postCancellable(event);
-        if (event.isCancelled()) {
-            ci.cancel();
-            return;
-        }
-
-        Optional<ChatModule> moduleOptional = ModuleRegistry.INSTANCE.getModule(ChatModule.class);
-        if (moduleOptional.isPresent() && moduleOptional.get().isEnabled()) {
-            Component transformed = moduleOptional.get().transform(contents, this);
-            if (transformed != contents) {
-                alumite$reentry = true;
-                try {
-                    addMessage(transformed, signature, source, tag);
-                } finally {
-                    alumite$reentry = false;
-                }
+            ChatMessageEvent event = new ChatMessageEvent(contents, source);
+            FascinatedEventBus.INSTANCE.postCancellable(event);
+            if (event.isCancelled()) {
                 ci.cancel();
                 return;
             }
+
+            Optional<ChatModule> moduleOptional = ModuleRegistry.INSTANCE.getModule(ChatModule.class);
+            if (moduleOptional.isPresent() && moduleOptional.get().isEnabled()) {
+                Component transformed = moduleOptional.get().transform(contents, this);
+                if (transformed != contents) {
+                    alumite$reentry = true;
+                    try {
+                        addMessage(transformed, signature, source, tag);
+                    } finally {
+                        alumite$reentry = false;
+                    }
+                    ci.cancel();
+                    return;
+                }
+            }
+            ChatSearch.INSTANCE.setAddingMessage(true);
+        } finally {
+            ALUMITE$ADD_MESSAGE.end(start);
         }
-        ChatSearch.INSTANCE.setAddingMessage(true);
     }
 
     @Inject(method = "addMessage", at = @At("RETURN"))
     private void alumite$afterAddMessage(Component contents, @Nullable MessageSignature signature, GuiMessageSource source, @Nullable GuiMessageTag tag, CallbackInfo ci) {
-        ChatSearch.INSTANCE.setAddingMessage(false);
-        if (ChatSearch.INSTANCE.isActive()) {
-            refreshTrimmedMessages();
+        long start = ALUMITE$ADD_MESSAGE.begin();
+        try {
+            ChatSearch.INSTANCE.setAddingMessage(false);
+            if (ChatSearch.INSTANCE.isActive()) {
+                refreshTrimmedMessages();
+            }
+        } finally {
+            ALUMITE$ADD_MESSAGE.end(start);
         }
     }
 
@@ -91,6 +109,15 @@ public abstract class ChatComponentMixin implements ChatComponentAccess {
     @Override
     public void alumite$refreshTrimmedMessages() {
         refreshTrimmedMessages();
+    }
+
+    @Override
+    public void alumite$removeNewestMessage() {
+        GuiMessage newest = allMessages.removeFirst();
+        // The newest message's wrapped lines sit at the front, so only those are dropped instead of re-wrapping the whole chat.
+        while (!trimmedMessages.isEmpty() && trimmedMessages.getFirst().parent() == newest) {
+            trimmedMessages.removeFirst();
+        }
     }
 
     @Override

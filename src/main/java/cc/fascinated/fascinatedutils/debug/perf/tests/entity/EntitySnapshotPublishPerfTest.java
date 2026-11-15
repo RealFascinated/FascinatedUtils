@@ -1,12 +1,11 @@
 package cc.fascinated.fascinatedutils.debug.perf.tests.entity;
 
-import cc.fascinated.fascinatedutils.common.culling.OcclusionProvider;
+import cc.fascinated.fascinatedutils.common.culling.AbstractCullTask;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.EntitiesPerfScene;
 import cc.fascinated.fascinatedutils.systems.turboentities.EntitiesCullTask;
 import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
-import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
-import com.logisticscraft.occlusionculling.cache.ArrayOcclusionCache;
 import net.minecraft.client.Minecraft;
 
 import java.util.List;
@@ -16,9 +15,6 @@ import java.util.List;
  * private {@link EntitiesCullTask} so the live cull thread is not shared.
  */
 public class EntitySnapshotPublishPerfTest extends PerfTest {
-    private static final int OCCLUSION_RANGE = 128;
-    private static final double AABB_EXPANSION = 0.0;
-
     private EntitiesCullTask cullTask;
 
     public EntitySnapshotPublishPerfTest() {
@@ -27,7 +23,7 @@ public class EntitySnapshotPublishPerfTest extends PerfTest {
 
     @Override
     public void setup() {
-        cullTask = new EntitiesCullTask(new OcclusionCullingInstance(OCCLUSION_RANGE, new OcclusionProvider(), new ArrayOcclusionCache(OCCLUSION_RANGE), AABB_EXPANSION));
+        cullTask = new EntitiesCullTask(AbstractCullTask.createOcclusionCulling());
     }
 
     @Override
@@ -44,7 +40,7 @@ public class EntitySnapshotPublishPerfTest extends PerfTest {
 
     @Override
     public List<String> sceneIds() {
-        return List.of("entities");
+        return List.of(EntitiesPerfScene.ID);
     }
 
     @Override

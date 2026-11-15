@@ -40,12 +40,4 @@ public class ClipRegion {
     public boolean contains(float pointerX, float pointerY) {
         return pointerX >= positionX && pointerY >= positionY && pointerX < right() && pointerY < bottom();
     }
-
-    public ClipRegion intersect(ClipRegion otherRegion) {
-        int intersectX = Math.max(positionX, otherRegion.positionX);
-        int intersectY = Math.max(positionY, otherRegion.positionY);
-        int intersectRight = Math.min(right(), otherRegion.right());
-        int intersectBottom = Math.min(bottom(), otherRegion.bottom());
-        return new ClipRegion(intersectX, intersectY, Math.max(0, intersectRight - intersectX), Math.max(0, intersectBottom - intersectY));
-    }
 }

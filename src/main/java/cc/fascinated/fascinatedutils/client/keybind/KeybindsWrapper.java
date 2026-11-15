@@ -34,25 +34,15 @@ public class KeybindsWrapper {
     }
 
     public static KeyMapping registerCallbackKeybind(String keyTranslation, InputConstants.Type type, int key, KeyMapping.Category category, Runnable callback) {
-        return INSTANCE.registerCallbackKeybindImpl(keyTranslation, type, key, category, callback);
+        KeyMapping keyMapping = KeyMappingHelper.registerKeyMapping(new KeyMapping(keyTranslation, type, key, category));
+        INSTANCE.keybindCallbacks.put(keyMapping, callback);
+        return keyMapping;
     }
 
     /**
      * Registers a vanilla keybinding with no mod tick callback (use {@link KeyMapping#isDown()} etc.).
-     *
-     * @param keyTranslation translation key for the controls screen
-     * @param type           key or scan type for the default binding
-     * @param key            default key code or scan code
-     * @param category       controls category tab
-     * @return the registered keybinding
      */
     public static KeyMapping registerKeybind(String keyTranslation, InputConstants.Type type, int key, KeyMapping.Category category) {
         return KeyMappingHelper.registerKeyMapping(new KeyMapping(keyTranslation, type, key, category));
-    }
-
-    private KeyMapping registerCallbackKeybindImpl(String keyTranslation, InputConstants.Type type, int key, KeyMapping.Category category, Runnable callback) {
-        KeyMapping keyMapping = KeyMappingHelper.registerKeyMapping(new KeyMapping(keyTranslation, type, key, category));
-        keybindCallbacks.put(keyMapping, callback);
-        return keyMapping;
     }
 }

@@ -14,12 +14,13 @@ import java.util.List;
  * render before closing it again, so the keybind dispatch and each screen's open path run.
  */
 public class KeybindsPerfScene extends PerfScene {
+    public static final String ID = "keybinds";
     private static final List<String> CALLBACK_KEYS = List.of("key.alumite.settings_keybind", "key.alumite.screenshots_keybind", "key.alumite.waypoints_keybind");
     private static final int TICKS_PER_KEY = 20;
     private static final int CLOSE_AFTER_TICKS = 15;
 
     public KeybindsPerfScene() {
-        super("keybinds", "Each callback keybind tapped in turn, its screen rendered, then closed");
+        super(ID, "Each callback keybind tapped in turn, its screen rendered, then closed");
     }
 
     @Override

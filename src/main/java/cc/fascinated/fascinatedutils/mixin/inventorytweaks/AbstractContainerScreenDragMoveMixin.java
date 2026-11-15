@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.systems.modules.impl.InventoryTweaksModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks.QuickMove;
 import cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks.ScrollMove;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.Window;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
@@ -24,7 +25,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-
 
 @Mixin(AbstractContainerScreen.class)
 public abstract class AbstractContainerScreenDragMoveMixin {
@@ -53,7 +53,7 @@ public abstract class AbstractContainerScreenDragMoveMixin {
             alumite$abortQuickMoveDragSession();
             return;
         }
-        if (event.button() != 0) {
+        if (!alumite$isLeftButton(event)) {
             if (alumite$shiftDragging) {
                 alumite$abortQuickMoveDragSession();
             }
@@ -87,9 +87,9 @@ public abstract class AbstractContainerScreenDragMoveMixin {
         if (!alumite$shiftDragging || !featureOpt.map(QuickMove::isEnabled).orElse(false)) {
             return;
         }
-        com.mojang.blaze3d.platform.Window window = Minecraft.getInstance().getWindow();
+        Window window = Minecraft.getInstance().getWindow();
         boolean shiftHeld = event.hasShiftDown() || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_SHIFT) || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_SHIFT);
-        if (event.button() != 0 || !shiftHeld) {
+        if (!alumite$isLeftButton(event) || !shiftHeld) {
             alumite$abortQuickMoveDragSession();
             return;
         }
@@ -109,7 +109,7 @@ public abstract class AbstractContainerScreenDragMoveMixin {
 
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
     private void alumite$onMouseReleased(MouseButtonEvent event, CallbackInfoReturnable<Boolean> cir) {
-        if (event.button() != 0) {
+        if (!alumite$isLeftButton(event)) {
             if (alumite$shiftDragging) {
                 alumite$abortQuickMoveDragSession();
             }
@@ -170,5 +170,10 @@ public abstract class AbstractContainerScreenDragMoveMixin {
     @Unique
     private Optional<ScrollMove> alumite$scrollMove() {
         return ModuleRegistry.INSTANCE.getModule(InventoryTweaksModule.class).map(InventoryTweaksModule::getScrollMoveFeature);
+    }
+
+    @Unique
+    private static boolean alumite$isLeftButton(MouseButtonEvent event) {
+        return event.button() == 0;
     }
 }

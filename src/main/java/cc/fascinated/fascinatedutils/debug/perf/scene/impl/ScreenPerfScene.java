@@ -12,12 +12,13 @@ import java.util.function.Supplier;
  * {@code PerfSceneRegistry}; results are named {@code scene.screen.<name>/...}.
  */
 public class ScreenPerfScene extends PerfScene {
+    public static final String ID_PREFIX = "screen.";
     private final Supplier<Screen> screenFactory;
     private final Runnable onClose;
     private final List<String> covers;
 
     public ScreenPerfScene(String name, String description, Supplier<Screen> screenFactory, Runnable onClose, List<String> covers) {
-        super("screen." + name, description);
+        super(ID_PREFIX + name, description);
         this.screenFactory = screenFactory;
         this.onClose = onClose;
         this.covers = covers;

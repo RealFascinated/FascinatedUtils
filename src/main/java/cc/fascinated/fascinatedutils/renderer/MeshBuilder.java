@@ -5,9 +5,9 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.jspecify.annotations.NonNull;
 
 /**
- * Frame-level segment boundaries for batched GUI mesh recording ({@link MeshRenderer}). Replaces the former
- * {@code FascinatedGuiBatch} indirection: each segment pairs {@link #beginSegment} / {@link #endSegment} around scissor
- * and immediate-draw flushes.
+ * Frame-level flush boundaries for batched GUI mesh recording ({@link MeshRenderer}). Replaces the former
+ * {@code FascinatedGuiBatch} indirection: {@link #endSegment} flushes pending quads around scissor and immediate-draw
+ * changes.
  */
 public class MeshBuilder {
     public static final MeshBuilder INSTANCE = new MeshBuilder();
@@ -22,16 +22,6 @@ public class MeshBuilder {
      * @param minecraftClient client instance (reserved for future device hooks)
      */
     public void beginFrame(@NonNull GuiGraphicsExtractor drawContext, @NonNull Minecraft minecraftClient) {
-    }
-
-    /**
-     * Open a mesh recording segment (typically after a scissor push or before immediate draws that must sort above
-     * pending quads).
-     *
-     * @param drawContext active draw context
-     */
-    public void beginSegment(@NonNull GuiGraphicsExtractor drawContext) {
-        MeshRenderer.INSTANCE.beginSegment(drawContext);
     }
 
     /**

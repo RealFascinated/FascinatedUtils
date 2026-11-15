@@ -3,7 +3,6 @@ package cc.fascinated.fascinatedutils.mixin.turboparticles;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.systems.turboparticles.ParticleCullTask;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.particle.ParticleGroup;
 import net.minecraft.client.particle.ParticleRenderType;
@@ -25,26 +24,21 @@ public class ParticleEngineMixin {
             return;
         }
 
-        Client.TURBO_PARTICLES.frameSnapshot();
-        ParticleCullTask cullTask = Client.TURBO_PARTICLES.getParticleCullTask();
+        ParticleCullTask cullTask = Client.TURBO_PARTICLES.getCullTask();
         if (cullTask == null) {
             return;
         }
 
-        Minecraft client = Minecraft.getInstance();
-        if (client.level == null || client.player == null) {
-            cullTask.setInGame(false);
+        if (!cullTask.handOffFrame(camera, frustum)) {
             return;
         }
 
-        cullTask.setInGame(true);
-        cullTask.setCamera(camera.position());
-        // Hand the cull thread a private copy; the render thread keeps mutating the live frustum.
-        cullTask.setFrustum(new Frustum(frustum));
-
-        Map<ParticleRenderType, ParticleGroup<?>> map = ((ParticleEngineAccessor) this).getParticles();
-        cullTask.publishParticleCullSnapshotFromGroups(map.values());
-
-        cullTask.requestCull();
+        // Particles only move on client ticks, so a snapshot is published and a pass requested on the cadence set by
+        // the module instead of every frame.
+        if (Client.TURBO_PARTICLES.claimTickSnapshot()) {
+            Map<ParticleRenderType, ParticleGroup<?>> map = ((ParticleEngineAccessor) this).getParticles();
+            cullTask.publishParticleCullSnapshotFromGroups(map.values());
+            cullTask.requestCull();
+        }
     }
 }

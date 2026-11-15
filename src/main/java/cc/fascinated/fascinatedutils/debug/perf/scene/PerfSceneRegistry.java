@@ -1,14 +1,21 @@
 package cc.fascinated.fascinatedutils.debug.perf.scene;
 
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.BigScoreboardPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.CameraPerfScene;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.ChatFloodPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.EntitiesPerfScene;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.FlythroughPerfScene;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.HeavyLoadPerfScene;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.WorstCasePerfScene;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.TurboOffPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.TurboWorldPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.HudOverlaysPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.IdlePerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.InteractPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.InventoryPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.KeybindsPerfScene;
+import cc.fascinated.fascinatedutils.debug.perf.scene.impl.PacketFloodPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.ParticlesPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.ScreenPerfScene;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
@@ -63,10 +70,10 @@ public class PerfSceneRegistry {
         initialized = true;
 
         register(new IdlePerfScene());
-        register(new EntitiesPerfScene());
+        register(new EntitiesPerfScene(EntitiesPerfScene.ID, EntitiesPerfScene.GRID_SIZE));
         register(new TurboWorldPerfScene(TurboWorldPerfScene.RAIN, "Rain over the default terrain, to time weather extraction"));
         register(new TurboWorldPerfScene(TurboWorldPerfScene.DISPLAYS, "75 block, text and item displays at 50 to 60 blocks"));
-        register(new TurboWorldPerfScene(TurboWorldPerfScene.NAMETAGS, "100 named sheep at 42 to 60 blocks"));
+        register(new TurboWorldPerfScene(TurboWorldPerfScene.NAMETAGS, "100 named sheep at 20 to 32 blocks, behind a wall at 16 blocks"));
         register(new ParticlesPerfScene());
         register(new HudOverlaysPerfScene());
         register(new CameraPerfScene());
@@ -75,6 +82,20 @@ public class PerfSceneRegistry {
         register(new SoundsPerfScene());
         register(new KeybindsPerfScene());
         register(new InventoryPerfScene());
+        register(new EntitiesPerfScene("entities_x4", EntitiesPerfScene.GRID_SIZE * 2));
+        register(new EntitiesPerfScene("entities_x9", EntitiesPerfScene.GRID_SIZE * 3));
+        register(new FlythroughPerfScene());
+        register(new ChatFloodPerfScene());
+        register(new PacketFloodPerfScene());
+        register(new BigScoreboardPerfScene());
+        register(new WorstCasePerfScene());
+        register(new HeavyLoadPerfScene());
+        register(new TurboOffPerfScene(new EntitiesPerfScene("entities_x9", EntitiesPerfScene.GRID_SIZE * 3)));
+        register(new TurboOffPerfScene(new TurboWorldPerfScene(TurboWorldPerfScene.NAMETAGS, "100 named sheep at 20 to 32 blocks, behind a wall at 16 blocks")));
+        register(new TurboOffPerfScene(new TurboWorldPerfScene(TurboWorldPerfScene.DISPLAYS, "75 block, text and item displays at 50 to 60 blocks")));
+        register(new TurboOffPerfScene(new TurboWorldPerfScene(TurboWorldPerfScene.RAIN, "Rain over the default terrain, to time weather extraction")));
+        register(new TurboOffPerfScene(new ParticlesPerfScene()));
+        register(new TurboOffPerfScene(new WorstCasePerfScene()));
         register(new ScreenPerfScene("pause", "Vanilla pause menu with the mod's buttons and actions overlay", () -> new PauseScreen(true), List.of(PerfCoverage.mixin("GameMenuScreenMixin"), PerfCoverage.mixin("confirmdisconnect.GameMenuScreenMixin"))));
         register(new ScreenPerfScene("settings", "Mod settings screen", () -> new ModSettingsScreen(null, null), List.of(PerfCoverage.screen(ModSettingsScreen.class), PerfCoverage.gui("node"), PerfCoverage.gui("layout"), PerfCoverage.gui("core"), PerfCoverage.common("setting"), PerfCoverage.common("EnumUtils"))));
         register(new ScreenPerfScene("settings_detail", "Module settings page", () -> {
@@ -97,14 +118,14 @@ public class PerfSceneRegistry {
         register(new ScreenPerfScene("waypoints", "Waypoint list", WaypointsScreen::new, List.of(PerfCoverage.screen(WaypointsScreen.class), PerfCoverage.system("waypoint"))));
         register(new ScreenPerfScene("waypoint_edit", "Create waypoint form", () -> new CreateEditWaypointScreen(CreateEditWaypointScreen.Type.CREATE, null), List.of(PerfCoverage.screen(CreateEditWaypointScreen.class))));
         register(new ScreenPerfScene("select_world", "Vanilla world list with world sizes", () -> new SelectWorldScreen(new TitleScreen()), List.of(PerfCoverage.mixin("worldsize.SelectWorldScreenMixin"), PerfCoverage.mixin("worldsize.WorldListEntryMixin"), PerfCoverage.mixin("worldsize.WorldSelectionListMixin"), PerfCoverage.module(WorldSizeModule.class))));
-        register(new ScreenPerfScene("title", "Vanilla title screen with the mod's additions", TitleScreen::new, List.of(PerfCoverage.mixin("titlemenu.TitleScreenMixin"))));
+        register(new ScreenPerfScene("title", "Vanilla title screen with the mod's additions", TitleScreen::new, List.of()));
 
         List<String> allScenes = new ArrayList<>(scenes.keySet());
-        List<String> screenScenes = allScenes.stream().filter(sceneId -> sceneId.startsWith("screen.") || sceneId.equals("inventory")).toList();
-        registerScenario(new PerfScenario(DEFAULT_SCENARIO, DEFAULT_WORLD_NAME, DEFAULT_SEED, PerfScenario.WorldType.NORMAL, STANDARD_SETTLE_TICKS, STANDARD_MEASURE_TICKS, PerfScenario.ModuleMode.ALL, List.of("idle", "entities", "particles", "hud_overlays", "camera"), false));
-        registerScenario(new PerfScenario("quick", DEFAULT_WORLD_NAME, DEFAULT_SEED, PerfScenario.WorldType.NORMAL, QUICK_SETTLE_TICKS, QUICK_MEASURE_TICKS, PerfScenario.ModuleMode.ALL, List.of("idle", "entities", "particles"), false));
+        List<String> screenScenes = allScenes.stream().filter(sceneId -> sceneId.startsWith(ScreenPerfScene.ID_PREFIX) || sceneId.equals(InventoryPerfScene.ID)).toList();
+        registerScenario(new PerfScenario(DEFAULT_SCENARIO, DEFAULT_WORLD_NAME, DEFAULT_SEED, PerfScenario.WorldType.NORMAL, STANDARD_SETTLE_TICKS, STANDARD_MEASURE_TICKS, PerfScenario.ModuleMode.ALL, List.of(IdlePerfScene.ID, EntitiesPerfScene.ID, ParticlesPerfScene.ID, HudOverlaysPerfScene.ID, CameraPerfScene.ID), false));
+        registerScenario(new PerfScenario("quick", DEFAULT_WORLD_NAME, DEFAULT_SEED, PerfScenario.WorldType.NORMAL, QUICK_SETTLE_TICKS, QUICK_MEASURE_TICKS, PerfScenario.ModuleMode.ALL, List.of(IdlePerfScene.ID, EntitiesPerfScene.ID, ParticlesPerfScene.ID), false));
         registerScenario(new PerfScenario("gui", DEFAULT_WORLD_NAME, DEFAULT_SEED, PerfScenario.WorldType.NORMAL, QUICK_SETTLE_TICKS, GUI_MEASURE_TICKS, PerfScenario.ModuleMode.ALL, screenScenes, false));
-        List<String> shotScenes = new ArrayList<>(List.of("idle", "hud_overlays"));
+        List<String> shotScenes = new ArrayList<>(List.of(IdlePerfScene.ID, HudOverlaysPerfScene.ID));
         shotScenes.addAll(screenScenes);
         registerScenario(new PerfScenario("shots", DEFAULT_WORLD_NAME, DEFAULT_SEED, PerfScenario.WorldType.NORMAL, SHOT_SETTLE_TICKS, QUICK_MEASURE_TICKS, PerfScenario.ModuleMode.ALL, shotScenes, false));
         registerScenario(new PerfScenario("full", DEFAULT_WORLD_NAME, DEFAULT_SEED, PerfScenario.WorldType.NORMAL, STANDARD_SETTLE_TICKS, STANDARD_MEASURE_TICKS, PerfScenario.ModuleMode.ALL, allScenes, true));

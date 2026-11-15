@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.client.command.internal;
 
 import cc.fascinated.fascinatedutils.client.command.annotation.Arg;
 import cc.fascinated.fascinatedutils.client.command.annotation.ClientCommand;
-import cc.fascinated.fascinatedutils.client.command.annotation.Requires;
 import cc.fascinated.fascinatedutils.client.command.annotation.Subcommand;
 import lombok.experimental.UtilityClass;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -15,7 +14,6 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 
 @UtilityClass
 public class ClientCommandScanner {
@@ -25,7 +23,6 @@ public class ClientCommandScanner {
         if (root == null) {
             throw new IllegalArgumentException("Missing @ClientCommand on " + clazz.getName());
         }
-        Predicate<FabricClientCommandSource> classRequires = toPredicate(clazz.getAnnotation(Requires.class));
         List<ScannedCommandMethod> methods = new ArrayList<>();
         MethodHandles.Lookup lookup = MethodHandles.lookup();
         for (Method method : clazz.getDeclaredMethods()) {
@@ -68,28 +65,14 @@ public class ClientCommandScanner {
             } catch (NoSuchMethodException | IllegalAccessException exception) {
                 throw new IllegalStateException("Cannot create MethodHandle for " + method, exception);
             }
-            Predicate<FabricClientCommandSource> methodRequires = toPredicate(method.getAnnotation(Requires.class));
-            Predicate<FabricClientCommandSource> combined = classRequires.and(methodRequires);
-            methods.add(new ScannedCommandMethod(method, handle, List.of(path), bindings, combined));
+            methods.add(new ScannedCommandMethod(method, handle, List.of(path), bindings));
         }
         if (methods.isEmpty()) {
             throw new IllegalStateException("No @Subcommand methods on " + clazz.getName());
         }
-        return new ScannedCommandClass(clazz, root.value(), root.aliases(), classRequires, methods);
-    }
-
-    private static Predicate<FabricClientCommandSource> toPredicate(Requires requires) {
-        if (requires == null || requires.value() == Requires.Policy.NONE) {
-            return commandSource -> true;
-        }
-        return switch (requires.value()) {
-            case WORLD_LOADED -> commandSource -> commandSource.getClient().level != null;
-            case SINGLEPLAYER -> commandSource -> commandSource.getClient().hasSingleplayerServer();
-            default -> throw new IllegalStateException("Unexpected value: " + requires.value());
-        };
+        return new ScannedCommandClass(clazz, root.value(), root.aliases(), methods);
     }
 
     public record ScannedCommandClass(Class<?> clazz, String rootLiteral, String[] aliases,
-                                      Predicate<FabricClientCommandSource> classRequires,
                                       List<ScannedCommandMethod> methods) {}
 }

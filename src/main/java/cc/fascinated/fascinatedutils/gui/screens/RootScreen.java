@@ -30,21 +30,18 @@ public abstract class RootScreen extends WidgetScreen {
 
     /**
      * Subclasses override this to compose their screen content. The returned node is placed inside
-     * a full-screen root that also mounts the active {@link GlobalContextMenu} as a top-level overlay,
-     * ensuring only one context menu can be visible at a time across all screens.
+     * a full-screen root.
      */
     protected UiNode composeContent() {
         return createRootNode();
     }
 
     /**
-     * Final. Wraps {@link #composeContent} with a full-screen root and mounts the global
-     * context menu overlay on top of all content.
+     * Final. Wraps {@link #composeContent} with a full-screen root.
      */
     protected final UiNode composeRoot(UiStateStore stateStore) {
         PositionedNode<?> root = new PositionedNode<>().full();
         root.addChild(composeContent());
-        GlobalContextMenu.mountIfActive(root);
         return root;
     }
 
@@ -99,7 +96,6 @@ public abstract class RootScreen extends WidgetScreen {
         GuiRenderer renderFrame = new GuiRenderer(drawContext);
         renderFrame.beginFrame(uiWidth, uiHeight);
         renderFrame.setPointer(pointerX, pointerY);
-        host.tick(deltaSeconds);
         host.layout(0, 0, Math.round(uiWidth), Math.round(uiHeight), renderFrame);
         // Dispatch PointerMove twice: the first pass triggers any hover-driven visibility
         // changes (e.g. showing overlaid buttons on cell hover); the second pass re-evaluates
@@ -183,18 +179,8 @@ public abstract class RootScreen extends WidgetScreen {
     }
 
     @Override
-    public void tick() {
-        super.tick();
-        if (!initialized) {
-            return;
-        }
-        host.tick(1f / 20f);
-    }
-
-    @Override
     public void removed() {
         super.removed();
-        GlobalContextMenu.close();
         host.dispose();
         initialized = false;
     }

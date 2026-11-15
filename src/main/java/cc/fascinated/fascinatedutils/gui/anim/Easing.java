@@ -15,17 +15,6 @@ public class Easing {
     }
 
     /**
-     * Smooth start and end curve.
-     *
-     * @param progress linear progress in the unit interval
-     * @return eased progress in the unit interval
-     */
-    public static float smoothStep(float progress) {
-        float clamped = clampUnit(progress);
-        return clamped * clamped * (3f - 2f * clamped);
-    }
-
-    /**
      * Curve that overshoots the end value slightly before settling on it.
      *
      * @param progress linear progress in the unit interval

@@ -10,26 +10,6 @@ import net.minecraft.util.FormattedCharSequence;
 public interface TextRenderer {
 
     /**
-     * Horizontal span for a substring in logical pixels.
-     *
-     * @param text   source string
-     * @param length maximum code units to measure (clamped to {@code text.length()})
-     * @param shadow whether shadow width padding matches draw mode
-     * @return width in logical pixels, at least zero
-     */
-    double getWidth(String text, int length, boolean shadow);
-
-    /**
-     * Default width for the full string without shadow padding.
-     *
-     * @param text source string
-     * @return width in logical pixels
-     */
-    default double getWidth(String text) {
-        return getWidth(text, text.length(), false);
-    }
-
-    /**
      * Rich-text width in logical pixels.
      *
      * @param text rich text to measure
@@ -61,18 +41,6 @@ public interface TextRenderer {
     default double getHeight() {
         return getHeight(false);
     }
-
-    /**
-     * Draw a plain string using the active font.
-     *
-     * @param drawContext draw context for matrix and scissor state
-     * @param text        string content
-     * @param originX     left origin in logical pixels
-     * @param originY     top origin in logical pixels
-     * @param colorArgb   packed ARGB color
-     * @param shadow      whether vanilla shadow is drawn
-     */
-    void drawString(GuiGraphicsExtractor drawContext, String text, int originX, int originY, int colorArgb, boolean shadow);
 
     /**
      * Draw a precomposed literal/styled glyph run using the active font.

@@ -55,11 +55,11 @@ public class DebugHudPanel extends MiniMessageHudPanel {
             int consideredEntities = cullTask.getConsideredEntityCount();
             int visibleEntities = consideredEntities - cullTask.getCulledEntityCount();
             out.add("  Rendered Entities: " + debugWidget.formatDebugStat(visibleEntities, consideredEntities));
-            int consideredFrames = turboEntities.itemFrameCounters.lastConsidered;
-            int culledFrames = turboEntities.itemFrameCounters.lastCulled;
+            int consideredFrames = turboEntities.itemFrameCounters.getLastConsidered();
+            int culledFrames = turboEntities.itemFrameCounters.getLastCulled();
             out.add("  Rendered Item Frames: " + debugWidget.formatDebugStat(consideredFrames - culledFrames, consideredFrames));
-            int consideredSigns = turboEntities.signCounters.lastConsidered;
-            int culledSigns = turboEntities.signCounters.lastCulled;
+            int consideredSigns = turboEntities.signCounters.getLastConsidered();
+            int culledSigns = turboEntities.signCounters.getLastCulled();
             out.add("  Rendered Signs: " + debugWidget.formatDebugStat(consideredSigns - culledSigns, consideredSigns));
             out.add("  Cached Block Models: " + turboEntities.getBlockModelCache().size());
             int skipped = turboEntities.getLastSkippedEntityTicks();
@@ -73,23 +73,18 @@ public class DebugHudPanel extends MiniMessageHudPanel {
 
         out.add("<grey>Turbo Particles</grey>");
         TurboParticles particles = debugWidget.turboParticles();
-        if (particles == null) {
-            out.add("  <grey>Unavailable</grey>");
+        ParticleCullTask particleCullTask = particles.getCullTask();
+        if (particleCullTask == null) {
+            debugWidget.getParticleCullPassMs().reset();
+            out.add("  <grey>Disabled</grey>");
         }
         else {
-            ParticleCullTask particleCullTask = particles.getParticleCullTask();
-            if (particleCullTask == null) {
-                debugWidget.getParticleCullPassMs().reset();
-                out.add("  <grey>Disabled</grey>");
-            }
-            else {
-                double passMs = debugWidget.getParticleCullPassMs().smooth(particleCullTask.getLastPassNanos() / 1_000_000.0, deltaSeconds);
-                int consideredParticles = particleCullTask.getConsideredParticleCount();
-                int visibleParticles = consideredParticles - particleCullTask.getCulledParticleCount();
-                out.add("  Rendered Particles: " + debugWidget.formatDebugStat(visibleParticles, consideredParticles));
-                out.add(String.format(Locale.ENGLISH, "  Last Pass: %.2f ms", passMs));
-                out.add("  Cull Thread: " + (particles.isParticleCullThreadAlive() ? "Running" : "<red>Stopped</red>"));
-            }
+            double passMs = debugWidget.getParticleCullPassMs().smooth(particleCullTask.getLastPassNanos() / 1_000_000.0, deltaSeconds);
+            int consideredParticles = particleCullTask.getConsideredParticleCount();
+            int visibleParticles = consideredParticles - particleCullTask.getCulledParticleCount();
+            out.add("  Rendered Particles: " + debugWidget.formatDebugStat(visibleParticles, consideredParticles));
+            out.add(String.format(Locale.ENGLISH, "  Last Pass: %.2f ms", passMs));
+            out.add("  Cull Thread: " + (particles.isCullThreadAlive() ? "Running" : "<red>Stopped</red>"));
         }
 
         out.add("<grey>Turbo Weather</grey>");

@@ -18,7 +18,7 @@ public class McUtilsHudPanel extends MiniMessageHudPanel {
     private final McUtilsModule module;
 
     public McUtilsHudPanel(McUtilsModule module) {
-        super(module, "mcutils", HudHostModule.UTILITY_WIDGET_MIN_WIDTH);
+        super(module, "mcutils", HudHostModule.UTILITY_WIDGET_MIN_WIDTH, UPDATE_INTERVAL_NANOS);
         this.module = module;
     }
 
@@ -30,11 +30,6 @@ public class McUtilsHudPanel extends MiniMessageHudPanel {
     @Override
     protected boolean defaultVisible() {
         return false;
-    }
-
-    @Override
-    protected long miniMessageLineUpdateIntervalNanos() {
-        return UPDATE_INTERVAL_NANOS;
     }
 
     @Override

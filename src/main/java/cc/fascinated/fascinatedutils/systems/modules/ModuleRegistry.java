@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.systems.modules;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
-import cc.fascinated.fascinatedutils.event.impl.module.ModuleEnabledStateChangedEvent;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
@@ -32,7 +31,6 @@ import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.waypoint.WaypointsModule;
 import lombok.AccessLevel;
 import lombok.Getter;
-import meteordevelopment.orbit.EventHandler;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,9 +44,8 @@ public class ModuleRegistry {
     public static final ModuleRegistry INSTANCE = new ModuleRegistry();
     private final List<Module> modules = new ArrayList<>();
     @Getter(AccessLevel.NONE)
-    private final Map<Class<?>, Module> modulesByClass = new HashMap<>();
-    private final List<Module> enabledModules = new ArrayList<>();
-    private final List<HudPanel> hudPanels = new ArrayList<>();
+    // Holds one Optional per module so per-frame lookups allocate nothing.
+    private final Map<Class<?>, Optional<Module>> modulesByClass = new HashMap<>();
     private boolean initialized;
 
     private ModuleRegistry() {
@@ -106,15 +103,12 @@ public class ModuleRegistry {
 
         for (Module module : modules) {
             FascinatedEventBus.INSTANCE.subscribe(module);
-            if (module instanceof HudHostModule hudHost) {
-                hudPanels.addAll(hudHost.registeredHudPanels());
-            }
+            modulesByClass.putIfAbsent(module.getClass(), Optional.of(module));
 
             Client.LOG.info("Loaded module {} with {} settings", module.getDisplayName(), module.getAllSettings().size());
         }
 
         ModConfig.profiles().loadActiveProfile();
-        rebuildEnabledModules();
         ModConfig.config().load();
         HUDManager.INSTANCE.init();
 
@@ -131,6 +125,12 @@ public class ModuleRegistry {
     }
 
     public List<HudPanel> getHudPanels() {
+        List<HudPanel> hudPanels = new ArrayList<>();
+        for (Module module : modules) {
+            if (module instanceof HudHostModule hudHost) {
+                hudPanels.addAll(hudHost.registeredHudPanels());
+            }
+        }
         return Collections.unmodifiableList(hudPanels);
     }
 
@@ -142,39 +142,23 @@ public class ModuleRegistry {
      * @return the registered module instance, or an empty optional when none match
      */
     public <T extends Module> Optional<T> getModule(Class<T> moduleClass) {
-        Module module = modulesByClass.get(moduleClass);
-        if (module == null || modulesByClass.size() != modules.size()) {
-            modulesByClass.clear();
-            for (Module candidate : modules) {
-                modulesByClass.putIfAbsent(candidate.getClass(), candidate);
-            }
-            module = modulesByClass.get(moduleClass);
-        }
-        return Optional.ofNullable(module).map(moduleClass::cast);
+        @SuppressWarnings("unchecked")
+        Optional<T> module = (Optional<T>) modulesByClass.getOrDefault(moduleClass, Optional.empty());
+        return module;
+    }
+
+    /**
+     * Checks whether a module is registered and currently enabled.
+     *
+     * @param moduleClass the module implementation class
+     * @return true when the module exists and is enabled
+     */
+    public boolean isEnabled(Class<? extends Module> moduleClass) {
+        Optional<? extends Module> module = getModule(moduleClass);
+        return module.isPresent() && module.get().isEnabled();
     }
 
     public void setModuleEnabled(Module module, boolean enabled) {
         module.setEnabled(enabled);
-    }
-
-    @EventHandler
-    private void alumite$onModuleEnabledStateChanged(ModuleEnabledStateChangedEvent event) {
-        Module module = event.module();
-        if (module.isEnabled()) {
-            if (!enabledModules.contains(module)) {
-                enabledModules.add(module);
-            }
-            return;
-        }
-        enabledModules.remove(module);
-    }
-
-    private void rebuildEnabledModules() {
-        enabledModules.clear();
-        for (Module module : modules) {
-            if (module.isEnabled()) {
-                enabledModules.add(module);
-            }
-        }
     }
 }

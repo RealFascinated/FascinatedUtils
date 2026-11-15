@@ -22,8 +22,8 @@ public class LightmapRenderStateExtractorMixin {
     private boolean previousFullbright = false;
 
     @Inject(method = "extract", at = @At("HEAD"))
-    private void onExtractHead(LightmapRenderState renderState, float partialTicks, CallbackInfo ci) {
-        boolean enabled = ModuleRegistry.INSTANCE.getModule(FullbrightModule.class).map(FullbrightModule::isEnabled).orElse(false);
+    private void alumite$onExtractHead(LightmapRenderState renderState, float partialTicks, CallbackInfo ci) {
+        boolean enabled = ModuleRegistry.INSTANCE.isEnabled(FullbrightModule.class);
 
         if (!enabled && previousFullbright) {
             // Force vanilla logic to run this frame by pretending update is needed
@@ -32,8 +32,8 @@ public class LightmapRenderStateExtractorMixin {
     }
 
     @Inject(method = "extract", at = @At("RETURN"))
-    private void onExtractReturn(LightmapRenderState renderState, float partialTicks, CallbackInfo ci) {
-        boolean enabled = ModuleRegistry.INSTANCE.getModule(FullbrightModule.class).map(FullbrightModule::isEnabled).orElse(false);
+    private void alumite$onExtractReturn(LightmapRenderState renderState, float partialTicks, CallbackInfo ci) {
+        boolean enabled = ModuleRegistry.INSTANCE.isEnabled(FullbrightModule.class);
 
         if (enabled) {
             renderState.ambientColor = new Vector3f(1.0F, 1.0F, 1.0F);

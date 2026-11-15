@@ -95,8 +95,7 @@ public class ChatModule extends Module {
         List<GuiMessage> allMessages = chat.alumite$getAllMessages();
         lastPlainText = plainText;
         if (sameAsLast && !allMessages.isEmpty() && allMessages.getFirst().content() == lastShownMessage) {
-            allMessages.removeFirst();
-            chat.alumite$refreshTrimmedMessages();
+            chat.alumite$removeNewestMessage();
             duplicateCount++;
             return true;
         }

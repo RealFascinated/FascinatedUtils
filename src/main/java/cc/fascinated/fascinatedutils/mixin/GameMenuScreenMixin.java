@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin;
 
 import cc.fascinated.fascinatedutils.gui.screens.impl.ActionsOverlayScreen;
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
+import cc.fascinated.fascinatedutils.settings.Settings;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class GameMenuScreenMixin {
     @Inject(method = "createPauseMenu", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/chat/CommonComponents;disconnectButtonLabel(Z)Lnet/minecraft/network/chat/Component;", shift = At.Shift.BEFORE))
     private void alumite$addServerListRowBeforeDisconnect(CallbackInfo callbackInfo, @Local(name = "helper") GridLayout.RowHelper helper) {
-        if (SettingsRegistry.INSTANCE.getSettings().getShowServerListInPauseMenu().isEnabled()) {
+        if (Settings.INSTANCE.getShowServerListInPauseMenu().isEnabled()) {
             PauseScreen self = (PauseScreen) (Object) this;
             Minecraft client = Minecraft.getInstance();
             helper.addChild(Button.builder(Component.translatable("alumite.setting.pause_menu.server_list"), button -> client.setScreen(new JoinMultiplayerScreen(self))).width(204).build(), 2);

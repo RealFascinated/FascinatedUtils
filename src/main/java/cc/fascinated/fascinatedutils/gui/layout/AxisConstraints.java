@@ -78,27 +78,30 @@ public class AxisConstraints {
         return parentPosition;
     }
 
-    public int resolveSize(int parentSize) {
-        return resolveSize(parentSize, "axis", "unknown-node");
+    /**
+     * Whether this axis fixes its own size, either by an explicit size or by both start and end constraints. Only then
+     * may {@link #resolveSize(int)} be called.
+     *
+     * @return true when {@link #resolveSize(int)} can resolve the size
+     */
+    public boolean hasDefinedSize() {
+        return hasSizeConstraint() || (hasStartConstraint() && hasEndConstraint());
     }
 
-    public int resolveSize(int parentSize, String axisLabel, String nodePath) {
+    /**
+     * Resolves the size of an axis that has a defined size. Check {@link #hasDefinedSize()} first.
+     *
+     * @param parentSize the parent's size along this axis in pixels
+     * @return the resolved size in pixels, never negative
+     */
+    public int resolveSize(int parentSize) {
         dropSizeWhenOverConstrained();
         if (size != null) {
             return Math.max(0, Math.round(size.resolve(parentSize)));
         }
-        if (start != null && end != null) {
-            float startValue = start.resolve(parentSize) + startOffset;
-            float endValue = end.resolve(parentSize) + endOffset;
-            return Math.max(0, Math.round(parentSize - startValue - endValue));
-        }
-        StringBuilder messageBuilder = new StringBuilder();
-        messageBuilder.append("Axis size is undefined for ");
-        messageBuilder.append(axisLabel);
-        messageBuilder.append(" on node ");
-        messageBuilder.append(nodePath);
-        messageBuilder.append(". Set sizePx/sizeRel or set both start and end constraints.");
-        throw new IllegalStateException(messageBuilder.toString());
+        float startValue = start.resolve(parentSize) + startOffset;
+        float endValue = end.resolve(parentSize) + endOffset;
+        return Math.max(0, Math.round(parentSize - startValue - endValue));
     }
 
     private void dropSizeWhenOverConstrained() {

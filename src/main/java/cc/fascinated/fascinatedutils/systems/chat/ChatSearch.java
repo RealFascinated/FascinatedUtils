@@ -4,14 +4,21 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.multiplayer.chat.GuiMessage;
+import net.minecraft.network.chat.Component;
 
 import java.util.Locale;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.function.Predicate;
 
 public class ChatSearch {
     public static final ChatSearch INSTANCE = new ChatSearch();
 
+    private static final int MAX_CACHED_MESSAGES = 512;
+
     private final Predicate<GuiMessage> messageFilter = this::matches;
+    // Lowercased plain text per chat message, keyed by the message's component instance so each message is flattened once, not once per query.
+    private final Map<Component, String> lowercaseTextCache = new IdentityHashMap<>();
 
     @Getter
     private String query = "";
@@ -47,6 +54,19 @@ public class ChatSearch {
     }
 
     private boolean matches(GuiMessage message) {
-        return addingMessage || query.isEmpty() || message.content().getString().toLowerCase(Locale.ROOT).contains(query);
+        return addingMessage || query.isEmpty() || lowercaseText(message.content()).contains(query);
+    }
+
+    private String lowercaseText(Component content) {
+        String cached = lowercaseTextCache.get(content);
+        if (cached != null) {
+            return cached;
+        }
+        if (lowercaseTextCache.size() >= MAX_CACHED_MESSAGES) {
+            lowercaseTextCache.clear();
+        }
+        String lowercase = content.getString().toLowerCase(Locale.ROOT);
+        lowercaseTextCache.put(content, lowercase);
+        return lowercase;
     }
 }

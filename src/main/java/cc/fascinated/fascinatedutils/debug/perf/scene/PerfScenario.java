@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.debug.perf.scene;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.debug.perf.PerfMode;
+import cc.fascinated.fascinatedutils.debug.perf.PerfProperties;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,14 +23,6 @@ import java.util.Locale;
  */
 public record PerfScenario(String name, String worldName, long seed, WorldType worldType, int settleTicks, int measureTicks, ModuleMode moduleMode, List<String> sceneIds, boolean printSummary) {
     public static final int TICKS_PER_SECOND = 20;
-
-    private static final String PROPERTY_WORLD_NAME = PerfMode.PROPERTY_PREFIX + "worldName";
-    private static final String PROPERTY_SEED = PerfMode.PROPERTY_PREFIX + "seed";
-    private static final String PROPERTY_WORLD_TYPE = PerfMode.PROPERTY_PREFIX + "worldType";
-    private static final String PROPERTY_SETTLE_SECONDS = PerfMode.PROPERTY_PREFIX + "settleSeconds";
-    private static final String PROPERTY_MEASURE_SECONDS = PerfMode.PROPERTY_PREFIX + "measureSeconds";
-    private static final String PROPERTY_MODULES = PerfMode.PROPERTY_PREFIX + "modules";
-    private static final String PROPERTY_SCENES = PerfMode.PROPERTY_PREFIX + "scenes";
 
     /**
      * The generator used for a newly created perf world.
@@ -60,15 +52,15 @@ public record PerfScenario(String name, String worldName, long seed, WorldType w
      * {@code measureSeconds}, {@code modules} and {@code scenes} applied where set
      */
     public PerfScenario withPropertyOverrides() {
-        long seedOverride = Long.getLong(PROPERTY_SEED, seed);
-        WorldType worldTypeOverride = parseEnum(WorldType.class, PROPERTY_WORLD_TYPE, worldType);
+        long seedOverride = Long.getLong(PerfProperties.SEED, seed);
+        WorldType worldTypeOverride = parseEnum(WorldType.class, PerfProperties.WORLD_TYPE, worldType);
         // A flat run must not reuse the normal world's save, so it gets its own folder unless one was named.
         String defaultWorldName = worldTypeOverride == worldType ? worldName : worldName + "_" + worldTypeOverride.name().toLowerCase(Locale.ROOT);
-        String worldNameOverride = System.getProperty(PROPERTY_WORLD_NAME, defaultWorldName);
-        int settleOverride = parseSeconds(PROPERTY_SETTLE_SECONDS, settleTicks);
-        int measureOverride = parseSeconds(PROPERTY_MEASURE_SECONDS, measureTicks);
-        ModuleMode moduleOverride = parseEnum(ModuleMode.class, PROPERTY_MODULES, moduleMode);
-        String scenes = System.getProperty(PROPERTY_SCENES);
+        String worldNameOverride = System.getProperty(PerfProperties.WORLD_NAME, defaultWorldName);
+        int settleOverride = parseSeconds(PerfProperties.SETTLE_SECONDS, settleTicks);
+        int measureOverride = parseSeconds(PerfProperties.MEASURE_SECONDS, measureTicks);
+        ModuleMode moduleOverride = parseEnum(ModuleMode.class, PerfProperties.MODULES, moduleMode);
+        String scenes = System.getProperty(PerfProperties.SCENES);
         List<String> scenesOverride = scenes == null || scenes.isBlank() ? sceneIds : Arrays.stream(scenes.split(",")).map(String::trim).filter(scene -> !scene.isEmpty()).toList();
         return new PerfScenario(name, worldNameOverride, seedOverride, worldTypeOverride, settleOverride, measureOverride, moduleOverride, scenesOverride, printSummary);
     }

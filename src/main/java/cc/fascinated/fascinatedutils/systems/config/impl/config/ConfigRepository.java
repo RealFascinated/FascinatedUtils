@@ -1,11 +1,9 @@
 package cc.fascinated.fascinatedutils.systems.config.impl.config;
 
 import cc.fascinated.fascinatedutils.Constants;
-import cc.fascinated.fascinatedutils.common.setting.Setting;
-import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
+import cc.fascinated.fascinatedutils.settings.Settings;
 import cc.fascinated.fascinatedutils.systems.config.ConfigManager;
-import com.google.gson.JsonElement;
+import cc.fascinated.fascinatedutils.systems.config.SettingsJsonCodec;
 import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
 
@@ -18,25 +16,11 @@ public class ConfigRepository {
         if (settingsJson == null) {
             return;
         }
-        for (Setting<?> setting : SettingsRegistry.INSTANCE.getSettings().getSettings()) {
-            JsonElement element = settingsJson.get(setting.getSettingKey());
-            if (element != null && !element.isJsonNull()) {
-                setting.deserialize(element, Constants.GSON);
-            }
-        }
+        SettingsJsonCodec.INSTANCE.deserialize(settingsJson, Settings.INSTANCE.getSettings(), Constants.GSON, "global config");
     }
 
     public void save() {
-        JsonObject captured = new JsonObject();
-        for (Setting<?> setting : SettingsRegistry.INSTANCE.getSettings().getSettings()) {
-            if (setting instanceof KeybindSetting) {
-                continue;
-            }
-            JsonElement serialized = setting.serialize(Constants.GSON);
-            if (!serialized.isJsonNull()) {
-                captured.add(setting.getSettingKey(), serialized);
-            }
-        }
+        JsonObject captured = SettingsJsonCodec.INSTANCE.serialize(Settings.INSTANCE.getSettings(), Constants.GSON);
         FascinatedConfig current = configManager.getCurrent();
         configManager.updateAndSave(new FascinatedConfig(current.activeProfileId(), captured));
     }

@@ -59,24 +59,12 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
         return nameProvider.get();
     }
 
-    public @Nullable String getTooltip() {
-        return tooltipProvider.get();
-    }
-
     public void setTranslationKeyPrefix(String translationKeyPrefix) {
         this.translationKeyPrefix = Objects.requireNonNull(translationKeyPrefix, "translation key prefix is required");
     }
 
     public boolean isLocked() {
         return locked != null && Boolean.TRUE.equals(locked.get());
-    }
-
-    public @Nullable String getLockedReasonText() {
-        if (lockedReason == null) {
-            return null;
-        }
-        String reason = lockedReason.get();
-        return reason == null || reason.isBlank() ? null : reason;
     }
 
     public boolean isAtDefault() {

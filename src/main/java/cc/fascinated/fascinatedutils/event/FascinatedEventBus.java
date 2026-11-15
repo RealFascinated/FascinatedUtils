@@ -1,13 +1,11 @@
 package cc.fascinated.fascinatedutils.event;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import lombok.Getter;
 import meteordevelopment.orbit.EventBus;
 import meteordevelopment.orbit.ICancellable;
 
 import java.lang.invoke.MethodHandles;
 
-@Getter
 public class FascinatedEventBus {
     public static final FascinatedEventBus INSTANCE = new FascinatedEventBus();
 
@@ -51,15 +49,6 @@ public class FascinatedEventBus {
      */
     public void subscribe(Class<?> klass) {
         bus.subscribe(klass);
-    }
-
-    /**
-     * Unregister all {@link meteordevelopment.orbit.EventHandler} listener methods on an instance.
-     *
-     * @param subscriber object to unsubscribe
-     */
-    public void unsubscribe(Object subscriber) {
-        bus.unsubscribe(subscriber);
     }
 
     /**

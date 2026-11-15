@@ -5,10 +5,10 @@ import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.anim.Easing;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.core.UiKeys;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -98,19 +98,22 @@ public class CheckboxNode extends PositionedNode<CheckboxNode> {
     @Override
     public boolean onClick(float pointerX, float pointerY, int button) {
         if (button != 0) return false;
-        checked = !checked;
-        onChange.accept(checked);
+        toggle();
         return true;
     }
 
     @Override
     public boolean onKeyPress(int keyCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_SPACE) {
-            checked = !checked;
-            onChange.accept(checked);
+        if (UiKeys.isActivationKey(keyCode)) {
+            toggle();
             return true;
         }
         return false;
+    }
+
+    private void toggle() {
+        checked = !checked;
+        onChange.accept(checked);
     }
 
     @Override
@@ -144,7 +147,8 @@ public class CheckboxNode extends PositionedNode<CheckboxNode> {
             renderFrame.drawTexture(ModUiTextures.CHECK.getId(), bx + checkOffset, boxY + checkOffset, checkSize, checkSize, checkColor);
         }
         if (focused) {
-            renderFrame.drawRoundedRectFrame(bx - 3, boxY - 3, BOX_SIZE + 6, BOX_SIZE + 6, CORNER_RADIUS + 3, theme.focusRing(), 0, 2);
+            int ringOffset = ButtonNode.FOCUS_RING_OFFSET;
+            renderFrame.drawRoundedRectFrame(bx - ringOffset, boxY - ringOffset, BOX_SIZE + ringOffset * 2, BOX_SIZE + ringOffset * 2, CORNER_RADIUS + ringOffset, theme.focusRing(), 0, ButtonNode.FOCUS_RING_THICKNESS);
         }
 
         if (labelSupplier != null) {

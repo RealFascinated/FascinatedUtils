@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.gui.node.input;
 
-import cc.fascinated.fascinatedutils.gui.core.UiState;
 import lombok.Getter;
 import org.lwjgl.glfw.GLFW;
 
@@ -27,12 +26,6 @@ public class TextInputHandler {
     private Consumer<String> onSubmit = ignored -> {};
     private Consumer<String> onChange = ignored -> {};
     private Runnable onCancel = () -> {};
-    private Runnable onBufferMutated = () -> {};
-
-    // Persistent state — bound by caller so values survive recompose
-    private UiState<Integer> caretState;
-    private UiState<Integer> selectionState;
-    private UiState<Boolean> dragState;
 
     public TextInputHandler setMaxLength(int maxLength) {
         this.maxLength = Math.max(0, maxLength);
@@ -55,20 +48,6 @@ public class TextInputHandler {
 
     public TextInputHandler setOnCancel(Runnable onCancel) {
         this.onCancel = onCancel == null ? () -> {} : onCancel;
-        return this;
-    }
-
-    /**
-     * Registers a callback invoked after every buffer mutation, before {@code onChange}.
-     *
-     * <p>Use this to invalidate per-node caches (e.g. wrapped-line layout) without wrapping
-     * the public {@code onChange} callback.
-     *
-     * @param callback invoked after every buffer mutation
-     * @return this
-     */
-    public TextInputHandler setOnBufferMutated(Runnable callback) {
-        this.onBufferMutated = callback == null ? () -> {} : callback;
         return this;
     }
 
@@ -129,7 +108,6 @@ public class TextInputHandler {
         buffer.append(snapshot.text());
         caretIndex = Math.min(snapshot.caret(), buffer.length());
         clearSelection();
-        persistCaret();
         fireChange();
     }
 
@@ -142,24 +120,6 @@ public class TextInputHandler {
         caretIndex = 0;
         selectionAnchor = -1;
         mouseSelecting = false;
-        if (caretState != null) caretState.set(0);
-        if (selectionState != null) selectionState.set(-1);
-        if (dragState != null) dragState.set(false);
-    }
-
-    public void bindCaretState(UiState<Integer> state) {
-        this.caretState = state;
-        this.caretIndex = Math.max(0, Math.min(state.get(), buffer.length()));
-    }
-
-    public void bindSelectionState(UiState<Integer> state) {
-        this.selectionState = state;
-        this.selectionAnchor = Math.min(state.get(), buffer.length());
-    }
-
-    public void bindDragState(UiState<Boolean> state) {
-        this.dragState = state;
-        this.mouseSelecting = Boolean.TRUE.equals(state.get());
     }
 
     public StringBuilder buffer() {
@@ -199,9 +159,6 @@ public class TextInputHandler {
         caretIndex = charIndex;
         selectionAnchor = charIndex;
         mouseSelecting = true;
-        persistCaret();
-        persistSelection();
-        if (dragState != null) dragState.set(true);
     }
 
     /**
@@ -212,7 +169,6 @@ public class TextInputHandler {
     public void updateDrag(int charIndex) {
         if (charIndex != caretIndex) {
             caretIndex = charIndex;
-            persistCaret();
         }
     }
 
@@ -221,10 +177,8 @@ public class TextInputHandler {
      */
     public void endDrag() {
         mouseSelecting = false;
-        if (dragState != null) dragState.set(false);
         if (selectionAnchor == caretIndex) {
             selectionAnchor = -1;
-            persistSelection();
         }
     }
 
@@ -241,14 +195,11 @@ public class TextInputHandler {
         if (extending) {
             if (selectionAnchor == -1) {
                 selectionAnchor = caretIndex;
-                persistSelection();
             }
             caretIndex = newIndex;
-            persistCaret();
         } else {
             caretIndex = newIndex;
             clearSelection();
-            persistCaret();
         }
     }
 
@@ -307,7 +258,6 @@ public class TextInputHandler {
         buffer.delete(start, end);
         caretIndex = start;
         clearSelection();
-        persistCaret();
         fireChange();
         return true;
     }
@@ -317,7 +267,6 @@ public class TextInputHandler {
      */
     public void clearSelection() {
         selectionAnchor = -1;
-        persistSelection();
     }
 
     /**
@@ -344,8 +293,6 @@ public class TextInputHandler {
             case GLFW.GLFW_KEY_A -> {
                 selectionAnchor = 0;
                 caretIndex = buffer.length();
-                persistCaret();
-                persistSelection();
                 return true;
             }
             case GLFW.GLFW_KEY_C -> {
@@ -383,7 +330,6 @@ public class TextInputHandler {
                         }
                         buffer.insert(caretIndex, insert);
                         caretIndex += insert.length();
-                        persistCaret();
                         fireChange();
                     }
                 }
@@ -409,7 +355,6 @@ public class TextInputHandler {
                     int target = wordLeft(caretIndex);
                     buffer.delete(target, caretIndex);
                     caretIndex = target;
-                    persistCaret();
                     fireChange();
                 }
                 return true;
@@ -423,7 +368,6 @@ public class TextInputHandler {
                 if (caretIndex < buffer.length()) {
                     int target = wordRight(caretIndex);
                     buffer.delete(caretIndex, target);
-                    persistCaret();
                     fireChange();
                 }
                 return true;
@@ -458,7 +402,6 @@ public class TextInputHandler {
                 if (caretIndex > 0) {
                     buffer.deleteCharAt(caretIndex - 1);
                     caretIndex--;
-                    persistCaret();
                     fireChange();
                 }
                 return true;
@@ -471,7 +414,6 @@ public class TextInputHandler {
                 }
                 if (caretIndex < buffer.length()) {
                     buffer.deleteCharAt(caretIndex);
-                    persistCaret();
                     fireChange();
                 }
                 return true;
@@ -480,7 +422,6 @@ public class TextInputHandler {
                 if (!shift && hasSelection()) {
                     caretIndex = selectStart();
                     clearSelection();
-                    persistCaret();
                 } else {
                     moveCaret(caretIndex - 1, shift);
                 }
@@ -490,7 +431,6 @@ public class TextInputHandler {
                 if (!shift && hasSelection()) {
                     caretIndex = selectEnd();
                     clearSelection();
-                    persistCaret();
                 } else {
                     moveCaret(caretIndex + 1, shift);
                 }
@@ -518,7 +458,6 @@ public class TextInputHandler {
         }
         buffer.insert(caretIndex, character);
         caretIndex++;
-        persistCaret();
         fireChange();
         return true;
     }
@@ -538,19 +477,10 @@ public class TextInputHandler {
     }
 
     private void fireChange() {
-        onBufferMutated.run();
         onChange.accept(buffer.toString());
     }
 
     private static boolean isWordChar(char character) {
         return Character.isLetterOrDigit(character) || character == '_';
-    }
-
-    private void persistCaret() {
-        if (caretState != null) caretState.set(caretIndex);
-    }
-
-    private void persistSelection() {
-        if (selectionState != null) selectionState.set(selectionAnchor);
     }
 }

@@ -63,10 +63,7 @@ public class BossbarHudPanel extends HudPanel {
         float layoutWidth = padding * 2f + finalContentWidth;
         float layoutHeight = padding * 2f + rows.size() * rowContentHeight + Math.max(0f, rows.size() - 1f) * ROW_GAP;
 
-        getHudState().setLastLayoutWidth(layoutWidth);
-        getHudState().setLastLayoutHeight(layoutHeight);
-        getHudState().setCommittedLayoutWidth(layoutWidth);
-        getHudState().setCommittedLayoutHeight(layoutHeight);
+        commitLayout(layoutWidth, layoutHeight);
 
         List<BossRow> rowsCopy = List.copyOf(rows);
         boolean textShadow = hudHostModule().isTextShadowEnabled();

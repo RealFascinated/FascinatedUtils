@@ -1,60 +1,39 @@
 package cc.fascinated.fascinatedutils.systems.turboparticles;
 
-import cc.fascinated.fascinatedutils.client.Client;
+import cc.fascinated.fascinatedutils.common.culling.AbstractCullTask;
+import cc.fascinated.fascinatedutils.common.culling.CullDistances;
+import cc.fascinated.fascinatedutils.common.culling.CullSnapshotBuffers;
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
-import cc.fascinated.fascinatedutils.systems.turboentities.CullSnapshotBuffers;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
-import com.logisticscraft.occlusionculling.util.Vec3d;
 import lombok.Getter;
-import lombok.Setter;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleGroup;
 import net.minecraft.client.particle.SingleQuadParticle;
-import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-@Getter
-public class ParticleCullTask implements Runnable {
-    private static final int SLEEP_DELAY = 10;
-    private static final double PARTICLE_FORCE_CULL_DISTANCE_SQ = 64.0 * 64.0;
+public class ParticleCullTask extends AbstractCullTask {
+    private static final int SLEEP_DELAY = 20;
+    private static final long FRUSTUM_COPY_INTERVAL_NANOS = 20_000_000L;
     private static final PerfProbe.Section PUBLISH_SECTION = PerfProbe.INSTANCE.section("turbo_particles.publish");
     private static final PerfProbe.Section CULL_PASS_SECTION = PerfProbe.INSTANCE.section("turbo_particles.cull_pass");
 
-    private final OcclusionCullingInstance culling;
-
-    private final Vec3d aabbMin = new Vec3d(0, 0, 0);
-    private final Vec3d aabbMax = new Vec3d(0, 0, 0);
-    private final Vec3d cameraVec3d = new Vec3d(0, 0, 0);
     private final CullSnapshotBuffers<Particle> particleSnapshots = new CullSnapshotBuffers<>();
-    private volatile boolean running = true;
-    private volatile boolean requestCull = false;
-    @Setter
-    private volatile boolean inGame = false;
-    @Setter
-    private volatile Vec3 camera = Vec3.ZERO;
-    @Setter
-    private volatile Frustum frustum = null;
-
+    @Getter
     private volatile int consideredParticleCount = 0;
+    @Getter
     private volatile int culledParticleCount = 0;
-    private volatile long lastPassNanos = 0L;
-
-    private Vec3 lastCameraPos = Vec3.ZERO;
 
     public ParticleCullTask(OcclusionCullingInstance culling) {
-        this.culling = culling;
+        super(culling, SLEEP_DELAY, FRUSTUM_COPY_INTERVAL_NANOS, CULL_PASS_SECTION);
     }
 
     private static AABB cullingBoxForParticle(Particle particle) {
         AABB box = particle.getBoundingBox();
-        // Create a tighter or standard culling box centered on the particle
         double centerX = (box.minX + box.maxX) * 0.5;
         double centerY = (box.minY + box.maxY) * 0.5;
         double centerZ = (box.minZ + box.maxZ) * 0.5;
@@ -62,27 +41,8 @@ public class ParticleCullTask implements Runnable {
     }
 
     @Override
-    public void run() {
-        while (running && Minecraft.getInstance().isRunning()) {
-            try {
-                Thread.sleep(SLEEP_DELAY);
-                if (!inGame) {
-                    continue;
-                }
-
-                Vec3 cameraSnap = camera;
-                if (requestCull || !cameraSnap.equals(lastCameraPos)) {
-                    requestCull = false;
-                    cullPass(cameraSnap);
-                }
-            } catch (InterruptedException exception) {
-                Thread.currentThread().interrupt();
-                break;
-            } catch (Exception exception) {
-                // A failed pass must not end the thread, or every particle keeps its last culled flag forever.
-                Client.LOG.warn("Particle cull pass failed: {}", exception.toString());
-            }
-        }
+    protected long newestSnapshotPublishNanos() {
+        return particleSnapshots.getPublishedNanos();
     }
 
     /**
@@ -91,34 +51,23 @@ public class ParticleCullTask implements Runnable {
      */
     private void collectCullable(Iterable<? extends Particle> particles, ArrayList<Particle> target) {
         for (Particle particle : particles) {
-            // Only add particles that we can actually cull
             if (particle instanceof SingleQuadParticle && particle instanceof Cullable) {
                 target.add(particle);
             }
         }
     }
 
-    /**
-     * Runs one occlusion and frustum pass over the published particle snapshot.
-     *
-     * @param cameraPosition the camera position to cull from
-     */
-    public void cullPass(Vec3 cameraPosition) {
-        lastCameraPos = cameraPosition;
-        cameraVec3d.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
-
-        long passStart = System.nanoTime();
-        culling.resetCache();
-
+    @Override
+    protected void cullSnapshots() {
         List<Particle> particles = particleSnapshots.acquire();
         try {
-            cullParticles(particles);
+            if (!particles.isEmpty()) {
+                resetOcclusionCache();
+                cullParticles(particles);
+            }
         } finally {
             particleSnapshots.release();
         }
-
-        lastPassNanos = System.nanoTime() - passStart;
-        CULL_PASS_SECTION.record(lastPassNanos);
     }
 
     /**
@@ -133,69 +82,27 @@ public class ParticleCullTask implements Runnable {
         for (ParticleGroup<?> group : groups) {
             try {
                 collectCullable(group.getAll(), snapshot);
-            } catch (Exception ignored) {
+            } catch (Exception exception) {
+                logFailureOnce("Particle group", exception);
             }
         }
         particleSnapshots.publish(snapshot);
         PUBLISH_SECTION.end(publishStart);
     }
 
-    public void requestCull() {
-        this.requestCull = true;
-    }
-
-    public void stop() {
-        this.running = false;
-    }
-
     private void cullParticles(List<Particle> snapshot) {
-        int considered = 0;
-        int culled = 0;
-
-        for (Particle particle : snapshot) {
-            if (!(particle instanceof Cullable cullable)) {
-                continue;
+        CullTally tally = cullSnapshot(snapshot, "Particle", (particle, cullable) -> {
+            double distSq = particle.getBoundingBox().getCenter().distanceToSqr(getLastCameraPos());
+            if (distSq > CullDistances.PARTICLE_FORCE_CULL_DISTANCE_SQ) {
+                cullable.alumite$setCulled(true);
             }
-
-            considered++;
-
-            try {
-                // 1. Distance Culling (Fastest)
-                double distSq = particle.getBoundingBox().getCenter().distanceToSqr(lastCameraPos);
-                if (distSq > PARTICLE_FORCE_CULL_DISTANCE_SQ) {
-                    cullable.alumite$setCulled(true);
-                }
-                else {
-                    // 2. Frustum and Occlusion Culling
-                    AABB box = cullingBoxForParticle(particle);
-                    cullable.alumite$setCulled(!isVisible(box));
-                }
-
-                if (cullable.alumite$isCulled()) {
-                    culled++;
-                }
-            } catch (Exception ignored) {
-                // Particles can be volatile; ignore occasional errors during culling pass
+            else {
+                AABB box = cullingBoxForParticle(particle);
+                cullable.alumite$setCulled(!isVisible(box));
             }
-        }
-
-        consideredParticleCount = considered;
-        culledParticleCount = culled;
-    }
-
-    private boolean isVisible(AABB box) {
-        if (box == null) {
             return true;
-        }
-
-        // Frustum Check
-        if (frustum != null && !frustum.isVisible(box)) {
-            return false;
-        }
-
-        // Occlusion Check
-        aabbMin.set(box.minX, box.minY, box.minZ);
-        aabbMax.set(box.maxX, box.maxY, box.maxZ);
-        return culling.isAABBVisible(aabbMin, aabbMax, cameraVec3d);
+        });
+        consideredParticleCount = tally.considered();
+        culledParticleCount = tally.culled();
     }
 }

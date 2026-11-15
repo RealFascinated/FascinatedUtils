@@ -9,15 +9,13 @@ import java.util.List;
 
 public abstract class UiNode {
     private final List<UiNode> children = new ArrayList<>();
+    private final List<UiNode> childrenUnmodifiableView = Collections.unmodifiableList(children);
     private final UiBounds bounds = new UiBounds(0, 0, 0, 0);
     private UiNode parent;
     private String nodeId;
     private boolean visible = true;
-    private boolean enabled = true;
     private boolean mounted;
     private boolean inViewport = false;
-    private Runnable enterViewportCallback;
-    private Runnable leaveViewportCallback;
     private Runnable pointerEnterCallback;
     private Runnable pointerLeaveCallback;
 
@@ -66,14 +64,6 @@ public abstract class UiNode {
         }
     }
 
-    public boolean enabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
     /**
      * Whether this node's bounds are currently intersecting the active clip region and therefore
      * visible within the rendered viewport. Updated each frame during {@link #render}.
@@ -82,29 +72,8 @@ public abstract class UiNode {
         return inViewport;
     }
 
-    /**
-     * Sets a callback invoked the first time this node's bounds enter the rendered viewport.
-     *
-     * @param callback called when the node becomes visible in the viewport
-     */
-    public UiNode setOnEnterViewport(Runnable callback) {
-        this.enterViewportCallback = callback;
-        return this;
-    }
-
-    /**
-     * Sets a callback invoked when this node's bounds leave the rendered viewport, or when the
-     * node is hidden or unmounted.
-     *
-     * @param callback called when the node leaves the viewport
-     */
-    public UiNode setOnLeaveViewport(Runnable callback) {
-        this.leaveViewportCallback = callback;
-        return this;
-    }
-
     public List<UiNode> childrenView() {
-        return Collections.unmodifiableList(children);
+        return childrenUnmodifiableView;
     }
 
     public UiNode addChild(UiNode childNode) {
@@ -132,16 +101,6 @@ public abstract class UiNode {
             }
             childNode.parent = null;
         }
-    }
-
-    public void clearChildren() {
-        for (UiNode childNode : new ArrayList<>(children)) {
-            if (mounted) {
-                childNode.unmountSubtree();
-            }
-            childNode.parent = null;
-        }
-        children.clear();
     }
 
     public void layout(GuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
@@ -181,15 +140,7 @@ public abstract class UiNode {
         }
 
         ClipRegion clip = renderFrame.currentClip();
-        boolean nowInViewport = clip == null || bounds.intersects(clip);
-        if (nowInViewport != inViewport) {
-            inViewport = nowInViewport;
-            if (inViewport) {
-                if (enterViewportCallback != null) enterViewportCallback.run();
-            } else {
-                if (leaveViewportCallback != null) leaveViewportCallback.run();
-            }
-        }
+        inViewport = clip == null || bounds.intersects(clip);
 
         if (inViewport) {
             renderSelf(renderFrame, deltaSeconds);
@@ -239,15 +190,6 @@ public abstract class UiNode {
     public void onFocusLost() {
     }
 
-    public void onTick(float deltaSeconds) {
-    }
-
-    public void onMount() {
-    }
-
-    public void onUnmount() {
-    }
-
     public boolean clipChildren() {
         return false;
     }
@@ -256,23 +198,11 @@ public abstract class UiNode {
         return false;
     }
 
-    public boolean capturesPointerPress(float pointerX, float pointerY, int button) {
-        return false;
-    }
-
     public boolean onPointerPress(float pointerX, float pointerY, int button) {
         return false;
     }
 
-    public boolean capturesPointerRelease(float pointerX, float pointerY, int button) {
-        return false;
-    }
-
     public boolean onPointerRelease(float pointerX, float pointerY, int button) {
-        return false;
-    }
-
-    public boolean capturesClick(float pointerX, float pointerY, int button) {
         return false;
     }
 
@@ -349,19 +279,11 @@ public abstract class UiNode {
         }
     }
 
-    void tickSubtree(float deltaSeconds) {
-        onTick(deltaSeconds);
-        for (UiNode childNode : children) {
-            childNode.tickSubtree(deltaSeconds);
-        }
-    }
-
     void mountSubtree() {
         if (mounted) {
             return;
         }
         mounted = true;
-        onMount();
         for (UiNode childNode : children) {
             childNode.mountSubtree();
         }
@@ -375,19 +297,14 @@ public abstract class UiNode {
         for (UiNode childNode : children) {
             childNode.unmountSubtree();
         }
-        onUnmount();
         mounted = false;
     }
 
     /**
-     * Recursively notifies this node and all descendants that they have left the viewport,
-     * firing {@link #onLeaveViewport()} on each node that was previously in the viewport.
+     * Recursively marks this node and all descendants as outside the viewport.
      */
     void notifySubtreeViewportLeave() {
-        if (inViewport) {
-            inViewport = false;
-            if (leaveViewportCallback != null) leaveViewportCallback.run();
-        }
+        inViewport = false;
         for (UiNode childNode : children) {
             childNode.notifySubtreeViewportLeave();
         }

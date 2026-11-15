@@ -4,24 +4,6 @@ import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 
 public class PanelNode extends PositionedNode<PanelNode> {
-    private int borderThickness = 1;
-    private Integer fillColorOverrideArgb;
-    private Integer borderColorOverrideArgb;
-
-    public PanelNode setFillColorArgb(int fillColorArgb) {
-        this.fillColorOverrideArgb = fillColorArgb;
-        return this;
-    }
-
-    public PanelNode setBorderColorArgb(int borderColorArgb) {
-        this.borderColorOverrideArgb = borderColorArgb;
-        return this;
-    }
-
-    public PanelNode setBorderThickness(int borderThickness) {
-        this.borderThickness = Math.max(1, borderThickness);
-        return this;
-    }
 
     @Override
     protected void renderSelf(GuiRenderer renderFrame, float deltaSeconds) {
@@ -29,9 +11,7 @@ public class PanelNode extends PositionedNode<PanelNode> {
         int posY = bounds().positionY();
         int width = bounds().width();
         int height = bounds().height();
-        int fillColorArgb = fillColorOverrideArgb != null ? fillColorOverrideArgb : renderFrame.theme().panelFill();
-        int borderColorArgb = borderColorOverrideArgb != null ? borderColorOverrideArgb : renderFrame.theme().panelBorder();
-        renderFrame.drawRect(posX, posY, width, height, fillColorArgb);
-        renderFrame.drawBorder(posX, posY, width, height, borderThickness, borderColorArgb);
+        renderFrame.drawRect(posX, posY, width, height, renderFrame.theme().panelFill());
+        renderFrame.drawBorder(posX, posY, width, height, 1, renderFrame.theme().panelBorder());
     }
 }

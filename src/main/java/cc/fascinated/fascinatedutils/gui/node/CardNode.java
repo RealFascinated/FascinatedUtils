@@ -79,11 +79,6 @@ public class CardNode extends PositionedNode<CardNode> {
         return this;
     }
 
-    public CardNode setNoFill() {
-        fillSupplier = null;
-        return this;
-    }
-
     public CardNode setBorderArgb(int argb) {
         borderSupplier = () -> argb;
         return this;

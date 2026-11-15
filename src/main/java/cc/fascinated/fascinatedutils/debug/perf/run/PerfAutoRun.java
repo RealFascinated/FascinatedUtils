@@ -2,7 +2,10 @@ package cc.fascinated.fascinatedutils.debug.perf.run;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.debug.perf.PerfMode;
+import cc.fascinated.fascinatedutils.debug.perf.PerfOut;
+import cc.fascinated.fascinatedutils.debug.perf.PerfProperties;
 import cc.fascinated.fascinatedutils.debug.perf.PerfSuite;
+import cc.fascinated.fascinatedutils.debug.perf.core.PerfGcSnapshot;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.debug.perf.report.PerfComparison;
@@ -47,16 +50,7 @@ import java.util.Locale;
 public class PerfAutoRun {
     public static final PerfAutoRun INSTANCE = new PerfAutoRun();
 
-    private static final String PROPERTY_RUN = PerfMode.PROPERTY_PREFIX + "run";
-    private static final String PROPERTY_FILTER = PerfMode.PROPERTY_PREFIX + "filter";
-    private static final String PROPERTY_COMPARE = PerfMode.PROPERTY_PREFIX + "compare";
-    private static final String PROPERTY_EXIT = PerfMode.PROPERTY_PREFIX + "exit";
-    private static final String PROPERTY_COVERAGE = PerfMode.PROPERTY_PREFIX + "coverage";
-    private static final String PROPERTY_COMPARE_REPORTS = PerfMode.PROPERTY_PREFIX + "compareReports";
-    private static final String GC_META_PREFIX = "gc.";
-    private static final String PREFIX = "ALUMITE_PERF ";
     private static final int READY_SETTLE_TICKS = 100;
-    private static final int READY_TIMEOUT_TICKS = 6_000;
 
     private int readyTicks;
     private boolean finished;
@@ -66,7 +60,7 @@ public class PerfAutoRun {
      */
     public void register() {
         PerfProbe.INSTANCE.register();
-        boolean titleScreenMode = System.getProperty(PROPERTY_RUN) != null || Boolean.getBoolean(PROPERTY_COVERAGE) || System.getProperty(PROPERTY_COMPARE_REPORTS) != null;
+        boolean titleScreenMode = System.getProperty(PerfProperties.RUN) != null || Boolean.getBoolean(PerfProperties.COVERAGE) || System.getProperty(PerfProperties.COMPARE_REPORTS) != null;
         if (titleScreenMode && !PerfMode.isWorldScenario()) {
             FascinatedEventBus.INSTANCE.subscribe(this);
         }
@@ -79,7 +73,7 @@ public class PerfAutoRun {
      * @param label the report that was just produced
      */
     public void printComparisonIfRequested(String label) {
-        String baseline = System.getProperty(PROPERTY_COMPARE);
+        String baseline = System.getProperty(PerfProperties.COMPARE);
         if (baseline != null) {
             printComparison(baseline, label);
         }
@@ -92,15 +86,15 @@ public class PerfAutoRun {
      */
     public void printGcLines(PerfReport report) {
         report.meta().forEach((key, value) -> {
-            if (key.startsWith(GC_META_PREFIX) && key.endsWith(".count")) {
-                String resultId = key.substring(GC_META_PREFIX.length(), key.length() - ".count".length());
-                print("gc " + resultId + " count=" + value + " timeMs=" + report.meta().getOrDefault(GC_META_PREFIX + resultId + ".timeMs", "?"));
+            if (PerfGcSnapshot.isCountKey(key)) {
+                String resultId = PerfGcSnapshot.resultIdOfCountKey(key);
+                PerfOut.INSTANCE.printAndLog("gc " + resultId + " count=" + value + " timeMs=" + report.meta().getOrDefault(PerfGcSnapshot.timeKey(resultId), "?"));
             }
         });
     }
 
     private void printComparison(String baseline, String label) {
-        PerfSuite.INSTANCE.compare(baseline, label).ifPresentOrElse(result -> printResult(baseline, label, result), () -> print("compare failed: missing report " + baseline + " or " + label));
+        PerfSuite.INSTANCE.compare(baseline, label).ifPresentOrElse(result -> printResult(baseline, label, result), () -> PerfOut.INSTANCE.printAndLog("compare failed: missing report " + baseline + " or " + label));
     }
 
     @EventHandler
@@ -115,61 +109,55 @@ public class PerfAutoRun {
             return;
         }
         finished = true;
-        if (Boolean.getBoolean(PROPERTY_COVERAGE)) {
+        if (Boolean.getBoolean(PerfProperties.COVERAGE)) {
             PerfCoverage.INSTANCE.printToStdout(PerfCoverage.INSTANCE.check());
         }
-        String compareReports = System.getProperty(PROPERTY_COMPARE_REPORTS);
+        String compareReports = System.getProperty(PerfProperties.COMPARE_REPORTS);
         if (compareReports != null) {
             String[] labels = compareReports.split(",");
             if (labels.length == 2) {
                 printComparison(labels[0].trim(), labels[1].trim());
             } else {
-                print("FAILED " + PROPERTY_COMPARE_REPORTS + " must be <before>,<after>, got " + compareReports);
+                PerfOut.INSTANCE.printAndLog("FAILED " + PerfProperties.COMPARE_REPORTS + " must be <before>,<after>, got " + compareReports);
             }
         }
         try {
-            if (System.getProperty(PROPERTY_RUN) != null) {
+            if (System.getProperty(PerfProperties.RUN) != null) {
                 runMicroBenchmarks();
             }
         } catch (Throwable throwable) {
             Client.LOG.error("[perf] micro-benchmark run failed", throwable);
-            print("FAILED run: " + throwable);
+            PerfOut.INSTANCE.printAndLog("FAILED run: " + throwable);
         } finally {
-            finished = true;
-            System.out.println("ALUMITE_PERF_DONE");
-            if (Boolean.getBoolean(PROPERTY_EXIT)) {
+            PerfOut.INSTANCE.done();
+            if (Boolean.getBoolean(PerfProperties.EXIT)) {
                 minecraft.execute(minecraft::stop);
             }
         }
     }
 
     private void runMicroBenchmarks() {
-        String label = System.getProperty(PROPERTY_RUN);
-        PerfSuite.RunOutcome outcome = PerfSuite.INSTANCE.run(label, System.getProperty(PROPERTY_FILTER), true);
+        String label = System.getProperty(PerfProperties.RUN);
+        PerfSuite.RunOutcome outcome = PerfSuite.INSTANCE.run(label, System.getProperty(PerfProperties.FILTER), true);
         for (PerfResult result : outcome.report().results()) {
-            print(String.format(Locale.ROOT, "%s medianMs=%.6f perCallMs=%.6f totalMs=%.6f calls=%d p95Ms=%.6f maxMs=%.6f cvPercent=%.1f allocBytesPerCall=%.0f", result.id(), result.medianMs(), result.perCallMs(), result.totalMs(), result.calls(), result.p95Ms(), result.maxMs(), result.cvPercent(), result.allocBytesPerCall()));
+            PerfOut.INSTANCE.printResult(result);
         }
         printGcLines(outcome.report());
         for (String failure : outcome.failures()) {
-            print("FAILED " + failure);
+            PerfOut.INSTANCE.printAndLog("FAILED " + failure);
         }
         if (outcome.file() != null) {
-            print("report " + outcome.file());
+            PerfOut.INSTANCE.printAndLog("report " + outcome.file());
         }
         printComparisonIfRequested(label);
     }
 
     private void printResult(String baseline, String label, PerfComparison.Result result) {
-        result.warnings().forEach(warning -> print("compare warning " + warning));
+        result.warnings().forEach(warning -> PerfOut.INSTANCE.printAndLog("compare warning " + warning));
         for (PerfComparison.Row row : result.rows()) {
-            print(String.format(Locale.ROOT, "compare %s->%s %s beforeMedianMs=%.6f afterMedianMs=%.6f deltaPercent=%+.1f noisePercent=%.1f significant=%b", baseline, label, row.id(), row.beforeMedianMs(), row.afterMedianMs(), row.deltaPercent(), row.noisePercent(), row.significant()));
+            PerfOut.INSTANCE.printAndLog(String.format(Locale.ROOT, "compare %s->%s %s beforeMedianMs=%.6f afterMedianMs=%.6f deltaPercent=%+.1f noisePercent=%.1f pValue=%.4f significant=%b", baseline, label, row.id(), row.beforeMedianMs(), row.afterMedianMs(), row.deltaPercent(), row.noisePercent(), row.pValue(), row.significant()));
         }
-        result.onlyInBefore().forEach(id -> print("compare only-in-before " + id));
-        result.onlyInAfter().forEach(id -> print("compare only-in-after " + id));
-    }
-
-    private void print(String line) {
-        System.out.println(PREFIX + line);
-        Client.LOG.info("[perf] {}", line);
+        result.onlyInBefore().forEach(id -> PerfOut.INSTANCE.printAndLog("compare only-in-before " + id));
+        result.onlyInAfter().forEach(id -> PerfOut.INSTANCE.printAndLog("compare only-in-after " + id));
     }
 }

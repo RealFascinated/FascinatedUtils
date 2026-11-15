@@ -20,7 +20,7 @@ public class ScreenshotMixin {
         method = "grab(Ljava/io/File;Lcom/mojang/blaze3d/pipeline/RenderTarget;Ljava/util/function/Consumer;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Screenshot;grab(Ljava/io/File;Ljava/lang/String;Lcom/mojang/blaze3d/pipeline/RenderTarget;ILjava/util/function/Consumer;)V")
     )
-    private static void onGrab(Args args) {
+    private static void alumite$onGrab(Args args) {
         File workDir = args.get(0);
         Consumer<Component> originalCallback = args.get(4);
         args.set(4, (Consumer<Component>) component -> {

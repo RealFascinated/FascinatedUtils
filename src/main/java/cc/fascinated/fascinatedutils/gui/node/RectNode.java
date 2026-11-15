@@ -40,11 +40,6 @@ public class RectNode extends PositionedNode<RectNode> {
         return this;
     }
 
-    public RectNode setBorderSupplier(Supplier<Integer> supplier) {
-        borderSupplier = supplier;
-        return this;
-    }
-
     public RectNode setBorderThickness(int borderThickness) {
         this.borderThickness = Math.max(1, borderThickness);
         return this;

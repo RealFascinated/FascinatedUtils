@@ -12,11 +12,6 @@ public class PingColors {
 
     private static final int ALPHA_MASK = 0xFF000000;
 
-    private static final int COLOR_GREY = 0x535353;
-    private static final int COLOR_START = Colors.GOOD_COLOR;
-    private static final int COLOR_MID = Colors.WARNING_COLOR;
-    private static final int COLOR_END = Colors.BAD_COLOR;
-
     /**
      * Resolve a packed ARGB text color for the given round-trip latency in milliseconds.
      *
@@ -30,12 +25,12 @@ public class PingColors {
 
     private static int getPingColorInternal(int latencyMs) {
         if (latencyMs <= PING_START) {
-            return COLOR_GREY;
+            return Colors.GREY_COLOR;
         }
         if (latencyMs < PING_MID) {
-            return Colors.mixArgb(computeOffset(PING_START, PING_MID, latencyMs), ALPHA_MASK | COLOR_START, ALPHA_MASK | COLOR_MID);
+            return Colors.mixArgb(computeOffset(PING_START, PING_MID, latencyMs), ALPHA_MASK | Colors.GOOD_COLOR, ALPHA_MASK | Colors.WARNING_COLOR);
         }
-        return Colors.mixArgb(computeOffset(PING_MID, PING_END, Math.min(latencyMs, PING_END)), ALPHA_MASK | COLOR_MID, ALPHA_MASK | COLOR_END);
+        return Colors.mixArgb(computeOffset(PING_MID, PING_END, Math.min(latencyMs, PING_END)), ALPHA_MASK | Colors.WARNING_COLOR, ALPHA_MASK | Colors.BAD_COLOR);
     }
 
     private static float computeOffset(int rangeStart, int rangeEnd, int value) {

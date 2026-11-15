@@ -3,22 +3,22 @@ package cc.fascinated.fascinatedutils.systems.waypoint;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
-import cc.fascinated.fascinatedutils.debug.perf.PerfMode;
+import cc.fascinated.fascinatedutils.systems.config.AtomicFiles;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.world.level.storage.LevelResource;
 
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 public class WaypointRepository {
@@ -26,13 +26,22 @@ public class WaypointRepository {
     private static List<JsonElement> UNPARSED_ENTRIES = new ArrayList<>();
     private static Path waypointsFile;
     private static boolean saveBlocked;
+    private static List<Waypoint> currentWorldWaypoints;
+    private static ClientLevel cachedLevel;
+    private static ServerData cachedServerData;
+    private static ClientPacketListener cachedConnection;
+    private static String migratedWorldKey;
 
-    public WaypointRepository() {
+    /**
+     * Resolves the waypoints file and loads its waypoints. Must run once at client startup before any waypoint is read.
+     */
+    public static void init() {
         waypointsFile = ModConfig.getDirectory().resolve("waypoints.json");
-        this.loadWaypoints();
+        loadWaypoints();
     }
 
-    private void loadWaypoints() {
+    private static void loadWaypoints() {
+        currentWorldWaypoints = null;
         if (!Files.isRegularFile(waypointsFile)) {
             WAYPOINTS = new ArrayList<>();
             return;
@@ -67,10 +76,9 @@ public class WaypointRepository {
         UNPARSED_ENTRIES = unparsed;
     }
 
-    private void quarantineCorruptFile(Exception error) {
-        Path corruptPath = waypointsFile.resolveSibling(waypointsFile.getFileName() + ".corrupt");
+    private static void quarantineCorruptFile(Exception error) {
         try {
-            Files.move(waypointsFile, corruptPath, StandardCopyOption.REPLACE_EXISTING);
+            Path corruptPath = AtomicFiles.INSTANCE.quarantine(waypointsFile, false);
             Client.LOG.warn("Waypoints file is corrupt ({}); moved to {}", error.toString(), corruptPath);
         } catch (IOException moveError) {
             saveBlocked = true;
@@ -85,18 +93,39 @@ public class WaypointRepository {
      * @return matching waypoints
      */
     public static List<Waypoint> getForCurrentWorldKey() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (currentWorldWaypoints == null || minecraft.level != cachedLevel || minecraft.getCurrentServer() != cachedServerData || minecraft.getConnection() != cachedConnection) {
+            rebuildCurrentWorldWaypoints(minecraft);
+        }
+        return currentWorldWaypoints;
+    }
+
+    /**
+     * Rebuilds the cached waypoints for the current world, running the legacy migration first.
+     * Called when the level, server data or connection changes, and after any save.
+     *
+     * @param minecraft the Minecraft client
+     */
+    private static void rebuildCurrentWorldWaypoints(Minecraft minecraft) {
         String worldKey = getWorldKey();
         migrateLegacySingleplayerKey(worldKey);
-        return WAYPOINTS.stream().filter(waypoint -> waypoint.getWorldKey().equals(worldKey)).toList();
+        cachedLevel = minecraft.level;
+        cachedServerData = minecraft.getCurrentServer();
+        cachedConnection = minecraft.getConnection();
+        currentWorldWaypoints = WAYPOINTS.stream().filter(waypoint -> waypoint.getWorldKey().equals(worldKey)).toList();
     }
 
     /**
      * Moves waypoints stored under the old display-name based singleplayer key to the save-folder based key,
-     * but only when nothing is stored under the new key yet.
+     * but only when nothing is stored under the new key yet. Runs once per world key.
      *
      * @param worldKey the current world key
      */
     private static void migrateLegacySingleplayerKey(String worldKey) {
+        if (worldKey.equals(migratedWorldKey)) {
+            return;
+        }
+        migratedWorldKey = worldKey;
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.getSingleplayerServer() == null || WAYPOINTS.stream().anyMatch(waypoint -> waypoint.getWorldKey().equals(worldKey))) {
             return;
@@ -185,7 +214,8 @@ public class WaypointRepository {
      * Persists all cached waypoints to disk.
      */
     public static void save() {
-        if (saveBlocked || PerfMode.isWorldScenario()) {
+        currentWorldWaypoints = null;
+        if (saveBlocked) {
             return;
         }
         JsonArray array = new JsonArray();
@@ -196,14 +226,7 @@ public class WaypointRepository {
             array.add(unparsedEntry);
         }
         try {
-            Files.createDirectories(waypointsFile.getParent());
-            Path temporaryFile = waypointsFile.resolveSibling(waypointsFile.getFileName() + ".tmp");
-            Files.writeString(temporaryFile, Constants.GSON.toJson(array), StandardCharsets.UTF_8);
-            try {
-                Files.move(temporaryFile, waypointsFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-            } catch (AtomicMoveNotSupportedException unsupported) {
-                Files.move(temporaryFile, waypointsFile, StandardCopyOption.REPLACE_EXISTING);
-            }
+            AtomicFiles.INSTANCE.writeAtomically(waypointsFile, Constants.GSON.toJson(array));
         } catch (IOException exception) {
             Client.LOG.warn("Failed to save waypoints: {}", exception.toString());
         }

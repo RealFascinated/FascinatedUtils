@@ -17,10 +17,12 @@ public interface ChatComponentAccess {
      */
     List<GuiMessage> alumite$getAllMessages();
 
-    /**
-     * Rebuilds the wrapped display lines from the stored messages.
-     */
     void alumite$refreshTrimmedMessages();
+
+    /**
+     * Removes the newest stored message and its wrapped lines from the visible chat, without re-wrapping older messages.
+     */
+    void alumite$removeNewestMessage();
 
     /**
      * Adds a message to chat without running the chat module transforms or history recording.

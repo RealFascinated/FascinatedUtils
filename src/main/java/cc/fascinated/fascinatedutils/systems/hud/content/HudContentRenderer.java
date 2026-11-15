@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import java.util.List;
 
 public class HudContentRenderer {
+    private static final List<String> BLANK_LINES = List.of("");
 
     /**
      * Measure content dimensions and return a draw callback.
@@ -19,23 +20,26 @@ public class HudContentRenderer {
      * @param glRenderer renderer for deferred draw callbacks
      * @param host       module supplying padding, chrome colors, shadows
      * @param panel      panel receiving layout commits
-     * @return a draw callback, or {@code null} for {@link HudContent.Custom} content
+     * @param textLinesPainter per-panel painter reused for text-line content
+     * @return a draw callback, or {@code null} when there is nothing to draw
      */
-    public static Runnable prepare(GuiRenderer glRenderer, HudContent content, HudHostModule host, HudPanel panel, boolean editorMode) {
+    public static Runnable prepare(GuiRenderer glRenderer, HudContent content, HudHostModule host, HudPanel panel, boolean editorMode, TextLinesPainter textLinesPainter) {
         return switch (content) {
             case HudContent.TextLines textLines ->
-                    prepareTextLines(glRenderer, textLines.miniMessageLines(), host, panel, editorMode);
+                    prepareTextLines(glRenderer, textLines.miniMessageLines(), host, panel, editorMode, textLinesPainter);
             case HudContent.ItemRows itemRows -> prepareItemRows(glRenderer, itemRows.rows(), host, panel, editorMode);
-            case HudContent.Custom _ -> null;
         };
     }
 
-    private static Runnable prepareTextLines(GuiRenderer glRenderer, List<String> rawLines, HudHostModule host, HudPanel panel, boolean editorMode) {
-        List<String> lines = rawLines == null || rawLines.isEmpty() ? List.of("") : rawLines;
+    private static TextLinesPainter prepareTextLines(GuiRenderer glRenderer, List<String> rawLines, HudHostModule host, HudPanel panel, boolean editorMode, TextLinesPainter painter) {
+        List<String> lines = rawLines == null || rawLines.isEmpty() ? BLANK_LINES : rawLines;
 
         float lineHeight = glRenderer.fontHeight();
         float maxLineWidth = 0f;
-        float[] lineWidths = new float[lines.size()];
+        if (painter.lineWidths.length < lines.size()) {
+            painter.lineWidths = new float[lines.size()];
+        }
+        float[] lineWidths = painter.lineWidths;
         for (int index = 0; index < lines.size(); index++) {
             String miniMessageLine = lines.get(index);
             if (miniMessageLine == null) {
@@ -49,20 +53,56 @@ public class HudContentRenderer {
         float horizontalPadding = host.getPaddingValue();
         float verticalPadding = host.getPaddingValue();
         float innerTextHeight = HUDPanelBackground.innerTextHeightForLineCount(lines.size(), lineHeight);
-        float layoutWidth = Math.max(1f, Math.max(panel.getMinWidth(), maxLineWidth + 2f * horizontalPadding));
-        float layoutHeight = Math.max(1f, innerTextHeight + 2f * verticalPadding);
+        float topTrim = recordTopTrim(panel, verticalPadding, editorMode);
+        float leftTrim = recordLeftTrim(panel, horizontalPadding, editorMode);
+        float layoutWidth = Math.max(1f, Math.max(panel.getMinWidth(), maxLineWidth + 2f * horizontalPadding - leftTrim));
+        float layoutHeight = Math.max(1f, innerTextHeight + 2f * verticalPadding - topTrim);
 
-        panel.getHudState().setLastLayoutWidth(layoutWidth);
-        panel.getHudState().setLastLayoutHeight(layoutHeight);
-        panel.getHudState().setCommittedLayoutWidth(layoutWidth);
-        panel.getHudState().setCommittedLayoutHeight(layoutHeight);
+        panel.commitLayout(layoutWidth, layoutHeight);
 
-        return () -> {
+        painter.glRenderer = glRenderer;
+        painter.host = host;
+        painter.panel = panel;
+        painter.lines = lines;
+        painter.lineHeight = lineHeight;
+        painter.horizontalPadding = horizontalPadding;
+        painter.verticalPadding = verticalPadding;
+        painter.innerTextHeight = innerTextHeight;
+        painter.topTrim = topTrim;
+        painter.leftTrim = leftTrim;
+        painter.layoutWidth = layoutWidth;
+        painter.layoutHeight = layoutHeight;
+        painter.editorMode = editorMode;
+        return painter;
+    }
+
+    /**
+     * Draw callback for text-line content. Each panel owns one instance and refills it every frame,
+     * so preparing a text-line panel allocates no callback or width buffer once the buffer has grown.
+     */
+    public static class TextLinesPainter implements Runnable {
+        private GuiRenderer glRenderer;
+        private HudHostModule host;
+        private HudPanel panel;
+        private List<String> lines = BLANK_LINES;
+        private float[] lineWidths = new float[0];
+        private float lineHeight;
+        private float horizontalPadding;
+        private float verticalPadding;
+        private float innerTextHeight;
+        private float topTrim;
+        private float leftTrim;
+        private float layoutWidth;
+        private float layoutHeight;
+        private boolean editorMode;
+
+        @Override
+        public void run() {
             host.drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
 
-            float innerHeight = layoutHeight - 2f * verticalPadding;
-            float cursorY = verticalPadding + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, innerTextHeight, HudAnchorContentAlignment.Vertical.CENTER);
-            float innerBandWidth = layoutWidth - 2f * horizontalPadding;
+            float innerHeight = layoutHeight - 2f * verticalPadding + topTrim;
+            float cursorY = verticalPadding - topTrim + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, innerTextHeight, HudAnchorContentAlignment.Vertical.CENTER);
+            float innerBandWidth = layoutWidth - 2f * horizontalPadding + leftTrim;
 
             for (int lineIndex = 0; lineIndex < lines.size(); lineIndex++) {
                 String lineText = lines.get(lineIndex);
@@ -70,14 +110,14 @@ public class HudContentRenderer {
                     lineText = "";
                 }
                 float lineWidth = lineWidths[lineIndex];
-                float drawX = horizontalPadding + HudAnchorLayout.horizontalOffsetInInnerBand(innerBandWidth, lineWidth, panel.hudTextLineHorizontalAlignment());
+                float drawX = horizontalPadding - leftTrim + HudAnchorLayout.horizontalOffsetInInnerBand(innerBandWidth, lineWidth, panel.hudTextLineHorizontalAlignment());
                 glRenderer.drawMiniMessageText(lineText, drawX, cursorY, host.isTextShadowEnabled());
                 cursorY += lineHeight;
                 if (lineIndex < lines.size() - 1) {
                     cursorY += HUDPanelBackground.LINE_GAP_PX;
                 }
             }
-        };
+        }
     }
 
     private static Runnable prepareItemRows(GuiRenderer glRenderer, List<HudContent.ItemRow> rows, HudHostModule host, HudPanel panel, boolean editorMode) {
@@ -109,21 +149,20 @@ public class HudContentRenderer {
         }
 
         float rowHeight = Math.max(itemIconSize, lineHeight);
-        float layoutWidth = Math.max(1f, Math.max(panel.getMinWidth(), maxStripWidth + 2f * horizontalPadding));
+        float topTrim = recordTopTrim(panel, verticalPadding, editorMode);
+        float leftTrim = recordLeftTrim(panel, horizontalPadding, editorMode);
+        float layoutWidth = Math.max(1f, Math.max(panel.getMinWidth(), maxStripWidth + 2f * horizontalPadding - leftTrim));
         float innerContentHeight = rows.size() * rowHeight + Math.max(0, rows.size() - 1) * lineGapPx;
-        float layoutHeight = Math.max(1f, innerContentHeight + 2f * verticalPadding);
+        float layoutHeight = Math.max(1f, innerContentHeight + 2f * verticalPadding - topTrim);
 
-        panel.getHudState().setLastLayoutWidth(layoutWidth);
-        panel.getHudState().setLastLayoutHeight(layoutHeight);
-        panel.getHudState().setCommittedLayoutWidth(layoutWidth);
-        panel.getHudState().setCommittedLayoutHeight(layoutHeight);
+        panel.commitLayout(layoutWidth, layoutHeight);
 
         return () -> {
             host.drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
 
-            float innerHeight = layoutHeight - 2f * verticalPadding;
-            float cursorY = verticalPadding + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, innerContentHeight, panel.hudContentVerticalAlignment());
-            float innerRowBandWidth = layoutWidth - 2f * horizontalPadding;
+            float innerHeight = layoutHeight - 2f * verticalPadding + topTrim;
+            float cursorY = verticalPadding - topTrim + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, innerContentHeight, panel.hudContentVerticalAlignment());
+            float innerRowBandWidth = layoutWidth - 2f * horizontalPadding + leftTrim;
             boolean isOnRight = panel.hudContentHorizontalAlignment() == HudAnchorContentAlignment.Horizontal.RIGHT;
 
             Minecraft minecraftClient = Minecraft.getInstance();
@@ -133,7 +172,7 @@ public class HudContentRenderer {
                 float gapBeforeIcon = textWidthPx > 0f ? iconTextGap : 0f;
                 float iconBandWidth = iconBandWidths[index];
                 float stripWidth = textWidthPx + gapBeforeIcon + iconBandWidth;
-                float stripLeft = horizontalPadding + (isOnRight ? innerRowBandWidth - stripWidth : HudAnchorLayout.horizontalOffsetInInnerBand(innerRowBandWidth, stripWidth, HudAnchorContentAlignment.Horizontal.LEFT));
+                float stripLeft = horizontalPadding - leftTrim + (isOnRight ? innerRowBandWidth - stripWidth : HudAnchorLayout.horizontalOffsetInInnerBand(innerRowBandWidth, stripWidth, HudAnchorContentAlignment.Horizontal.LEFT));
 
                 float iconY = cursorY + (rowHeight - itemIconSize) * 0.5f;
                 float textY = cursorY + (rowHeight - lineHeight) * 0.5f;
@@ -160,6 +199,18 @@ public class HudContentRenderer {
                 }
             }
         };
+    }
+
+    private static float recordTopTrim(HudPanel panel, float verticalPadding, boolean editorMode) {
+        float topTrim = !editorMode && panel.getHudState().isTrimTopPadding() ? verticalPadding : 0f;
+        panel.getHudState().setAppliedTopTrim(topTrim);
+        return topTrim;
+    }
+
+    private static float recordLeftTrim(HudPanel panel, float horizontalPadding, boolean editorMode) {
+        float leftTrim = !editorMode && panel.getHudState().isTrimLeftPadding() ? horizontalPadding : 0f;
+        panel.getHudState().setAppliedLeftTrim(leftTrim);
+        return leftTrim;
     }
 
     private static float itemRowTextWidthPx(GuiRenderer glRenderer, String miniMessageText) {

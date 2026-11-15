@@ -9,7 +9,6 @@ import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.screens.impl.screenshot.ScreenshotScreen;
 import cc.fascinated.fascinatedutils.gui.theme.UiMetrics;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
-import cc.fascinated.fascinatedutils.gui.theme.UiThemeRepository;
 import cc.fascinated.fascinatedutils.gui.screens.impl.hudeditor.HUDEditorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -79,13 +78,10 @@ public class ActionsOverlayScreen {
                 node.setLeftAlignLabel(true);
                 node.setVariant(ButtonNode.ButtonVariant.GHOST);
                 node.setOnPress(button.onClick());
-                node.setRounded(true);
                 group.addChild(node);
             }
         });
-        PositionedNode<?> buttonGroup = panel;
-
-        rootNode.addChild(buttonGroup);
+        rootNode.addChild(panel);
         return rootNode;
     }
 
@@ -95,7 +91,6 @@ public class ActionsOverlayScreen {
         float pointerX = UIScale.screenPointerX();
         float pointerY = UIScale.screenPointerY();
 
-        UiTheme uiTheme = UiThemeRepository.get();
         GuiRenderer renderFrame = new GuiRenderer(graphics);
         renderFrame.beginFrame(uiWidth, uiHeight);
         renderFrame.setPointer(pointerX, pointerY);

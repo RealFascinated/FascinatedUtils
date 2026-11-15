@@ -100,18 +100,18 @@ public class ScreenshotViewerScreen extends RootScreen {
                 .height(BUTTON_HEIGHT)
                 .setLeftIcon(ModUiTextures.BACK.getId())
                 .setOnPress(() -> Minecraft.getInstance().setScreen(new ScreenshotScreen()))
-                .setRounded(true));
+                );
         barRow.addChild(new ButtonNode(() -> Component.translatable("alumite.screenshot.viewer.copy").getString())
                 .height(BUTTON_HEIGHT)
                 .setLeftIcon(ModUiTextures.COPY.getId())
                 .setOnPress(screenshot::copyToClipboard)
-                .setRounded(true));
+                );
         barRow.addChild(new ButtonNode(() -> Component.translatable("alumite.screenshot.viewer.delete").getString())
                 .height(BUTTON_HEIGHT)
                 .setLeftIcon(ModUiTextures.TRASH.getId())
                 .setVariant(ButtonNode.ButtonVariant.DANGER)
                 .setOnPress(() -> confirmDelete.set(true))
-                .setRounded(true));
+                );
 
         barRow.addChild(new SpacerNode());
 
@@ -120,13 +120,13 @@ public class ScreenshotViewerScreen extends RootScreen {
                 .setIconCenter(ModUiTextures.CHEVRON_LEFT.getId())
                 .setDisabled(() -> !canNavigate(-1))
                 .setOnPress(() -> navigate(-1))
-                .setRounded(true));
+                );
         barRow.addChild(new ButtonNode()
                 .height(BUTTON_HEIGHT).width(NAV_BUTTON_WIDTH)
                 .setIconCenter(ModUiTextures.CHEVRON_RIGHT.getId())
                 .setDisabled(() -> !canNavigate(1))
                 .setOnPress(() -> navigate(1))
-                .setRounded(true));
+                );
 
         PanelNode bottomBar = new PanelNode()
                 .fullWidth().bottom(0).height(BAR_HEIGHT);

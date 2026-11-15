@@ -2,11 +2,11 @@ package cc.fascinated.fascinatedutils.renderer;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
+import cc.fascinated.fascinatedutils.common.LRUCache;
 import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.renderer.text.TextRenderer;
 import cc.fascinated.fascinatedutils.renderer.text.VanillaTextRenderer;
 import net.kyori.adventure.platform.modcommon.MinecraftClientAudiences;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -15,6 +15,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
@@ -27,8 +28,6 @@ import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
 import org.joml.Vector2f;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 /**
@@ -40,8 +39,9 @@ public class Renderer2D {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final int MINI_MESSAGE_CACHE_LIMIT = 1024;
-    private static final Map<String, net.minecraft.network.chat.Component> MINI_MESSAGE_CACHE = new ConcurrentHashMap<>();
-    private static final Map<String, Integer> MINI_MESSAGE_WIDTH_CACHE = new ConcurrentHashMap<>();
+    private static final LRUCache<String, Component> MINI_MESSAGE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
+    private static final LRUCache<String, Integer> MINI_MESSAGE_WIDTH_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
+    private static final LRUCache<String, FormattedCharSequence> MINI_MESSAGE_VISUAL_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
     private static volatile int cachedFontOptionsKey;
     private final GuiGraphicsExtractor graphics;
     private final TextRenderer guiTextRenderer;
@@ -103,7 +103,7 @@ public class Renderer2D {
      * Set separate alpha multipliers for non-text draws (fills, textures, borders) and for text draws.
      *
      * @param geometryFactor multiplier applied to shapes and textures
-     * @param textFactor     multiplier applied to string and {@link net.minecraft.network.chat.Component} draws
+     * @param textFactor     multiplier applied to string and {@link Component} draws
      */
     public void setMultiplyAlpha(float geometryFactor, float textFactor) {
         this.multiplyAlpha = Mth.clamp(geometryFactor, 0f, 1f);
@@ -134,6 +134,10 @@ public class Renderer2D {
         MeshRenderer.INSTANCE.enqueueAxisTexQuad(graphics, currentScissor(), positionX, positionY, width, height, argb, argb, argb, argb);
     }
 
+    public void drawDottedOutline(float width, float height, float dotSize, float step, int color) {
+        MeshRenderer.INSTANCE.enqueueDottedOutline(graphics, currentScissor(), width, height, dotSize, step, withAlpha(color));
+    }
+
     public void drawLine(float x1, float y1, float x2, float y2, float thickness, int color) {
         float deltaX = x2 - x1;
         float deltaY = y2 - y1;
@@ -160,10 +164,6 @@ public class Renderer2D {
         int top = withAlpha(colorTop);
         int bottom = withAlpha(colorBottom);
         MeshRenderer.INSTANCE.enqueueAxisTexQuad(graphics, currentScissor(), positionX, positionY, width, height, top, bottom, bottom, top);
-    }
-
-    public void fillRoundedGradientVertical(float positionX, float positionY, float width, float height, float cornerRadius, int colorTop, int colorBottom, int cornerRoundMask) {
-        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, currentScissor(), positionX, positionY, width, height, cornerRadius, colorTop, colorBottom, cornerRoundMask);
     }
 
     public void drawBorder(float positionX, float positionY, float width, float height, float thickness, int color) {
@@ -201,7 +201,7 @@ public class Renderer2D {
     }
 
     /**
-     * Draw styled {@link net.minecraft.network.chat.Component} after batched geometry has been flushed (Meteor text pass); no extra batch flush.
+     * Draw styled {@link Component} after batched geometry has been flushed (Meteor text pass); no extra batch flush.
      *
      * @param text      rich text to draw
      * @param positionX left origin in logical pixels
@@ -210,26 +210,25 @@ public class Renderer2D {
      *                  GuiRenderer})
      * @param shadow    whether to draw vanilla text shadow
      */
-    public void drawTextImmediate(net.minecraft.network.chat.Component text, float positionX, float positionY, int color, boolean shadow) {
-        float sx = shellScaleX();
-        float sy = shellScaleY();
-        Matrix3x2fStack matrices = graphics.pose();
-        int originX = Mth.floor(positionX);
-        int originY = Math.round(positionY);
-        if (Math.abs(sx - 1f) > 1e-4f || Math.abs(sy - 1f) > 1e-4f) {
-            matrices.pushMatrix();
-            matrices.translate(originX, originY);
-            matrices.scale(sx, sy);
-            guiTextRenderer.drawText(graphics, text, 0, 0, color, shadow);
-            matrices.popMatrix();
-        }
-        else {
-            guiTextRenderer.drawText(graphics, text, originX, originY, color, shadow);
-        }
+    public void drawTextImmediate(Component text, float positionX, float positionY, int color, boolean shadow) {
+        guiTextRenderer.drawText(graphics, text, Mth.floor(positionX), Math.round(positionY), color, shadow);
     }
 
-    public net.minecraft.network.chat.Component parseMiniMessage(String miniMessageText) {
-        net.minecraft.network.chat.Component component = miniMessageText == null ? null : MINI_MESSAGE_CACHE.get(miniMessageText);
+    /**
+     * Draw a pre-ordered glyph sequence (see {@link #miniMessageVisualOrder}) after batched geometry has been flushed.
+     *
+     * @param text      visual-order glyph sequence
+     * @param positionX left origin in logical pixels
+     * @param positionY top origin in logical pixels
+     * @param color     packed ARGB color
+     * @param shadow    whether vanilla text shadow is drawn
+     */
+    public void drawTextImmediate(FormattedCharSequence text, float positionX, float positionY, int color, boolean shadow) {
+        guiTextRenderer.drawText(graphics, text, Mth.floor(positionX), Math.round(positionY), color, shadow);
+    }
+
+    public Component parseMiniMessage(String miniMessageText) {
+        Component component = miniMessageText == null ? null : MINI_MESSAGE_CACHE.get(miniMessageText);
         if (component != null) {
             return component;
         }
@@ -237,18 +236,15 @@ public class Renderer2D {
         ProfilerFiller profiler = Profiler.get();
         profiler.push("parseMiniMessage");
         try {
-            Component adventure = MINI_MESSAGE.deserialize(miniMessageText == null ? "" : miniMessageText);
-            net.minecraft.network.chat.Component nativeComponent = MinecraftClientAudiences.of().asNative(adventure);
+            var adventure = MINI_MESSAGE.deserialize(miniMessageText == null ? "" : miniMessageText);
+            Component nativeComponent = MinecraftClientAudiences.of().asNative(adventure);
             if (miniMessageText != null) {
-                if (MINI_MESSAGE_CACHE.size() >= MINI_MESSAGE_CACHE_LIMIT) {
-                    MINI_MESSAGE_CACHE.clear();
-                }
                 MINI_MESSAGE_CACHE.put(miniMessageText, nativeComponent);
             }
             return nativeComponent;
         } catch (Exception exception) {
             Client.LOG.debug("MiniMessage parse failed for UI text \"{}\", falling back to literal", miniMessageText, exception);
-            return net.minecraft.network.chat.Component.literal(miniMessageText == null ? "" : miniMessageText);
+            return Component.literal(miniMessageText == null ? "" : miniMessageText);
         } finally {
             profiler.pop();
         }
@@ -273,9 +269,6 @@ public class Renderer2D {
         }
         int width = measureTextWidth(parseMiniMessage(miniMessageText));
         if (miniMessageText != null) {
-            if (MINI_MESSAGE_WIDTH_CACHE.size() >= MINI_MESSAGE_CACHE_LIMIT) {
-                MINI_MESSAGE_WIDTH_CACHE.clear();
-            }
             MINI_MESSAGE_WIDTH_CACHE.put(miniMessageText, width);
         }
         return width;
@@ -286,14 +279,35 @@ public class Renderer2D {
      */
     public static void clearMiniMessageWidthCache() {
         MINI_MESSAGE_WIDTH_CACHE.clear();
+        MINI_MESSAGE_VISUAL_CACHE.clear();
     }
 
     /**
-     * Measure {@link net.minecraft.network.chat.Component} width in logical pixels (matches {@link #drawTextImmediate}).
+     * Returns the ordered glyph sequence for MiniMessage text, reusing the last conversion for the exact same text.
+     * Vanilla rebuilds this sequence from a {@link Component} on every draw, so caching it avoids that per-frame work.
+     *
+     * @param miniMessageText MiniMessage source text
+     * @return visual-order sequence ready for {@link #drawTextImmediate(FormattedCharSequence, float, float, int, boolean)}
      */
-    public int measureTextWidth(net.minecraft.network.chat.Component text) {
+    public FormattedCharSequence miniMessageVisualOrder(String miniMessageText) {
+        if (miniMessageText == null) {
+            return parseMiniMessage(null).getVisualOrderText();
+        }
+        FormattedCharSequence cachedSequence = MINI_MESSAGE_VISUAL_CACHE.get(miniMessageText);
+        if (cachedSequence != null) {
+            return cachedSequence;
+        }
+        FormattedCharSequence sequence = parseMiniMessage(miniMessageText).getVisualOrderText();
+        MINI_MESSAGE_VISUAL_CACHE.put(miniMessageText, sequence);
+        return sequence;
+    }
+
+    /**
+     * Measure {@link Component} width in logical pixels (matches {@link #drawTextImmediate}).
+     */
+    public int measureTextWidth(Component text) {
         int vanilla = guiTextRenderer.getWidth(text);
-        return Math.max(1, Mth.ceil(vanilla * shellScaleX()));
+        return Math.max(1, Mth.ceil(vanilla));
     }
 
     /**
@@ -347,24 +361,8 @@ public class Renderer2D {
      * @param bold      whether bold styling is applied
      */
     public void drawTextImmediate(String text, float positionX, float positionY, int color, boolean shadow, boolean bold) {
-        float sx = shellScaleX();
-        float sy = shellScaleY();
-        Matrix3x2fStack matrices = graphics.pose();
         FormattedCharSequence literalText = styledLiteralSequence(text, bold);
-        if (Math.abs(sx - 1f) > 1e-4f || Math.abs(sy - 1f) > 1e-4f) {
-            int originX = Mth.floor(positionX);
-            int originY = Math.round(positionY);
-            matrices.pushMatrix();
-            matrices.translate(originX, originY);
-            matrices.scale(sx, sy);
-            guiTextRenderer.drawText(graphics, literalText, 0, 0, color, shadow);
-            matrices.popMatrix();
-        }
-        else {
-            int originX = Mth.floor(positionX);
-            int originY = Math.round(positionY);
-            guiTextRenderer.drawText(graphics, literalText, originX, originY, color, shadow);
-        }
+        guiTextRenderer.drawText(graphics, literalText, Mth.floor(positionX), Math.round(positionY), color, shadow);
     }
 
     public void drawTexture(Identifier texture, float positionX, float positionY, float width, float height, int tintArgb) {
@@ -446,24 +444,15 @@ public class Renderer2D {
 
     public int measureTextWidth(String text, boolean bold) {
         double vanilla = guiTextRenderer.getWidth(styledLiteralSequence(text, bold));
-        return Math.max(1, Mth.ceil(vanilla * shellScaleX()));
+        return Math.max(1, Mth.ceil(vanilla));
     }
 
     public int getFontHeight() {
-        return Math.max(1, Mth.ceil(guiTextRenderer.getHeight() * shellScaleY()));
-    }
-
-    private float shellScaleX() {
-        return 1f;
-    }
-
-    private float shellScaleY() {
-        return 1f;
+        return Math.max(1, Mth.ceil(guiTextRenderer.getHeight()));
     }
 
     private void flushMeshSegmentBeforeImmediateDraw() {
         MeshBuilder.INSTANCE.endSegment(graphics);
-        MeshBuilder.INSTANCE.beginSegment(graphics);
     }
 
     private ScreenRectangle currentScissor() {

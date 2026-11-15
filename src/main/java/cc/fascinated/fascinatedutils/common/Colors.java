@@ -9,6 +9,7 @@ public class Colors {
     public static final int GOOD_COLOR = 0x00E676;
     public static final int WARNING_COLOR = 0xD6CD30;
     public static final int BAD_COLOR = 0xE53935;
+    public static final int GREY_COLOR = 0x535353;
     private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
 
     /**

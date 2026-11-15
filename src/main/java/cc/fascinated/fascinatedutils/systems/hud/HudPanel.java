@@ -11,25 +11,20 @@ import lombok.Getter;
 import net.minecraft.util.Mth;
 import org.jspecify.annotations.Nullable;
 
-public abstract class  HudPanel implements HudRenderablePanel {
+public abstract class HudPanel implements HudRenderablePanel {
     private final HudHostModule host;
     @Getter
     private final String id;
     private final float minWidth;
     @Getter
     private final ModuleHudState hudState = new ModuleHudState();
+    private final HudContentRenderer.TextLinesPainter textLinesPainter = new HudContentRenderer.TextLinesPainter();
 
     protected HudPanel(HudHostModule hostModule, String panelId, float minWidth) {
         this.host = hostModule;
         this.id = panelId;
         this.minWidth = minWidth;
-        HudDefaults defaults = hostModule.getHudDefaults();
-        hudState.setHudAnchor(defaults.defaultAnchor());
-        hudState.setAnchorOffsetX(defaults.defaultXOffset());
-        hudState.setAnchorOffsetY(defaults.defaultYOffset());
-        hudState.setBottomAnchorRightAligned(defaults.defaultXOffset() < 0f);
-        hudState.setPositionX(defaults.defaultXOffset());
-        hudState.setPositionY(defaults.defaultYOffset());
+        applyHudDefaults(hostModule.getHudDefaults());
     }
 
     /**
@@ -65,7 +60,7 @@ public abstract class  HudPanel implements HudRenderablePanel {
         if (!host.isEnabled()) {
             return false;
         }
-        if (host.registeredHudPanels().size() <= 1 && !host.getHudDefaults().alwaysShowPanelToggles()) {
+        if (host.registeredHudPanelCount() <= 1 && !host.getHudDefaults().alwaysShowPanelToggles()) {
             return true;
         }
         return host.isHudPanelUserVisible(id);
@@ -77,7 +72,7 @@ public abstract class  HudPanel implements HudRenderablePanel {
         if (content == null) {
             return null;
         }
-        return HudContentRenderer.prepare(glRenderer, content, host, this, editorMode);
+        return HudContentRenderer.prepare(glRenderer, content, host, this, editorMode, textLinesPainter);
     }
 
     /**
@@ -122,14 +117,8 @@ public abstract class  HudPanel implements HudRenderablePanel {
     }
 
     public void resetPanelLayoutDefaults() {
-        HudDefaults defaults = host.getHudDefaults();
         hudState.setScale(1.0f);
-        hudState.setHudAnchor(defaults.defaultAnchor());
-        hudState.setAnchorOffsetX(defaults.defaultXOffset());
-        hudState.setAnchorOffsetY(defaults.defaultYOffset());
-        hudState.setBottomAnchorRightAligned(defaults.defaultXOffset() < 0f);
-        hudState.setPositionX(defaults.defaultXOffset());
-        hudState.setPositionY(defaults.defaultYOffset());
+        applyHudDefaults(host.getHudDefaults());
         hudState.setLastLayoutWidth(-1f);
         hudState.setLastLayoutHeight(-1f);
         hudState.setCommittedLayoutHeight(-1f);
@@ -246,11 +235,21 @@ public abstract class  HudPanel implements HudRenderablePanel {
     public final void recordHudContentSkipped() {
         if (hudState.getLastLayoutWidth() < 0f || hudState.getLastLayoutHeight() < 0f) {
             float fallback = Math.max(1f, minWidth);
-            hudState.setLastLayoutWidth(fallback);
-            hudState.setLastLayoutHeight(fallback);
-            hudState.setCommittedLayoutWidth(fallback);
-            hudState.setCommittedLayoutHeight(fallback);
+            commitLayout(fallback, fallback);
         }
+    }
+
+    /**
+     * Records a measured layout size as both the last measured and the committed layout size.
+     *
+     * @param width  layout width in HUD pixels
+     * @param height layout height in HUD pixels
+     */
+    public final void commitLayout(float width, float height) {
+        hudState.setLastLayoutWidth(width);
+        hudState.setLastLayoutHeight(height);
+        hudState.setCommittedLayoutWidth(width);
+        hudState.setCommittedLayoutHeight(height);
     }
 
     JsonObject serializeHudState(Gson gson) {
@@ -302,6 +301,15 @@ public abstract class  HudPanel implements HudRenderablePanel {
                 hudState.setCommittedLayoutHeight(height);
             }
         }
+    }
+
+    private void applyHudDefaults(HudDefaults defaults) {
+        hudState.setHudAnchor(defaults.defaultAnchor());
+        hudState.setAnchorOffsetX(defaults.defaultXOffset());
+        hudState.setAnchorOffsetY(defaults.defaultYOffset());
+        hudState.setBottomAnchorRightAligned(defaults.defaultXOffset() < 0f);
+        hudState.setPositionX(defaults.defaultXOffset());
+        hudState.setPositionY(defaults.defaultYOffset());
     }
 
     private float layoutWidthForAnchoring() {

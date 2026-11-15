@@ -72,11 +72,6 @@ public class PlayerUtils {
         };
     }
 
-    /**
-     * The command to make the player run without "/"
-     *
-     * @param command the command to run
-     */
     public static void runCommand(String command) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) {
@@ -85,11 +80,6 @@ public class PlayerUtils {
         player.connection.sendCommand(command);
     }
 
-    /**
-     * The message to make the player send in chat
-     *
-     * @param message the command to send
-     */
     public static void sendMessage(String message) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) {

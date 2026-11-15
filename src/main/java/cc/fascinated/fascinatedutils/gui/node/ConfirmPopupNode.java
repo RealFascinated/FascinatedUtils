@@ -49,11 +49,9 @@ public class ConfirmPopupNode extends PopupNode<ConfirmPopupNode> {
 
         cancelButton = new ButtonNode(() -> cancelLabel).setOnPress(() -> onCancel.run());
         cancelButton.left(0).size(BUTTON_WIDTH, BUTTON_HEIGHT);
-        cancelButton.setRounded(true);
 
         confirmButton = new ButtonNode(() -> confirmLabel).setOnPress(() -> onConfirm.run());
         confirmButton.left(BUTTON_WIDTH + BUTTON_GAP).size(BUTTON_WIDTH, BUTTON_HEIGHT);
-        confirmButton.setRounded(true);
 
         PositionedNode<?> buttonRow = new PositionedNode<>();
         buttonRow.size(BUTTON_ROW_WIDTH, BUTTON_HEIGHT).alignX(0.5f).bottom(PAD_BOTTOM);
@@ -73,20 +71,9 @@ public class ConfirmPopupNode extends PopupNode<ConfirmPopupNode> {
         return this;
     }
 
-    public ConfirmPopupNode setCancelLabel(String cancelLabel) {
-        this.cancelLabel = cancelLabel == null ? "Cancel" : cancelLabel;
-        cancelButton.setLabel(this.cancelLabel);
-        return this;
-    }
-
     public ConfirmPopupNode setConfirmLabel(String confirmLabel) {
         this.confirmLabel = confirmLabel == null ? Component.translatable("alumite.common.confirm").getString() : confirmLabel;
         confirmButton.setLabel(this.confirmLabel);
-        return this;
-    }
-
-    public ConfirmPopupNode setConfirmLabelColorArgb(Integer confirmLabelColorArgb) {
-        confirmButton.setLabelColorArgb(confirmLabelColorArgb);
         return this;
     }
 

@@ -17,13 +17,8 @@ public class PingHudPanel extends MiniMessageHudPanel {
     private final PingWidget pingWidget;
 
     public PingHudPanel(PingWidget pingWidget) {
-        super(pingWidget, "ping", HudHostModule.UTILITY_WIDGET_MIN_WIDTH);
+        super(pingWidget, "ping", HudHostModule.UTILITY_WIDGET_MIN_WIDTH, UPDATE_INTERVAL_NANOS);
         this.pingWidget = pingWidget;
-    }
-
-    @Override
-    protected long miniMessageLineUpdateIntervalNanos() {
-        return UPDATE_INTERVAL_NANOS;
     }
 
     @Override

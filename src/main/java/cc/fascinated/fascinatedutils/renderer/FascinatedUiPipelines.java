@@ -17,33 +17,16 @@ public class FascinatedUiPipelines {
     public static final RenderPipeline AXIS_TEX_COLOR = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET, RenderPipelines.GUI_TEXTURED_SNIPPET).withLocation(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "pipeline/axis_tex_color")).withVertexShader(Identifier.withDefaultNamespace("core/position_tex_color")).withFragmentShader(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "core/fui_axis_tex_color")).withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false)).withCull(false).withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT)).withSampler("Sampler0").build());
 
     /**
-     * Solid {@code POSITION} + {@code Color} quad ({@code pos_color} path).
-     */
-    public static final RenderPipeline SOLID_COLOR = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET, RenderPipelines.DEBUG_FILLED_SNIPPET).withLocation(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "pipeline/solid_color")).withVertexShader(Identifier.withDefaultNamespace("core/position_color")).withFragmentShader(Identifier.fromNamespaceAndPath(AlumiteMod.MOD_ID, "core/fui_solid_color")).withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false)).withCull(false).withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT)).build());
-
-    /**
      * Rounded fill: all four corners filleted; radius comes from vertex alpha ({@link MeshRenderer#packArgbRadius}).
      */
     public static final RenderPipeline ROUNDED_RECT_ALL = registerRoundedPreset("pipeline/rounded_rect_all", "core/fui_rounded_rect_all");
 
-    /**
-     * Rounded fill: top two corners only.
-     */
     public static final RenderPipeline ROUNDED_RECT_TOP = registerRoundedPreset("pipeline/rounded_rect_top", "core/fui_rounded_rect_top");
 
-    /**
-     * Rounded fill: bottom two corners only.
-     */
     public static final RenderPipeline ROUNDED_RECT_BOTTOM = registerRoundedPreset("pipeline/rounded_rect_bottom", "core/fui_rounded_rect_bottom");
 
-    /**
-     * Rounded fill: left two corners only.
-     */
     public static final RenderPipeline ROUNDED_RECT_LEFT = registerRoundedPreset("pipeline/rounded_rect_left", "core/fui_rounded_rect_left");
 
-    /**
-     * Rounded fill: right two corners only.
-     */
     public static final RenderPipeline ROUNDED_RECT_RIGHT = registerRoundedPreset("pipeline/rounded_rect_right", "core/fui_rounded_rect_right");
 
     /**
@@ -84,13 +67,5 @@ public class FascinatedUiPipelines {
             return ROUNDED_RECT_RIGHT;
         }
         throw new IllegalArgumentException("cornerRoundMask is not a preset rounded mask: " + cornerRoundMask);
-    }
-
-    /**
-     * @return true if this pipeline reads per-corner radii from {@link RoundedRectCornerRadiiTexture} via
-     * {@code Sampler1} (needs mesh splits / uploads coordinated with draws)
-     */
-    public static boolean usesCornerRadiiLut(RenderPipeline pipeline) {
-        return pipeline == ROUNDED_RECT_TEX_LUT;
     }
 }

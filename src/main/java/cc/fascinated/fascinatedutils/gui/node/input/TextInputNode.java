@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.node.input;
 
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui.core.UiState;
 import cc.fascinated.fascinatedutils.gui.render.ClipRegion;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.render.UiText;
@@ -90,21 +89,6 @@ public class TextInputNode<V> extends PositionedNode<TextInputNode<V>> {
         scrollOffsetX = 0;
     }
 
-    public TextInputNode<V> bindCaretState(UiState<Integer> state) {
-        handler.bindCaretState(state);
-        return this;
-    }
-
-    public TextInputNode<V> bindSelectionState(UiState<Integer> state) {
-        handler.bindSelectionState(state);
-        return this;
-    }
-
-    public TextInputNode<V> bindDragState(UiState<Boolean> state) {
-        handler.bindDragState(state);
-        return this;
-    }
-
     public void submit() {
         handler.submit();
     }
@@ -119,7 +103,7 @@ public class TextInputNode<V> extends PositionedNode<TextInputNode<V>> {
         int lineH = frame.fontHeight();
         int intrinsicHeight = PADDING_V * 2 + lineH;
         int height = boxLayout().vertical().hasSizeConstraint()
-                ? Math.max(intrinsicHeight, boxLayout().vertical().resolveSize(parentHeight, "vertical", debugPath()))
+                ? Math.max(intrinsicHeight, boxLayout().vertical().resolveSize(parentHeight))
                 : Math.max(intrinsicHeight, Math.min(parentHeight, UiMetrics.CONTROL_HEIGHT));
         bounds().set(parentX, parentY, parentWidth, height);
 

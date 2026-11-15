@@ -14,8 +14,4 @@ public class PatternHandler {
         String cacheKey = processedPattern != null ? processedPattern : pattern;
         return patternCache.computeIfAbsent(cacheKey, Pattern::compile);
     }
-
-    public void clearPatterns() {
-        patternCache.clear();
-    }
 }

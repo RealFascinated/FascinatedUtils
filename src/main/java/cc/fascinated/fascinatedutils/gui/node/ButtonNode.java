@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.gui.node;
 import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.core.UiKeys;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
@@ -10,7 +11,6 @@ import cc.fascinated.fascinatedutils.gui.render.UiText;
 import cc.fascinated.fascinatedutils.gui.theme.UiMetrics;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -26,14 +26,14 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
     private static final int ICON_TEXT_GAP = 6;
     private static final int CORNER_RADIUS = UiMetrics.RADIUS;
     private static final int FOCUS_RING_GAP = 1;
-    private static final int FOCUS_RING_THICKNESS = 2;
+    static final int FOCUS_RING_THICKNESS = 2;
+    static final int FOCUS_RING_OFFSET = FOCUS_RING_GAP + FOCUS_RING_THICKNESS;
     private Supplier<String> labelSupplier;
     private Runnable onPress = () -> {};
     private Supplier<Boolean> disabledSupplier = () -> false;
     private final AnimHandle hoverAnim = new AnimHandle(0f);
     private boolean hovered;
     private boolean focused;
-    private boolean rounded;
     private int cornerMask = RectCornerRoundMask.ALL;
     private Supplier<ButtonVariant> variantSupplier = () -> ButtonVariant.DEFAULT;
     private boolean leftAlignLabel;
@@ -42,7 +42,6 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
     private Identifier leftIcon;
     private Identifier rightIcon;
     private Identifier centerIcon;
-    private Integer iconTintArgb;
     private int iconSize = ICON_SIZE;
 
     public ButtonNode() {
@@ -87,11 +86,6 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
         return this;
     }
 
-    public ButtonNode setIconTintArgb(int iconTintArgb) {
-        this.iconTintArgb = iconTintArgb;
-        return this;
-    }
-
     public ButtonNode setLabelColorArgb(Integer labelColorArgb) {
         this.labelColorArgb = labelColorArgb;
         this.labelColorResolver = null;
@@ -112,11 +106,6 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
      */
     public ButtonNode setCornerMask(int cornerMask) {
         this.cornerMask = cornerMask;
-        return this;
-    }
-
-    public ButtonNode setRounded(boolean rounded) {
-        this.rounded = rounded;
         return this;
     }
 
@@ -208,7 +197,7 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
         if (disabledSupplier.get()) {
             return false;
         }
-        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_SPACE) {
+        if (UiKeys.isActivationKey(keyCode)) {
             onPress.run();
             return true;
         }
@@ -264,19 +253,18 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
             renderFrame.fillRoundedRectFrame(bx, by, bw, bh, cornerRadius, Colors.mixArgb(hover, theme.buttonBorder(), theme.buttonBorderHover()), 0, 1, 1, cornerMask);
         }
         if (focused && !isDisabled) {
-            int ringOffset = FOCUS_RING_GAP + FOCUS_RING_THICKNESS;
-            renderFrame.drawRoundedRectFrame(bx - ringOffset, by - ringOffset, bw + ringOffset * 2, bh + ringOffset * 2, cornerRadius + ringOffset, theme.focusRing(), 0, FOCUS_RING_THICKNESS);
+            renderFrame.drawRoundedRectFrame(bx - FOCUS_RING_OFFSET, by - FOCUS_RING_OFFSET, bw + FOCUS_RING_OFFSET * 2, bh + FOCUS_RING_OFFSET * 2, cornerRadius + FOCUS_RING_OFFSET, theme.focusRing(), 0, FOCUS_RING_THICKNESS);
         }
 
         UiText labelText = UiText.of(label()).color(textColor);
         int textWidth = labelText.width(renderFrame);
         int iconY = by + (bh - iconSize) / 2;
         if (centerIcon != null) {
-            int iconTint = iconTintArgb != null ? iconTintArgb : renderFrame.theme().textPrimary();
+            int iconTint = renderFrame.theme().textPrimary();
             renderFrame.drawTexture(centerIcon, bx + (bw - iconSize) / 2, iconY, iconSize, iconSize, iconTint);
         }
         if (leftIcon != null) {
-            int iconTint = iconTintArgb != null ? iconTintArgb : renderFrame.theme().textPrimary();
+            int iconTint = renderFrame.theme().textPrimary();
             renderFrame.drawTexture(leftIcon, bx + ICON_PADDING, iconY, iconSize, iconSize, iconTint);
         }
 
@@ -295,7 +283,7 @@ public class ButtonNode extends PositionedNode<ButtonNode> {
         labelText.draw(renderFrame, textX, textY);
 
         if (rightIcon != null) {
-            int iconTint = iconTintArgb != null ? iconTintArgb : renderFrame.theme().textPrimary();
+            int iconTint = renderFrame.theme().textPrimary();
             renderFrame.drawTexture(rightIcon, bx + bw - ICON_PADDING - iconSize, iconY, iconSize, iconSize, iconTint);
         }
     }

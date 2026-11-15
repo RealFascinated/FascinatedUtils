@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.updater;
 
+import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
 import cc.fascinated.fascinatedutils.common.SystemUtils;
@@ -25,12 +26,15 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Slf4j
 public class Updater {
     public static final Updater INSTANCE = new Updater();
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
+    private static final Duration DOWNLOAD_TIMEOUT = Duration.ofMinutes(2);
+    private static final int WINDOWS_MOVE_ATTEMPTS = 600;
     private static final String STAGED_PREFIX = "FascinatedUtils-update-";
     private static final String STAGED_SUFFIX = ".staged";
     private static final String DOWNLOAD_PREFIX = "FascinatedUtils-download-";
@@ -48,6 +52,9 @@ public class Updater {
     }
 
     public void start() {
+        if (Constants.DEBUG_MODE) {
+            return;
+        }
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "FascinatedUtils-Updater");
             thread.setDaemon(true);
@@ -71,21 +78,27 @@ public class Updater {
         if (!Files.isDirectory(modsDir)) {
             return;
         }
+        deleteModsFiles(modsDir, name -> name.startsWith(DOWNLOAD_PREFIX) || (name.startsWith(STAGED_PREFIX) && name.endsWith(".jar")), "leftover update");
+    }
+
+    /**
+     * Deletes the files in the mods directory whose names match, logging each failure.
+     *
+     * @param modsDir     the mods directory to list
+     * @param nameFilter  decides which file names are deleted
+     * @param description what the deleted files are, used in the log
+     */
+    private void deleteModsFiles(Path modsDir, Predicate<String> nameFilter, String description) {
         try (Stream<Path> stream = Files.list(modsDir)) {
-            stream.filter(path -> {
-                String name = path.getFileName().toString();
-                boolean partial = name.startsWith(DOWNLOAD_PREFIX);
-                boolean legacyStaged = name.startsWith(STAGED_PREFIX) && name.endsWith(".jar");
-                return partial || legacyStaged;
-            }).forEach(path -> {
+            stream.filter(path -> nameFilter.test(path.getFileName().toString())).forEach(path -> {
                 try {
                     Files.deleteIfExists(path);
                 } catch (Exception exception) {
-                    log.info("Could not delete leftover update file {}", path, exception);
+                    log.warn("Could not delete {} file {}", description, path, exception);
                 }
             });
         } catch (IOException exception) {
-            log.info("Could not clean leftover update files", exception);
+            log.info("Could not clean {} files", description, exception);
         }
     }
 
@@ -110,7 +123,7 @@ public class Updater {
 
     private void check() {
         try {
-            String currentVersion = FabricLoader.getInstance().getModContainer("alumite")
+            String currentVersion = FabricLoader.getInstance().getModContainer(AlumiteMod.MOD_ID)
                     .map(mod -> mod.getMetadata().getVersion().getFriendlyString())
                     .orElse(null);
 
@@ -174,7 +187,7 @@ public class Updater {
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(downloadUrl))
                     .header("User-Agent", AlumiteEnvironment.USER_AGENT)
-                    .timeout(Duration.ofMinutes(2))
+                    .timeout(DOWNLOAD_TIMEOUT)
                     .GET()
                     .build();
 
@@ -188,19 +201,7 @@ public class Updater {
                 Files.copy(inputStream, temp, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            try (Stream<Path> stream = Files.list(modsDir)) {
-                stream.filter(path -> {
-                    String name = path.getFileName().toString();
-                    return name.startsWith(STAGED_PREFIX);
-                }).forEach(path -> {
-                    try {
-                        Files.deleteIfExists(path);
-                    } catch (Exception ignored) {
-                    }
-                });
-            } catch (IOException exception) {
-                log.info("Could not clean old staged files", exception);
-            }
+            deleteModsFiles(modsDir, name -> name.startsWith(STAGED_PREFIX), "old staged update");
 
             Path staged = stagedPathFor(modsDir, tagName);
             Files.move(temp, staged, StandardCopyOption.REPLACE_EXISTING);
@@ -208,7 +209,8 @@ public class Updater {
         } catch (Exception exception) {
             try {
                 Files.deleteIfExists(temp);
-            } catch (Exception ignored) {
+            } catch (Exception cleanupException) {
+                log.warn("Could not delete partial download {}", temp, cleanupException);
             }
             throw exception;
         }
@@ -236,7 +238,7 @@ public class Updater {
             return;
         }
 
-        ModContainer mod = FabricLoader.getInstance().getModContainer("alumite").orElse(null);
+        ModContainer mod = FabricLoader.getInstance().getModContainer(AlumiteMod.MOD_ID).orElse(null);
         if (mod == null) {
             log.warn("Mod container not found; cannot apply staged update");
             return;
@@ -282,7 +284,7 @@ public class Updater {
     }
 
     private void runWindowsUpdater(Path staged, Path current) {
-        String inner = String.format("for /L %%i in (1,1,600) do ( move /Y \"%s\" \"%s\" >nul 2>&1 && exit /b 0 || timeout /t 2 /nobreak >nul )", staged, current);
+        String inner = String.format("for /L %%i in (1,1,%d) do ( move /Y \"%s\" \"%s\" >nul 2>&1 && exit /b 0 || timeout /t 2 /nobreak >nul )", WINDOWS_MOVE_ATTEMPTS, staged, current);
         try {
             new ProcessBuilder("cmd", "/c", "start \"\" /min cmd /c \"" + inner + "\"").start();
             log.info("Spawned detached update helper: {} -> {}", staged, current);

@@ -2,7 +2,7 @@
 .gradle/
 build/
 out/
-.temp-build.gradle
+temp-build.gradle
 
 # Loom / Minecraft dev
 run/

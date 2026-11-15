@@ -33,7 +33,7 @@ public class ClientCommandTreeCompiler {
             }
         }
         for (String rootName : rootNames) {
-            LiteralArgumentBuilder<FabricClientCommandSource> root = ClientCommands.literal(rootName).requires(spec.classRequires());
+            LiteralArgumentBuilder<FabricClientCommandSource> root = ClientCommands.literal(rootName);
             for (Map.Entry<String, LitNode> entry : virtualRoot.next.entrySet()) {
                 root.then(buildLitChain(entry.getValue(), entry.getKey(), spec.clazz()));
             }
@@ -143,10 +143,6 @@ public class ClientCommandTreeCompiler {
     @SuppressWarnings("unchecked")
     private static int invoke(ScannedCommandMethod scannedMethod, Class<?> commandClass, CommandContext<FabricClientCommandSource> commandContext) {
         try {
-            if (!scannedMethod.requires().test(commandContext.getSource())) {
-                commandContext.getSource().sendError(Component.literal("This command cannot be used in the current context."));
-                return 0;
-            }
             FabricClientCommandSource commandSource = commandContext.getSource();
             Object[] commandArguments = new Object[1 + scannedMethod.args().size()];
             commandArguments[0] = commandSource;

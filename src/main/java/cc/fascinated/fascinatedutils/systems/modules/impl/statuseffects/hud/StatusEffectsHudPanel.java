@@ -115,10 +115,7 @@ public class StatusEffectsHudPanel extends HudPanel {
         float layoutWidth = Math.max(1f, Math.max(getMinWidth(), padding * 2f + maxRowWidth));
         float layoutHeight = Math.max(1f, padding * 2f + contentHeight);
 
-        getHudState().setLastLayoutWidth(layoutWidth);
-        getHudState().setLastLayoutHeight(layoutHeight);
-        getHudState().setCommittedLayoutWidth(layoutWidth);
-        getHudState().setCommittedLayoutHeight(layoutHeight);
+        commitLayout(layoutWidth, layoutHeight);
 
         boolean textShadow = hudHostModule().isTextShadowEnabled();
         return () -> {

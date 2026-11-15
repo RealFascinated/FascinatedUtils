@@ -6,11 +6,7 @@ import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.gui.screens.impl.screenshot.ScreenshotScreen;
-import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.mojang.blaze3d.platform.InputConstants;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
@@ -21,7 +17,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class Settings implements GsonSerializable<Settings> {
+public class Settings {
+    public static final Settings INSTANCE = new Settings();
+
+    private static final String CATEGORY_GENERAL = "alumite.setting.category.general";
+    private static final String CATEGORY_PERFORMANCE = "alumite.setting.category.performance";
 
     private final List<Setting<?>> settings = new ArrayList<>();
 
@@ -42,39 +42,44 @@ public class Settings implements GsonSerializable<Settings> {
 
     private final BooleanSetting showSelfNameplate = BooleanSetting.builder().id("show_self_nameplate")
             .defaultValue(true)
-            .categoryDisplayKey("alumite.setting.category.general")
+            .categoryDisplayKey(CATEGORY_GENERAL)
             .build();
 
     private final BooleanSetting showServerListInPauseMenu = BooleanSetting.builder().id("show_server_list_in_pause_menu")
             .defaultValue(true)
-            .categoryDisplayKey("alumite.setting.category.general")
+            .categoryDisplayKey(CATEGORY_GENERAL)
             .build();
 
     private final BooleanSetting confirmDisconnect = BooleanSetting.builder().id("confirm_disconnect")
             .defaultValue(false)
-            .categoryDisplayKey("alumite.setting.category.general")
+            .categoryDisplayKey(CATEGORY_GENERAL)
+            .build();
+
+    private final BooleanSetting seamlessPanels = BooleanSetting.builder().id("seamless_panels")
+            .defaultValue(true)
+            .categoryDisplayKey(CATEGORY_GENERAL)
             .build();
 
     private final BooleanSetting reduceMacOSResolution = BooleanSetting.builder().id("reduce_mac_os_resolution")
             .defaultValue(false)
             .locked(() -> !ClientUtils.isMacOS())
             .lockedReason(() -> I18n.get("alumite.setting.lock_reason.requires_mac_os"))
-            .categoryDisplayKey("alumite.setting.category.performance")
+            .categoryDisplayKey(CATEGORY_PERFORMANCE)
             .build();
 
     private final BooleanSetting turboEntities = BooleanSetting.builder().id("turbo_entities")
             .defaultValue(true)
-            .categoryDisplayKey("alumite.setting.category.performance")
+            .categoryDisplayKey(CATEGORY_PERFORMANCE)
             .build();
 
     private final BooleanSetting turboParticles = BooleanSetting.builder().id("turbo_particles")
             .defaultValue(true)
-            .categoryDisplayKey("alumite.setting.category.performance")
+            .categoryDisplayKey(CATEGORY_PERFORMANCE)
             .build();
 
     private final BooleanSetting turboWeather = BooleanSetting.builder().id("turbo_weather")
             .defaultValue(true)
-            .categoryDisplayKey("alumite.setting.category.performance")
+            .categoryDisplayKey(CATEGORY_PERFORMANCE)
             .build();
 
     public Settings() {
@@ -83,12 +88,12 @@ public class Settings implements GsonSerializable<Settings> {
         addSetting(showSelfNameplate);
         addSetting(showServerListInPauseMenu);
         addSetting(confirmDisconnect);
+        addSetting(seamlessPanels);
         addSetting(reduceMacOSResolution);
         addSetting(turboEntities);
         addSetting(turboParticles);
         addSetting(turboWeather);
 
-        // ensure it's only enabled on macOS
         if (!ClientUtils.isMacOS() && reduceMacOSResolution.isEnabled()) {
             reduceMacOSResolution.setValue(false);
         }
@@ -97,32 +102,5 @@ public class Settings implements GsonSerializable<Settings> {
     private void addSetting(Setting<?> setting) {
         setting.setTranslationKeyPrefix("alumite.setting");
         this.settings.add(setting);
-    }
-
-    @Override
-    public JsonElement serialize(Gson gson) {
-        JsonObject root = new JsonObject();
-        for (Setting<?> setting : settings) {
-            JsonElement serialized = setting.serialize(gson);
-            if (!serialized.isJsonNull()) {
-                root.add(setting.getSettingKey(), serialized);
-            }
-        }
-        return root;
-    }
-
-    @Override
-    public Settings deserialize(JsonElement data, Gson gson) {
-        if (!data.isJsonObject()) {
-            return this;
-        }
-        JsonObject root = data.getAsJsonObject();
-        for (Setting<?> setting : settings) {
-            JsonElement element = root.get(setting.getSettingKey());
-            if (element != null && !element.isJsonNull()) {
-                setting.deserialize(element, gson);
-            }
-        }
-        return this;
     }
 }

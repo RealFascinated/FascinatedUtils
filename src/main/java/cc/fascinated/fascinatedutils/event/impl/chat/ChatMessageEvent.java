@@ -9,11 +9,22 @@ import net.minecraft.network.chat.Component;
 public class ChatMessageEvent extends CancellableFascinatedEvent {
     private final Component contents;
     private final GuiMessageSource source;
-    private final String rawMessage;
+    private String rawMessage;
 
     public ChatMessageEvent(Component contents, GuiMessageSource source) {
         this.contents = contents;
         this.source = source;
-        this.rawMessage = contents.getString();
+    }
+
+    /**
+     * Returns the plain text of the message, flattening the component on first access only.
+     *
+     * @return the message contents without any formatting
+     */
+    public String getRawMessage() {
+        if (rawMessage == null) {
+            rawMessage = contents.getString();
+        }
+        return rawMessage;
     }
 }

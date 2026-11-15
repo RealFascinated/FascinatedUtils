@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.debug.perf.report;
 
 import cc.fascinated.fascinatedutils.Constants;
-import cc.fascinated.fascinatedutils.debug.perf.PerfMode;
+import cc.fascinated.fascinatedutils.debug.perf.PerfProperties;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import com.google.gson.JsonObject;
 
@@ -20,7 +20,6 @@ public class PerfReportStore {
     public static final PerfReportStore INSTANCE = new PerfReportStore();
 
     private static final String EXTENSION = ".json";
-    private static final String PROPERTY_REPORT_DIR = PerfMode.PROPERTY_PREFIX + "reportDir";
 
     /**
      * Replaces characters that are unsafe in a file name.
@@ -102,8 +101,13 @@ public class PerfReportStore {
         }
     }
 
-    private Path directory() {
-        String reportDir = System.getProperty(PROPERTY_REPORT_DIR);
+    /**
+     * Returns the directory that holds saved reports.
+     *
+     * @return the report directory, from {@code -Dalumite.perf.reportDir} or the mod config folder
+     */
+    public Path directory() {
+        String reportDir = System.getProperty(PerfProperties.REPORT_DIR);
         return reportDir == null || reportDir.isBlank() ? ModConfig.getDirectory().resolve("perf") : Path.of(reportDir);
     }
 }

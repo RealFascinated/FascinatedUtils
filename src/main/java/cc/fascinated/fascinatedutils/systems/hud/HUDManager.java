@@ -1,11 +1,13 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
 import cc.fascinated.fascinatedutils.debug.perf.PerfMode;
+import cc.fascinated.fascinatedutils.debug.perf.core.PerfAllocation;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
+import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.screens.impl.hudeditor.HUDEditorScreen;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
@@ -32,6 +34,11 @@ public class HUDManager {
     private final List<HudPanel> widgets = new ArrayList<>();
     private final Map<HudPanel, PerfProbe.Section> widgetSections = new IdentityHashMap<>();
     private final Map<HudPanel, String> widgetProfilerNames = new IdentityHashMap<>();
+    private final HudPanelMerger panelMerger = new HudPanelMerger();
+    private final List<HudPanel> drawablePanels = new ArrayList<>();
+    private final List<Runnable> drawCallbacks = new ArrayList<>();
+    private long[] prepareNanos = new long[0];
+    private long[] prepareAllocationBytes = new long[0];
     private boolean editMode;
     private boolean initialized;
     private volatile long lastRenderNanos = 0L;
@@ -61,28 +68,66 @@ public class HUDManager {
 
         long renderStart = System.nanoTime();
         long renderAllocStart = PerfProbe.INSTANCE.beginAllocation();
-        for (HudPanel widget : widgets) {
+        drawablePanels.clear();
+        drawCallbacks.clear();
+        if (prepareAllocationBytes.length < widgets.size()) {
+            prepareAllocationBytes = new long[widgets.size()];
+            prepareNanos = new long[widgets.size()];
+        }
+        for (int widgetIndex = 0; widgetIndex < widgets.size(); widgetIndex++) {
+            HudPanel widget = widgets.get(widgetIndex);
             if (!widget.shouldRenderHudPanel()) {
                 continue;
             }
             profiler.push(widgetProfilerNames.get(widget));
-            PerfProbe.Section widgetSection = widgetSections.get(widget);
-            long widgetStart = widgetSection.begin();
+            long prepareStart = System.nanoTime();
+            long prepareAllocationStart = PerfProbe.INSTANCE.beginAllocation();
 
             Runnable draw = widget.prepareAndDraw(renderer, deltaSeconds, editorMode);
             if (draw == null) {
                 widget.recordHudContentSkipped();
             }
             widget.applyHudAnchorToPosition(canvasWidth, canvasHeight);
+            long elapsed = System.nanoTime() - prepareStart;
+            long prepareBytes = prepareAllocationStart < 0 ? -1 : PerfAllocation.INSTANCE.currentThreadBytes() - prepareAllocationStart;
             if (draw != null) {
-                renderer.pushTranslate(Math.round(widget.getHudState().getPositionX()), Math.round(widget.getHudState().getPositionY()));
-                renderer.pushScale(widget.getHudState().getScale());
-                draw.run();
-                renderer.endRenderSegment();
-                renderer.popScale();
-                renderer.popTranslate();
+                prepareAllocationBytes[drawablePanels.size()] = prepareBytes;
+                prepareNanos[drawablePanels.size()] = elapsed;
+                drawablePanels.add(widget);
+                drawCallbacks.add(draw);
             }
-            widgetSection.end(widgetStart);
+            else {
+                PerfProbe.Section widgetSection = widgetSections.get(widget);
+                widgetSection.record(elapsed);
+                widgetSection.endAllocation(prepareAllocationStart);
+            }
+            profiler.pop();
+        }
+
+        panelMerger.update(drawablePanels, !editorMode);
+
+        for (int index = 0; index < drawablePanels.size(); index++) {
+            HudPanel widget = drawablePanels.get(index);
+            profiler.push(widgetProfilerNames.get(widget));
+            long drawStart = System.nanoTime();
+            long drawAllocationStart = PerfProbe.INSTANCE.beginAllocation();
+
+            widget.hudHostModule().setSquaredCornerMask(widget.getHudState().getSquaredCornerMask());
+            renderer.pushTranslate(Math.round(widget.getHudState().getPositionX()), Math.round(widget.getHudState().getPositionY()));
+            renderer.pushScale(widget.getHudState().getScale());
+            drawCallbacks.get(index).run();
+            renderer.endRenderSegment();
+            renderer.popScale();
+            renderer.popTranslate();
+            widget.hudHostModule().setSquaredCornerMask(RectCornerRoundMask.NONE);
+
+            PerfProbe.Section widgetSection = widgetSections.get(widget);
+            widgetSection.record(prepareNanos[index] + System.nanoTime() - drawStart);
+            long prepareBytes = prepareAllocationBytes[index];
+            if (drawAllocationStart >= 0 && prepareBytes >= 0) {
+                // Start token shifted back by the prepare bytes, so the end reading covers prepare plus draw.
+                widgetSection.endAllocation(drawAllocationStart - prepareBytes);
+            }
             profiler.pop();
         }
         lastRenderNanos = System.nanoTime() - renderStart;

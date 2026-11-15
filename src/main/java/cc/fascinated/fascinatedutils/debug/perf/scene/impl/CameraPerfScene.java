@@ -19,6 +19,7 @@ import java.util.List;
  * Zoom and freelook held while real mouse movement, scrolling and right clicks go through the vanilla mouse handler.
  */
 public class CameraPerfScene extends PerfScene {
+    public static final String ID = "camera";
     private static final String ZOOM_KEY = "key.alumite.zoom";
     private static final String FREELOOK_KEY = "key.alumite.freelook";
     private static final double MOUSE_DELTA = 4.0;
@@ -27,7 +28,7 @@ public class CameraPerfScene extends PerfScene {
     private static final int CLICK_EVERY_TICKS = 5;
 
     public CameraPerfScene() {
-        super("camera", "Zoom and freelook held, mouse moved every tick, scroll and right click through the mouse handler");
+        super(ID, "Zoom and freelook held, mouse moved every tick, scroll and right click through the mouse handler");
     }
 
     @Override

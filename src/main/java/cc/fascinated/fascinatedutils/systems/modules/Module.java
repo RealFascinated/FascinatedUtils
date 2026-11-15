@@ -1,14 +1,12 @@
 package cc.fascinated.fascinatedutils.systems.modules;
 
-import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
-import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
-import cc.fascinated.fascinatedutils.event.impl.module.ModuleEnabledStateChangedEvent;
 import cc.fascinated.fascinatedutils.systems.config.ConfigVersion;
 import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
+import cc.fascinated.fascinatedutils.systems.config.SettingsJsonCodec;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -38,21 +36,19 @@ public abstract class Module implements GsonSerializable<Module> {
     private final Map<String, Setting<?>> settingsByKey = new HashMap<>();
     private final ModuleCategory category;
 
-    private final ModuleDefaults defaults;
+    private final boolean defaultEnabled;
 
-    // settings
     private boolean enabled;
-    private boolean batchingEnabledEvents;
 
-    public Module(String displayName, ModuleCategory category, ModuleDefaults defaults) {
+    public Module(String displayName, ModuleCategory category, boolean defaultEnabled) {
         this.moduleKey = idFromModuleClass(getClass());
         this.displayName = displayName;
         this.category = category;
-        this.defaults = defaults;
+        this.defaultEnabled = defaultEnabled;
     }
 
     public Module(String displayName, ModuleCategory category) {
-        this(displayName, category, ModuleDefaults.builder().build());
+        this(displayName, category, false);
     }
 
     /**
@@ -144,36 +140,11 @@ public abstract class Module implements GsonSerializable<Module> {
     }
 
     public void setEnabled(boolean enabled) {
-        if (this.enabled == enabled) {
-            return;
-        }
         this.enabled = enabled;
-        if (ModuleRegistry.INSTANCE.isInitialized() && !batchingEnabledEvents) {
-            FascinatedEventBus.INSTANCE.post(new ModuleEnabledStateChangedEvent(this, enabled));
-        }
-    }
-
-    /**
-     * Runs {@code action} and posts at most one {@link ModuleEnabledStateChangedEvent}, only if the enabled state
-     * differs from before. Used when a reset followed by a load would otherwise toggle the module twice.
-     *
-     * @param action the work that may change the enabled state
-     */
-    public void batchEnabledStateEvents(Runnable action) {
-        boolean enabledBefore = enabled;
-        batchingEnabledEvents = true;
-        try {
-            action.run();
-        } finally {
-            batchingEnabledEvents = false;
-        }
-        if (enabled != enabledBefore && ModuleRegistry.INSTANCE.isInitialized()) {
-            FascinatedEventBus.INSTANCE.post(new ModuleEnabledStateChangedEvent(this, enabled));
-        }
     }
 
     public void resetToDefault() {
-        setEnabled(defaults.defaultState());
+        setEnabled(defaultEnabled);
         for (Setting<?> setting : settings) {
             if (setting instanceof KeybindSetting) {
                 continue;
@@ -186,17 +157,7 @@ public abstract class Module implements GsonSerializable<Module> {
     public JsonElement serialize(Gson gson) {
         JsonObject root = new JsonObject();
         root.addProperty("enabled", enabled);
-        JsonObject settingsJson = new JsonObject();
-        for (Setting<?> setting : settings) {
-            if (setting instanceof KeybindSetting) {
-                continue;
-            }
-            JsonElement serialized = setting.serialize(gson);
-            if (!serialized.isJsonNull()) {
-                settingsJson.add(setting.getSettingKey(), serialized);
-            }
-        }
-        root.add("settings", settingsJson);
+        root.add("settings", SettingsJsonCodec.INSTANCE.serialize(settings, gson));
         return root;
     }
 
@@ -213,17 +174,7 @@ public abstract class Module implements GsonSerializable<Module> {
             }
         }
         JsonObject settingsJson = root.has("settings") && root.get("settings").isJsonObject() ? root.get("settings").getAsJsonObject() : new JsonObject();
-        for (Setting<?> setting : settings) {
-            JsonElement value = settingsJson.get(setting.getSettingKey());
-            if (value != null && !value.isJsonNull()) {
-                try {
-                    setting.deserialize(value, gson);
-                } catch (RuntimeException exception) {
-                    // One bad value must not stop the remaining settings (or HUD layouts) from loading.
-                    Client.LOG.warn("Failed to load setting {} of module {}: {}", setting.getSettingKey(), moduleKey, exception.toString());
-                }
-            }
-        }
+        SettingsJsonCodec.INSTANCE.deserialize(settingsJson, settings, gson, "module " + moduleKey);
         return this;
     }
 

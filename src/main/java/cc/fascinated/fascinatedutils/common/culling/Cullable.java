@@ -1,35 +1,21 @@
 package cc.fascinated.fascinatedutils.common.culling;
 
 /**
- * Interface injected into Entity and BlockEntity to track culling state.
+ * Interface injected into Entity, BlockEntity and Particle to track culling state.
  */
 public interface Cullable {
 
     /**
-     * Sets the culled state of this entity/block entity.
+     * Sets the culled state of this entity, block entity or particle.
      *
      * @param culled whether this should be culled from rendering
      */
     void alumite$setCulled(boolean culled);
 
     /**
-     * Gets whether this entity/block entity is currently culled.
+     * Gets whether this entity, block entity or particle is currently culled.
      *
      * @return true if culled and should skip rendering
      */
     boolean alumite$isCulled();
-
-    /**
-     * Sets whether this entity is outside the camera view.
-     *
-     * @param outOfCamera true if outside camera frustum
-     */
-    void alumite$setOutOfCamera(boolean outOfCamera);
-
-    /**
-     * Gets whether this entity is outside the camera view.
-     *
-     * @return true if outside camera
-     */
-    boolean alumite$isOutOfCamera();
 }

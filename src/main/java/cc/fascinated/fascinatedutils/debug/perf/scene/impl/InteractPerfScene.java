@@ -25,6 +25,7 @@ import java.util.List;
  * in view (waypoint world render and label). Waypoint saving is disabled during perf world runs.
  */
 public class InteractPerfScene extends PerfScene {
+    public static final String ID = "interact";
     private static final int INTERACT_EVERY_TICKS = 5;
     private static final double SHEEP_SEARCH_RADIUS = 6.0;
     private static final double WAYPOINT_DISTANCE = 12.0;
@@ -34,7 +35,7 @@ public class InteractPerfScene extends PerfScene {
     private Sheep sheep;
 
     public InteractPerfScene() {
-        super("interact", "Looking at a block, interacting with a sheep every 5 ticks, a waypoint in view");
+        super(ID, "Looking at a block, interacting with a sheep every 5 ticks, a waypoint in view");
     }
 
     @Override

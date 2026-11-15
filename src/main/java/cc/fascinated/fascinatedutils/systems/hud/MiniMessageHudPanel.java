@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
-import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import org.jspecify.annotations.Nullable;
@@ -12,25 +11,28 @@ public abstract class MiniMessageHudPanel extends HudPanel {
     private static final long DEFAULT_UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(100L);
 
     private final float baseMinWidthValue;
+    private final long lineUpdateIntervalNanos;
     private List<String> cachedMiniMessageLines;
+    private HudContent.TextLines cachedTextLines;
     private boolean cachedLinesHidden;
     private long lastMiniMessageSampleNanos;
 
     protected MiniMessageHudPanel(HudHostModule hostModule, String panelId, float baseMinWidth) {
-        super(hostModule, panelId, baseMinWidth);
-        this.baseMinWidthValue = baseMinWidth;
+        this(hostModule, panelId, baseMinWidth, DEFAULT_UPDATE_INTERVAL_NANOS);
     }
 
     /**
-     * @param host                   settings host for {@link HudHostModule#SETTING_REMOVE_MIN_WIDTH}
-     * @param resolvedMinWidthBefore width after panel rules but before stripping
-     * @return zero when remove-min-width is enabled, otherwise {@code resolvedMinWidthBefore}
+     * Creates a MiniMessage panel that recomputes its lines at the given interval.
+     *
+     * @param hostModule          host module that owns this panel
+     * @param panelId             stable identifier for this panel within the host
+     * @param baseMinWidth        width from the HUD panel registration
+     * @param lineUpdateIntervalNanos minimum nanoseconds between {@link #computeMiniMessageLines} calls; {@code 0L} refreshes every frame
      */
-    protected static float applyRemoveMinimumWidthFromHost(HudHostModule host, float resolvedMinWidthBefore) {
-        if (host.getSetting(BooleanSetting.class, HudHostModule.SETTING_REMOVE_MIN_WIDTH).filter(BooleanSetting::isEnabled).isPresent()) {
-            return 0f;
-        }
-        return resolvedMinWidthBefore;
+    protected MiniMessageHudPanel(HudHostModule hostModule, String panelId, float baseMinWidth, long lineUpdateIntervalNanos) {
+        super(hostModule, panelId, baseMinWidth);
+        this.baseMinWidthValue = baseMinWidth;
+        this.lineUpdateIntervalNanos = lineUpdateIntervalNanos;
     }
 
     private static List<String> normalizeMiniMessageLines(List<String> rawLines) {
@@ -50,22 +52,16 @@ public abstract class MiniMessageHudPanel extends HudPanel {
     protected abstract List<String> computeMiniMessageLines(float deltaSeconds, boolean editorMode);
 
     /**
-     * Wall-clock sampling interval for {@link #computeMiniMessageLines}. Return {@code 0L} to refresh every frame.
-     *
-     * @return minimum nanoseconds between recomputes
-     */
-    protected long miniMessageLineUpdateIntervalNanos() {
-        return DEFAULT_UPDATE_INTERVAL_NANOS;
-    }
-
-    /**
      * Resolves {@link HudHostModule#SETTING_REMOVE_MIN_WIDTH} after any panel-specific minimum width rules.
      *
      * @param baseMinWidth width from the HUD panel registration
      * @return width passed to layout
      */
     protected float resolvePanelMinimumWidth(float baseMinWidth) {
-        return applyRemoveMinimumWidthFromHost(hudHostModule(), baseMinWidth);
+        if (hudHostModule().isRemoveMinimumWidthEnabled()) {
+            return 0f;
+        }
+        return baseMinWidth;
     }
 
     /**
@@ -88,12 +84,12 @@ public abstract class MiniMessageHudPanel extends HudPanel {
     }
 
     private List<String> miniMessageLinesWithCache(float deltaSeconds, boolean editorMode) {
-        long intervalNanos = miniMessageLineUpdateIntervalNanos();
         long now = System.nanoTime();
-        if (intervalNanos <= 0L || cachedMiniMessageLines == null || now - lastMiniMessageSampleNanos >= intervalNanos) {
+        if (lineUpdateIntervalNanos <= 0L || cachedMiniMessageLines == null || now - lastMiniMessageSampleNanos >= lineUpdateIntervalNanos) {
             List<String> rawLines = computeMiniMessageLines(deltaSeconds, editorMode);
             cachedLinesHidden = hideWhenNoLines() && (rawLines == null || rawLines.isEmpty());
             cachedMiniMessageLines = normalizeMiniMessageLines(rawLines);
+            cachedTextLines = new HudContent.TextLines(cachedMiniMessageLines);
             lastMiniMessageSampleNanos = now;
         }
         return cachedMiniMessageLines;
@@ -106,11 +102,11 @@ public abstract class MiniMessageHudPanel extends HudPanel {
 
     @Override
     protected HudContent produceHudContent(float deltaSeconds, boolean editorMode) {
-        List<String> lines = miniMessageLinesWithCache(deltaSeconds, editorMode);
+        miniMessageLinesWithCache(deltaSeconds, editorMode);
         if (cachedLinesHidden) {
             return null;
         }
-        return new HudContent.TextLines(lines);
+        return cachedTextLines;
     }
 
     @Override

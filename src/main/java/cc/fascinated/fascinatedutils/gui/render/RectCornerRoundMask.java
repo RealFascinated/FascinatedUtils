@@ -45,12 +45,23 @@ public class RectCornerRoundMask {
      * @return packed bytes {@code (topLeft<<24)|(topRight<<16)|(bottomRight<<8)|bottomLeft}
      */
     public static int packedCornerRadiiBytes(float cornerRadius, int cornerRoundMask, float halfMinPixelSide) {
-        float fraction = halfMinPixelSide > 1e-4f ? cornerRadius / halfMinPixelSide : 0f;
-        int radiusByte = Mth.clamp(Math.round(fraction * 255f), 0, 255);
+        int radiusByte = cornerRadiusByte(cornerRadius, halfMinPixelSide);
         int topLeft = (cornerRoundMask & TOP_LEFT) != 0 ? radiusByte : 0;
         int topRight = (cornerRoundMask & TOP_RIGHT) != 0 ? radiusByte : 0;
         int bottomRight = (cornerRoundMask & BOTTOM_RIGHT) != 0 ? radiusByte : 0;
         int bottomLeft = (cornerRoundMask & BOTTOM_LEFT) != 0 ? radiusByte : 0;
         return (topLeft << 24) | (topRight << 16) | (bottomRight << 8) | bottomLeft;
+    }
+
+    /**
+     * Encode a corner radius as a byte fraction of the half-minimum pixel side, the form the rounded-rect shaders decode.
+     *
+     * @param cornerRadius     requested fillet radius in logical pixels
+     * @param halfMinPixelSide half of the smaller pixel-quad dimension after floor/ceil snapping
+     * @return radius byte in {@code [0, 255]}, or 0 when the pixel side is degenerate
+     */
+    public static int cornerRadiusByte(float cornerRadius, float halfMinPixelSide) {
+        float fraction = halfMinPixelSide > 1e-4f ? cornerRadius / halfMinPixelSide : 0f;
+        return Mth.clamp(Math.round(fraction * 255f), 0, 255);
     }
 }

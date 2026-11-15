@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.renderer;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
@@ -27,7 +28,7 @@ public class AxisTexColorQuadRenderState implements GuiElementRenderState {
     /**
      * @param pipeline         typically {@link FascinatedUiPipelines#AXIS_TEX_COLOR}
      * @param textureSetup     opaque white (or neutral) texture setup
-     * @param pose             copy of the active {@link net.minecraft.client.gui.GuiGraphicsExtractor} matrix stack head
+     * @param pose             copy of the active {@link GuiGraphicsExtractor} matrix stack head
      * @param x0               first corner x
      * @param y0               first corner y
      * @param x1               opposite corner x

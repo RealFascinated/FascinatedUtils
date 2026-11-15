@@ -1,6 +1,5 @@
 plugins {
     id 'net.fabricmc.fabric-loom' version '1.16.1'
-    id 'maven-publish'
 }
 
 version = project.mod_version
@@ -49,10 +48,6 @@ dependencies {
     compileOnly files('libs/iris-fabric-1.10.9+mc26.1.1.jar')
 }
 
-test {
-    useJUnitPlatform()
-}
-
 processResources {
     inputs.property "version", project.version
     inputs.property "minecraft_version", project.minecraft_version
@@ -95,24 +90,6 @@ jar {
     }
 }
 
-// configure the maven publication
-publishing {
-    publications {
-        create("mavenJava", MavenPublication) {
-            artifactId = project.archives_base_name
-            from components.java
-        }
-    }
-
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-    repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
-    }
-}
-
 // Forward perf-suite properties from the Gradle command line to the game, e.g.
 // ./gradlew runClient -Dalumite.perf.run=after -Dalumite.perf.compare=before -Dalumite.perf.exit=true
 // ./gradlew runClient -Dalumite.perf.world=after -Dalumite.perf.exit=true
@@ -121,5 +98,10 @@ tasks.matching { it.name == 'runClient' }.configureEach { task ->
         if (key.toString().startsWith('alumite.perf.')) {
             task.systemProperty key.toString(), value.toString()
         }
+    }
+    // -Palumite.perf.lowEnd=true runs the game like a 2-core, 2 GB machine so low-end behaviour can be profiled.
+    if (findProperty('alumite.perf.lowEnd')?.toString() == 'true') {
+        task.jvmArgs '-XX:ActiveProcessorCount=2', '-Xmx2G'
+        task.systemProperty 'alumite.perf.lowEnd', 'true'
     }
 }

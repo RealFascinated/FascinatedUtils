@@ -104,6 +104,8 @@
   "alumite.module.hud_border_color.description": "The outline color of HUD panels.",
   "alumite.module.hud_padding.display_name": "Padding",
   "alumite.module.hud_padding.description": "The spacing between a HUD panel's edge and its content.",
+  "alumite.setting.seamless_panels.display_name": "Seamless Panels",
+  "alumite.setting.seamless_panels.description": "Joins HUD panels that touch into one continuous shape, squaring the touching corners and removing the duplicate padding.",
   "alumite.module.text_shadow.display_name": "Text Shadow",
   "alumite.module.text_shadow.description": "Draws a drop shadow behind HUD text.",
   "alumite.module.remove_min_width.display_name": "Remove Minimum Width",

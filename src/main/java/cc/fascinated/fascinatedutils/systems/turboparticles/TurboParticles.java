@@ -1,98 +1,79 @@
 package cc.fascinated.fascinatedutils.systems.turboparticles;
 
-import cc.fascinated.fascinatedutils.common.culling.CullCounters;
-import cc.fascinated.fascinatedutils.common.culling.OcclusionProvider;
+import cc.fascinated.fascinatedutils.common.culling.AbstractCullTask;
+import cc.fascinated.fascinatedutils.common.culling.CullThreadLifecycle;
+import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
-import cc.fascinated.fascinatedutils.settings.SettingsRegistry;
-import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
-import com.logisticscraft.occlusionculling.cache.ArrayOcclusionCache;
-import lombok.Getter;
+import cc.fascinated.fascinatedutils.settings.Settings;
 import meteordevelopment.orbit.EventHandler;
 
 /**
  * Turbo Particles: background frustum + occlusion culling for billboard particles.
  */
 public class TurboParticles {
+    // Particles move every tick, but their occlusion state changes slowly, so a pass every other tick halves the cull
+    // cost with at most one tick of extra latency.
+    private static final int CULL_SNAPSHOT_CAPTURE_RATE_TICKS = 2;
+    private static final PerfProbe.Counter PARTICLES_CONSIDERED_COUNTER = PerfProbe.INSTANCE.counter("turbo_particles.considered");
+    private static final PerfProbe.Counter PARTICLES_CULLED_COUNTER = PerfProbe.INSTANCE.counter("turbo_particles.culled");
 
-    public final CullCounters particleCounters = new CullCounters();
-
-    @Getter
-    private ParticleCullTask particleCullTask;
-    private Thread particleCullThread;
-
-    private volatile boolean previousEnabledState = false;
-
-    private volatile boolean enabledMirror = false;
+    private int tickCounter;
+    private int snapshotTick = -1;
+    private int captureTickCounter;
+    private final CullThreadLifecycle<ParticleCullTask> cullLifecycle = new CullThreadLifecycle<>(() -> Settings.INSTANCE.getTurboParticles().isEnabled(), () -> new ParticleCullTask(AbstractCullTask.createOcclusionCulling()), "FascinatedUtils-ParticleCulling", () -> {
+        snapshotTick = -1;
+        captureTickCounter = 0;
+    });
 
     /**
-     * Fast gate for mixins: avoids walking {@link SettingsRegistry} for every particle; refreshed each client tick.
+     * Fast gate for mixins: avoids walking {@link Settings} for every particle; refreshed each client tick.
      */
     public boolean isEnabled() {
-        return enabledMirror;
+        return cullLifecycle.isEnabled();
     }
 
-    public void frameSnapshot() {
-        particleCounters.snapshotAndReset();
+    public ParticleCullTask getCullTask() {
+        return cullLifecycle.getTask();
     }
 
-    public void incrementConsidered(boolean wasCulled) {
-        particleCounters.increment(wasCulled);
+    public boolean isCullThreadAlive() {
+        return cullLifecycle.isThreadAlive();
+    }
+
+    /**
+     * Claims the particle snapshot slot for this tick.
+     *
+     * @return true when a snapshot should be published and a pass requested this tick
+     */
+    public boolean claimTickSnapshot() {
+        if (snapshotTick == tickCounter) {
+            return false;
+        }
+        snapshotTick = tickCounter;
+        return captureTickCounter++ % CULL_SNAPSHOT_CAPTURE_RATE_TICKS == 0;
     }
 
     @EventHandler
     private void alumite$onClientStarted(ClientStartedEvent event) {
-        previousEnabledState = SettingsRegistry.INSTANCE.getSettings().getTurboParticles().isEnabled();
-        enabledMirror = previousEnabledState;
-        if (previousEnabledState) {
-            startParticleCullThread();
-        }
+        cullLifecycle.onClientStarted();
     }
 
     @EventHandler
     private void alumite$onClientTick(ClientTickEvent event) {
-        boolean enabled = SettingsRegistry.INSTANCE.getSettings().getTurboParticles().isEnabled();
-        enabledMirror = enabled;
-        if (enabled == previousEnabledState) {
-            return;
-        }
+        tickCounter++;
+        cullLifecycle.onClientTick();
 
-        previousEnabledState = enabled;
-        if (enabled) {
-            startParticleCullThread();
-        }
-        else {
-            stopParticleCullThread();
+        ParticleCullTask cullTask = cullLifecycle.getTask();
+        if (cullTask != null && cullLifecycle.isEnabled()) {
+            PARTICLES_CONSIDERED_COUNTER.add(cullTask.getConsideredParticleCount());
+            PARTICLES_CULLED_COUNTER.add(cullTask.getCulledParticleCount());
         }
     }
 
     @EventHandler
     private void alumite$onClientStopping(ClientStoppingEvent event) {
-        enabledMirror = false;
-        stopParticleCullThread();
-    }
-
-    public boolean isParticleCullThreadAlive() {
-        return particleCullThread != null && particleCullThread.isAlive();
-    }
-
-    private void startParticleCullThread() {
-        if (particleCullThread != null && particleCullThread.isAlive()) {
-            return;
-        }
-        OcclusionCullingInstance occlusion = new OcclusionCullingInstance(128, new OcclusionProvider(), new ArrayOcclusionCache(128), 0.0);
-        particleCullTask = new ParticleCullTask(occlusion);
-        particleCullThread = new Thread(particleCullTask, "FascinatedUtils-ParticleCulling");
-        particleCullThread.setDaemon(true);
-        particleCullThread.start();
-    }
-
-    private void stopParticleCullThread() {
-        if (particleCullTask != null) {
-            particleCullTask.stop();
-        }
-        particleCullThread = null;
-        particleCullTask = null;
+        cullLifecycle.onClientStopping();
     }
 }

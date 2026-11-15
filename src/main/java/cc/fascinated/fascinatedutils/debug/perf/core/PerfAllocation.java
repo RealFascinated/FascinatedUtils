@@ -16,6 +16,9 @@ public class PerfAllocation {
         ThreadMXBean bean = ManagementFactory.getPlatformMXBean(ThreadMXBean.class);
         if (bean != null && bean.isThreadAllocatedMemorySupported()) {
             bean.setThreadAllocatedMemoryEnabled(true);
+            if (bean.isCurrentThreadCpuTimeSupported()) {
+                bean.setThreadCpuTimeEnabled(true);
+            }
             this.threadBean = bean;
         } else {
             this.threadBean = null;
@@ -29,5 +32,14 @@ public class PerfAllocation {
      */
     public long currentThreadBytes() {
         return threadBean == null ? -1 : threadBean.getCurrentThreadAllocatedBytes();
+    }
+
+    /**
+     * CPU time used so far by the calling thread.
+     *
+     * @return the CPU time in nanoseconds, or -1 when the JVM cannot report it
+     */
+    public long currentThreadCpuNanos() {
+        return threadBean == null || !threadBean.isCurrentThreadCpuTimeSupported() ? -1 : threadBean.getCurrentThreadCpuTime();
     }
 }

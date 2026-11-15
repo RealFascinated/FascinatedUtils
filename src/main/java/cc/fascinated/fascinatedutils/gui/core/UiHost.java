@@ -31,27 +31,20 @@ public class UiHost {
         return stateStore;
     }
 
-    public void setRoot(UiNode root) {
-        if (this.root != null) {
-            inputRouter.focusManager().clearFocus();
-            this.root.unmountSubtree();
-        }
-        this.root = root;
-        if (this.root != null) {
-            this.root.mountSubtree();
-        }
-    }
-
     public void layout(int positionX, int positionY, int width, int height, GuiRenderer renderFrame) {
         long composeToken = COMPOSE_SECTION.begin();
+        long composeAllocationToken = PerfProbe.INSTANCE.beginAllocation();
         recompose();
         COMPOSE_SECTION.end(composeToken);
+        COMPOSE_SECTION.endAllocation(composeAllocationToken);
         if (root == null) {
             return;
         }
         long layoutToken = LAYOUT_SECTION.begin();
+        long layoutAllocationToken = PerfProbe.INSTANCE.beginAllocation();
         root.layout(renderFrame, positionX, positionY, width, height);
         LAYOUT_SECTION.end(layoutToken);
+        LAYOUT_SECTION.endAllocation(layoutAllocationToken);
     }
 
     public void render(GuiRenderer renderFrame, float deltaSeconds) {
@@ -59,8 +52,10 @@ public class UiHost {
             return;
         }
         long renderToken = RENDER_SECTION.begin();
+        long renderAllocationToken = PerfProbe.INSTANCE.beginAllocation();
         root.render(renderFrame, deltaSeconds);
         RENDER_SECTION.end(renderToken);
+        RENDER_SECTION.endAllocation(renderAllocationToken);
     }
 
     public boolean dispatch(UiEvent event) {
@@ -71,13 +66,6 @@ public class UiHost {
             dirty = true;
         }
         return inputRouter.dispatch(root, event);
-    }
-
-    public void tick(float deltaSeconds) {
-        if (root == null) {
-            return;
-        }
-        root.tickSubtree(deltaSeconds);
     }
 
     public void dispose() {

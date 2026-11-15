@@ -17,7 +17,7 @@ public class TpsHudPanel extends MiniMessageHudPanel {
     private final TpsWidget tpsWidget;
 
     public TpsHudPanel(TpsWidget tpsWidget) {
-        super(tpsWidget, "tps", tpsWidget.tpsHudBaseMinWidth());
+        super(tpsWidget, "tps", TpsWidget.MIN_WIDTH_WITH_MSPT, UPDATE_INTERVAL_NANOS);
         this.tpsWidget = tpsWidget;
     }
 
@@ -32,15 +32,10 @@ public class TpsHudPanel extends MiniMessageHudPanel {
     }
 
     @Override
-    protected long miniMessageLineUpdateIntervalNanos() {
-        return UPDATE_INTERVAL_NANOS;
-    }
-
-    @Override
     protected float resolvePanelMinimumWidth(float baseMinWidth) {
         boolean showMspt = tpsWidget.getShowMspt().isEnabled();
         float resolved = showMspt ? TpsWidget.MIN_WIDTH_WITH_MSPT : HudHostModule.UTILITY_WIDGET_MIN_WIDTH;
-        return applyRemoveMinimumWidthFromHost(hudHostModule(), resolved);
+        return super.resolvePanelMinimumWidth(resolved);
     }
 
     @Override

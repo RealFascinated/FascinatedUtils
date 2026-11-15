@@ -31,7 +31,7 @@ public class UiFocusManager {
         if (focusedNode == null) {
             return;
         }
-        if (!contains(rootNode, focusedNode) || !focusedNode.enabled() || !focusedNode.visible()) {
+        if (!contains(rootNode, focusedNode) || !focusedNode.visible()) {
             clearFocus();
         }
     }
@@ -68,7 +68,7 @@ public class UiFocusManager {
     }
 
     private static void collectFocusable(UiNode node, List<UiNode> output) {
-        if (node == null || !node.visible() || !node.enabled()) {
+        if (node == null || !node.visible()) {
             return;
         }
         if (node.focusable()) {

@@ -9,6 +9,7 @@
 #   --world      run the in-world scenario (default preset "default") instead of the micro-benchmarks
 #   --filter     only tests whose id contains the text
 #   --no-mods    do not copy run/mods into the worktrees (by default both sides get the same copy)
+#   --low-end    pass -Palumite.perf.lowEnd=true to every launch (2 CPUs, 2 GB heap; see build.gradle)
 #
 # Both refs must contain the perf suite (debug/perf). Reports go to a temp dir that is printed at the end.
 set -euo pipefail
@@ -30,6 +31,7 @@ fi
 world_scenario=""
 filter=""
 copy_mods=1
+low_end=0
 while [[ $# -gt 0 ]]; do
     case $1 in
         --world)
@@ -45,6 +47,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --no-mods) copy_mods=0 ;;
+        --low-end) low_end=1 ;;
         *) usage ;;
     esac
     shift
@@ -136,6 +139,9 @@ for ((run = 1; run <= launches; run++)); do
         fi
         if [[ -n $filter ]]; then
             properties+=("-Dalumite.perf.filter=$filter")
+        fi
+        if [[ $low_end -eq 1 ]]; then
+            properties+=("-Palumite.perf.lowEnd=true")
         fi
         launch "$side" "$work/$label.log" "${properties[@]}"
     done

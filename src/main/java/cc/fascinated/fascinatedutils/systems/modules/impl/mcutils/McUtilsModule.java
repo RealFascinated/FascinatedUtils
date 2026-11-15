@@ -17,14 +17,9 @@ import java.util.concurrent.TimeUnit;
 
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
-import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
-import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.packet.PacketReceiveEvent;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.hud.HudWidgetAppearanceBuilders;
 import cc.fascinated.fascinatedutils.systems.modules.impl.mcutils.hud.McUtilsHudPanel;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -47,50 +42,26 @@ public class McUtilsModule extends HudHostModule {
     private volatile long initialCount = -1;
     private volatile long currentCount = -1;
 
-    private final BooleanSetting showBackground = HudWidgetAppearanceBuilders.showBackground().build();
-    private final BooleanSetting roundedCorners = HudWidgetAppearanceBuilders.roundedCorners().build();
-    private final SliderSetting roundingRadius = HudWidgetAppearanceBuilders.roundingRadius().build();
-    private final BooleanSetting showBorder = HudWidgetAppearanceBuilders.showBorder().build();
-    private final SliderSetting borderThickness = HudWidgetAppearanceBuilders.borderThickness().build();
-    private final ColorSetting backgroundColor = HudWidgetAppearanceBuilders.backgroundColor().build();
-    private final ColorSetting borderColor = HudWidgetAppearanceBuilders.borderColor().build();
-    private final BooleanSetting removeMinimumWidth = HudWidgetAppearanceBuilders.removeMinimumWidth().build();
-    private final SliderSetting padding = HudWidgetAppearanceBuilders.padding().build();
-    private final BooleanSetting textShadow = HudWidgetAppearanceBuilders.textShadow().build();
 
     public McUtilsModule() {
         super("mcutils", "McUtils", HudDefaults.builder().defaultState(true).alwaysShowPanelToggles(true).build());
-        addSetting(showBackground);
-        addSetting(roundedCorners);
-        addSetting(showBorder);
-        addSetting(roundingRadius);
-        addSetting(borderThickness);
-        addSetting(backgroundColor);
-        addSetting(borderColor);
-        showBackground.addSubSetting(backgroundColor);
-        roundedCorners.addSubSetting(roundingRadius);
-        showBorder.addSubSetting(borderThickness);
-        showBorder.addSubSetting(borderColor);
-        addSetting(removeMinimumWidth);
-        addSetting(padding);
-        addSetting(textShadow);
+        addAppearanceSettings(true);
         registerHudPanel(new McUtilsHudPanel(this));
 
         Constants.SCHEDULED_POOL.scheduleAtFixedRate(() -> {
             try {
                 this.submitPending();
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            } catch (Exception exception) {
+                Client.LOG.error("Scheduled McUtils submit failed", exception);
             }
         }, 0, 1, TimeUnit.MINUTES);
         Constants.SCHEDULED_POOL.scheduleAtFixedRate(() -> {
             try {
                 this.fetchStats();
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            } catch (Exception exception) {
+                Client.LOG.error("Scheduled McUtils stats fetch failed", exception);
             }
         }, 0, 10, TimeUnit.SECONDS);
-        FascinatedEventBus.INSTANCE.subscribe(this);
     }
 
     private void submitPending() {
@@ -100,7 +71,6 @@ public class McUtilsModule extends HudHostModule {
         // Names whose Mojang lookup succeeded; they are marked as submitted and re-queued if the submit fails.
         List<String> processedNames = new ArrayList<>();
         try {
-            // Drain the queue into a local list, skipping already-queried names.
             List<String> names = new ArrayList<>();
             Set<String> seenInDrain = new HashSet<>();
             String name;

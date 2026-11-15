@@ -44,13 +44,11 @@ public class TextPromptPopupNode extends PopupNode<TextPromptPopupNode> {
         addPopupChild(inputHost);
 
         ButtonNode cancelButton = new ButtonNode(() -> Component.translatable("alumite.common.cancel").getString())
-                .setOnPress(() -> onCancel.run())
-                .setRounded(true);
+                .setOnPress(() -> onCancel.run());
         cancelButton.left(0).size(BUTTON_WIDTH, BUTTON_HEIGHT);
         ButtonNode confirmButton = new ButtonNode(confirmLabel)
                 .setOnPress(() -> onConfirm.run())
-                .setDisabled(confirmDisabled)
-                .setRounded(true);
+                .setDisabled(confirmDisabled);
         confirmButton.left(BUTTON_WIDTH + BUTTON_GAP).size(BUTTON_WIDTH, BUTTON_HEIGHT);
 
         PositionedNode<?> buttonRow = new PositionedNode<>();

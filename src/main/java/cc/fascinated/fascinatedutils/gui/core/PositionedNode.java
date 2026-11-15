@@ -4,8 +4,6 @@ import cc.fascinated.fascinatedutils.gui.layout.AxisConstraints;
 import cc.fascinated.fascinatedutils.gui.layout.BoxLayoutSpec;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 
-import java.util.function.IntSupplier;
-
 public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
     private final BoxLayoutSpec boxLayout = new BoxLayoutSpec();
     private int columnGap = -1;
@@ -138,10 +136,6 @@ public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
         return left(positionX).top(positionY);
     }
 
-    public T posRel(float relativeX, float relativeY) {
-        return leftRel(relativeX).topRel(relativeY);
-    }
-
     public T alignX(float alignment) {
         boxLayout.horizontal().startRel(alignment, 0, alignment);
         return self();
@@ -180,23 +174,18 @@ public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
         return 0;
     }
 
-    protected final int resolveAxisSize(AxisConstraints axisConstraints, int parentSize, IntSupplier intrinsicSize, String axisLabel) {
-        if (axisConstraints.hasSizeConstraint() || (axisConstraints.hasStartConstraint() && axisConstraints.hasEndConstraint())) {
-            return axisConstraints.resolveSize(parentSize, axisLabel, debugPath());
-        }
-        return intrinsicSize.getAsInt();
-    }
-
     @Override
     public void layout(GuiRenderer renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
-        int resolvedWidth = resolveAxisSize(boxLayout.horizontal(), parentWidth, () -> intrinsicWidth(renderFrame, parentWidth), "horizontal");
+        AxisConstraints horizontal = boxLayout.horizontal();
+        AxisConstraints vertical = boxLayout.vertical();
+        int resolvedWidth = horizontal.hasDefinedSize() ? horizontal.resolveSize(parentWidth) : intrinsicWidth(renderFrame, parentWidth);
         if (columnGap >= 0) {
             layoutColumn(renderFrame, parentX, parentY, parentWidth, parentHeight, resolvedWidth);
             return;
         }
-        int resolvedHeight = resolveAxisSize(boxLayout.vertical(), parentHeight, () -> intrinsicHeight(renderFrame, parentHeight, resolvedWidth), "vertical");
-        int resolvedX = boxLayout.horizontal().resolvePosition(parentX, parentWidth, resolvedWidth);
-        int resolvedY = boxLayout.vertical().resolvePosition(parentY, parentHeight, resolvedHeight);
+        int resolvedHeight = vertical.hasDefinedSize() ? vertical.resolveSize(parentHeight) : intrinsicHeight(renderFrame, parentHeight, resolvedWidth);
+        int resolvedX = horizontal.resolvePosition(parentX, parentWidth, resolvedWidth);
+        int resolvedY = vertical.resolvePosition(parentY, parentHeight, resolvedHeight);
         bounds().set(resolvedX, resolvedY, resolvedWidth, resolvedHeight);
 
         if (rowGap >= 0) {
@@ -214,8 +203,8 @@ public class PositionedNode<T extends PositionedNode<T>> extends UiNode {
      */
     private void layoutColumn(GuiRenderer renderFrame, int parentX, int parentY, int parentWidth, int parentHeight, int resolvedWidth) {
         AxisConstraints vertical = boxLayout.vertical();
-        boolean fixedHeight = vertical.hasSizeConstraint() || (vertical.hasStartConstraint() && vertical.hasEndConstraint());
-        int fixedResolvedHeight = fixedHeight ? vertical.resolveSize(parentHeight, "vertical", debugPath()) : parentHeight;
+        boolean fixedHeight = vertical.hasDefinedSize();
+        int fixedResolvedHeight = fixedHeight ? vertical.resolveSize(parentHeight) : parentHeight;
         int resolvedX = boxLayout.horizontal().resolvePosition(parentX, parentWidth, resolvedWidth);
 
         int visibleCount = 0;

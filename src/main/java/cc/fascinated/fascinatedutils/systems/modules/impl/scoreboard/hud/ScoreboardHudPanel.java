@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.scoreboard.ScoreboardModule;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
@@ -12,18 +13,30 @@ import net.minecraft.network.chat.numbers.NumberFormat;
 import net.minecraft.network.chat.numbers.StyledFormat;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.PlayerScoreEntry;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ScoreboardHudPanel extends HudPanel {
 
+    private static final List<Component> PREVIEW_NAMES = List.of(Component.literal("Player1"), Component.literal("Player2"), Component.literal("Player3"), Component.literal("Player4"));
     private static final Component PREVIEW_TITLE = Component.literal("My Server");
-    private static final List<ScoreRow> PREVIEW_ROWS = List.of(new ScoreRow(Component.literal("Player1"), Component.empty(), 0), new ScoreRow(Component.literal("Player2"), Component.empty(), 0), new ScoreRow(Component.literal("Player3"), Component.empty(), 0), new ScoreRow(Component.literal("Player4"), Component.empty(), 0));
+    private static final Component VALUE_SEPARATOR = Component.literal(": ");
+    private static final int MAX_ROWS = 15;
 
     private final ScoreboardModule scoreboardModule;
+
+    private List<RowInput> cachedInputs = List.of();
+    private Component cachedTitle;
+    private NumberFormat cachedObjectiveFormat;
+    private boolean cachedHideScores;
+    private Font cachedFont;
+    private Snapshot cachedSnapshot;
 
     public ScoreboardHudPanel(ScoreboardModule scoreboardModule) {
         super(scoreboardModule, "scoreboard", 0f);
@@ -38,10 +51,10 @@ public class ScoreboardHudPanel extends HudPanel {
     @Override
     public @Nullable Runnable prepareAndDraw(GuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
         Minecraft minecraft = Minecraft.getInstance();
+        Font font = minecraft.font;
         if (minecraft.level == null) {
             if (editorMode) {
-                float lineHeight = glRenderer.fontHeight();
-                return buildScoreboardDraw(glRenderer, lineHeight, PREVIEW_TITLE, PREVIEW_ROWS, editorMode);
+                return buildScoreboardDraw(glRenderer, glRenderer.fontHeight(), previewSnapshot(font), editorMode);
             }
             return null;
         }
@@ -52,47 +65,102 @@ public class ScoreboardHudPanel extends HudPanel {
         float lineHeight = glRenderer.fontHeight();
         if (objective == null) {
             if (editorMode) {
-                return buildScoreboardDraw(glRenderer, lineHeight, PREVIEW_TITLE, PREVIEW_ROWS, editorMode);
+                return buildScoreboardDraw(glRenderer, lineHeight, previewSnapshot(font), editorMode);
             }
             recordHudContentSkipped();
             return null;
         }
 
-        Font font = minecraft.font;
         NumberFormat objectiveScoreFormat = objective.numberFormatOrDefault(StyledFormat.SIDEBAR_DEFAULT);
         boolean hideScores = scoreboardModule.scoreboardHideScoreLines();
-        List<ScoreRow> rows = board.listPlayerScores(objective).stream().filter(entry -> !entry.isHidden()).sorted(GuiScoreDisplayOrderAccessor.scoreDisplayOrder()).limit(15L).map(entry -> {
-            PlayerTeam team = board.getPlayersTeam(entry.owner());
-            Component ownerName = entry.ownerName();
-            Component name = PlayerTeam.formatNameForTeam(team, ownerName);
-            Component scoreText = hideScores ? Component.empty() : entry.formatValue(objectiveScoreFormat);
-            int scoreWidth = hideScores ? 0 : font.width(scoreText);
-            return new ScoreRow(name, scoreText, scoreWidth);
-        }).toList();
+        Component title = objective.getDisplayName();
+        List<RowInput> inputs = collectRowInputs(board, objective);
 
-        return buildScoreboardDraw(glRenderer, lineHeight, objective.getDisplayName(), rows, editorMode);
+        if (cachedSnapshot == null || hideScores != cachedHideScores || font != cachedFont || !Objects.equals(cachedTitle, title) || !Objects.equals(cachedObjectiveFormat, objectiveScoreFormat) || !inputs.equals(cachedInputs)) {
+            cachedSnapshot = buildSnapshot(font, title, inputs, objectiveScoreFormat, hideScores);
+            cachedTitle = title;
+            cachedObjectiveFormat = objectiveScoreFormat;
+            cachedHideScores = hideScores;
+            cachedFont = font;
+            cachedInputs = inputs;
+        }
+        return buildScoreboardDraw(glRenderer, lineHeight, cachedSnapshot, editorMode);
     }
 
-    private Runnable buildScoreboardDraw(GuiRenderer glRenderer, float lineHeight, Component title, List<ScoreRow> rows, boolean editorMode) {
-        Font font = Minecraft.getInstance().font;
-        int titleWidth = font.width(title);
-        int spacerWidth = font.width(Component.literal(": "));
-        int widest = titleWidth;
-        for (ScoreRow row : rows) {
-            int rowWidth = font.width(row.name) + (row.scoreWidth > 0 ? spacerWidth + row.scoreWidth : 0);
-            widest = Math.max(widest, rowWidth);
+    /**
+     * Collects the sidebar entries in display order, with the team state that affects how each row is drawn.
+     * Only cheap reads happen here; text and widths are built in {@link #buildSnapshot} when the inputs change.
+     *
+     * @param board     scoreboard of the current level
+     * @param objective sidebar objective
+     * @return the visible rows, at most {@link #MAX_ROWS}
+     */
+    private static List<RowInput> collectRowInputs(Scoreboard board, Objective objective) {
+        List<PlayerScoreEntry> entries = new ArrayList<>();
+        for (PlayerScoreEntry entry : board.listPlayerScores(objective)) {
+            if (!entry.isHidden()) {
+                entries.add(entry);
+            }
         }
+        entries.sort(GuiScoreDisplayOrderAccessor.scoreDisplayOrder());
+
+        int count = Math.min(entries.size(), MAX_ROWS);
+        List<RowInput> inputs = new ArrayList<>(count);
+        for (int index = 0; index < count; index++) {
+            PlayerScoreEntry entry = entries.get(index);
+            PlayerTeam team = board.getPlayersTeam(entry.owner());
+            if (team == null) {
+                inputs.add(new RowInput(entry.ownerName(), entry.value(), entry.numberFormatOverride(), null, null, null, null));
+            }
+            else {
+                inputs.add(new RowInput(entry.ownerName(), entry.value(), entry.numberFormatOverride(), team, team.getPlayerPrefix(), team.getPlayerSuffix(), team.getColor()));
+            }
+        }
+        return inputs;
+    }
+
+    private static Snapshot buildSnapshot(Font font, Component title, List<RowInput> inputs, NumberFormat objectiveScoreFormat, boolean hideScores) {
+        int spacerWidth = font.width(VALUE_SEPARATOR);
+        List<ScoreRow> rows = new ArrayList<>(inputs.size());
+        int widest = font.width(title);
+        for (RowInput input : inputs) {
+            Component name = PlayerTeam.formatNameForTeam(input.team(), input.ownerName());
+            Component scoreText = Component.empty();
+            int scoreWidth = 0;
+            if (!hideScores) {
+                NumberFormat format = input.numberFormat() == null ? objectiveScoreFormat : input.numberFormat();
+                scoreText = format.format(input.value());
+                scoreWidth = font.width(scoreText);
+            }
+            int rowWidth = font.width(name) + (scoreWidth > 0 ? spacerWidth + scoreWidth : 0);
+            widest = Math.max(widest, rowWidth);
+            rows.add(new ScoreRow(name, scoreText, scoreWidth));
+        }
+        return new Snapshot(title, font.width(title), widest, List.copyOf(rows));
+    }
+
+    private static Snapshot previewSnapshot(Font font) {
+        List<ScoreRow> rows = new ArrayList<>(PREVIEW_NAMES.size());
+        int widest = font.width(PREVIEW_TITLE);
+        for (Component name : PREVIEW_NAMES) {
+            int rowWidth = font.width(name);
+            widest = Math.max(widest, rowWidth);
+            rows.add(new ScoreRow(name, Component.empty(), 0));
+        }
+        return new Snapshot(PREVIEW_TITLE, font.width(PREVIEW_TITLE), widest, List.copyOf(rows));
+    }
+
+    private Runnable buildScoreboardDraw(GuiRenderer glRenderer, float lineHeight, Snapshot snapshot, boolean editorMode) {
         float padX = hudHostModule().getPaddingValue();
         float padY = hudHostModule().getPaddingValue();
-        float layoutWidth = Math.max(getMinWidth(), (float) widest + 2f * padX);
+        float layoutWidth = Math.max(getMinWidth(), (float) snapshot.widest() + 2f * padX);
+        List<ScoreRow> rows = snapshot.rows();
         float layoutHeight = Math.max(1f, (rows.size() + 1) * lineHeight + 2f * padY);
-        getHudState().setLastLayoutWidth(layoutWidth);
-        getHudState().setLastLayoutHeight(layoutHeight);
-        getHudState().setCommittedLayoutWidth(layoutWidth);
-        getHudState().setCommittedLayoutHeight(layoutHeight);
+        commitLayout(layoutWidth, layoutHeight);
 
         int textColor = 0xFFFFFFFF;
-        List<ScoreRow> rowsCopy = List.copyOf(rows);
+        Component title = snapshot.title();
+        int titleWidth = snapshot.titleWidth();
         boolean textShadow = hudHostModule().isTextShadowEnabled();
         return () -> {
             hudHostModule().drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
@@ -100,16 +168,20 @@ public class ScoreboardHudPanel extends HudPanel {
             float contentRight = layoutWidth - padX;
             float titleX = padX + (contentRight - padX - titleWidth) * 0.5f;
             glRenderer.drawComponentText(title, titleX, padY, textColor, textShadow);
-            for (int index = 0; index < rowsCopy.size(); index++) {
-                ScoreRow row = rowsCopy.get(index);
+            for (int index = 0; index < rows.size(); index++) {
+                ScoreRow row = rows.get(index);
                 float rowY = padY + (index + 1) * lineHeight;
-                glRenderer.drawComponentText(row.name, padX, rowY, textColor, textShadow);
-                if (row.scoreWidth > 0) {
-                    glRenderer.drawComponentText(row.score, contentRight - row.scoreWidth, rowY, textColor, textShadow);
+                glRenderer.drawComponentText(row.name(), padX, rowY, textColor, textShadow);
+                if (row.scoreWidth() > 0) {
+                    glRenderer.drawComponentText(row.score(), contentRight - row.scoreWidth(), rowY, textColor, textShadow);
                 }
             }
         };
     }
 
+    private record RowInput(Component ownerName, int value, @Nullable NumberFormat numberFormat, @Nullable PlayerTeam team, @Nullable Component teamPrefix, @Nullable Component teamSuffix, @Nullable ChatFormatting teamColor) {}
+
     private record ScoreRow(Component name, Component score, int scoreWidth) {}
+
+    private record Snapshot(Component title, int titleWidth, int widest, List<ScoreRow> rows) {}
 }

@@ -22,7 +22,7 @@ public class ClientLevelTickMixin {
 
     @Inject(method = "tickNonPassenger", at = @At("HEAD"), cancellable = true)
     private void alumite$skipCulledEntityTick(Entity entity, CallbackInfo info) {
-        if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
+        if (!Client.TURBO_ENTITIES.isEnabled()) {
             return;
         }
 
@@ -32,17 +32,8 @@ public class ClientLevelTickMixin {
         }
 
         Minecraft minecraft = Minecraft.getInstance();
-        if (entity == minecraft.player || entity == minecraft.getCameraEntity()) {
-            Client.TURBO_ENTITIES.incrementTickedEntities();
-            return;
-        }
-
-        if (entity.isVehicle() || entity.isPassenger()) {
-            Client.TURBO_ENTITIES.incrementTickedEntities();
-            return;
-        }
-
-        if (!(entity instanceof Cullable cullable) || !cullable.alumite$isCulled()) {
+        boolean culled = entity instanceof Cullable cullable && cullable.alumite$isCulled();
+        if (entity == minecraft.player || entity == minecraft.getCameraEntity() || entity.isVehicle() || entity.isPassenger() || !culled) {
             Client.TURBO_ENTITIES.incrementTickedEntities();
             return;
         }

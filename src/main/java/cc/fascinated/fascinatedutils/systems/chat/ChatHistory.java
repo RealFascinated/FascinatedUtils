@@ -5,6 +5,7 @@ import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
 import cc.fascinated.fascinatedutils.mixininterface.ChatComponentAccess;
+import cc.fascinated.fascinatedutils.systems.config.AtomicFiles;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.ChatModule;
@@ -34,6 +35,7 @@ public class ChatHistory {
     private static final int FLUSH_INTERVAL_TICKS = 200;
 
     private final List<Component> entries = new ArrayList<>();
+    private final List<String> unparsedLines = new ArrayList<>();
     private ClientPacketListener lastConnection;
     private boolean dirty;
     private int ticksSinceFlush;
@@ -133,14 +135,15 @@ public class ChatHistory {
     private void save() {
         dirty = false;
         ticksSinceFlush = 0;
-        List<String> lines = new ArrayList<>(entries.size());
+        StringBuilder content = new StringBuilder();
         for (Component entry : entries) {
-            ComponentSerialization.CODEC.encodeStart(JsonOps.INSTANCE, entry).result().ifPresent(json -> lines.add(json.toString()));
+            ComponentSerialization.CODEC.encodeStart(JsonOps.INSTANCE, entry).result().ifPresent(json -> content.append(json).append(System.lineSeparator()));
+        }
+        for (String unparsedLine : unparsedLines) {
+            content.append(unparsedLine).append(System.lineSeparator());
         }
         try {
-            Path path = historyPath();
-            Files.createDirectories(path.getParent());
-            Files.write(path, lines, StandardCharsets.UTF_8);
+            AtomicFiles.INSTANCE.writeAtomically(historyPath(), content.toString());
         } catch (IOException exception) {
             Client.LOG.warn("Failed to save chat history: {}", exception.toString());
         }
@@ -156,11 +159,17 @@ public class ChatHistory {
                 if (line.isBlank()) {
                     continue;
                 }
-                JsonElement json = JsonParser.parseString(line);
-                ComponentSerialization.CODEC.parse(JsonOps.INSTANCE, json).result().ifPresent(entries::add);
+                try {
+                    JsonElement json = JsonParser.parseString(line);
+                    ComponentSerialization.CODEC.parse(JsonOps.INSTANCE, json).result().ifPresentOrElse(entries::add, () -> unparsedLines.add(line));
+                } catch (RuntimeException exception) {
+                    // Kept and written back on save so one bad line neither aborts the load nor erases the rest of the history.
+                    unparsedLines.add(line);
+                    Client.LOG.warn("Skipping unreadable chat history line: {}", exception.toString());
+                }
             }
             trim();
-        } catch (IOException | RuntimeException exception) {
+        } catch (IOException exception) {
             Client.LOG.warn("Failed to load chat history: {}", exception.toString());
         }
     }

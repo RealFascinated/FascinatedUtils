@@ -10,20 +10,16 @@ import lombok.SneakyThrows;
 import org.jspecify.annotations.NonNull;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.Date;
-import java.util.Iterator;
 
 @Getter
 public class Screenshot {
@@ -31,8 +27,6 @@ public class Screenshot {
     private final Path path;
     private final Date createdAt;
     private final long size;
-    private long width;
-    private long height;
 
     @SneakyThrows
     public Screenshot(Path path) {
@@ -44,28 +38,15 @@ public class Screenshot {
         this.createdAt = new Date(createdAt.toMillis());
 
         this.size = path.toFile().length();
-
-        try (ImageInputStream in = ImageIO.createImageInputStream(path.toFile())) {
-            Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
-            if (readers.hasNext()) {
-                ImageReader reader = readers.next();
-                reader.setInput(in);
-                this.width = reader.getWidth(0);
-                this.height = reader.getHeight(0);
-                reader.dispose();
-            }
-        } catch (IOException e) {
-            Client.LOG.error("Failed to load screenshot {}", path, e);
-        }
     }
 
     /**
      * Gets the texture for this screenshot.
      *
-     * @return the texture identifier
+     * @return the loaded texture, or {@code null} while it is still loading
      */
     public TextureManager.LoadedTexture getTexture(int maxHeight) {
-        return TextureManager.INSTANCE.getLocal(path, maxHeight, () -> {});
+        return TextureManager.INSTANCE.getLocal(path, maxHeight);
     }
 
     /**
@@ -75,7 +56,10 @@ public class Screenshot {
         Constants.EXECUTORS.execute(() -> {
             try {
                 BufferedImage img = ImageIO.read(path.toFile());
-                if (img == null) return;
+                if (img == null) {
+                    Client.LOG.warn("Failed to decode screenshot {} for clipboard copy", path);
+                    return;
+                }
                 Transferable transferable = new Transferable() {
                     @Override
                     public DataFlavor[] getTransferDataFlavors() {
@@ -95,8 +79,8 @@ public class Screenshot {
                 };
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(transferable, null);
                 Toast.show().message(Component.translatable("alumite.screenshot.copied").getString()).info();
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            } catch (Exception exception) {
+                Client.LOG.warn("Failed to copy screenshot {} to clipboard", path, exception);
             }
         });
     }

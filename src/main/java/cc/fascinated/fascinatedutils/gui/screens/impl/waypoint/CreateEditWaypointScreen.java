@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.waypoint;
 
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
+import cc.fascinated.fascinatedutils.common.Colors;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.core.SpacerNode;
@@ -91,8 +92,7 @@ public class CreateEditWaypointScreen extends RootScreen {
                 .setBorderResolver(theme -> theme.inputBorder())
                 .alignY(0.5f));
         colorRow.addChild(new ButtonNode()
-                .setLabel(() -> "#" + String.format("%06X", colorState.get().getPackedArgb() & 0xFFFFFF))
-                .setRounded(true)
+                .setLabel(() -> Colors.rgbHex(colorState.get().getPackedArgb()))
                 .left(SWATCH_SIZE + UiMetrics.SPACE_XS)
                 .right(0)
                 .setOnPress(() -> {
@@ -113,7 +113,6 @@ public class CreateEditWaypointScreen extends RootScreen {
                     header.right(UiMetrics.SPACE_XS);
                     header.addChild(new ButtonNode()
                             .setIconCenter(ModUiTextures.BACK.getId())
-                            .setRounded(true)
                             .setVariant(ButtonNode.ButtonVariant.GHOST)
                             .setOnPress(() -> Minecraft.getInstance().setScreen(new WaypointsScreen())));
                 })
@@ -135,7 +134,6 @@ public class CreateEditWaypointScreen extends RootScreen {
                     footer.addChild(new ButtonNode()
                             .setLeftIcon(ModUiTextures.SAVE.getId())
                             .setLabel(Component.translatable("alumite.waypoints.save").getString())
-                            .setRounded(true)
                             .setVariant(ButtonNode.ButtonVariant.PRIMARY)
                             .setDisabled(() -> nameState.get().isBlank())
                             .setOnPress(() -> {

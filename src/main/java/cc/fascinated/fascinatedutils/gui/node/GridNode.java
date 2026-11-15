@@ -11,11 +11,6 @@ public class GridNode extends UiNode {
     private float cellAspectRatio = -1f;
     private int rowFooterHeight = 0;
 
-    public GridNode setCols(int cols) {
-        this.cols = Math.max(1, cols);
-        return this;
-    }
-
     public GridNode setGap(int gap) {
         this.gap = Math.max(0, gap);
         return this;
@@ -31,11 +26,6 @@ public class GridNode extends UiNode {
      *
      * @param rowHeight height in pixels for each row
      */
-    public GridNode setRowHeight(int rowHeight) {
-        this.rowHeight = Math.max(0, rowHeight);
-        return this;
-    }
-
     /**
      * Sets the minimum cell width used to compute the column count dynamically at layout
      * time. The grid will fit as many columns as possible without any cell going below this

@@ -9,11 +9,6 @@ public class NanoSamples {
     private long[] values = new long[256];
     private int count;
 
-    /**
-     * Appends one sample.
-     *
-     * @param nanos the duration in nanoseconds
-     */
     public synchronized void add(long nanos) {
         if (count == values.length) {
             values = Arrays.copyOf(values, values.length * 2);
@@ -21,12 +16,11 @@ public class NanoSamples {
         values[count++] = nanos;
     }
 
-    /**
-     * Copies the recorded samples.
-     *
-     * @return an array holding exactly the recorded samples
-     */
     public synchronized long[] toArray() {
         return Arrays.copyOf(values, count);
+    }
+
+    public synchronized void clear() {
+        count = 0;
     }
 }

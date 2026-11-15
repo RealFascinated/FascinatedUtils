@@ -11,10 +11,11 @@ import java.util.List;
  * The camera inside a block of water, so the water fog path runs instead of the atmospheric one.
  */
 public class WaterPerfScene extends PerfScene {
+    public static final String ID = "water";
     private static final String WATER_VOLUME = "~-3 ~-3 ~-3 ~3 ~3 ~3";
 
     public WaterPerfScene() {
-        super("water", "Camera submerged in a 7x7x7 block of water");
+        super(ID, "Camera submerged in a 7x7x7 block of water");
     }
 
     @Override

@@ -155,7 +155,6 @@ public class HUDEditorScreen extends RootScreen {
                     .fullWidth()
                     .height(LABEL_HEIGHT));
             ButtonNode modsButton = new ButtonNode(() -> Component.translatable("alumite.setting.hud_editor.branding.mods_button").getString())
-                    .setRounded(true)
                     .setVariant(ButtonNode.ButtonVariant.PRIMARY)
                     .setOnPress(() -> Minecraft.getInstance().setScreen(new ModSettingsScreen(null, this)));
             modsButton.fullWidth().height(MODS_BUTTON_HEIGHT);
@@ -169,7 +168,6 @@ public class HUDEditorScreen extends RootScreen {
         ButtonNode closeButton = new ButtonNode()
                 .setIconCenter(ModUiTextures.CLOSE.getId())
                 .setIconSize(16)
-                .setRounded(true)
                 .setOnPress(() -> Minecraft.getInstance().setScreen(null));
         closeButton.size(CLOSE_EDITOR_SIZE).right(CORNER_MARGIN).top(CORNER_MARGIN);
         return closeButton;

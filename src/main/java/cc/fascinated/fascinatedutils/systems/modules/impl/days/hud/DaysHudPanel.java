@@ -14,12 +14,7 @@ public class DaysHudPanel extends MiniMessageHudPanel {
     private static final long UPDATE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(500L);
 
     public DaysHudPanel(DaysCounterWidget daysWidget) {
-        super(daysWidget, "days", HudHostModule.UTILITY_WIDGET_MIN_WIDTH);
-    }
-
-    @Override
-    protected long miniMessageLineUpdateIntervalNanos() {
-        return UPDATE_INTERVAL_NANOS;
+        super(daysWidget, "days", HudHostModule.UTILITY_WIDGET_MIN_WIDTH, UPDATE_INTERVAL_NANOS);
     }
 
     @Override

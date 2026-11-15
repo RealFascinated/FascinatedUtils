@@ -2,7 +2,6 @@ package cc.fascinated.fascinatedutils.gui.render;
 
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiThemeRepository;
-import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -89,8 +88,6 @@ public class UiText {
         }
     }
 
-    private record WordToken(String word, Segment segment) {}
-
     private static final int DEFAULT_COLOR = 0xFFFFFFFF;
 
     private final List<Segment> segments;
@@ -110,18 +107,6 @@ public class UiText {
      */
     public static UiText of(String text) {
         return single(text != null ? text : "");
-    }
-
-    /**
-     * Creates a {@code UiText} whose string is the resolved value of a translatable language key.
-     *
-     * @param key
-     *         the translation key to look up
-     *
-     * @return a new single-segment {@code UiText}
-     */
-    public static UiText ofTranslatable(String key) {
-        return of(Component.translatable(key).getString());
     }
 
     /**
@@ -317,192 +302,6 @@ public class UiText {
             }
             cursorX += segWidth;
         }
-    }
-
-    /**
-     * Draws this text with word-wrapping within the given maximum width, starting a new line
-     * whenever a word would exceed it. Newline characters inside segment text force a line break.
-     *
-     * <p>When a line contains segments at different scales they are vertically centred relative
-     * to the tallest segment on that line.
-     *
-     * @param frame
-     *         the render frame to draw with
-     * @param x
-     *         left edge of the text block in logical pixels
-     * @param y
-     *         top edge of the first line in logical pixels
-     * @param maxWidth
-     *         maximum line width before wrapping, in logical pixels
-     * @param lineSpacing
-     *         extra vertical gap between lines, in logical pixels
-     *
-     * @return the total height used in logical pixels, not including a trailing gap
-     */
-    public int draw(GuiRenderer frame, int x, int y, int maxWidth, int lineSpacing) {
-        List<List<WordToken>> lines = flow(frame, maxWidth);
-        if (lines.isEmpty()) {
-            return 0;
-        }
-        int baseLineHeight = frame.fontHeight();
-        int cursorY = y;
-        for (int lineIndex = 0; lineIndex < lines.size(); lineIndex++) {
-            List<WordToken> line = lines.get(lineIndex);
-            int lineHeight = baseLineHeight;
-            for (WordToken token : line) {
-                lineHeight = Math.max(lineHeight, token.segment().height(frame));
-            }
-            int cursorX = x;
-            Segment prevSegment = null;
-            for (WordToken token : line) {
-                Segment seg = token.segment();
-                if (prevSegment != null) {
-                    int spaceWidth = prevSegment.widthOf(frame, " ");
-                    int spaceY = cursorY + (lineHeight - prevSegment.height(frame)) / 2;
-                    prevSegment.draw(frame, " ", cursorX, spaceY);
-                    cursorX += spaceWidth;
-                }
-                int wordWidth = seg.widthOf(frame, token.word());
-                int wordY = cursorY + (lineHeight - seg.height(frame)) / 2;
-                if (seg.isInteractive()) {
-                    seg.drawInteractive(frame, token.word(), cursorX, wordY, wordWidth, seg.height(frame));
-                } else {
-                    seg.draw(frame, token.word(), cursorX, wordY);
-                }
-                cursorX += wordWidth;
-                prevSegment = seg;
-            }
-            cursorY += lineHeight;
-            if (lineIndex < lines.size() - 1) {
-                cursorY += lineSpacing;
-            }
-        }
-        return cursorY - y;
-    }
-
-    /**
-     * Measures the height this text would occupy when drawn with word-wrapping at the given
-     * maximum width, without actually drawing anything.
-     *
-     * @param frame
-     *         the render frame used for font measurement
-     * @param maxWidth
-     *         maximum line width before wrapping, in logical pixels
-     * @param lineSpacing
-     *         extra vertical gap between lines, in logical pixels
-     *
-     * @return the total height in logical pixels, not including a trailing gap
-     */
-    public int wrappedHeight(GuiRenderer frame, int maxWidth, int lineSpacing) {
-        List<List<WordToken>> lines = flow(frame, maxWidth);
-        if (lines.isEmpty()) {
-            return 0;
-        }
-        int baseLineHeight = frame.fontHeight();
-        int total = 0;
-        for (int lineIndex = 0; lineIndex < lines.size(); lineIndex++) {
-            int lineHeight = baseLineHeight;
-            for (WordToken token : lines.get(lineIndex)) {
-                lineHeight = Math.max(lineHeight, token.segment().height(frame));
-            }
-            total += lineHeight;
-            if (lineIndex < lines.size() - 1) {
-                total += lineSpacing;
-            }
-        }
-        return total;
-    }
-
-    private List<List<WordToken>> flow(GuiRenderer frame, int maxWidth) {
-        List<Object> tokens = new ArrayList<>();
-        for (Segment seg : segments) {
-            String[] paragraphs = seg.text().split("\\R", -1);
-            for (int pi = 0; pi < paragraphs.length; pi++) {
-                if (pi > 0) {
-                    tokens.add(null); // forced line break
-                }
-                for (String word : paragraphs[pi].split(" +", -1)) {
-                    if (!word.isEmpty()) {
-                        tokens.add(new WordToken(word, seg));
-                    }
-                }
-            }
-        }
-
-        List<List<WordToken>> lines = new ArrayList<>();
-        List<WordToken> currentLine = new ArrayList<>();
-        int currentWidth = 0;
-
-        for (Object token : tokens) {
-            if (token == null) {
-                lines.add(currentLine);
-                currentLine = new ArrayList<>();
-                currentWidth = 0;
-                continue;
-            }
-            WordToken wordToken = (WordToken) token;
-            int wordWidth = wordToken.segment().widthOf(frame, wordToken.word());
-            if (wordWidth > maxWidth) {
-                // Word is too wide to fit on any line on its own — must be split.
-                if (!currentLine.isEmpty()) {
-                    lines.add(currentLine);
-                    currentLine = new ArrayList<>();
-                    currentWidth = 0;
-                }
-                String word = wordToken.word();
-                Segment seg = wordToken.segment();
-                int start = 0;
-                while (start < word.length()) {
-                    int end = longestPrefixFits(seg, word, start, maxWidth, frame);
-                    String chunk = word.substring(start, end);
-                    start = end;
-                    if (start < word.length()) {
-                        // Not the last chunk — emit as its own line.
-                        List<WordToken> chunkLine = new ArrayList<>();
-                        chunkLine.add(new WordToken(chunk, seg));
-                        lines.add(chunkLine);
-                    } else {
-                        // Last chunk — keep on currentLine so following words can join.
-                        currentLine.add(new WordToken(chunk, seg));
-                        currentWidth = seg.widthOf(frame, chunk);
-                    }
-                }
-            } else {
-                int spaceWidth = currentLine.isEmpty() ? 0 : currentLine.get(currentLine.size() - 1).segment().widthOf(frame, " ");
-                int needed = spaceWidth + wordWidth;
-                if (!currentLine.isEmpty() && currentWidth + needed > maxWidth) {
-                    lines.add(currentLine);
-                    currentLine = new ArrayList<>();
-                    currentLine.add(wordToken);
-                    currentWidth = wordWidth;
-                } else {
-                    currentLine.add(wordToken);
-                    currentWidth += needed;
-                }
-            }
-        }
-
-        if (!currentLine.isEmpty() || !lines.isEmpty()) {
-            lines.add(currentLine);
-        }
-
-        return lines;
-    }
-
-    private static int longestPrefixFits(Segment seg, String word, int start, int maxWidth, GuiRenderer frame) {
-        int low = start + 1;
-        int high = word.length();
-        int best = start + 1; // always advance at least one character
-        while (low <= high) {
-            int mid = (low + high) >>> 1;
-            if (seg.widthOf(frame, word.substring(start, mid)) <= maxWidth) {
-                best = mid;
-                low = mid + 1;
-            } else {
-                high = mid - 1;
-            }
-        }
-        return best;
     }
 
     private static UiText single(String text) {

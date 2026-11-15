@@ -48,7 +48,6 @@ public class ScreenshotScreen extends RootScreen {
         UiState<Integer> confirmDeleteIndex = stateStore.state("confirmDeleteIndex", -1);
 
         CardNode card = new CardNode()
-                .setRounded(false)
                 .full()
                 .setFillResolver(UiTheme::panelFill)
                 .setBorderResolver(UiTheme::borderSubtle)
@@ -64,7 +63,6 @@ public class ScreenshotScreen extends RootScreen {
                             .setOnPress(() -> Util.getPlatform().openFile(Paths.get(mc.gameDirectory.getAbsolutePath(), "screenshots").toFile())));
                     header.addChild(new ButtonNode()
                             .setIconCenter(ModUiTextures.CLOSE.getId())
-                            .setRounded(true)
                             .setVariant(ButtonNode.ButtonVariant.GHOST)
                             .setOnPress(() -> mc.setScreen(null)));
                 })
@@ -94,14 +92,14 @@ public class ScreenshotScreen extends RootScreen {
                                     .size(BUTTON_SIZE, CELL_BTN_HEIGHT)
                                     .setIconCenter(ModUiTextures.COPY.getId())
                                     .setOnPress(screenshot::copyToClipboard)
-                                    .setRounded(true));
+                                    );
 
                             buttonRow.addChild(new ButtonNode()
                                     .size(BUTTON_SIZE, CELL_BTN_HEIGHT)
                                     .setIconCenter(ModUiTextures.TRASH.getId())
                                     .setVariant(ButtonNode.ButtonVariant.DANGER)
                                     .setOnPress(() -> confirmDeleteIndex.set(screenshotIndex))
-                                    .setRounded(true));
+                                    );
 
                             TextureNode texture = new TextureNode()
                                     .setLoadedTextureSupplier(() -> screenshot.getTexture(TEXTURE_MAX_HEIGHT))

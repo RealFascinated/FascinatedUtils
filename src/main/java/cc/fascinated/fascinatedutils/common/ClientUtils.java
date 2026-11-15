@@ -2,11 +2,6 @@ package cc.fascinated.fascinatedutils.common;
 
 import lombok.experimental.UtilityClass;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
-import net.minecraft.core.Holder;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.effect.MobEffect;
 import org.lwjgl.glfw.GLFW;
 
 @UtilityClass
@@ -15,10 +10,6 @@ public class ClientUtils {
 
     public static boolean isMacOS() {
         return OS_NAME.contains("mac");
-    }
-
-    public static Identifier mobEffectSprite(Holder<MobEffect> effect) {
-        return effect.unwrapKey().map(ResourceKey::identifier).map(identifier -> identifier.withPrefix("mob_effect/")).orElseGet(MissingTextureAtlasSprite::getLocation);
     }
 
     /**

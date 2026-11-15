@@ -22,7 +22,7 @@ public class FpsHudPanel extends MiniMessageHudPanel {
     private final FpsWidget fpsWidget;
 
     public FpsHudPanel(FpsWidget fpsWidget) {
-        super(fpsWidget, "fps", HudHostModule.UTILITY_WIDGET_MIN_WIDTH);
+        super(fpsWidget, "fps", HudHostModule.UTILITY_WIDGET_MIN_WIDTH, UPDATE_INTERVAL_NANOS);
         this.fpsWidget = fpsWidget;
     }
 
@@ -37,11 +37,6 @@ public class FpsHudPanel extends MiniMessageHudPanel {
             return FPS_COLOR_AMBER;
         }
         return FPS_COLOR_RED;
-    }
-
-    @Override
-    protected long miniMessageLineUpdateIntervalNanos() {
-        return UPDATE_INTERVAL_NANOS;
     }
 
     @Override

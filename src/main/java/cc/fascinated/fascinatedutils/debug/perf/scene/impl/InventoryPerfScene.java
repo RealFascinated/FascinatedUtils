@@ -23,13 +23,14 @@ import java.util.List;
  * item's tooltip is built every tick and items are given and cleared so the inventory slot hooks run.
  */
 public class InventoryPerfScene extends PerfScene {
+    public static final String ID = "inventory";
     private static final int INPUT_EVERY_TICKS = 5;
     private static final int RESTOCK_EVERY_TICKS = 20;
 
     private List<?> lastTooltip;
 
     public InventoryPerfScene() {
-        super("inventory", "Inventory screen open with items, scroll and click input, tooltips built every tick");
+        super(ID, "Inventory screen open with items, scroll and click input, tooltips built every tick");
     }
 
     @Override

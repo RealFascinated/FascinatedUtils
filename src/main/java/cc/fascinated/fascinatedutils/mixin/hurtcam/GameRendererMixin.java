@@ -1,6 +1,5 @@
 package cc.fascinated.fascinatedutils.mixin.hurtcam;
 
-import cc.fascinated.fascinatedutils.mixininterface.IGameRenderer;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
 import cc.fascinated.fascinatedutils.systems.modules.impl.HurtcamModule;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -14,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Optional;
 
 @Mixin(GameRenderer.class)
-public abstract class GameRendererMixin implements IGameRenderer {
+public abstract class GameRendererMixin {
 
     @Inject(method = "bobHurt", at = @At("HEAD"), cancellable = true, require = 0)
     private void alumite$cancelHurtcamTilt(CameraRenderState cameraState, PoseStack poseStack, CallbackInfo callbackInfo) {

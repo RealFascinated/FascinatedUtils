@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 public class OcclusionProvider implements DataProvider {
 
     private final Minecraft client = Minecraft.getInstance();
+    private final BlockPos.MutableBlockPos scratchPos = new BlockPos.MutableBlockPos();
     private ClientLevel world = null;
 
     @Override
@@ -22,7 +23,7 @@ public class OcclusionProvider implements DataProvider {
         if (level == null) {
             return false;
         }
-        return level.getBlockState(new BlockPos(x, y, z)).isSolidRender();
+        return level.getBlockState(scratchPos.set(x, y, z)).isSolidRender();
     }
 
     @Override

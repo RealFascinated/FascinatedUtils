@@ -19,7 +19,7 @@ public class ClientClockManagerMixin {
     private long lastTickGameTime;
 
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
-    private void onTick(long gameTime, CallbackInfo ci) {
+    private void alumite$onTick(long gameTime, CallbackInfo ci) {
         ModuleRegistry.INSTANCE.getModule(TimeChangerModule.class).ifPresent(timeChangerModule -> {
             if (timeChangerModule.isEnabled()) {
                 this.lastTickGameTime = gameTime;
@@ -29,7 +29,7 @@ public class ClientClockManagerMixin {
     }
 
     @Inject(method = "getTotalTicks", at = @At("HEAD"), cancellable = true)
-    private void onGetTotalTicks(Holder<WorldClock> definition, CallbackInfoReturnable<Long> cir) {
+    private void alumite$onGetTotalTicks(Holder<WorldClock> definition, CallbackInfoReturnable<Long> cir) {
         ModuleRegistry.INSTANCE.getModule(TimeChangerModule.class).ifPresent(timeChangerModule -> {
             if (timeChangerModule.isEnabled()) {
                 cir.setReturnValue(timeChangerModule.getWorldTime().getValue().longValue());

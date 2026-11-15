@@ -60,7 +60,6 @@ public class WaypointsScreen extends RootScreen {
                     header.right(UiMetrics.SPACE_XS);
                     header.addChild(new ButtonNode()
                             .setIconCenter(ModUiTextures.CLOSE.getId())
-                            .setRounded(true)
                             .setVariant(ButtonNode.ButtonVariant.GHOST)
                             .setOnPress(() -> mc.setScreen(null))
                     );

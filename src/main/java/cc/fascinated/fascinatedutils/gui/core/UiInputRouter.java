@@ -146,7 +146,7 @@ public class UiInputRouter {
     }
 
     private static UiNode hitLeaf(UiNode root, float pointerX, float pointerY) {
-        if (root == null || !root.visible() || !root.enabled()) {
+        if (root == null || !root.visible()) {
             return null;
         }
         if (root.clipChildren() && !root.contains(pointerX, pointerY)) {
@@ -159,7 +159,7 @@ public class UiInputRouter {
                 return childLeaf;
             }
         }
-        if (root.contains(pointerX, pointerY) && root.blocksHitWhenEmpty() && root.enabled()) {
+        if (root.contains(pointerX, pointerY) && root.blocksHitWhenEmpty()) {
             return root;
         }
         return null;
@@ -202,11 +202,6 @@ public class UiInputRouter {
 
     private static boolean walkPointerPress(UiNode leaf, float pointerX, float pointerY, int button) {
         List<UiNode> chain = pathToRoot(leaf);
-        for (int index = chain.size() - 1; index >= 0; index--) {
-            if (chain.get(index).capturesPointerPress(pointerX, pointerY, button)) {
-                return true;
-            }
-        }
         for (UiNode node : chain) {
             if (node.onPointerPress(pointerX, pointerY, button)) {
                 return true;
@@ -217,11 +212,6 @@ public class UiInputRouter {
 
     private static boolean walkPointerRelease(UiNode leaf, float pointerX, float pointerY, int button) {
         List<UiNode> chain = pathToRoot(leaf);
-        for (int index = chain.size() - 1; index >= 0; index--) {
-            if (chain.get(index).capturesPointerRelease(pointerX, pointerY, button)) {
-                return true;
-            }
-        }
         boolean consumed = false;
         for (UiNode node : chain) {
             consumed |= node.onPointerRelease(pointerX, pointerY, button);
@@ -231,11 +221,6 @@ public class UiInputRouter {
 
     private static boolean walkClick(UiNode leaf, float pointerX, float pointerY, int button) {
         List<UiNode> chain = pathToRoot(leaf);
-        for (int index = chain.size() - 1; index >= 0; index--) {
-            if (chain.get(index).capturesClick(pointerX, pointerY, button)) {
-                return true;
-            }
-        }
         boolean consumed = false;
         for (UiNode node : chain) {
             consumed |= node.onClick(pointerX, pointerY, button);

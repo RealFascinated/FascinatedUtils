@@ -4,8 +4,9 @@ import cc.fascinated.fascinatedutils.gui.core.NodeScrollContext;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-
 import java.util.function.Consumer;
 
 public class ScrollColumnNode extends UiNode {
@@ -20,6 +21,7 @@ public class ScrollColumnNode extends UiNode {
     private static final String TIME_KEY_SUFFIX = "#time";
     private static final int SCROLLBAR_TOTAL = SCROLLBAR_LEFT_MARGIN + SCROLLBAR_WIDTH + SCROLLBAR_RIGHT_MARGIN;
 
+    private final List<UiNode> visibleChildrenScratch = new ArrayList<>();
     private int gap;
     private int scrollOffset;
     private float visualOffset;
@@ -191,8 +193,13 @@ public class ScrollColumnNode extends UiNode {
     public void layout(GuiRenderer renderFrame, int positionX, int positionY, int width, int height) {
         bounds().set(positionX, positionY, width, height);
 
-        UiNode[] visibleChildren = childrenView().stream().filter(UiNode::visible).toArray(UiNode[]::new);
-        int visibleCount = visibleChildren.length;
+        visibleChildrenScratch.clear();
+        for (UiNode childNode : childrenView()) {
+            if (childNode.visible()) {
+                visibleChildrenScratch.add(childNode);
+            }
+        }
+        int visibleCount = visibleChildrenScratch.size();
         if (visibleCount == 0) {
             contentHeight = 0;
             scrollOffset = 0;
@@ -202,7 +209,7 @@ public class ScrollColumnNode extends UiNode {
 
         // First pass: measure content height using full width.
         contentHeight = 0;
-        for (UiNode childNode : visibleChildren) {
+        for (UiNode childNode : visibleChildrenScratch) {
             childNode.layout(renderFrame, positionX, 0, width, height);
             contentHeight += Math.max(0, childNode.bounds().height());
         }
@@ -215,7 +222,7 @@ public class ScrollColumnNode extends UiNode {
         // Re-measure with the narrower width in case children reflow with scrollbar present.
         if (needsScrollbar) {
             contentHeight = 0;
-            for (UiNode childNode : visibleChildren) {
+            for (UiNode childNode : visibleChildrenScratch) {
                 childNode.layout(renderFrame, positionX, 0, contentWidth, height);
                 contentHeight += Math.max(0, childNode.bounds().height());
             }
@@ -229,7 +236,7 @@ public class ScrollColumnNode extends UiNode {
 
         advanceVisualOffset(maxScroll);
         int cursorY = positionY - Math.round(visualOffset);
-        for (UiNode childNode : visibleChildren) {
+        for (UiNode childNode : visibleChildrenScratch) {
             childNode.translate(0, cursorY - childNode.bounds().positionY());
             cursorY += Math.max(0, childNode.bounds().height()) + gap;
         }

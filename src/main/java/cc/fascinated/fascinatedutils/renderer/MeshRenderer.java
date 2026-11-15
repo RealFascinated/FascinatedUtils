@@ -12,6 +12,7 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
+import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.Mth;
 import org.joml.Matrix3x2f;
@@ -28,9 +29,7 @@ import java.util.OptionalDouble;
  */
 public class MeshRenderer {
     public static final MeshRenderer INSTANCE = new MeshRenderer();
-    private final List<GuiElementRenderState> pendingSolid = new ArrayList<>();
     private final List<GuiElementRenderState> pendingTextured = new ArrayList<>();
-    private final List<DynamicTexture> disposableCornerRadiiLuts = new ArrayList<>();
     private DynamicTexture whiteDot;
     private TextureSetup whiteTextureSetup;
     private GpuSampler linearSampler;
@@ -49,21 +48,11 @@ public class MeshRenderer {
      * @return packed color for all four quad vertices (same alpha byte on each)
      */
     public static int packArgbRadius(int argb, float cornerRadius, float halfMinPixelSide) {
-        float fraction = halfMinPixelSide > 1e-4f ? cornerRadius / halfMinPixelSide : 0f;
-        int radiusByte = Mth.clamp(Math.round(fraction * 255f), 0, 255);
-        return (argb & 0x00FFFFFF) | (radiusByte << 24);
+        return (argb & 0x00FFFFFF) | (RectCornerRoundMask.cornerRadiusByte(cornerRadius, halfMinPixelSide) << 24);
     }
 
     /**
-     * Start recording quads for the active scissor segment (no-op for this implementation).
-     *
-     * @param drawContext draw context for the active GUI pass
-     */
-    public void beginSegment(@NonNull GuiGraphicsExtractor drawContext) {
-    }
-
-    /**
-     * Submit solid queue then textured queue to {@link net.minecraft.client.renderer.state.gui.GuiRenderState}.
+     * Submit the textured queue to {@link GuiRenderState}.
      *
      * @param drawContext draw context for the active GUI pass
      */
@@ -71,42 +60,14 @@ public class MeshRenderer {
         flush(drawContext);
     }
 
-    /**
-     * Call from a mixin at the tail of {@link net.minecraft.client.gui.render.GuiRenderer#render} so GPU sampling has
-     * finished before {@link DynamicTexture#close()} invalidates views used by the pass.
-     */
-    public void releaseDisposableRadiiLutsAfterGuiRenderPass() {
-        for (DynamicTexture texture : disposableCornerRadiiLuts) {
-            texture.close();
-        }
-        disposableCornerRadiiLuts.clear();
-        RoundedRectCornerRadiiTexture.trimCachedLuts();
-    }
-
     public void flush(@NonNull GuiGraphicsExtractor drawContext) {
-        if (pendingSolid.isEmpty() && pendingTextured.isEmpty()) {
+        if (pendingTextured.isEmpty()) {
             return;
         }
-        for (GuiElementRenderState element : pendingSolid) {
-            drawContext.guiRenderState.addGuiElement(element);
-        }
-        pendingSolid.clear();
         for (GuiElementRenderState element : pendingTextured) {
             drawContext.guiRenderState.addGuiElement(element);
         }
         pendingTextured.clear();
-    }
-
-    /**
-     * Queue an axis-aligned solid {@code pos_color} quad (four corner colors).
-     */
-    public void enqueueSolidQuad(@NonNull GuiGraphicsExtractor drawContext, @Nullable ScreenRectangle scissor, float positionX, float positionY, float width, float height, int colorTopLeft, int colorBottomLeft, int colorBottomRight, int colorTopRight) {
-        Matrix3x2f pose = new Matrix3x2f(drawContext.pose());
-        int x0 = Mth.floor(positionX);
-        int y0 = Mth.floor(positionY);
-        int x1 = Mth.ceil(positionX + width);
-        int y1 = Mth.ceil(positionY + height);
-        pendingSolid.add(new SolidColorQuadRenderState(FascinatedUiPipelines.SOLID_COLOR, pose, x0, y0, x1, y1, colorTopLeft, colorBottomLeft, colorBottomRight, colorTopRight, scissor));
     }
 
     /**
@@ -152,6 +113,14 @@ public class MeshRenderer {
         int x1 = Mth.ceil(positionX + width);
         int y1 = Mth.ceil(positionY + height);
         pendingTextured.add(new AxisTexColorQuadRenderState(FascinatedUiPipelines.AXIS_TEX_COLOR, whiteSetup(), pose, x0, y0, x1, y1, colorTopLeft, colorBottomLeft, colorBottomRight, colorTopRight, scissor));
+    }
+
+    /**
+     * Queue a dotted rectangle outline from the local origin as a single element carrying every dot.
+     */
+    public void enqueueDottedOutline(@NonNull GuiGraphicsExtractor drawContext, @Nullable ScreenRectangle scissor, float width, float height, float dotSize, float step, int color) {
+        Matrix3x2f pose = new Matrix3x2f(drawContext.pose());
+        pendingTextured.add(new DottedOutlineRenderState(FascinatedUiPipelines.AXIS_TEX_COLOR, whiteSetup(), pose, width, height, dotSize, step, color, scissor));
     }
 
     /**

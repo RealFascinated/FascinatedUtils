@@ -14,9 +14,6 @@ public class CullableMixin implements Cullable {
     @Unique
     private volatile boolean alumite$culled = false;
 
-    @Unique
-    private volatile boolean alumite$outOfCamera = false;
-
     @Override
     public void alumite$setCulled(boolean culled) {
         this.alumite$culled = culled;
@@ -25,15 +22,5 @@ public class CullableMixin implements Cullable {
     @Override
     public boolean alumite$isCulled() {
         return alumite$culled;
-    }
-
-    @Override
-    public void alumite$setOutOfCamera(boolean outOfCamera) {
-        this.alumite$outOfCamera = outOfCamera;
-    }
-
-    @Override
-    public boolean alumite$isOutOfCamera() {
-        return alumite$outOfCamera;
     }
 }

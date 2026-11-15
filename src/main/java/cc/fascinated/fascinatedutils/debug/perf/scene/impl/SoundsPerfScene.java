@@ -12,10 +12,11 @@ import java.util.List;
  * Sounds played at the player several times a second, so the sound engine hooks (filter and music) run per sound.
  */
 public class SoundsPerfScene extends PerfScene {
+    public static final String ID = "sounds";
     private static final int SOUND_EVERY_TICKS = 2;
 
     public SoundsPerfScene() {
-        super("sounds", "A note block and a step sound played at the player every 2 ticks");
+        super(ID, "A note block and a step sound played at the player every 2 ticks");
     }
 
     @Override

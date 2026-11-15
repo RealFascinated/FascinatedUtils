@@ -38,7 +38,7 @@ public class GameRendererPerfMixin {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void alumite$frameEnd(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo callbackInfo) {
-        ALUMITE$FRAME_CPU.end(alumite$frameStart);
+        PerfProbe.INSTANCE.endFrameCpu(alumite$frameStart);
         ALUMITE$FRAME_CPU.endAllocation(alumite$frameAllocStart);
     }
 

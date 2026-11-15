@@ -3,19 +3,25 @@ package cc.fascinated.fascinatedutils.systems.modules.impl;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
+import lombok.AccessLevel;
 import lombok.Getter;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 public class ParticleFilterModule extends Module {
 
     private final List<BooleanSetting> particleToggles = new ArrayList<>();
+    @Getter(AccessLevel.NONE)
+    private final Map<ParticleType<?>, BooleanSetting> togglesByType = new IdentityHashMap<>();
 
     public ParticleFilterModule() {
         super("Particle Filter", ModuleCategory.GENERAL);
@@ -29,12 +35,8 @@ public class ParticleFilterModule extends Module {
      * @return true when the particle should be suppressed
      */
     public boolean isParticleBlocked(ParticleOptions options) {
-        Identifier key = BuiltInRegistries.PARTICLE_TYPE.getKey(options.getType());
-        if (key == null) {
-            return false;
-        }
-        String id = key.getNamespace() + ":" + key.getPath();
-        return particleToggles.stream().filter(toggle -> toggle.getNameProvider().get().equals(id)).findFirst().map(toggle -> !toggle.getValue()).orElse(false);
+        BooleanSetting toggle = togglesByType.get(options.getType());
+        return toggle != null && !toggle.getValue();
     }
 
     private void initParticleToggles() {
@@ -42,6 +44,7 @@ public class ParticleFilterModule extends Module {
             String id = identifier.getNamespace() + ":" + identifier.getPath();
             BooleanSetting particleToggle = BooleanSetting.builder().categoryDisplayKey("alumite.setting.category.particle_filter").id(id).displayName(() -> id).tooltip(() -> I18n.get("alumite.module.particlefilter.toggle.description")).defaultValue(true).build();
             particleToggles.add(particleToggle);
+            togglesByType.put(BuiltInRegistries.PARTICLE_TYPE.getValue(identifier), particleToggle);
             addSetting(particleToggle);
         }
     }

@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 import java.util.Locale;
 import java.util.function.BiConsumer;
@@ -88,12 +89,10 @@ public class ColorPickerPopupNode extends PopupNode<ColorPickerPopupNode> {
 
         applyButton = new ButtonNode()
                 .setLabel(Component.translatable("alumite.color_picker.apply").getString())
-                .setRounded(true)
                 .setOnPress(this::applyAndClose);
 
         cancelButton = new ButtonNode()
                 .setLabel(Component.translatable("alumite.common.cancel").getString())
-                .setRounded(true)
                 .setOnPress(onCancel);
 
         addPopupChild(titleNode);
@@ -269,13 +268,9 @@ public class ColorPickerPopupNode extends PopupNode<ColorPickerPopupNode> {
         private void updateFromPointer(float pointerX, float pointerY) {
             int width = bounds().width();
             int height = bounds().height();
-            saturation = clamp01((pointerX - bounds().positionX()) / Math.max(1, width - 1));
-            value = 1f - clamp01((pointerY - bounds().positionY()) / Math.max(1, height - 1));
+            saturation = Mth.clamp((pointerX - bounds().positionX()) / Math.max(1, width - 1), 0f, 1f);
+            value = 1f - Mth.clamp((pointerY - bounds().positionY()) / Math.max(1, height - 1), 0f, 1f);
             onSvChanged.accept(saturation, value);
-        }
-
-        private static float clamp01(float val) {
-            return Math.max(0f, Math.min(1f, val));
         }
     }
 
@@ -345,12 +340,8 @@ public class ColorPickerPopupNode extends PopupNode<ColorPickerPopupNode> {
         }
 
         private void updateFromPointer(float pointerX) {
-            hue = clamp01((pointerX - bounds().positionX()) / Math.max(1, bounds().width() - 1)) * 360f;
+            hue = Mth.clamp((pointerX - bounds().positionX()) / Math.max(1, bounds().width() - 1), 0f, 1f) * 360f;
             onHueChanged.accept(hue);
-        }
-
-        private static float clamp01(float val) {
-            return Math.max(0f, Math.min(1f, val));
         }
     }
 }

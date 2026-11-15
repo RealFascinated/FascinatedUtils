@@ -22,16 +22,16 @@ public class EntityInteractionReachMixin {
 
     @Inject(method = "attack", at = @At("HEAD"))
     private void alumite$recordAttackReach(Player player, Entity entity, CallbackInfo ci) {
-        recordReach(player, entity);
+        alumite$recordReach(player, entity);
     }
 
     @Inject(method = "interact", at = @At("HEAD"))
     private void alumite$recordInteractReach(Player player, Entity entity, EntityHitResult hitResult, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-        recordReach(player, entity);
+        alumite$recordReach(player, entity);
     }
 
     @Unique
-    private void recordReach(Player player, Entity entity) {
+    private void alumite$recordReach(Player player, Entity entity) {
         Optional<ReachWidget> optionalWidget = ModuleRegistry.INSTANCE.getModule(ReachWidget.class);
         if (optionalWidget.isPresent()) {
             ReachWidget widget = optionalWidget.get();

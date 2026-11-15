@@ -15,6 +15,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -22,23 +23,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LevelRenderer.class)
 public class LevelRendererMixin {
+    // Shared by every culled entity: nothing writes to a state after extraction, and an invisible interaction draws nothing.
+    @Unique
+    private static final EntityRenderState ALUMITE$INVISIBLE_STATE = alumite$createInvisibleState();
 
     @Inject(method = "extractEntity", at = @At("HEAD"), cancellable = true)
     private void alumite$extractEntity(Entity entity, float partialTickTime, CallbackInfoReturnable<EntityRenderState> info) {
-        if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
+        if (!Client.TURBO_ENTITIES.isEnabled()) {
             return;
         }
 
-        // Distance cap check — skip extracting render state entirely for far-away low-value entities
         Double maxDistSq = TurboEntities.RENDER_DISTANCE_CAPS.get(entity.getType());
         if (maxDistSq != null) {
             Minecraft client = Minecraft.getInstance();
             Vec3 cameraPos = client.gameRenderer.getMainCamera().position();
             if (entity.distanceToSqr(cameraPos.x, cameraPos.y, cameraPos.z) > maxDistSq) {
-                EntityRenderState skipped = new EntityRenderState();
-                skipped.entityType = EntityType.INTERACTION;
-                skipped.isInvisible = true;
-                info.setReturnValue(skipped);
+                info.setReturnValue(ALUMITE$INVISIBLE_STATE);
                 return;
             }
         }
@@ -48,20 +48,13 @@ public class LevelRendererMixin {
         }
 
         if (cullable.alumite$isCulled()) {
-            // Return an invisible state to skip rendering
-            EntityRenderState state = new EntityRenderState();
-            state.entityType = EntityType.INTERACTION;
-            state.isInvisible = true;
-            info.setReturnValue(state);
-            return;
+            info.setReturnValue(ALUMITE$INVISIBLE_STATE);
         }
-
-        cullable.alumite$setOutOfCamera(false);
     }
 
     @Inject(method = "extractVisibleEntities", at = @At("HEAD"))
     private void alumite$extractVisibleEntities(Camera camera, Frustum frustum, DeltaTracker deltaTracker, LevelRenderState output, CallbackInfo info) {
-        if (!Client.TURBO_ENTITIES.isTurboEntitiesCullEnabled()) {
+        if (!Client.TURBO_ENTITIES.isEnabled()) {
             return;
         }
 
@@ -71,19 +64,18 @@ public class LevelRendererMixin {
             return;
         }
 
-        Minecraft client = Minecraft.getInstance();
-        if (client.level == null || client.player == null) {
-            cullTask.setInGame(false);
+        if (!cullTask.handOffFrame(camera, frustum)) {
             return;
         }
 
-        cullTask.setInGame(true);
-        cullTask.setCamera(camera.position());
-        // Hand the cull thread a private copy; the render thread keeps mutating the live frustum.
-        cullTask.setFrustum(new Frustum(frustum));
-
         module.snapshotAndResetRenderFrameCounters();
+    }
 
-        cullTask.requestCull();
+    @Unique
+    private static EntityRenderState alumite$createInvisibleState() {
+        EntityRenderState state = new EntityRenderState();
+        state.entityType = EntityType.INTERACTION;
+        state.isInvisible = true;
+        return state;
     }
 }

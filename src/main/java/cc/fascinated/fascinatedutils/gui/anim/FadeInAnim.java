@@ -1,30 +1,21 @@
 package cc.fascinated.fascinatedutils.gui.anim;
 
-import cc.fascinated.fascinatedutils.gui.render.GuiRenderer;
-
 /**
  * A simple fade-in/out animation backed by an {@link AnimHandle}.
  *
  * <p>Usage:
  * <pre>{@code
- * private final FadeInAnim anim = new FadeInAnim();
+ * private final FadeInAnim anim = new FadeInAnim(300f);
  *
  * // each frame:
  * anim.tick(deltaSeconds);
  * anim.show(); // or anim.hide()
- * anim.render(guiRenderer, () -> drawContent(...));
+ * if (anim.isVisible()) drawContent(anim.progress().value());
  * }</pre>
  */
 public class FadeInAnim {
 
     private final AnimHandle progress;
-
-    /**
-     * Create a fade animation with a default duration of 300 ms.
-     */
-    public FadeInAnim() {
-        this(300f);
-    }
 
     /**
      * Create a fade animation that completes (to ~95%) in the given duration.
@@ -47,20 +38,6 @@ public class FadeInAnim {
      */
     public void hide() {
         progress.target(0f);
-    }
-
-    /**
-     * Snap immediately to the visible state with no easing.
-     */
-    public void snapVisible() {
-        progress.snap(1f);
-    }
-
-    /**
-     * Snap immediately to the hidden state with no easing.
-     */
-    public void snapHidden() {
-        progress.snap(0f);
     }
 
     /**
@@ -88,20 +65,5 @@ public class FadeInAnim {
      */
     public void tick(float deltaSeconds) {
         progress.tick(deltaSeconds);
-    }
-
-    /**
-     * Render the animated content if visible, applying the current alpha.
-     *
-     * @param guiRenderer the active renderer for this frame
-     * @param content     draws the actual content
-     */
-    public void render(GuiRenderer guiRenderer, Runnable content) {
-        if (!isVisible()) {
-            return;
-        }
-        guiRenderer.setMultiplyAlpha(progress.value());
-        content.run();
-        guiRenderer.resetMultiplyAlpha();
     }
 }

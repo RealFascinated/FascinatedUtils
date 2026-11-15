@@ -23,5 +23,19 @@ public class ModuleHudState {
     private float lastLayoutHeight = -1f;
     private float committedLayoutWidth = -1f;
     private float committedLayoutHeight = -1f;
-    private long lastUpdateTimeMs = 0L;
+
+    /**
+     * Corners (see {@code RectCornerRoundMask}) drawn square because another HUD panel touches them.
+     */
+    private int squaredCornerMask;
+    /**
+     * Whether the top padding is dropped because this panel touches the panel above it.
+     */
+    private boolean trimTopPadding;
+    /**
+     * Whether the left padding is dropped because this panel touches the panel to its left.
+     */
+    private boolean trimLeftPadding;
+    private float appliedTopTrim;
+    private float appliedLeftTrim;
 }

@@ -1,10 +1,8 @@
 package meteordevelopment.orbit;
 
+import lombok.extern.slf4j.Slf4j;
 import meteordevelopment.orbit.listeners.IListener;
 import meteordevelopment.orbit.listeners.LambdaListener;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -14,30 +12,24 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
-public class EventBus implements IEventBus {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventBus.class);
+@Slf4j
+public class EventBus {
 
     private final Map<Object, List<IListener>> listenerCache = new ConcurrentHashMap<>();
     private final Map<Class<?>, List<IListener>> staticListenerCache = new ConcurrentHashMap<>();
-    private final Map<Class<?>, List<IListener>> listenerMap = new ConcurrentHashMap<>();
+    private static final IListener[] NO_LISTENERS = new IListener[0];
+
+    private final Map<Class<?>, IListener[]> listenerMap = new ConcurrentHashMap<>();
     private final List<LambdaFactoryInfo> lambdaFactoryInfos = new ArrayList<>();
 
-    @Override
     public void registerLambdaFactory(String packagePrefix, LambdaListener.Factory factory) {
         synchronized (lambdaFactoryInfos) {
             lambdaFactoryInfos.add(new LambdaFactoryInfo(packagePrefix, factory));
         }
     }
 
-    @Override
-    public boolean isListening(Class<?> eventKlass) {
-        List<IListener> listeners = listenerMap.get(eventKlass);
-        return listeners != null && !listeners.isEmpty();
-    }
-
-    @Override
     public <T> T post(T event) {
-        List<IListener> listeners = listenerMap.get(event.getClass());
+        IListener[] listeners = listenerMap.get(event.getClass());
 
         if (listeners != null) {
             for (IListener listener : listeners) {
@@ -48,9 +40,8 @@ public class EventBus implements IEventBus {
         return event;
     }
 
-    @Override
     public <T extends ICancellable> T post(T event) {
-        List<IListener> listeners = listenerMap.get(event.getClass());
+        IListener[] listeners = listenerMap.get(event.getClass());
 
         if (listeners != null) {
             event.setCancelled(false);
@@ -70,23 +61,16 @@ public class EventBus implements IEventBus {
         try {
             listener.call(event);
         } catch (Throwable throwable) {
-            LOGGER.error("Event listener failed while handling {}", event.getClass().getName(), throwable);
+            log.error("Event listener failed while handling {}", event.getClass().getName(), throwable);
         }
     }
 
-    @Override
     public void subscribe(Object object) {
         subscribe(getListeners(object.getClass(), object), false);
     }
 
-    @Override
     public void subscribe(Class<?> klass) {
         subscribe(getListeners(klass, null), true);
-    }
-
-    @Override
-    public void subscribe(IListener listener) {
-        subscribe(listener, false);
     }
 
     private void subscribe(List<IListener> listeners, boolean onlyStatic) {
@@ -96,61 +80,32 @@ public class EventBus implements IEventBus {
     }
 
     private void subscribe(IListener listener, boolean onlyStatic) {
-        if (onlyStatic) {
-            if (listener.isStatic()) {
-                insert(listenerMap.computeIfAbsent(listener.getTarget(), aClass -> new CopyOnWriteArrayList<>()), listener);
-            }
+        if (onlyStatic && !listener.isStatic()) {
+            return;
         }
-        else {
-            insert(listenerMap.computeIfAbsent(listener.getTarget(), aClass -> new CopyOnWriteArrayList<>()), listener);
-        }
+        insert(listener);
     }
 
-    private void insert(List<IListener> listeners, IListener listener) {
-        int i = 0;
-        for (; i < listeners.size(); i++) {
-            if (listener.getPriority() > listeners.get(i).getPriority()) {
-                break;
+    /**
+     * Publishes a new dispatch array for the listener's target with the listener inserted before the first existing
+     * listener of lower priority. Posting threads keep iterating whichever array they already read.
+     *
+     * @param listener the listener to add
+     */
+    private void insert(IListener listener) {
+        synchronized (listenerMap) {
+            Class<?> target = listener.getTarget();
+            IListener[] current = listenerMap.getOrDefault(target, NO_LISTENERS);
+            int index = 0;
+            while (index < current.length && listener.getPriority() <= current[index].getPriority()) {
+                index++;
             }
-        }
 
-        listeners.add(i, listener);
-    }
-
-    @Override
-    public void unsubscribe(Object object) {
-        unsubscribe(getListeners(object.getClass(), object), false);
-        listenerCache.keySet().removeIf(key -> key == object);
-    }
-
-    @Override
-    public void unsubscribe(Class<?> klass) {
-        unsubscribe(getListeners(klass, null), true);
-    }
-
-    @Override
-    public void unsubscribe(IListener listener) {
-        unsubscribe(listener, false);
-    }
-
-    private void unsubscribe(List<IListener> listeners, boolean staticOnly) {
-        for (IListener listener : listeners) {
-            unsubscribe(listener, staticOnly);
-        }
-    }
-
-    private void unsubscribe(IListener listener, boolean staticOnly) {
-        List<IListener> l = listenerMap.get(listener.getTarget());
-
-        if (l != null) {
-            if (staticOnly) {
-                if (listener.isStatic()) {
-                    l.remove(listener);
-                }
-            }
-            else {
-                l.remove(listener);
-            }
+            IListener[] updated = new IListener[current.length + 1];
+            System.arraycopy(current, 0, updated, 0, index);
+            updated[index] = listener;
+            System.arraycopy(current, index, updated, index + 1, current.length - index);
+            listenerMap.put(target, updated);
         }
     }
 
@@ -186,7 +141,7 @@ public class EventBus implements IEventBus {
                 try {
                     listeners.add(new LambdaListener(factory, klass, object, method));
                 } catch (Throwable throwable) {
-                    LOGGER.error("Skipping event listener {}#{}", klass.getName(), method.getName(), throwable);
+                    log.error("Skipping event listener {}#{}", klass.getName(), method.getName(), throwable);
                 }
             }
         }

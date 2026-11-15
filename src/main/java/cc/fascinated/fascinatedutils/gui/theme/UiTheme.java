@@ -17,25 +17,11 @@ public interface UiTheme {
 
     int onDanger();
 
-    int rowHoverFill();
-
-    int rowSelectedFill();
-
-    int tabActiveFill();
-
-    int tabHoverFill();
-
     int inputFill();
 
     int inputBorder();
 
-    int inputPlaceholderFocused();
-
     int caret();
-
-    int avatarFallbackFill();
-
-    int avatarRing();
 
     int buttonFill();
 
@@ -44,8 +30,6 @@ public interface UiTheme {
     int buttonBorder();
 
     int buttonBorderHover();
-
-    int buttonBorderFocus();
 
     int textPrimary();
 
@@ -74,10 +58,6 @@ public interface UiTheme {
      * @return packed ARGB
      */
     int successFillHover();
-
-    int attachmentTint();
-
-    int attachmentPlaceholderFill();
 
     int popupBackdropFill();
 
@@ -128,27 +108,6 @@ public interface UiTheme {
     int accentHover();
 
     /**
-     * Accent fill while pressed.
-     *
-     * @return packed ARGB color
-     */
-    int accentPressed();
-
-    /**
-     * Translucent accent tint for selected rows and active tabs.
-     *
-     * @return packed ARGB color
-     */
-    int accentSubtle();
-
-    /**
-     * Accent tone for text and icons on dark surfaces. Meets 7:1 on the panel.
-     *
-     * @return packed ARGB color
-     */
-    int accentText();
-
-    /**
      * Content color on an accent fill.
      *
      * @return packed ARGB color
@@ -168,18 +127,4 @@ public interface UiTheme {
      * @return packed ARGB color
      */
     int success();
-
-    /**
-     * Warning status tone for text and icons.
-     *
-     * @return packed ARGB color
-     */
-    int warning();
-
-    /**
-     * Danger tone for text and icons on dark surfaces. Meets 6.5:1 on the card surface.
-     *
-     * @return packed ARGB color
-     */
-    int dangerText();
 }

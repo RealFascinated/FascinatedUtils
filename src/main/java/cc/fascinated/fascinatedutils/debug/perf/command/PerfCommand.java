@@ -102,7 +102,7 @@ public class PerfCommand {
         source.sendFeedback(Component.literal("Perf " + beforeLabel + " -> " + afterLabel + " (median per call, negative is faster)").withStyle(ChatFormatting.AQUA));
         result.warnings().forEach(warning -> source.sendFeedback(Component.literal("Warning: " + warning).withStyle(ChatFormatting.YELLOW)));
         for (PerfComparison.Row row : result.rows()) {
-            source.sendFeedback(Component.literal(String.format(Locale.ROOT, "%s: %s -> %s ms (%+.1f%%, noise %.1f%%) total %s -> %s ms%s", row.id(), formatMs(row.beforeMedianMs()), formatMs(row.afterMedianMs()), row.deltaPercent(), row.noisePercent(), formatMs(row.beforeTotalMs()), formatMs(row.afterTotalMs()), formatAlloc(row))).withStyle(deltaColor(row)));
+            source.sendFeedback(Component.literal(String.format(Locale.ROOT, "%s: %s -> %s ms (%+.1f%%, noise %.1f%%, p=%.4f) total %s -> %s ms%s", row.id(), formatMs(row.beforeMedianMs()), formatMs(row.afterMedianMs()), row.deltaPercent(), row.noisePercent(), row.pValue(), formatMs(row.beforeTotalMs()), formatMs(row.afterTotalMs()), formatAlloc(row))).withStyle(deltaColor(row)));
         }
         if (!result.onlyInBefore().isEmpty() || !result.onlyInAfter().isEmpty()) {
             source.sendFeedback(Component.literal("Not in both reports: only before " + result.onlyInBefore() + ", only after " + result.onlyInAfter()).withStyle(ChatFormatting.YELLOW));
@@ -153,7 +153,7 @@ public class PerfCommand {
         outcome.failures().forEach(failure -> source.sendError(Component.literal("Failed " + failure)));
         source.sendFeedback(Component.literal("Perf report '" + report.label() + "' (per call / total)").withStyle(ChatFormatting.AQUA));
         for (PerfResult result : report.results()) {
-            String line = String.format(Locale.ROOT, "%s: median %s ms/call (mean %s, p95 %s, max %s, cv %.1f%%), %s ms total, %d calls%s", result.id(), formatMs(result.medianMs()), formatMs(result.perCallMs()), formatMs(result.p95Ms()), formatMs(result.maxMs()), result.cvPercent(), formatMs(result.totalMs()), result.calls(), result.allocBytesPerCall() < 0 ? "" : String.format(Locale.ROOT, ", %.0f B/call", result.allocBytesPerCall()));
+            String line = String.format(Locale.ROOT, "%s: median %s ms/call (mean %s, p95 %s, p99 %s, max %s, %d stutters, cv %.1f%%), %s ms total, %d calls%s", result.id(), formatMs(result.medianMs()), formatMs(result.perCallMs()), formatMs(result.p95Ms()), formatMs(result.p99Ms()), formatMs(result.maxMs()), result.stutters(), result.cvPercent(), formatMs(result.totalMs()), result.calls(), result.allocBytesPerCall() < 0 ? "" : String.format(Locale.ROOT, ", %.0f B/call", result.allocBytesPerCall()));
             source.sendFeedback(Component.literal(line).withStyle(ChatFormatting.WHITE));
             Client.LOG.info("[perf:{}] {}", report.label(), line);
         }
