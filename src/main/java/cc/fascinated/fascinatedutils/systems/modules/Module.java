@@ -147,7 +147,7 @@ public abstract class Module implements GsonSerializable<Module> {
     public void resetToDefault() {
         setEnabled(defaultEnabled);
         for (Setting<?> setting : settings) {
-            if (setting instanceof KeybindSetting) {
+            if (setting instanceof KeybindSetting || setting.isBound()) {
                 continue;
             }
             setting.resetToDefault();

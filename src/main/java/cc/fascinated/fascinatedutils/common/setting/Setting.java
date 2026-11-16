@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.resources.language.I18n;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Getter
@@ -23,10 +25,14 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
     private final @Nullable String categoryDisplayKey;
     private final @Nullable Supplier<Boolean> locked;
     private final @Nullable Supplier<String> lockedReason;
+    private final @Nullable Supplier<T> boundGetter;
+    private final @Nullable Consumer<T> boundSetter;
     private final Supplier<String> nameProvider;
     private final Supplier<@Nullable String> tooltipProvider;
     private final List<Setting<?>> subSettings = new ArrayList<>();
     private String translationKeyPrefix = "alumite.setting";
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private T value;
     private boolean subSetting;
 
@@ -34,6 +40,8 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
         this.settingKey = Objects.requireNonNull(builder.id, "setting id is required");
         this.defaultValue = Objects.requireNonNull(builder.defaultValue, "default value is required");
         this.value = builder.value != null ? builder.value : this.defaultValue;
+        this.boundGetter = builder.boundGetter;
+        this.boundSetter = builder.boundSetter;
         this.categoryDisplayKey = builder.categoryDisplayKey;
         this.locked = builder.locked;
         this.lockedReason = builder.lockedReason;
@@ -55,6 +63,33 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
         return translated.isBlank() ? null : translated;
     }
 
+    /**
+     * Whether this setting reads and writes an external value instead of holding its own.
+     */
+    public boolean isBound() {
+        return boundGetter != null;
+    }
+
+    /**
+     * Current value, read from the bound source when one is set.
+     */
+    public T getValue() {
+        return boundGetter != null ? boundGetter.get() : value;
+    }
+
+    /**
+     * Updates the value, writing through to the bound source when one is set.
+     *
+     * @param value the new value
+     */
+    public void setValue(T value) {
+        if (boundSetter != null) {
+            boundSetter.accept(value);
+            return;
+        }
+        this.value = value;
+    }
+
     public String getName() {
         return nameProvider.get();
     }
@@ -68,11 +103,11 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
     }
 
     public boolean isAtDefault() {
-        return Objects.equals(value, defaultValue);
+        return Objects.equals(getValue(), defaultValue);
     }
 
     public void resetToDefault() {
-        this.value = this.defaultValue;
+        setValue(defaultValue);
     }
 
     public void addSubSetting(Setting<?> sub) {
@@ -97,12 +132,18 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
 
     @Override
     public JsonElement serialize(Gson gson) {
+        if (isBound()) {
+            return JsonNull.INSTANCE;
+        }
         JsonElement serialized = serializeValue();
         return serialized != null ? serialized : JsonNull.INSTANCE;
     }
 
     @Override
     public Setting<T> deserialize(JsonElement data, Gson gson) {
+        if (isBound()) {
+            return this;
+        }
         deserializeValue(data);
         return this;
     }
@@ -112,6 +153,8 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
         private T defaultValue;
         private T value;
         private @Nullable String categoryDisplayKey;
+        private @Nullable Supplier<T> boundGetter;
+        private @Nullable Consumer<T> boundSetter;
         private @Nullable Supplier<Boolean> locked;
         private @Nullable Supplier<String> lockedReason;
         private @Nullable Supplier<String> nameProvider;
@@ -129,6 +172,20 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
 
         public B value(T value) {
             this.value = value;
+            return self();
+        }
+
+        /**
+         * Backs the setting with an external value (such as a vanilla option). The source is the single
+         * source of truth, so the setting is not persisted in Alumite's config.
+         *
+         * @param getter reads the current value
+         * @param setter writes a new value
+         * @return this builder
+         */
+        public B bind(Supplier<T> getter, Consumer<T> setter) {
+            this.boundGetter = getter;
+            this.boundSetter = setter;
             return self();
         }
 

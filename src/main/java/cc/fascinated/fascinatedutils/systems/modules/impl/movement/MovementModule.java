@@ -9,13 +9,20 @@ import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
 import cc.fascinated.fascinatedutils.systems.modules.impl.movement.hud.MovementHudPanel;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.OptionInstance;
+import net.minecraft.client.Options;
 import net.minecraft.client.player.LocalPlayer;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Function;
 
 @Getter
 public class MovementModule extends HudHostModule {
+
+    private final BooleanSetting toggleSprint = toggleSetting("toggle_sprint", Options::toggleSprint);
+
+    private final BooleanSetting toggleSneak = toggleSetting("toggle_sneak", Options::toggleCrouch);
 
     private final BooleanSetting enableFlightSpeedModifier = BooleanSetting.builder().id("enable_flight_speed_modifier").defaultValue(false).categoryDisplayKey("alumite.setting.category.flight_speed").build();
 
@@ -25,10 +32,20 @@ public class MovementModule extends HudHostModule {
     public MovementModule() {
         super("movement", "Movement", HudDefaults.builder().defaultState(true).defaultAnchor(HUDWidgetAnchor.TOP_RIGHT).defaultXOffset(5).defaultYOffset(5).build());
         addAppearanceSettings(true);
+        addSetting(toggleSprint);
+        addSetting(toggleSneak);
         addSetting(enableFlightSpeedModifier);
         addSetting(flightSpeedModifier);
         enableFlightSpeedModifier.addSubSetting(flightSpeedModifier);
         registerHudPanel(new MovementHudPanel(this));
+    }
+
+    private static BooleanSetting toggleSetting(String id, Function<Options, OptionInstance<Boolean>> optionResolver) {
+        return BooleanSetting.builder().id(id).defaultValue(false).bind(() -> optionResolver.apply(Minecraft.getInstance().options).get(), (enabled) -> {
+            Options options = Minecraft.getInstance().options;
+            optionResolver.apply(options).set(enabled);
+            options.save();
+        }).build();
     }
 
     @Override
