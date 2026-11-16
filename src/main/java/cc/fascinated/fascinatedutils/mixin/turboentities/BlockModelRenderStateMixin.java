@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.turboentities;
 
 import cc.fascinated.fascinatedutils.mixininterface.BlockModelRenderStateCopy;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.client.renderer.block.BlockModelRenderState;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
@@ -38,7 +39,8 @@ public abstract class BlockModelRenderStateMixin implements BlockModelRenderStat
         renderType = other.renderType;
         specialRenderer = other.specialRenderer;
         specialRendererTransformation = other.specialRendererTransformation;
-        tintLayers = other.tintLayers;
+        // Own copy: vanilla clears a state's tint list in place, which would wipe the cached entry for every display.
+        tintLayers = other.tintLayers == null ? null : new IntArrayList(other.tintLayers);
         randomSource = other.randomSource;
     }
 }

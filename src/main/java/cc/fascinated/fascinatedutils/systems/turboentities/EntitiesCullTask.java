@@ -9,6 +9,7 @@ import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -124,6 +125,11 @@ public class EntitiesCullTask extends AbstractCullTask {
             }
             else if (entity.distanceToSqr(getLastCameraPos().x, getLastCameraPos().y, getLastCameraPos().z) > CullDistances.ENTITY_FORCE_CULL_DISTANCE_SQ) {
                 cullable.alumite$setCulled(true);
+            }
+            else if (entity instanceof Display) {
+                // The cull box is only the width/height footprint at the entity position, while the displayed model is moved and
+                // scaled by its transformation, so occlusion tests on it would hide displays that are in plain view.
+                cullable.alumite$setCulled(false);
             }
             else {
                 EntityRenderer<?, ?> renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
