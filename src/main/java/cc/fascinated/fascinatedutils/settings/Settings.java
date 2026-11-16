@@ -22,6 +22,7 @@ public class Settings {
 
     private static final String CATEGORY_GENERAL = "alumite.setting.category.general";
     private static final String CATEGORY_PERFORMANCE = "alumite.setting.category.performance";
+    private static final String CATEGORY_TURBO_RENDERING = "alumite.setting.category.turbo_rendering";
 
     private final List<Setting<?>> settings = new ArrayList<>();
 
@@ -69,17 +70,17 @@ public class Settings {
 
     private final BooleanSetting turboEntities = BooleanSetting.builder().id("turbo_entities")
             .defaultValue(true)
-            .categoryDisplayKey(CATEGORY_PERFORMANCE)
+            .categoryDisplayKey(CATEGORY_TURBO_RENDERING)
             .build();
 
     private final BooleanSetting turboParticles = BooleanSetting.builder().id("turbo_particles")
             .defaultValue(true)
-            .categoryDisplayKey(CATEGORY_PERFORMANCE)
+            .categoryDisplayKey(CATEGORY_TURBO_RENDERING)
             .build();
 
     private final BooleanSetting turboWeather = BooleanSetting.builder().id("turbo_weather")
             .defaultValue(true)
-            .categoryDisplayKey(CATEGORY_PERFORMANCE)
+            .categoryDisplayKey(CATEGORY_TURBO_RENDERING)
             .build();
 
     public Settings() {
