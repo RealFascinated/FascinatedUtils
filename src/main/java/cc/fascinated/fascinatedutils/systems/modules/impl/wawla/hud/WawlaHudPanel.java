@@ -118,8 +118,9 @@ public class WawlaHudPanel extends HudPanel {
         return () -> {
             glRenderer.setMultiplyAlpha(fadeAlpha);
             hudHostModule().drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
-            float iconY = panelPadding + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, ICON_SIZE, hudContentVerticalAlignment());
-            float textBlockY = panelPadding + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, textBlockHeight, hudContentVerticalAlignment());
+            // The icon rides with the text block, so it is always centered on it instead of sticking to the panel's anchor edge.
+            float iconY = panelPadding + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, ICON_SIZE, HudAnchorContentAlignment.Vertical.CENTER);
+            float textBlockY = panelPadding + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, textBlockHeight, HudAnchorContentAlignment.Vertical.CENTER);
             boolean rightAligned = hudContentHorizontalAlignment() == HudAnchorContentAlignment.Horizontal.RIGHT;
 
             if (!rightAligned) {
