@@ -27,9 +27,14 @@ public abstract class ChatScreenMixin extends Screen {
     private static final int SEARCH_BOX_HEIGHT = 14;
     private static final int SEARCH_BOX_BOTTOM_PADDING = 6;
     private static final int ESCAPE_KEY = 256;
+    private static final int DOWN_KEY = 264;
+    private static final int UP_KEY = 265;
 
     @Shadow
     protected EditBox input;
+
+    @Shadow
+    public abstract void moveInHistory(int dir);
 
     @Unique
     private EditBox alumite$searchBox;
@@ -80,7 +85,20 @@ public abstract class ChatScreenMixin extends Screen {
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void alumite$searchKeyPressed(KeyEvent event, CallbackInfoReturnable<Boolean> cir) {
-        if (alumite$searchBox == null || !alumite$searchBox.visible || !alumite$searchBox.isFocused() || event.key() == ESCAPE_KEY) {
+        if (alumite$searchBox == null) {
+            return;
+        }
+        boolean searchFocused = alumite$searchBox.visible && alumite$searchBox.isFocused();
+        if (!searchFocused && (event.key() == UP_KEY || event.key() == DOWN_KEY)) {
+            // Screen arrow navigation would otherwise move focus to the search box instead of browsing history
+            if (!input.isFocused()) {
+                setFocused(input);
+            }
+            moveInHistory(event.key() == UP_KEY ? -1 : 1);
+            cir.setReturnValue(true);
+            return;
+        }
+        if (!searchFocused || event.key() == ESCAPE_KEY) {
             return;
         }
         alumite$searchBox.keyPressed(event);
