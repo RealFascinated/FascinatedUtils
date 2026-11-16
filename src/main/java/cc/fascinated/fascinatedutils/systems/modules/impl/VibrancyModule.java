@@ -40,6 +40,11 @@ public class VibrancyModule extends Module {
         }
         GameRenderer gameRenderer = minecraftClient.gameRenderer;
         if (gameRenderer != null && POST_EFFECT_ID.equals(gameRenderer.currentPostEffect())) {
+            // Vanilla F4 toggles effectActive, which would switch vibrancy off.
+            GameRendererPostProcessorAccessorMixin accessor = (GameRendererPostProcessorAccessorMixin) gameRenderer;
+            if (!accessor.alumite$isPostProcessorEnabled()) {
+                accessor.alumite$setPostProcessorEnabled(true);
+            }
             return;
         }
         ensureVibrancyPostProcessor(gameRenderer);

@@ -12,5 +12,8 @@ public interface GameRendererPostProcessorAccessorMixin {
     void alumite$setPostProcessor(Identifier id);
 
     @Accessor("effectActive")
+    boolean alumite$isPostProcessorEnabled();
+
+    @Accessor("effectActive")
     void alumite$setPostProcessorEnabled(boolean enabled);
 }
