@@ -66,10 +66,7 @@ public class HUDEditorScreen extends RootScreen {
 
     @Override
     public void renderCustom(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        deltaSeconds = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaTicks() / 20f;
-        if (deltaSeconds <= 0f || Float.isNaN(deltaSeconds)) {
-            deltaSeconds = partialTick / 20f;
-        }
+        deltaSeconds = Minecraft.getInstance().getDeltaTracker().getRealtimeDeltaTicks() / 20f;
         deltaSeconds = Mth.clamp(deltaSeconds, 0f, 1f);
         screenAnim.tick(deltaSeconds);
         screenAnim.show();
@@ -145,7 +142,6 @@ public class HUDEditorScreen extends RootScreen {
 
     private UiNode composeBranding() {
         AlphaNode branding = new AlphaNode(() -> brandingAnim.progress().value());
-        branding.setVisible(brandingAnim.isVisible());
         branding.size(BRANDING_WIDTH, BRANDING_HEIGHT).center();
         CardNode card = new CardNode().full();
         card.setFillResolver(UiTheme::panelFill);
