@@ -13,6 +13,7 @@
     "GameMenuScreenMixin",
     "GameRendererMixin",
     "GameRendererPostProcessorAccessorMixin",
+    "GuiItemRenderStateMixin",
     "GuiRendererMixin",
     "InventorySelectedAccessorMixin",
     "JoinMultiplayerScreenMixin",

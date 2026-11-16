@@ -49,6 +49,7 @@ public class Renderer2D {
     private static final Vector2f UNIT_X_SCRATCH = new Vector2f();
     private static final Vector2f UNIT_Y_SCRATCH = new Vector2f();
     private static volatile int cachedFontOptionsKey;
+    private static float guiItemAlpha = 1f;
     private final GuiGraphicsExtractor graphics;
     private final TextRenderer guiTextRenderer;
     private final Supplier<ScreenRectangle> scissorSupplier;
@@ -97,6 +98,15 @@ public class Renderer2D {
         unitX.sub(origin);
         unitY.sub(origin);
         return 0.5f * (unitX.length() + unitY.length());
+    }
+
+    /**
+     * Alpha multiplier to capture on GUI items submitted right now; read by the item render state mixin.
+     *
+     * @return the alpha in the range 0 to 1
+     */
+    public static float guiItemAlpha() {
+        return guiItemAlpha;
     }
 
     public void setMultiplyAlpha(float factor) {
@@ -331,7 +341,12 @@ public class Renderer2D {
         int originX = Mth.floor(positionX);
         int originY = Mth.floor(positionY);
         Font vanillaFont = Minecraft.getInstance().font;
-        graphics.fakeItem(stack, originX, originY);
+        guiItemAlpha = multiplyAlpha;
+        try {
+            graphics.fakeItem(stack, originX, originY);
+        } finally {
+            guiItemAlpha = 1f;
+        }
         graphics.itemDecorations(vanillaFont, stack, originX, originY);
     }
 
@@ -352,7 +367,12 @@ public class Renderer2D {
         int originY = Mth.floor(positionY);
         Font vanillaFont = Minecraft.getInstance().font;
         int seed = Math.floorMod(holder.tickCount * 31 + stack.hashCode(), Integer.MAX_VALUE);
-        graphics.item(holder, stack, originX, originY, seed);
+        guiItemAlpha = multiplyAlpha;
+        try {
+            graphics.item(holder, stack, originX, originY, seed);
+        } finally {
+            guiItemAlpha = 1f;
+        }
         graphics.itemDecorations(vanillaFont, stack, originX, originY);
     }
 
