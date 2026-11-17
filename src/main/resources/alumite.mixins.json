@@ -15,6 +15,7 @@
     "accessor.GameRendererPostProcessorAccessorMixin",
     "gui.GuiItemRenderStateMixin",
     "gui.GuiRendererMixin",
+    "gui.GuiRenderStateMixin",
     "accessor.InventorySelectedAccessorMixin",
     "gui.JoinMultiplayerScreenMixin",
     "accessor.KeyBindingAccessorMixin",

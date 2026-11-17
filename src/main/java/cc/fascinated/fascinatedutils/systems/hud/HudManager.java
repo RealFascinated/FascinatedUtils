@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.systems.hud.layout.HudLayoutCanvas;
 
 import cc.fascinated.fascinatedutils.systems.hud.panel.HudPanel;
 
+import cc.fascinated.fascinatedutils.debug.HudFrameProfiler;
 import cc.fascinated.fascinatedutils.debug.perf.PerfMode;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
@@ -71,11 +72,14 @@ public class HudManager {
         if (this.editMode || Minecraft.getInstance().debugEntries.isOverlayVisible()) {
             return;
         }
+        HudFrameProfiler profiler = HudFrameProfiler.INSTANCE;
+        profiler.beginFrame(graphics.guiRenderState);
         long renderStart = System.nanoTime();
         long renderAllocStart = PerfProbe.INSTANCE.beginAllocation();
         frameDeltaSeconds = deltaSeconds;
         overlay.render(graphics, canvasWidth, canvasHeight, 0f, 0f, deltaSeconds);
         lastRenderNanos = System.nanoTime() - renderStart;
+        profiler.endSubmit(graphics.guiRenderState, lastRenderNanos);
         RENDER_SECTION.record(lastRenderNanos);
         RENDER_SECTION.endAllocation(renderAllocStart);
     }

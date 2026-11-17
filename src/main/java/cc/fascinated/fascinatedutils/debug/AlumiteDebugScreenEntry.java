@@ -5,7 +5,6 @@ import cc.fascinated.fascinatedutils.common.util.ByteUtils;
 import cc.fascinated.fascinatedutils.common.timing.ValueSmoother;
 import cc.fascinated.fascinatedutils.mixin.accessor.DebugScreenEntriesInvokerMixin;
 import cc.fascinated.fascinatedutils.systems.texture.TextureManager;
-import cc.fascinated.fascinatedutils.systems.hud.HudManager;
 import cc.fascinated.fascinatedutils.systems.turboentities.EntitiesCullTask;
 import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
 import cc.fascinated.fascinatedutils.systems.turboparticles.ParticleCullTask;
@@ -13,6 +12,7 @@ import cc.fascinated.fascinatedutils.systems.turboparticles.TurboParticles;
 import cc.fascinated.fascinatedutils.systems.turboweather.TurboWeather;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugEntryCategory;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
@@ -34,7 +34,8 @@ public class AlumiteDebugScreenEntry implements DebugScreenEntry {
     private static final String DISABLED = "§7Disabled";
     private static final String STOPPED = "§cStopped";
 
-    private static final ValueSmoother HUD_RENDER_MS = new ValueSmoother(500);
+    private static final ValueSmoother HUD_CPU_MS = new ValueSmoother(500);
+    private static final ValueSmoother HUD_GPU_MS = new ValueSmoother(500);
     private static final ValueSmoother ENTITY_PASS_MS = new ValueSmoother(500);
     private static final ValueSmoother ENTITY_SNAPSHOT_MS = new ValueSmoother(500);
     private static final ValueSmoother PARTICLE_PASS_MS = new ValueSmoother(500);
@@ -63,8 +64,15 @@ public class AlumiteDebugScreenEntry implements DebugScreenEntry {
     }
 
     private static List<String> hudLines(double deltaSeconds) {
-        double hudMs = HUD_RENDER_MS.smooth(HudManager.INSTANCE.getLastRenderNanos() / 1_000_000.0, deltaSeconds);
-        return List.of(String.format(Locale.ENGLISH, PREFIX + "HUD %.2f ms", hudMs));
+        HudFrameProfiler profiler = HudFrameProfiler.INSTANCE;
+        double cpuMs = HUD_CPU_MS.smooth((profiler.getLastBuildNanos() + profiler.getLastGuiPassNanos()) / 1_000_000.0, deltaSeconds);
+        String gpu = "n/a";
+        if (profiler.isGpuSupported() && profiler.getLastGpuNanos() >= 0L) {
+            gpu = String.format(Locale.ENGLISH, "%.2f ms", HUD_GPU_MS.smooth(profiler.getLastGpuNanos() / 1_000_000.0, deltaSeconds));
+        }
+        // The HUD is hidden while the overlay is open, so its figures are the last ones measured before it opened.
+        String stale = Minecraft.getInstance().debugEntries.isOverlayVisible() ? " (last)" : "";
+        return List.of(String.format(Locale.ENGLISH, PREFIX + "HUD %.2f ms cpu · %s gpu%s", cpuMs, gpu, stale));
     }
 
     private static List<String> turboEntitiesLines(double deltaSeconds) {
