@@ -66,6 +66,7 @@ public class PerfProbe {
     private boolean gcListenerInstalled;
     private long sessionStartNanos;
     private long lastFrameCpuNanos;
+    @Getter
     private volatile boolean recording;
     private int remainingTicks;
     private long lastFrameNanos;
@@ -133,15 +134,6 @@ public class PerfProbe {
         this.sessionStartNanos = System.nanoTime();
         this.recording = true;
         return true;
-    }
-
-    /**
-     * Reports whether a live session is running.
-     *
-     * @return true while recording
-     */
-    public boolean isRecording() {
-        return recording;
     }
 
     /**

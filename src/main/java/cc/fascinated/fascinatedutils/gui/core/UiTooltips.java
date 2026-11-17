@@ -38,11 +38,20 @@ public class UiTooltips {
             }
         }
         if (owner != tooltipNode) {
+            // Recompose rebuilds nodes, so a new instance with the same text is still the same tooltip.
+            boolean sameTooltip = owner != null && tooltipNode != null && tooltipText(owner).equals(tooltipText(tooltipNode));
             tooltipNode = owner;
-            hoverStartMillis = System.currentTimeMillis();
+            if (!sameTooltip) {
+                hoverStartMillis = System.currentTimeMillis();
+            }
         }
         pointerX = nextPointerX;
         pointerY = nextPointerY;
+    }
+
+    private static String tooltipText(UiNode node) {
+        String text = node.tooltip().get();
+        return text == null ? "" : text;
     }
 
     /**

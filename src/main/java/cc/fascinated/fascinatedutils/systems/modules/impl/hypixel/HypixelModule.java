@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.common.PatternHandler;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
+import cc.fascinated.fascinatedutils.systems.modules.ModuleRestriction;
 import cc.fascinated.fascinatedutils.systems.modules.impl.hypixel.feature.AutoGG;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
@@ -16,6 +17,7 @@ public class HypixelModule extends Module {
     public HypixelModule() {
         super("Hypixel", ModuleCategory.GENERAL);
         addSetting(autoGG);
+        addRestriction(ModuleRestriction.serverOnly("Hypixel", this::isOnHypixel));
 
         new AutoGG(this);
     }

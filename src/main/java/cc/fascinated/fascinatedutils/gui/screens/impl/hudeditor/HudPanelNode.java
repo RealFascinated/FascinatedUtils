@@ -8,6 +8,7 @@ import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.gui.screens.impl.settings.ModSettingsScreen;
 import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
 import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
+import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -21,6 +22,10 @@ public class HudPanelNode extends UiNode {
 
     private static final int ACTION_ICON_SIZE = 10;
 
+    /**
+     * Panel edited by this node.
+     */
+    @Getter
     private final HudPanel panel;
     private final HudEditorMergeGroup mergeGroup;
     private final HudEditorPointerSession session;
@@ -135,15 +140,6 @@ public class HudPanelNode extends UiNode {
      */
     public boolean hasPreview() {
         return drawPreview != null;
-    }
-
-    /**
-     * Panel edited by this node.
-     *
-     * @return the HUD panel
-     */
-    public HudPanel getPanel() {
-        return panel;
     }
 
     @Override

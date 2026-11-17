@@ -63,7 +63,8 @@ public class UiHost {
         if (root == null) {
             return false;
         }
-        if (!(event instanceof UiEvent.PointerMove)) {
+        // A held pointer (e.g. dragging a scrollbar) mutates persisted state that only a recompose picks up.
+        if (!(event instanceof UiEvent.PointerMove) || inputRouter.hasPressedLeaf()) {
             dirty = true;
         }
         return inputRouter.dispatch(root, event);

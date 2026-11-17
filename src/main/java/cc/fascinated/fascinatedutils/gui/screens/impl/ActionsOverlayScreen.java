@@ -83,7 +83,7 @@ public class ActionsOverlayScreen {
         float pointerX = UIScale.screenPointerX();
         float pointerY = UIScale.screenPointerY();
 
-        AlumiteGuiRenderer renderFrame = new AlumiteGuiRenderer(graphics);
+        AlumiteGuiRenderer renderFrame = new AlumiteGuiRenderer(graphics, true);
         renderFrame.beginFrame(uiWidth, uiHeight);
         renderFrame.setPointer(pointerX, pointerY);
         host.layout(0, 0, Math.round(uiWidth), Math.round(uiHeight), renderFrame);

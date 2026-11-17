@@ -26,7 +26,7 @@ public class Toast {
 
     public static class Builder {
 
-        private static final float DURATION_SECONDS = 3f;
+        private static final float DURATION_SECONDS = 6f;
 
         private String message = "";
 

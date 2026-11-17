@@ -39,6 +39,8 @@ public abstract class Module implements GsonSerializable<Module> {
     private final boolean defaultEnabled;
 
     private boolean enabled;
+    private long lastUsedMillis;
+    private final List<ModuleRestriction> restrictions = new ArrayList<>();
 
     public Module(String displayName, ModuleCategory category, boolean defaultEnabled) {
         this.moduleKey = idFromModuleClass(getClass());
@@ -140,8 +142,60 @@ public abstract class Module implements GsonSerializable<Module> {
         return Optional.empty();
     }
 
+    /**
+     * Registers a condition that keeps this module off, and explains why, while it holds.
+     *
+     * @param restriction the restriction to apply
+     */
+    protected void addRestriction(ModuleRestriction restriction) {
+        restrictions.add(restriction);
+    }
+
+    /**
+     * Finds the first restriction that currently keeps this module off.
+     *
+     * @return the violated restriction, or empty when the module is free to run
+     */
+    public Optional<ModuleRestriction> getActiveRestriction() {
+        return restrictions.stream().filter(ModuleRestriction::isViolated).findFirst();
+    }
+
+    /**
+     * Whether this module is hidden from the settings screen, because a restriction that hides it is violated.
+     *
+     * @return true when hidden
+     */
+    public boolean isHidden() {
+        return restrictions.stream().anyMatch(restriction -> restriction.isHidesModule() && restriction.isViolated());
+    }
+
+    /**
+     * Whether the module is switched on and no restriction holds it off.
+     *
+     * @return true when running
+     */
+    public boolean isEnabled() {
+        return enabled && getActiveRestriction().isEmpty();
+    }
+
+    /**
+     * Whether the user switched this module on, ignoring restrictions.
+     *
+     * @return the stored enabled state
+     */
+    public boolean isUserEnabled() {
+        return enabled;
+    }
+
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    /**
+     * Records that the user just toggled or opened this module in the settings screen.
+     */
+    public void markUsed() {
+        lastUsedMillis = System.currentTimeMillis();
     }
 
     public void resetToDefault() {
@@ -167,6 +221,7 @@ public abstract class Module implements GsonSerializable<Module> {
     public JsonElement serialize(Gson gson) {
         JsonObject root = new JsonObject();
         root.addProperty("enabled", enabled);
+        root.addProperty("lastUsed", lastUsedMillis);
         root.add("settings", SettingsJsonCodec.INSTANCE.serialize(settings, gson));
         return root;
     }
@@ -184,6 +239,9 @@ public abstract class Module implements GsonSerializable<Module> {
             if (enabledEl.isJsonPrimitive()) {
                 setEnabled(enabledEl.getAsBoolean());
             }
+        }
+        if (root.has("lastUsed") && root.get("lastUsed").isJsonPrimitive()) {
+            lastUsedMillis = root.get("lastUsed").getAsLong();
         }
         JsonObject settingsJson = root.has("settings") && root.get("settings").isJsonObject() ? root.get("settings").getAsJsonObject() : new JsonObject();
         SettingsJsonCodec.INSTANCE.deserialize(settingsJson, settings, gson, "module " + moduleKey);

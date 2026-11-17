@@ -7,6 +7,7 @@ import cc.fascinated.fascinatedutils.gui.core.UiKeys;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
 import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
+import lombok.Getter;
 
 import java.util.function.Consumer;
 
@@ -24,6 +25,7 @@ public class SwitchNode extends PositionedNode<SwitchNode> {
 
     private final AnimHandle hoverAnim = new AnimHandle(0f);
 
+    @Getter
     private boolean checked;
     private boolean hovered;
     private boolean focused;
@@ -33,10 +35,6 @@ public class SwitchNode extends PositionedNode<SwitchNode> {
     public SwitchNode setChecked(boolean checked) {
         this.checked = checked;
         return this;
-    }
-
-    public boolean isChecked() {
-        return checked;
     }
 
     public SwitchNode setOnChange(Consumer<Boolean> onChange) {

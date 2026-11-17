@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
 import com.logisticscraft.occlusionculling.cache.ArrayOcclusionCache;
 import com.logisticscraft.occlusionculling.util.Vec3d;
+import lombok.AccessLevel;
 import lombok.Getter;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -43,6 +44,7 @@ public abstract class AbstractCullTask implements Runnable {
     private volatile Frustum frustum = null;
     @Getter
     private volatile long lastPassNanos = 0L;
+    @Getter(AccessLevel.PROTECTED)
     private Vec3 lastCameraPos = Vec3.ZERO;
     private long lastFrustumCopyNanos = 0L;
 
@@ -174,10 +176,6 @@ public abstract class AbstractCullTask implements Runnable {
         if (worker != null) {
             LockSupport.unpark(worker);
         }
-    }
-
-    protected Vec3 getLastCameraPos() {
-        return lastCameraPos;
     }
 
     /**

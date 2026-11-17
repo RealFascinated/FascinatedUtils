@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.core.SpacerNode;
 import cc.fascinated.fascinatedutils.gui.core.UIScale;
@@ -45,6 +46,7 @@ import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -311,10 +313,17 @@ public class ModSettingsScreen extends RootScreen {
         }
         header.addChild(chips);
         header.addChild(new SpacerNode());
+        EnumSetting<ModuleSort> sort = Settings.INSTANCE.getModuleSort();
+        header.addChild(new ButtonNode(() -> Component.translatable("alumite.setting.shell.sort", sort.getValue().displayName()).getString())
+                .setVariant(ButtonNode.ButtonVariant.DEFAULT)
+                .setOnPress(() -> {
+                    sort.cycleNextConstant();
+                    ModConfig.config().save();
+                }));
         if (mainWidth < ENABLED_COUNT_MIN_MAIN_WIDTH) {
             return;
         }
-        List<Module> allModules = ModuleRegistry.INSTANCE.getModules();
+        List<Module> allModules = ModuleRegistry.INSTANCE.getModules().stream().filter(module -> !module.isHidden()).toList();
         header.addChild(new TextNode(() -> Component.translatable("alumite.setting.shell.enabled_count",
                 allModules.stream().filter(Module::isEnabled).count(), allModules.size()).getString())
                 .setColorResolver(UiTheme::textSubtle)
@@ -341,8 +350,10 @@ public class ModSettingsScreen extends RootScreen {
         enabledSwitch.alignY(0.5f);
         enabledSwitch.setOnChange(checked -> {
             ModuleRegistry.INSTANCE.setModuleEnabled(module, checked);
+            module.markUsed();
             ModConfig.profiles().saveModule(module);
         });
+        enabledSwitch.setTooltip(() -> restrictionReason(module));
         header.addChild(enabledSwitch);
         header.addChild(new SpacerNode());
         header.addChild(inputHost(detailSearchInput, DETAIL_SEARCH_WIDTH));
@@ -360,11 +371,17 @@ public class ModSettingsScreen extends RootScreen {
 
         String searchLower = search.get().toLowerCase(Locale.ROOT);
         List<Module> modules = new ArrayList<>(ModuleRegistry.INSTANCE.getModules().stream()
+                .filter(module -> !module.isHidden())
                 .filter(module -> filter.get() == null || module.getCategory() == filter.get())
                 .filter(module -> searchLower.isEmpty() || module.getDisplayName().toLowerCase(Locale.ROOT).contains(searchLower)
                         || moduleHasMatchingSetting(module, searchLower))
                 .toList());
-        modules.sort((left, right) -> String.CASE_INSENSITIVE_ORDER.compare(left.getDisplayName(), right.getDisplayName()));
+        Comparator<Module> byName = (left, right) -> String.CASE_INSENSITIVE_ORDER.compare(left.getDisplayName(), right.getDisplayName());
+        switch (Settings.INSTANCE.getModuleSort().getValue()) {
+            case LAST_USED -> modules.sort(Comparator.comparingLong(Module::getLastUsedMillis).reversed().thenComparing(byName));
+            case ENABLED_FIRST -> modules.sort(Comparator.comparing((Module module) -> !module.isEnabled()).thenComparing(byName));
+            default -> modules.sort(byName);
+        }
 
         ScrollColumnNode list = new ScrollColumnNode().setGap(GAP).persistScroll("modules.grid");
         if (modules.isEmpty()) {
@@ -460,12 +477,19 @@ public class ModSettingsScreen extends RootScreen {
                     .setVariant(() -> module.isEnabled() ? ButtonNode.ButtonVariant.SUCCESS : ButtonNode.ButtonVariant.DANGER)
                     .setOnPress(() -> {
                         ModuleRegistry.INSTANCE.setModuleEnabled(module, !module.isEnabled());
+                        module.markUsed();
                         ModConfig.profiles().saveModule(module);
                     });
+            status.setDisabled(() -> module.getActiveRestriction().isPresent());
+            status.setTooltip(() -> restrictionReason(module));
             status.size(tileWidth, CONTROL_HEIGHT).left(0).bottom(0);
             content.addChild(status);
         });
         return tile;
+    }
+
+    private static @Nullable String restrictionReason(Module module) {
+        return module.getActiveRestriction().map(restriction -> restriction.getReason().getString()).orElse(null);
     }
 
     private void openModuleDetail(Module module, UiState<Module> openModule) {
@@ -474,6 +498,8 @@ public class ModSettingsScreen extends RootScreen {
         if (detailSearchInput != null) {
             detailSearchInput.setValue("");
         }
+        module.markUsed();
+        ModConfig.profiles().saveModule(module);
         openModule.set(module);
     }
 
@@ -505,7 +531,9 @@ public class ModSettingsScreen extends RootScreen {
     }
 
     private void buildSettingsTab(PositionedNode<?> contents, Runnable refresh, UiState<ColorSetting> colorTarget) {
-        List<Setting<?>> allSettings = Settings.INSTANCE.getSettings();
+        List<Setting<?>> allSettings = Settings.INSTANCE.getSettings().stream()
+                .filter(setting -> setting != Settings.INSTANCE.getModuleSort())
+                .toList();
         SettingSectionsBuilder sections = new SettingSectionsBuilder(
                 () -> ModConfig.config().save(), refresh, setting -> openColorPicker(setting, colorTarget, () -> ModConfig.config().save()));
         PositionedNode<?> sectionsNode = sections.build(

@@ -38,11 +38,14 @@ public class AlumiteGuiRenderer {
     private static final int TEXT_WIDTH_CACHE_LIMIT = 4096;
     private static final Map<String, Integer> plainTextWidthCache = new HashMap<>();
     private static final Map<String, Integer> boldTextWidthCache = new HashMap<>();
+    private static final Map<String, Integer> guiPlainTextWidthCache = new HashMap<>();
+    private static final Map<String, Integer> guiBoldTextWidthCache = new HashMap<>();
     private static Font textWidthCacheFont;
 
     private final GuiGraphicsExtractor drawContext;
     private final Minecraft minecraftClient;
     private final Renderer2D backend;
+    private final boolean guiFont;
     private final Deque<ClipLayer> clipStack = new ArrayDeque<>();
     private final Deque<Float> alphaStack = new ArrayDeque<>();
     private final List<QueuedTextDraw> queuedTextDrawPool = new ArrayList<>();
@@ -53,9 +56,14 @@ public class AlumiteGuiRenderer {
     private float pointerY = Float.NaN;
 
     public AlumiteGuiRenderer(GuiGraphicsExtractor drawContext) {
+        this(drawContext, false);
+    }
+
+    public AlumiteGuiRenderer(GuiGraphicsExtractor drawContext, boolean guiFont) {
         this.drawContext = drawContext;
+        this.guiFont = guiFont;
         this.minecraftClient = Minecraft.getInstance();
-        this.backend = new Renderer2D(drawContext, this::currentScissorArea);
+        this.backend = new Renderer2D(drawContext, this::currentScissorArea, guiFont);
     }
 
     /**
@@ -309,6 +317,8 @@ public class AlumiteGuiRenderer {
     public static void clearTextWidthCache() {
         plainTextWidthCache.clear();
         boldTextWidthCache.clear();
+        guiPlainTextWidthCache.clear();
+        guiBoldTextWidthCache.clear();
     }
 
     /**
@@ -322,11 +332,10 @@ public class AlumiteGuiRenderer {
     public int measureTextWidth(String text, boolean bold) {
         Font font = minecraftClient.font;
         if (font != textWidthCacheFont) {
-            plainTextWidthCache.clear();
-            boldTextWidthCache.clear();
+            clearTextWidthCache();
             textWidthCacheFont = font;
         }
-        Map<String, Integer> cache = bold ? boldTextWidthCache : plainTextWidthCache;
+        Map<String, Integer> cache = guiFont ? (bold ? guiBoldTextWidthCache : guiPlainTextWidthCache) : (bold ? boldTextWidthCache : plainTextWidthCache);
         Integer cachedWidth = cache.get(text);
         if (cachedWidth != null) {
             return cachedWidth;
@@ -490,6 +499,10 @@ public class AlumiteGuiRenderer {
             queued.release();
         }
         queuedTextDrawCount = 0;
+        if (guiFont) {
+            // Atlas glyphs are queued as mesh quads; submit them now so they stay in the current stratum.
+            MeshBuilder.INSTANCE.endSegment(drawContext);
+        }
     }
 
     private void enableScissor(ClipLayer clipLayer) {

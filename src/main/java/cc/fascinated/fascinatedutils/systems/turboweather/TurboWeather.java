@@ -21,6 +21,7 @@ public class TurboWeather {
 
     private WeakReference<Level> cachedLevel = new WeakReference<>(null);
     private long gameTime;
+    @Getter
     private boolean enabled;
 
     /**
@@ -43,10 +44,6 @@ public class TurboWeather {
             precipitations.clear();
             lights.clear();
         }
-    }
-
-    public boolean isEnabled() {
-        return enabled;
     }
 
     public ColumnTable heights() {

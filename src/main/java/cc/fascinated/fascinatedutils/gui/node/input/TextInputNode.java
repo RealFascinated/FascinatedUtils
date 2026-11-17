@@ -235,7 +235,9 @@ public class TextInputNode<V> extends PositionedNode<TextInputNode<V>> {
         frame.drawRoundedRectFrame(posX, posY, width, height, CORNER_RADIUS, borderColor, 0, 1);
 
         if (text.isEmpty()) {
-            UiText.of(placeholder).color(frame.theme().textMuted()).draw(frame, lastTextX, lastTextY);
+            if (!handler.isFocused()) {
+                UiText.of(placeholder).color(frame.theme().textMuted()).draw(frame, lastTextX, lastTextY);
+            }
             if (handler.isFocused() && (System.currentTimeMillis() / CARET_BLINK_HALF_PERIOD_MS & 1L) == 0L) {
                 drawCaret(frame, lastTextX, lastTextY, lineH);
             }

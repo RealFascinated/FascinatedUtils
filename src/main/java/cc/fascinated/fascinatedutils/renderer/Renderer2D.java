@@ -4,6 +4,7 @@ import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
 import cc.fascinated.fascinatedutils.common.LRUCache;
 import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
+import cc.fascinated.fascinatedutils.renderer.text.GlyphAtlas;
 import cc.fascinated.fascinatedutils.renderer.text.TextRenderer;
 import cc.fascinated.fascinatedutils.renderer.text.VanillaTextRenderer;
 import net.kyori.adventure.platform.modcommon.MinecraftClientAudiences;
@@ -16,6 +17,7 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
@@ -44,6 +46,10 @@ public class Renderer2D {
     private static final LRUCache<String, FormattedCharSequence> MINI_MESSAGE_VISUAL_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
     private static final LRUCache<String, FormattedCharSequence> LITERAL_SEQUENCE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
     private static final LRUCache<String, FormattedCharSequence> BOLD_LITERAL_SEQUENCE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
+    private static final LRUCache<String, FormattedCharSequence> GUI_LITERAL_SEQUENCE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
+    private static final LRUCache<String, FormattedCharSequence> GUI_BOLD_LITERAL_SEQUENCE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
+    private static final Style GUI_REGULAR_STYLE = Style.EMPTY.withFont(new FontDescription.Resource(Identifier.fromNamespaceAndPath("alumite", "inter_regular")));
+    private static final Style GUI_BOLD_STYLE = Style.EMPTY.withFont(new FontDescription.Resource(Identifier.fromNamespaceAndPath("alumite", "inter_bold")));
     private static final Matrix3x2f POSE_SCRATCH = new Matrix3x2f();
     private static final Vector2f ORIGIN_SCRATCH = new Vector2f();
     private static final Vector2f UNIT_X_SCRATCH = new Vector2f();
@@ -52,12 +58,18 @@ public class Renderer2D {
     private static float guiItemAlpha = 1f;
     private final GuiGraphicsExtractor graphics;
     private final TextRenderer guiTextRenderer;
+    private final boolean guiFont;
     private final Supplier<ScreenRectangle> scissorSupplier;
     private float multiplyAlpha = 1f;
     private float multiplyAlphaText = 1f;
 
     public Renderer2D(GuiGraphicsExtractor graphics, Supplier<ScreenRectangle> scissorSupplier) {
+        this(graphics, scissorSupplier, false);
+    }
+
+    public Renderer2D(GuiGraphicsExtractor graphics, Supplier<ScreenRectangle> scissorSupplier, boolean guiFont) {
         this.graphics = graphics;
+        this.guiFont = guiFont;
         this.guiTextRenderer = VanillaTextRenderer.INSTANCE;
         this.scissorSupplier = scissorSupplier;
     }
@@ -387,6 +399,14 @@ public class Renderer2D {
      * @param bold      whether bold styling is applied
      */
     public void drawTextImmediate(String text, float positionX, float positionY, int color, boolean shadow, boolean bold) {
+        String plainText = text == null ? "" : text;
+        if (guiFont) {
+            GlyphAtlas atlas = GlyphAtlas.get(bold);
+            if (atlas.canRender(plainText)) {
+                atlas.draw(graphics, currentScissor(), plainText, positionX, positionY, color);
+                return;
+            }
+        }
         FormattedCharSequence literalText = styledLiteralSequence(text, bold);
         guiTextRenderer.drawText(graphics, literalText, Mth.floor(positionX), Math.round(positionY), color, shadow);
     }
@@ -469,6 +489,13 @@ public class Renderer2D {
     }
 
     public int measureTextWidth(String text, boolean bold) {
+        if (guiFont) {
+            GlyphAtlas atlas = GlyphAtlas.get(bold);
+            String plainText = text == null ? "" : text;
+            if (atlas.canRender(plainText)) {
+                return Math.max(1, Mth.ceil(atlas.measure(plainText)));
+            }
+        }
         double vanilla = guiTextRenderer.getWidth(styledLiteralSequence(text, bold));
         return Math.max(1, Mth.ceil(vanilla));
     }
@@ -517,10 +544,17 @@ public class Renderer2D {
 
     private FormattedCharSequence styledLiteralSequence(String raw, boolean bold) {
         String text = raw == null ? "" : raw;
-        LRUCache<String, FormattedCharSequence> cache = bold ? BOLD_LITERAL_SEQUENCE_CACHE : LITERAL_SEQUENCE_CACHE;
+        LRUCache<String, FormattedCharSequence> cache;
+        if (guiFont) {
+            cache = bold ? GUI_BOLD_LITERAL_SEQUENCE_CACHE : GUI_LITERAL_SEQUENCE_CACHE;
+        }
+        else {
+            cache = bold ? BOLD_LITERAL_SEQUENCE_CACHE : LITERAL_SEQUENCE_CACHE;
+        }
         FormattedCharSequence cached = cache.get(text);
         if (cached == null) {
-            cached = FormattedCharSequence.forward(text, bold ? Style.EMPTY.withBold(true) : Style.EMPTY);
+            Style style = guiFont ? (bold ? GUI_BOLD_STYLE : GUI_REGULAR_STYLE) : (bold ? Style.EMPTY.withBold(true) : Style.EMPTY);
+            cached = FormattedCharSequence.forward(text, style);
             cache.put(text, cached);
         }
         return cached;

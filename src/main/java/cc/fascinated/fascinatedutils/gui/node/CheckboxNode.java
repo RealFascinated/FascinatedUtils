@@ -9,6 +9,7 @@ import cc.fascinated.fascinatedutils.gui.core.UiKeys;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
 import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
+import lombok.Getter;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -21,6 +22,7 @@ public class CheckboxNode extends PositionedNode<CheckboxNode> {
 
     private final AnimHandle hoverAnim = new AnimHandle(0f);
     private final AnimHandle checkAnim = new AnimHandle(Float.NaN);
+    @Getter
     private boolean checked;
     private boolean hovered;
     private boolean focused;
@@ -30,10 +32,6 @@ public class CheckboxNode extends PositionedNode<CheckboxNode> {
     public CheckboxNode setChecked(boolean checked) {
         this.checked = checked;
         return this;
-    }
-
-    public boolean isChecked() {
-        return checked;
     }
 
     public CheckboxNode setLabel(String label) {

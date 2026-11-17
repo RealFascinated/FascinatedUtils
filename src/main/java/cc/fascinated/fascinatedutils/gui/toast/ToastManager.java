@@ -21,10 +21,8 @@ public class ToastManager {
     private static final float MARGIN_T = 12f;
     private static final float GAP = 6f;
     private static final float CORNER_R = 6f;
-    private static final float ACCENT_W = 4f;
-    private static final float ICON_SLOT_W = 28f;
+    private static final float ICON_SLOT_W = 30f;
     private static final float TITLE_GAP = 4f;
-    private static final float PROGRESS_H = 3f;
     private static final float FADE_IN_SPD = 8f;
     private static final float FADE_OUT_SPD = 4f;
     private static final float SLIDE_SPD = 12f;
@@ -32,8 +30,6 @@ public class ToastManager {
     private static final int MAX_TOASTS = 5;
     private static final float LINE_GAP = 2f;
     private static final int MAX_LINES = 4;
-
-    private static final int PROGRESS_TRACK_ALPHA = 0x20000000;
 
     private final ConcurrentLinkedQueue<Toast> pending = new ConcurrentLinkedQueue<>();
     private final List<Entry> entries = new ArrayList<>();
@@ -165,8 +161,8 @@ public class ToastManager {
         float renderY = entry.renderY;
 
         // Text area geometry (after accent stripe + icon slot)
-        float textStartX = renderX + ACCENT_W + ICON_SLOT_W;
-        float textClipW = TOAST_W - ACCENT_W - ICON_SLOT_W - 8f;
+        float textStartX = renderX + ICON_SLOT_W;
+        float textClipW = TOAST_W - ICON_SLOT_W - 10f;
 
         if (entry.wrappedLines == null) {
             entry.wrappedLines = wrapText(renderer, entry.toast.message(), textClipW);
@@ -174,8 +170,8 @@ public class ToastManager {
             float lineH = renderer.fontHeight();
             int lineCount = entry.wrappedLines.size();
             float msgH = lineCount > 0 ? lineCount * lineH + (lineCount - 1) * LINE_GAP + TITLE_GAP : 0f;
-            float padV = (TOAST_H - PROGRESS_H - capH - (lineCount > 0 ? TITLE_GAP + lineH : 0f)) / 2f;
-            entry.effectiveHeight = Math.max(TOAST_H, padV + capH + msgH + padV + PROGRESS_H);
+            float padV = (TOAST_H - capH - (lineCount > 0 ? TITLE_GAP + lineH : 0f)) / 2f;
+            entry.effectiveHeight = Math.max(TOAST_H, padV + capH + msgH + padV);
         }
         float effectiveH = entry.effectiveHeight;
 
@@ -188,19 +184,16 @@ public class ToastManager {
         int cardFill = hovered ? theme.surfaceActive() : theme.surfaceRaised();
         renderer.fillRoundedRectFrame(renderX, renderY, TOAST_W, effectiveH, CORNER_R, theme.borderSubtle(), cardFill, 1f, 1f, RectCornerRoundMask.ALL);
 
-        // Left accent stripe — left corners match card radius, right corners square
-        renderer.fillRoundedRect(renderX, renderY, ACCENT_W, effectiveH, CORNER_R, accentColor, RectCornerRoundMask.LEFT);
-
         // Vertical layout: pad top, then title row, then TITLE_GAP, then message rows
         float capH = renderer.fontCapHeight();
         float lineH = renderer.fontHeight();
-        float padV = (TOAST_H - PROGRESS_H - capH - TITLE_GAP - lineH) / 2f;
+        float padV = (TOAST_H - capH - TITLE_GAP - lineH) / 2f;
         float titleY = renderY + padV;
         float msgY = titleY + capH + TITLE_GAP;
 
-        // Icon — vertically centered in the full usable height (above progress bar)
-        float iconCenterX = renderX + ACCENT_W + ICON_SLOT_W / 2f;
-        float iconY = renderY + (effectiveH - PROGRESS_H - capH) / 2f;
+        // Icon — vertically centered
+        float iconCenterX = renderX + ICON_SLOT_W / 2f;
+        float iconY = renderY + (effectiveH - capH) / 2f;
         Identifier iconSprite = iconSprite(entry.toast.type());
         if (iconSprite != null) {
             renderer.drawSprite(iconSprite, iconCenterX - capH / 2f, iconY, capH, capH, accentColor);
@@ -209,24 +202,13 @@ public class ToastManager {
         }
 
         renderer.pushClip(textStartX, renderY, textClipW, effectiveH);
-        renderer.drawText(entry.toast.title(), textStartX, titleY, accentColor, false, true);
+        renderer.drawText(entry.toast.title(), textStartX, titleY, theme.textPrimary(), false, true);
 
         for (int lineIdx = 0; lineIdx < entry.wrappedLines.size(); lineIdx++) {
             float lineY = msgY + lineIdx * (lineH + LINE_GAP);
             renderer.drawText(entry.wrappedLines.get(lineIdx), textStartX, lineY, theme.textMuted(), false, false);
         }
         renderer.popClip();
-
-        // Progress bar — track across the bottom, fill depletes from the right
-        float barX = renderX + ACCENT_W;
-        float barY = renderY + effectiveH - PROGRESS_H;
-        float barContentW = TOAST_W - ACCENT_W;
-        float progress = Math.max(0f, 1f - entry.age / entry.toast.durationSeconds());
-        renderer.drawRect(barX, barY, barContentW, PROGRESS_H, (theme.textPrimary() & 0x00FFFFFF) | PROGRESS_TRACK_ALPHA);
-        if (progress > 0f) {
-            float filledW = progress * barContentW;
-            renderer.drawRect(barX, barY, filledW, PROGRESS_H, (accentColor & 0x00FFFFFF) | 0xBB000000);
-        }
 
         renderer.resetMultiplyAlpha();
     }

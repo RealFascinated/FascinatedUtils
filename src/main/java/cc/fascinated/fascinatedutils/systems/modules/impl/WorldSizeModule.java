@@ -3,6 +3,7 @@ package cc.fascinated.fascinatedutils.systems.modules.impl;
 import cc.fascinated.fascinatedutils.common.ByteUtils;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
+import cc.fascinated.fascinatedutils.systems.modules.ModuleRestriction;
 import net.minecraft.client.Minecraft;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ public class WorldSizeModule extends Module {
 
     public WorldSizeModule() {
         super("World Size", ModuleCategory.GENERAL, true);
+        addRestriction(ModuleRestriction.singleplayerOnly());
     }
 
     /**

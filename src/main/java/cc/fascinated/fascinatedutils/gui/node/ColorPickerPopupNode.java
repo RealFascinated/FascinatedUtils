@@ -5,6 +5,8 @@ import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.node.input.TextInputNode;
 import cc.fascinated.fascinatedutils.gui.node.input.TextParser;
 import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
+import lombok.AccessLevel;
+import lombok.Setter;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
@@ -193,6 +195,7 @@ public class ColorPickerPopupNode extends PopupNode<ColorPickerPopupNode> {
         private static final int CROSSHAIR_RADIUS = 4;
 
         private final BiConsumer<Float, Float> onSvChanged;
+        @Setter(AccessLevel.PACKAGE)
         private float hue;
         private float saturation;
         private float value;
@@ -203,10 +206,6 @@ public class ColorPickerPopupNode extends PopupNode<ColorPickerPopupNode> {
             this.saturation = saturation;
             this.value = value;
             this.onSvChanged = onSvChanged;
-        }
-
-        void setHue(float hue) {
-            this.hue = hue;
         }
 
         void setSaturationValue(float saturation, float value) {
@@ -281,16 +280,13 @@ public class ColorPickerPopupNode extends PopupNode<ColorPickerPopupNode> {
         private static final int MARKER_HALF_W = 2;
 
         private final Consumer<Float> onHueChanged;
+        @Setter(AccessLevel.PACKAGE)
         private float hue;
         private boolean dragging;
 
         HueBarNode(float hue, Consumer<Float> onHueChanged) {
             this.hue = hue;
             this.onHueChanged = onHueChanged;
-        }
-
-        void setHue(float hue) {
-            this.hue = hue;
         }
 
         @Override

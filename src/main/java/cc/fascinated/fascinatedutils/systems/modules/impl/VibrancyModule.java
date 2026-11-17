@@ -1,14 +1,17 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl;
 
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
+import cc.fascinated.fascinatedutils.gui.toast.Toast;
 import cc.fascinated.fascinatedutils.mixin.GameRendererPostProcessorAccessorMixin;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
+import cc.fascinated.fascinatedutils.systems.modules.ModuleRestriction;
 import meteordevelopment.orbit.EventHandler;
 import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.Nullable;
 
@@ -27,16 +30,20 @@ public class VibrancyModule extends Module {
 
     public VibrancyModule() {
         super("Vibrancy", ModuleCategory.GENERAL);
+        addRestriction(ModuleRestriction.when(this::isIrisShaderPackInUse, Component.translatable("alumite.module.vibrancy.restriction.shaders")));
     }
 
     @EventHandler
     private void onClientTickEvent(ClientTickEvent event) {
-        if (!isEnabled()) {
-            return;
-        }
         Minecraft minecraftClient = event.minecraftClient();
-        if (isIrisShaderPackStateChange()) {
+        if (isUserEnabled() && isIrisShaderPackStateChange()) {
+            boolean shadersOn = isIrisShaderPackInUse();
+            Toast.show().message(Component.translatable(shadersOn ? "alumite.module.vibrancy.disabled_shaders" : "alumite.module.vibrancy.enabled_shaders").getString()).info();
             minecraftClient.reloadResourcePacks();
+        }
+        if (!isEnabled()) {
+            disableVibrancyPostProcessor(minecraftClient.gameRenderer);
+            return;
         }
         GameRenderer gameRenderer = minecraftClient.gameRenderer;
         if (gameRenderer != null && POST_EFFECT_ID.equals(gameRenderer.currentPostEffect())) {
@@ -59,22 +66,23 @@ public class VibrancyModule extends Module {
      *         reload is needed to rebuild the stale PostChain and compiled pipeline
      */
     private boolean isIrisShaderPackStateChange() {
-        if (!FabricLoader.getInstance().isModLoaded("iris")) {
-            return false;
-        }
-        boolean inUse = IrisApi.getInstance().isShaderPackInUse();
+        boolean inUse = isIrisShaderPackInUse();
         Boolean previous = lastIrisPackInUse;
         lastIrisPackInUse = inUse;
         return previous != null && previous != inUse;
+    }
+
+    private boolean isIrisShaderPackInUse() {
+        return FabricLoader.getInstance().isModLoaded("iris") && IrisApi.getInstance().isShaderPackInUse();
     }
 
     @Override
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         Minecraft minecraftClient = Minecraft.getInstance();
-        if (enabled) {
-            // Re-observe the Iris state from scratch so a pack toggled while disabled doesn't trigger a reload now.
-            lastIrisPackInUse = null;
+        // Re-observe the Iris state from scratch so a pack toggled while disabled doesn't trigger a reload now.
+        lastIrisPackInUse = null;
+        if (isEnabled()) {
             ensureVibrancyPostProcessor(minecraftClient.gameRenderer);
             return;
         }

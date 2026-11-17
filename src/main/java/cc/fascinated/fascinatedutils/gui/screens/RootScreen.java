@@ -93,7 +93,7 @@ public abstract class RootScreen extends WidgetScreen {
         float pointerY = canvasPointerY();
 
         float deltaSeconds = delta / 20f;
-        AlumiteGuiRenderer renderFrame = new AlumiteGuiRenderer(drawContext);
+        AlumiteGuiRenderer renderFrame = new AlumiteGuiRenderer(drawContext, true);
         renderFrame.beginFrame(uiWidth, uiHeight);
         renderFrame.setPointer(pointerX, pointerY);
         host.layout(0, 0, Math.round(uiWidth), Math.round(uiHeight), renderFrame);

@@ -15,6 +15,10 @@ public class UiInputRouter {
         return focusManager;
     }
 
+    public boolean hasPressedLeaf() {
+        return pressedLeaf != null;
+    }
+
     public boolean dispatch(UiNode root, UiEvent event) {
         focusManager.ensureValid(root);
         UiNode focusTrap = findFocusTrap(root);

@@ -64,7 +64,7 @@ public abstract class GameRendererMixin {
             widgetScreen.renderCustom(drawContext, mouseX * scale, mouseY * scale, deltaTracker.getRealtimeDeltaTicks());
         }
 
-        AlumiteGuiRenderer toastRenderer = new AlumiteGuiRenderer(drawContext);
+        AlumiteGuiRenderer toastRenderer = new AlumiteGuiRenderer(drawContext, true);
         toastRenderer.beginFrame(uiWidth, uiHeight);
         ToastManager.INSTANCE.render(toastRenderer, uiWidth, uiHeight, UIScale.uiPointerX(), UIScale.uiPointerY(), deltaSeconds);
         toastRenderer.endFrame();

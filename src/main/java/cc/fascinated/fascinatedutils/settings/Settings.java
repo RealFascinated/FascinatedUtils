@@ -4,8 +4,10 @@ import cc.fascinated.fascinatedutils.client.keybind.KeybindsWrapper;
 import cc.fascinated.fascinatedutils.common.ClientUtils;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
+import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.gui.screens.impl.screenshot.ScreenshotScreen;
+import cc.fascinated.fascinatedutils.gui.screens.impl.settings.ModuleSort;
 import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
 import com.mojang.blaze3d.platform.InputConstants;
 import lombok.Getter;
@@ -83,6 +85,11 @@ public class Settings {
             .categoryDisplayKey(CATEGORY_TURBO_RENDERING)
             .build();
 
+    private final EnumSetting<ModuleSort> moduleSort = EnumSetting.<ModuleSort>builder().id("module_sort")
+            .defaultValue(ModuleSort.DEFAULT)
+            .valueFormatter(ModuleSort::displayName)
+            .build();
+
     public Settings() {
         addSetting(shellOpenKeybind);
         addSetting(screenshotsKeybind);
@@ -94,6 +101,7 @@ public class Settings {
         addSetting(turboEntities);
         addSetting(turboParticles);
         addSetting(turboWeather);
+        addSetting(moduleSort);
 
         if (!ClientUtils.isMacOS() && reduceMacOSResolution.isEnabled()) {
             reduceMacOSResolution.setValue(false);
