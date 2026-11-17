@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.HudOverlaysPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.IdlePerfScene;
-import cc.fascinated.fascinatedutils.systems.hud.HUDModuleWidgetsElement;
+import cc.fascinated.fascinatedutils.systems.hud.HudModuleWidgetsElement;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -21,14 +21,14 @@ public class HudRenderPerfTest extends PerfTest {
     private final GuiRenderState renderState = new GuiRenderState();
 
     public HudRenderPerfTest() {
-        super("hud.render_full", "HUDModuleWidgetsElement.extractRenderState into an offscreen GuiRenderState", 50, 2_000);
+        super("hud.render_full", "HudModuleWidgetsElement.extractRenderState into an offscreen GuiRenderState", 50, 2_000);
     }
 
     @Override
     public void runOnce() {
         renderState.reset();
         GuiGraphicsExtractor graphics = new GuiGraphicsExtractor(Minecraft.getInstance(), renderState, 0, 0);
-        HUDModuleWidgetsElement.INSTANCE.extractRenderState(graphics, DeltaTracker.ONE);
+        HudModuleWidgetsElement.INSTANCE.extractRenderState(graphics, DeltaTracker.ONE);
     }
 
     @Override

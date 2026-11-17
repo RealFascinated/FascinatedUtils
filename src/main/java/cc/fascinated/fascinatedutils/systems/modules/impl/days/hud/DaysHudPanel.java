@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.days.hud;
 
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.panel.MiniMessageHudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.impl.days.DaysCounterWidget;
 import net.minecraft.client.Minecraft;
 
@@ -20,13 +20,13 @@ public class DaysHudPanel extends MiniMessageHudPanel {
     @Override
     protected List<String> computeMiniMessageLines(float deltaSeconds, boolean editorMode) {
         if (editorMode && Minecraft.getInstance().level == null) {
-            return List.of("Day <white>124");
+            return List.of(hudText("day") + " <white>124");
         }
         Minecraft client = Minecraft.getInstance();
         if (client.level == null) {
-            return List.of("<grey>Day —</grey>");
+            return List.of("<grey>" + hudText("day") + " —</grey>");
         }
         long worldDay = Math.floorDiv(client.level.getGameTime(), TICKS_PER_DAY) + 1L;
-        return List.of("Day <white>" + worldDay);
+        return List.of(hudText("day") + " <white>" + worldDay);
     }
 }

@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.speed.hud;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.panel.MiniMessageHudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.impl.speed.SpeedWidget;
 
 import java.util.ArrayList;
@@ -22,17 +22,17 @@ public class SpeedHudPanel extends MiniMessageHudPanel {
     protected List<String> computeMiniMessageLines(float deltaSeconds, boolean editorMode) {
         float currentSpeed = speedWidget.getCurrentSpeed();
         if (!Float.isFinite(currentSpeed)) {
-            return List.of("<grey>Speed N/A</grey>");
+            return List.of("<grey>" + hudText("unavailable") + "</grey>");
         }
         List<String> lines = new ArrayList<>();
-        lines.add(String.format(Locale.ENGLISH, "%.2f b/s", currentSpeed));
+        lines.add(String.format(Locale.ENGLISH, "%.2f %s", currentSpeed, hudText("unit")));
         BooleanSetting showPeak = speedWidget.getShowPeak();
         if (showPeak.isEnabled() && speedWidget.getBufferCount() > 0) {
-            lines.add(String.format(Locale.ENGLISH, "<grey>Peak:</grey> %.2f", speedWidget.sampledPeakSpeed()));
+            lines.add(String.format(Locale.ENGLISH, "<grey>%s</grey> %.2f", hudText("peak"), speedWidget.sampledPeakSpeed()));
         }
         BooleanSetting showAverage = speedWidget.getShowAverage();
         if (showAverage.isEnabled() && speedWidget.getBufferCount() > 0) {
-            lines.add(String.format(Locale.ENGLISH, "<grey>Avg:</grey> %.2f", speedWidget.sampledAverageSpeed()));
+            lines.add(String.format(Locale.ENGLISH, "<grey>%s</grey> %.2f", hudText("average"), speedWidget.sampledAverageSpeed()));
         }
         return lines;
     }

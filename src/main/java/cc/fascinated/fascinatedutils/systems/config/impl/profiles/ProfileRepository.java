@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.config.impl.profiles;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.systems.config.AtomicFiles;
+import cc.fascinated.fascinatedutils.systems.config.io.AtomicFiles;
 import cc.fascinated.fascinatedutils.systems.config.ConfigManager;
 import cc.fascinated.fascinatedutils.systems.config.impl.config.FascinatedConfig;
 import cc.fascinated.fascinatedutils.systems.modules.Module;

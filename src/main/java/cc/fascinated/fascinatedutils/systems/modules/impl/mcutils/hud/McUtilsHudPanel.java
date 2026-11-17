@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.mcutils.hud;
 
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.panel.MiniMessageHudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
 import cc.fascinated.fascinatedutils.systems.modules.impl.mcutils.McUtilsModule;
 
@@ -28,15 +28,21 @@ public class McUtilsHudPanel extends MiniMessageHudPanel {
     }
 
     @Override
-    protected boolean defaultVisible() {
-        return false;
+    protected boolean isPanelVisible() {
+        return module.getShowHud().isEnabled();
+    }
+
+    @Override
+    public void hideFromHud() {
+        // The module keeps submitting names while only its panel is hidden.
+        module.getShowHud().setValue(false);
     }
 
     @Override
     protected List<String> computeMiniMessageLines(float deltaSeconds, boolean editorMode) {
         return List.of(
-                "Submitted <white>" + (module.getSubmittedCount() < 0 ? "…" : NUMBER_FORMAT.format(module.getSubmittedCount())) + "</white>",
-                "Session <green>+" + NUMBER_FORMAT.format(module.getSessionDelta()) + "</green>"
+                hudText("submitted") + " <white>" + (module.getSubmittedCount() < 0 ? "…" : NUMBER_FORMAT.format(module.getSubmittedCount())) + "</white>",
+                hudText("session") + " <green>+" + NUMBER_FORMAT.format(module.getSessionDelta()) + "</green>"
         );
     }
 }

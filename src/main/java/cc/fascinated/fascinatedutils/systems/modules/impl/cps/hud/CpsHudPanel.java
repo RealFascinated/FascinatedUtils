@@ -1,9 +1,9 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.cps.hud;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.gui.input.MouseClickRateTracker;
+import cc.fascinated.fascinatedutils.systems.modules.impl.cps.MouseClickRateTracker;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.panel.MiniMessageHudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.impl.cps.CpsWidget;
 
 import java.util.List;
@@ -23,8 +23,8 @@ public class CpsHudPanel extends MiniMessageHudPanel {
         int leftClicksPerSecond = MouseClickRateTracker.INSTANCE.leftClicksPerSecond();
         int rightClicksPerSecond = MouseClickRateTracker.INSTANCE.rightClicksPerSecond();
         if (splitButtons.isEnabled()) {
-            return List.of("%s <grey>|</grey> %s CPS".formatted(leftClicksPerSecond, rightClicksPerSecond));
+            return List.of("%s <grey>|</grey> %s %s".formatted(leftClicksPerSecond, rightClicksPerSecond, hudText("cps")));
         }
-        return List.of(MouseClickRateTracker.INSTANCE.combinedClicksPerSecond() + " CPS");
+        return List.of(MouseClickRateTracker.INSTANCE.combinedClicksPerSecond() + " " + hudText("cps"));
     }
 }

@@ -1,223 +1,131 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.hud;
 
-import cc.fascinated.fascinatedutils.common.Colors;
-import cc.fascinated.fascinatedutils.common.NumberUtils;
-import cc.fascinated.fascinatedutils.common.StringUtils;
+import cc.fascinated.fascinatedutils.common.color.Colors;
+import cc.fascinated.fascinatedutils.common.util.NumberUtils;
+import cc.fascinated.fascinatedutils.common.util.StringUtils;
 import cc.fascinated.fascinatedutils.common.culling.BiomeColors;
-import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
-import cc.fascinated.fascinatedutils.systems.hud.HUDPanelBackground;
+import cc.fascinated.fascinatedutils.gui.core.UiNode;
+import cc.fascinated.fascinatedutils.gui.node.display.RichTextNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.ColumnNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.RowNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.WidestNode;
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudComposeContext;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
-import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
 import cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.CoordinatesWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.coordinates.CoordinatesWidget.CoordinatesLayout;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CoordinatesHudPanel extends HudPanel {
 
-    private static final float COLUMN_GAP = 4f;
+    private static final int COLUMN_GAP = 4;
     private static final String[] COMPASS_DIRECTIONS = {"S", "SE", "E", "NE", "N", "NW", "W", "SW"};
+    private static final int PREVIEW_COMPASS_INDEX = 2;
     private static final String COMPASS_TRANSLATION_PREFIX = "alumite.module.coordinates.compass.";
+    private static final String PREVIEW_BIOME_ID = "minecraft:river";
 
     private final CoordinatesWidget coordinatesWidget;
-    private final Map<String, String> biomeMiniMessageCache = new HashMap<>();
-    private double cachedCoordX = Double.NaN;
-    private double cachedCoordY = Double.NaN;
-    private double cachedCoordZ = Double.NaN;
-    private int cachedDecimals = -1;
-    private String cachedBiomeMini;
-    private String xPart;
-    private String yPart;
-    private String zPart;
-    private List<String> verticalLines = List.of();
-    private String[] compassLabels = new String[0];
-    private float compassColumnWidth;
-    private String compassWidthLanguage;
 
     public CoordinatesHudPanel(CoordinatesWidget coordinatesWidget) {
         super(coordinatesWidget, "coordinates", HudHostModule.UTILITY_WIDGET_MIN_WIDTH);
         this.coordinatesWidget = coordinatesWidget;
     }
 
-    /**
-     * Rebuilds the coordinate strings only when a coordinate, the precision setting, or the biome changes.
-     *
-     * @param coordX    block X position shown
-     * @param coordY    block Y position shown
-     * @param coordZ    block Z position shown
-     * @param decimals  decimal places for the coordinates
-     * @param biomeMini biome label in MiniMessage form
-     */
-    private void refreshCoordinateText(double coordX, double coordY, double coordZ, int decimals, String biomeMini) {
-        if (coordX == cachedCoordX && coordY == cachedCoordY && coordZ == cachedCoordZ && decimals == cachedDecimals && biomeMini.equals(cachedBiomeMini)) {
-            return;
-        }
-        cachedCoordX = coordX;
-        cachedCoordY = coordY;
-        cachedCoordZ = coordZ;
-        cachedDecimals = decimals;
-        cachedBiomeMini = biomeMini;
-        xPart = I18n.get("alumite.module.coordinates.label.x") + NumberUtils.formatNumber(coordX, decimals);
-        yPart = I18n.get("alumite.module.coordinates.label.y") + NumberUtils.formatNumber(coordY, decimals);
-        zPart = I18n.get("alumite.module.coordinates.label.z") + NumberUtils.formatNumber(coordZ, decimals);
-        verticalLines = List.of(xPart, yPart, zPart, I18n.get("alumite.module.coordinates.label.biome") + biomeMini);
-    }
-
-    /**
-     * Returns the widest compass label width, measured once and re-measured only when the language changes.
-     *
-     * @param glRenderer renderer used for measuring
-     * @return the width of the widest compass label
-     */
-    private float compassColumnWidth(AlumiteGuiRenderer glRenderer) {
-        String language = Minecraft.getInstance().getLanguageManager().getSelected();
-        if (compassWidthLanguage == null || !compassWidthLanguage.equals(language)) {
-            compassLabels = new String[COMPASS_DIRECTIONS.length];
-            float widest = 0f;
-            for (int index = 0; index < COMPASS_DIRECTIONS.length; index++) {
-                compassLabels[index] = I18n.get(COMPASS_TRANSLATION_PREFIX + COMPASS_DIRECTIONS[index].toLowerCase(Locale.ROOT));
-                widest = Math.max(widest, glRenderer.measureMiniMessageTextWidth(compassLabels[index]));
-            }
-            compassColumnWidth = widest;
-            compassWidthLanguage = language;
-        }
-        return compassColumnWidth;
-    }
-
-    private String biomeColoredMiniMessage(String biomeIdRaw) {
-        return biomeMiniMessageCache.computeIfAbsent(biomeIdRaw, CoordinatesHudPanel::buildBiomeColoredMiniMessage);
-    }
-
     private static String buildBiomeColoredMiniMessage(String biomeIdRaw) {
         Identifier biomeId = Identifier.tryParse(biomeIdRaw);
         String path = biomeId == null ? biomeIdRaw : biomeId.getPath();
         String label = Arrays.stream(path.replace("_", " ").split(" ")).map(StringUtils::capitalize).collect(Collectors.joining(" "));
-        int biomeColorArgb = BiomeColors.colorForBiomeId(Identifier.tryParse(biomeIdRaw));
-        return "<color:" + Colors.rgbHex(biomeColorArgb) + ">" + label + "</color>";
+        int biomeColorArgb = BiomeColors.colorForBiomeId(biomeId);
+        return "<color:" + Colors.rgbHex(biomeColorArgb) + ">" + escapeMiniMessage(label) + "</color>";
     }
 
-    private String compassFromLook(Vec3 look) {
-        double horizontalX = look.x;
-        double horizontalZ = look.z;
-        if (Math.hypot(horizontalX, horizontalZ) < 1e-5d) {
-            return "—";
+    private static int compassIndexFromYaw(float yawDegrees) {
+        // Yaw 0 faces south and grows clockwise (towards west); the compass list runs south, south-east, east, ...
+        double heading = -yawDegrees % 360d;
+        if (heading < 0d) {
+            heading += 360d;
         }
-        double degrees = Math.toDegrees(Math.atan2(horizontalX, horizontalZ));
-        if (degrees < 0d) {
-            degrees += 360d;
+        return (int) Math.floor((heading + 22.5d) / 45d) & 7;
+    }
+
+    private static String[] translatedCompassLabels() {
+        String[] labels = new String[COMPASS_DIRECTIONS.length];
+        for (int index = 0; index < COMPASS_DIRECTIONS.length; index++) {
+            labels[index] = I18n.get(COMPASS_TRANSLATION_PREFIX + COMPASS_DIRECTIONS[index].toLowerCase(Locale.ROOT));
         }
-        int sector = (int) Math.floor((degrees + 22.5d) / 45d) & 7;
-        return compassLabels.length == COMPASS_DIRECTIONS.length ? compassLabels[sector] : COMPASS_DIRECTIONS[sector];
+        return labels;
     }
 
     @Override
-    protected @Nullable HudContent produceHudContent(float deltaSeconds, boolean editorMode) {
-        return null;
-    }
-
-    @Override
-    public @Nullable Runnable prepareAndDraw(AlumiteGuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
-        float compassWidth = compassColumnWidth(glRenderer);
+    protected @Nullable UiNode compose(HudComposeContext context) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
-        final double coordX;
-        final double coordY;
-        final double coordZ;
-        final String biomeMini;
-        final String facingKey;
+        double coordX;
+        double coordY;
+        double coordZ;
+        String biomeId;
+        int facingIndex;
         if (player != null) {
             coordX = player.getX();
             coordY = player.getY();
             coordZ = player.getZ();
-            biomeMini = biomeColoredMiniMessage(player.level().getBiome(player.blockPosition()).getRegisteredName());
-            facingKey = compassFromLook(player.getViewVector(client.getDeltaTracker().getGameTimeDeltaPartialTick(false)));
+            biomeId = player.level().getBiome(player.blockPosition()).getRegisteredName();
+            facingIndex = compassIndexFromYaw(player.getYRot());
         }
-        else if (editorMode) {
+        else if (context.editorMode()) {
             coordX = 12.375;
             coordY = 64.0625;
             coordZ = -8.254;
-            biomeMini = biomeColoredMiniMessage("minecraft:river");
-            facingKey = compassLabels.length == COMPASS_DIRECTIONS.length ? compassLabels[2] : "E";
+            biomeId = PREVIEW_BIOME_ID;
+            facingIndex = PREVIEW_COMPASS_INDEX;
         }
         else {
             return null;
         }
         int decimals = Math.round(coordinatesWidget.coordinatesHudBlockDecimals());
-        refreshCoordinateText(coordX, coordY, coordZ, decimals, biomeMini);
-        if (coordinatesWidget.coordinatesHudLayout() == CoordinatesLayout.HORIZONTAL) {
-            final String xPart = this.xPart;
-            final String yPart = this.yPart;
-            final String zPart = this.zPart;
-            float lineHeight = glRenderer.fontHeight();
-            float xWidth = glRenderer.measureMiniMessageTextWidth(xPart);
-            float yWidth = glRenderer.measureMiniMessageTextWidth(yPart);
-            float zWidth = glRenderer.measureMiniMessageTextWidth(zPart);
-            final float facingColumnBandWidth = compassWidth;
-            float innerWidth = xWidth + COLUMN_GAP + yWidth + COLUMN_GAP + zWidth + COLUMN_GAP + facingColumnBandWidth;
-            float padding = hudHostModule().getPaddingValue();
-            float layoutWidth = Math.max(1f, Math.max(getMinWidth(), innerWidth + 2f * padding));
-            float layoutHeight = Math.max(1f, lineHeight + 2f * padding);
-            commitLayout(layoutWidth, layoutHeight);
-            boolean textShadow = hudHostModule().isTextShadowEnabled();
-            return () -> {
-                hudHostModule().drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
-                float availableInnerWidth = layoutWidth - 2f * padding;
-                float startX = padding + HudAnchorLayout.horizontalOffsetInInnerBand(availableInnerWidth, innerWidth, hudContentHorizontalAlignment());
-                glRenderer.drawMiniMessageText(xPart, startX, padding, textShadow);
-                glRenderer.drawMiniMessageText(yPart, startX + xWidth + COLUMN_GAP, padding, textShadow);
-                glRenderer.drawMiniMessageText(zPart, startX + xWidth + COLUMN_GAP + yWidth + COLUMN_GAP, padding, textShadow);
-                float facingColumnX = startX + xWidth + COLUMN_GAP + yWidth + COLUMN_GAP + zWidth + COLUMN_GAP;
-                float currentFacingHeadingWidth = glRenderer.measureMiniMessageTextWidth(facingKey);
-                glRenderer.drawMiniMessageText(facingKey, facingColumnX + (facingColumnBandWidth - currentFacingHeadingWidth), padding, textShadow);
-            };
+        RichTextNode xLine = plainLine(context, I18n.get("alumite.module.coordinates.label.x") + NumberUtils.formatNumber(coordX, decimals));
+        RichTextNode yLine = plainLine(context, I18n.get("alumite.module.coordinates.label.y") + NumberUtils.formatNumber(coordY, decimals));
+        RichTextNode zLine = plainLine(context, I18n.get("alumite.module.coordinates.label.z") + NumberUtils.formatNumber(coordZ, decimals));
+        String[] compassLabels = translatedCompassLabels();
+        // The compass column is as wide as the widest direction so the panel does not resize while turning.
+        List<RichTextNode> compassCandidates = new ArrayList<>(compassLabels.length);
+        for (String compassLabel : compassLabels) {
+            compassCandidates.add(plainLine(context, compassLabel));
         }
-        List<String> leftLines = verticalLines;
-        float lineHeight = glRenderer.fontHeight();
-        float leftColumnWidth = 0f;
-        for (String line : leftLines) {
-            leftColumnWidth = Math.max(leftColumnWidth, glRenderer.measureMiniMessageTextWidth(line));
-        }
-        int lineCount = leftLines.size();
-        float facingWidth = compassWidth;
-        final float leftColumnCommitWidth = leftColumnWidth;
-        final float facingCommitWidth = facingWidth;
-        float innerHeight = lineCount * lineHeight + Math.max(0, lineCount - 1) * HUDPanelBackground.LINE_GAP_PX;
-        float innerWidth = leftColumnWidth + COLUMN_GAP + facingWidth;
-        float padding = hudHostModule().getPaddingValue();
-        float layoutWidth = Math.max(1f, Math.max(getMinWidth(), innerWidth + 2f * padding));
-        float layoutHeight = Math.max(1f, innerHeight + 2f * padding);
-        commitLayout(layoutWidth, layoutHeight);
+        WidestNode compassColumn = new WidestNode(compassCandidates);
+        compassColumn.addChild(plainLine(context, compassLabels[facingIndex]).alignX(1f));
 
-        boolean textShadow = hudHostModule().isTextShadowEnabled();
-        return () -> {
-            hudHostModule().drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
-            float availableInnerWidth = layoutWidth - 2f * padding;
-            float blockStartX = padding + HudAnchorLayout.horizontalOffsetInInnerBand(availableInnerWidth, innerWidth, hudContentHorizontalAlignment());
-            float cursorY = padding;
-            for (int index = 0; index < lineCount; index++) {
-                glRenderer.drawMiniMessageText(leftLines.get(index), blockStartX, cursorY, textShadow);
-                cursorY += lineHeight;
-                if (index < lineCount - 1) {
-                    cursorY += HUDPanelBackground.LINE_GAP_PX;
-                }
-            }
-            float facingColumnStartX = blockStartX + leftColumnCommitWidth + COLUMN_GAP;
-            float currentFacingHeadingWidth = glRenderer.measureMiniMessageTextWidth(facingKey);
-            float facingX = facingColumnStartX + (facingCommitWidth - currentFacingHeadingWidth);
-            glRenderer.drawMiniMessageText(facingKey, facingX, padding, textShadow);
-        };
+        RowNode row = new RowNode(COLUMN_GAP).alignX(context.contentAlignment());
+        if (coordinatesWidget.coordinatesHudLayout() == CoordinatesLayout.HORIZONTAL) {
+            row.addChild(xLine);
+            row.addChild(yLine);
+            row.addChild(zLine);
+        }
+        else {
+            ColumnNode lines = new ColumnNode(Math.round(HudAnchorLayout.LINE_GAP_PX));
+            lines.addChild(xLine);
+            lines.addChild(yLine);
+            lines.addChild(zLine);
+            lines.addChild(context.text(I18n.get("alumite.module.coordinates.label.biome") + buildBiomeColoredMiniMessage(biomeId)));
+            row.addChild(lines);
+        }
+        row.addChild(compassColumn);
+        return row;
+    }
+
+    private static RichTextNode plainLine(HudComposeContext context, String text) {
+        return RichTextNode.component(Component.literal(text), context.textShadow());
     }
 }

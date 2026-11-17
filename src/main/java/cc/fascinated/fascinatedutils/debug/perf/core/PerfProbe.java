@@ -3,7 +3,9 @@ package cc.fascinated.fascinatedutils.debug.perf.core;
 import cc.fascinated.fascinatedutils.debug.perf.report.PerfResult;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import meteordevelopment.orbit.EventHandler;
 
 import com.sun.management.GarbageCollectionNotificationInfo;
@@ -286,13 +288,10 @@ public class PerfProbe {
     /**
      * A thread-safe event counter. Each client tick of a session records how many events happened in that tick.
      */
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public class Counter {
         private final Section section;
         private final LongAdder pending = new LongAdder();
-
-        private Counter(Section section) {
-            this.section = section;
-        }
 
         /**
          * Counts events. Safe from any thread; does nothing when no session is recording.
@@ -309,15 +308,12 @@ public class PerfProbe {
     /**
      * A resolved probe section. Holds its own sample buffers, so recording a sample does no lookup.
      */
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public class Section {
         @Getter
         private final String name;
         private volatile NanoSamples durations = new NanoSamples();
         private volatile NanoSamples allocations = new NanoSamples();
-
-        private Section(String name) {
-            this.name = name;
-        }
 
         public long begin() {
             return recording ? System.nanoTime() : NOT_RECORDING;

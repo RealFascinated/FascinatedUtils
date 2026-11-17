@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.common.setting;
 
-import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
+import cc.fascinated.fascinatedutils.systems.config.io.GsonSerializable;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -13,6 +13,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -92,6 +93,27 @@ public class Setting<T> implements GsonSerializable<Setting<T>> {
 
     public String getName() {
         return nameProvider.get();
+    }
+
+    /**
+     * Text a settings search matches against: the display name and the tooltip, lowercased.
+     *
+     * @return the lowercased searchable text of this setting
+     */
+    public String searchableText() {
+        String tooltip = tooltipProvider.get();
+        String name = getName();
+        return (tooltip == null ? name : name + "\n" + tooltip).toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Whether this setting matches a search query.
+     *
+     * @param queryLower the lowercased query
+     * @return true when the name or tooltip contains the query
+     */
+    public boolean matchesSearch(String queryLower) {
+        return searchableText().contains(queryLower);
     }
 
     public void setTranslationKeyPrefix(String translationKeyPrefix) {

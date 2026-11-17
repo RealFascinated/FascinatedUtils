@@ -3,10 +3,12 @@ package cc.fascinated.fascinatedutils.api.internal;
 import cc.fascinated.fascinatedutils.api.AlumiteApiException;
 import cc.fascinated.fascinatedutils.api.Errors;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
-import cc.fascinated.fascinatedutils.common.JsonUtils;
+import cc.fascinated.fascinatedutils.common.util.JsonUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.io.IOException;
@@ -19,6 +21,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 @Accessors(fluent = true)
+@RequiredArgsConstructor
 public final class AlumiteHttpClient {
 
     private static final int MAX_ATTEMPTS = 3;
@@ -32,26 +35,15 @@ public final class AlumiteHttpClient {
     private final Supplier<String> accessTokenSupplier;
     private final BooleanSupplier refreshActiveToken;
 
-    public AlumiteHttpClient(HttpClient httpClient, Gson gson, Supplier<String> accessTokenSupplier, BooleanSupplier refreshActiveToken) {
-        this.httpClient = httpClient;
-        this.gson = gson;
-        this.accessTokenSupplier = accessTokenSupplier;
-        this.refreshActiveToken = refreshActiveToken;
-    }
-
     public RequestBuilder get(String path) { return new RequestBuilder("GET", path); }
     public RequestBuilder post(String path) { return new RequestBuilder("POST", path); }
 
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public final class RequestBuilder {
         private final String method;
         private final String path;
         private String body;
         private boolean authenticated = true;
-
-        private RequestBuilder(String method, String path) {
-            this.method = method;
-            this.path = path;
-        }
 
         public RequestBuilder body(Object obj) {
             this.body = gson.toJson(obj);

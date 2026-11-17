@@ -14,8 +14,8 @@ import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
-import cc.fascinated.fascinatedutils.gui.ModUiClientEntry;
-import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
+import cc.fascinated.fascinatedutils.systems.hud.HudElementRegistrar;
+import cc.fascinated.fascinatedutils.renderer.world.FascinatedWorldRenderTypes;
 import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.renderer.Renderer2D;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
@@ -114,7 +114,7 @@ public class Client implements ClientModInitializer {
         ModuleRegistry.INSTANCE.initialize();
         RainbowColors.init();
         FascinatedWorldRenderTypes.registerWithIris();
-        ModUiClientEntry.register();
+        HudElementRegistrar.register();
         WaypointRepository.init();
 
         // Starts the periodic update check; staged updates are applied on shutdown.

@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.debug.perf.scene.impl;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.debug.perf.scene.PerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.PerfSceneContext;
-import cc.fascinated.fascinatedutils.systems.modules.impl.FogCustomizerModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.fogcustomizer.FogCustomizerModule;
 
 import java.util.List;
 

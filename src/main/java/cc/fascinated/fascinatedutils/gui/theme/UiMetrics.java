@@ -1,11 +1,14 @@
 package cc.fascinated.fascinatedutils.gui.theme;
 
+import lombok.experimental.UtilityClass;
+
 /**
  * Shared spacing, sizing and rounding tokens in logical UI pixels, so every screen uses the same rhythm.
  *
  * <p>Spacing follows a 4px scale. Every interactive control (buttons, inputs, chips, icon buttons) is
  * {@link #CONTROL_HEIGHT} tall, and every rounded surface uses {@link #RADIUS}.</p>
  */
+@UtilityClass
 public class UiMetrics {
 
     /**
@@ -42,4 +45,39 @@ public class UiMetrics {
      * Corner radius of cards, buttons and inputs.
      */
     public static final int RADIUS = 6;
+
+    /**
+     * Horizontal inner padding of text inputs.
+     */
+    public static final int INPUT_PAD_X = 8;
+
+    /**
+     * Vertical inner padding of text inputs.
+     */
+    public static final int INPUT_PAD_Y = 5;
+
+    /**
+     * Inset of card content from the card edge.
+     */
+    public static final int CARD_INSET = 12;
+
+    /**
+     * Gap between an icon and its label.
+     */
+    public static final int ICON_GAP = 6;
+
+    /**
+     * Width of a dialog footer button.
+     */
+    public static final int DIALOG_BUTTON_WIDTH = 76;
+
+    /**
+     * Corner radius of toasts.
+     */
+    public static final int TOAST_RADIUS = 6;
+
+    /**
+     * Corner radius of checkboxes.
+     */
+    public static final int CHECKBOX_RADIUS = 4;
 }

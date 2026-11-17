@@ -1,9 +1,9 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.tps.hud;
 
-import cc.fascinated.fascinatedutils.common.Colors;
-import cc.fascinated.fascinatedutils.common.TpsColors;
+import cc.fascinated.fascinatedutils.common.color.Colors;
+import cc.fascinated.fascinatedutils.common.color.TpsColors;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.panel.MiniMessageHudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.impl.tps.TpsWidget;
 
 import java.util.List;
@@ -43,7 +43,7 @@ public class TpsHudPanel extends MiniMessageHudPanel {
         float lastKnownTps = tpsWidget.getLastKnownTps();
         float lastKnownMspt = tpsWidget.getLastKnownMspt();
         if (!Float.isFinite(lastKnownTps) || !Float.isFinite(lastKnownMspt)) {
-            return List.of("<grey>TPS N/A</grey>");
+            return List.of("<grey>" + hudText("unavailable") + "</grey>");
         }
         boolean showMspt = tpsWidget.getShowMspt().isEnabled();
         boolean useTpsColor = tpsWidget.getUseTpsColor().isEnabled();

@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.inventorytweaks;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.InventoryTweaksModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks.InventoryTweaksModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks.QuickMove;
 import cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks.ScrollMove;
 import com.mojang.blaze3d.platform.InputConstants;

@@ -1,16 +1,18 @@
 package cc.fascinated.fascinatedutils.debug;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.common.ByteUtils;
-import cc.fascinated.fascinatedutils.common.ValueSmoother;
-import cc.fascinated.fascinatedutils.mixin.DebugScreenEntriesInvokerMixin;
-import cc.fascinated.fascinatedutils.systems.TextureManager;
-import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
+import cc.fascinated.fascinatedutils.common.util.ByteUtils;
+import cc.fascinated.fascinatedutils.common.timing.ValueSmoother;
+import cc.fascinated.fascinatedutils.mixin.accessor.DebugScreenEntriesInvokerMixin;
+import cc.fascinated.fascinatedutils.systems.texture.TextureManager;
+import cc.fascinated.fascinatedutils.systems.hud.HudManager;
 import cc.fascinated.fascinatedutils.systems.turboentities.EntitiesCullTask;
 import cc.fascinated.fascinatedutils.systems.turboentities.TurboEntities;
 import cc.fascinated.fascinatedutils.systems.turboparticles.ParticleCullTask;
 import cc.fascinated.fascinatedutils.systems.turboparticles.TurboParticles;
 import cc.fascinated.fascinatedutils.systems.turboweather.TurboWeather;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import net.minecraft.client.gui.components.debug.DebugEntryCategory;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.DoubleFunction;
 
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class AlumiteDebugScreenEntry implements DebugScreenEntry {
     private static final DebugEntryCategory CATEGORY = new DebugEntryCategory(Component.literal("Alumite"), 3.0F);
     private static final Identifier GROUP = Identifier.fromNamespaceAndPath("alumite", "debug");
@@ -38,10 +41,6 @@ public class AlumiteDebugScreenEntry implements DebugScreenEntry {
 
     private final DoubleFunction<List<String>> lineBuilder;
     private long lastDisplayNanos = System.nanoTime();
-
-    private AlumiteDebugScreenEntry(DoubleFunction<List<String>> lineBuilder) {
-        this.lineBuilder = lineBuilder;
-    }
 
     /**
      * Registers every Alumite section with vanilla so each shows as its own toggle in the F3 overlay and the debug options screen.
@@ -64,7 +63,7 @@ public class AlumiteDebugScreenEntry implements DebugScreenEntry {
     }
 
     private static List<String> hudLines(double deltaSeconds) {
-        double hudMs = HUD_RENDER_MS.smooth(HUDManager.INSTANCE.getLastRenderNanos() / 1_000_000.0, deltaSeconds);
+        double hudMs = HUD_RENDER_MS.smooth(HudManager.INSTANCE.getLastRenderNanos() / 1_000_000.0, deltaSeconds);
         return List.of(String.format(Locale.ENGLISH, PREFIX + "HUD %.2f ms", hudMs));
     }
 

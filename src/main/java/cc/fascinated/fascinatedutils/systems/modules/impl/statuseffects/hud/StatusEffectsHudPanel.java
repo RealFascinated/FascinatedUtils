@@ -1,11 +1,15 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.hud;
 
-import cc.fascinated.fascinatedutils.common.DateUtils;
-import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
-import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
-import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
-import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
-import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
+import cc.fascinated.fascinatedutils.common.util.DateUtils;
+import cc.fascinated.fascinatedutils.gui.layout.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.core.UiNode;
+import cc.fascinated.fascinatedutils.gui.node.display.AlphaNode;
+import cc.fascinated.fascinatedutils.gui.node.display.RichTextNode;
+import cc.fascinated.fascinatedutils.gui.node.display.SpriteNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.ColumnNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.RowNode;
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudComposeContext;
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.StatusEffectsModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.StatusEffectsModule.DisplayMode;
 import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.StatusEffectsModule.SortMode;
@@ -15,7 +19,6 @@ import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import org.jspecify.annotations.Nullable;
@@ -26,29 +29,20 @@ import java.util.List;
 
 public class StatusEffectsHudPanel extends HudPanel {
 
-    private static final float ICON_SIZE = 18f;
-    private static final float ICON_TEXT_GAP = 5f;
-    private static final float TEXT_LINE_GAP = 1f;
-    private static final float ROW_GAP = 2f;
+    private static final int ICON_SIZE = 18;
+    private static final int ICON_TEXT_GAP = 5;
+    private static final int TEXT_LINE_GAP = 1;
+    private static final int ROW_GAP = 2;
     private static final Identifier PREVIEW_SPEED_ICON = Identifier.withDefaultNamespace("mob_effect/speed");
     private static final Identifier PREVIEW_POISON_ICON = Identifier.withDefaultNamespace("mob_effect/poison");
 
     private final StatusEffectsModule statusEffectsModule;
     private final Minecraft minecraft = Minecraft.getInstance();
 
-    private List<EffectRow> cachedRows = List.of();
-    private long cachedRowsSignature;
-    private boolean cachedRowsValid;
-    private float[] textWidthBuffer = new float[0];
 
     public StatusEffectsHudPanel(StatusEffectsModule statusEffectsModule) {
         super(statusEffectsModule, "status_effects", 56f);
         this.statusEffectsModule = statusEffectsModule;
-    }
-
-    private static int whiteWithAlpha(float alpha) {
-        int alphaChannel = Mth.clamp(Math.round(alpha * 255f), 0, 255);
-        return (alphaChannel << 24) | 0x00FFFFFF;
     }
 
     private static Identifier spriteForMobEffect(Holder<MobEffect> effect) {
@@ -80,113 +74,53 @@ public class StatusEffectsHudPanel extends HudPanel {
     }
 
     @Override
-    protected @Nullable HudContent produceHudContent(float deltaSeconds, boolean editorMode) {
-        return null;
-    }
-
-    @Override
-    public @Nullable Runnable prepareAndDraw(AlumiteGuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
-        List<EffectRow> effectRows = resolveEffectRows(editorMode);
-        if (effectRows.isEmpty()) {
+    protected @Nullable UiNode compose(HudComposeContext context) {
+        boolean includeDuration = statusEffectsModule.effectsShowDurationSetting();
+        List<EffectRow> rows = resolveEffectRows(context.editorMode());
+        if (rows.isEmpty()) {
             return null;
         }
-
-        float fontHeight = glRenderer.fontHeight();
-        boolean showDurationValue = statusEffectsModule.effectsShowDurationSetting();
-        boolean detailedLayout = statusEffectsModule.effectsDisplayMode() == DisplayMode.DETAILED && showDurationValue;
-        float textBlockHeight = detailedLayout ? fontHeight * 2f + TEXT_LINE_GAP : fontHeight;
-        float rowHeight = Math.max(ICON_SIZE, textBlockHeight);
-        float maxRowWidth = 0f;
-        if (textWidthBuffer.length < effectRows.size()) {
-            textWidthBuffer = new float[effectRows.size()];
+        boolean detailedLayout = statusEffectsModule.effectsDisplayMode() == DisplayMode.DETAILED && includeDuration;
+        float alignment = context.contentAlignment() == 1f ? 1f : 0f;
+        ColumnNode column = new ColumnNode(ROW_GAP).alignX(alignment);
+        for (EffectRow effectRow : rows) {
+            column.addChild(effectRowNode(context, effectRow, detailedLayout, includeDuration, alignment));
         }
-        float[] textWidths = textWidthBuffer;
+        return column;
+    }
 
-        for (int rowIndex = 0; rowIndex < effectRows.size(); rowIndex++) {
-            EffectRow effectRow = effectRows.get(rowIndex);
-            float textWidth;
-            if (detailedLayout) {
-                float nameWidth = glRenderer.measureMiniMessageTextWidth(effectRow.nameText);
-                float durationWidth = glRenderer.measureMiniMessageTextWidth(effectRow.durationText);
-                textWidth = Math.max(nameWidth, durationWidth);
-            }
-            else {
-                String compactSegment = compactText(effectRow.nameText, effectRow.durationText, showDurationValue);
-                textWidth = glRenderer.measureMiniMessageTextWidth(compactSegment);
-            }
-            textWidths[rowIndex] = textWidth;
-            maxRowWidth = Math.max(maxRowWidth, ICON_SIZE + ICON_TEXT_GAP + textWidth);
+    /**
+     * One effect: the sprite beside its text, sprite first unless the panel hangs from the right. The duration fades
+     * out while the effect is about to end.
+     */
+    private RowNode effectRowNode(HudComposeContext context, EffectRow effectRow, boolean detailedLayout, boolean includeDuration, float alignment) {
+        String nameText = escapeMiniMessage(effectRow.name());
+        String durationText = escapeMiniMessage(effectRow.duration());
+        PositionedNode<?> textBlock;
+        if (detailedLayout) {
+            ColumnNode lines = new ColumnNode(TEXT_LINE_GAP);
+            lines.addChild(context.text(nameText).alignX(alignment));
+            lines.addChild(fading(effectRow.flashAlpha(), context.text(durationText)).alignX(alignment));
+            textBlock = lines.alignY(0.5f);
         }
+        else {
+            textBlock = fading(effectRow.flashAlpha(), context.text(compactText(nameText, durationText, includeDuration))).alignY(0.5f);
+        }
+        SpriteNode icon = new SpriteNode(effectRow.sprite()).size(ICON_SIZE).alignY(0.5f);
+        RowNode row = new RowNode(0).alignX(alignment);
+        if (alignment == 1f) {
+            row.addChild(textBlock);
+            row.addChild(icon.left(ICON_TEXT_GAP));
+        }
+        else {
+            row.addChild(icon);
+            row.addChild(textBlock.left(ICON_TEXT_GAP));
+        }
+        return row;
+    }
 
-        float contentHeight = effectRows.size() * rowHeight + Math.max(0f, effectRows.size() - 1f) * ROW_GAP;
-        float padding = hudHostModule().getPaddingValue();
-        float layoutWidth = Math.max(1f, Math.max(getMinWidth(), padding * 2f + maxRowWidth));
-        float layoutHeight = Math.max(1f, padding * 2f + contentHeight);
-
-        commitLayout(layoutWidth, layoutHeight);
-
-        boolean textShadow = hudHostModule().isTextShadowEnabled();
-        return () -> {
-            hudHostModule().drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
-
-            float innerWidth = layoutWidth - padding * 2f;
-            float innerHeight = layoutHeight - padding * 2f;
-            float cursorY = padding + HudAnchorLayout.verticalOffsetInInnerBand(innerHeight, contentHeight, hudContentVerticalAlignment());
-            boolean rightAligned = hudContentHorizontalAlignment() == HudAnchorContentAlignment.Horizontal.RIGHT;
-
-            float sharedIconXWhenRight = padding + innerWidth - ICON_SIZE;
-            float textRightEdgeWhenRight = sharedIconXWhenRight - ICON_TEXT_GAP;
-
-            for (int rowIndex = 0; rowIndex < effectRows.size(); rowIndex++) {
-                EffectRow effectRow = effectRows.get(rowIndex);
-
-                float iconY = cursorY + (rowHeight - ICON_SIZE) * 0.5f;
-                float textBlockY = cursorY + (rowHeight - textBlockHeight) * 0.5f;
-                float durationY = textBlockY + fontHeight + TEXT_LINE_GAP;
-
-                float flashAlpha = effectRow.flashAlpha;
-                if (rightAligned) {
-                    if (detailedLayout) {
-                        float nameX = textRightEdgeWhenRight - glRenderer.measureMiniMessageTextWidth(effectRow.nameText);
-                        float durationX = textRightEdgeWhenRight - glRenderer.measureMiniMessageTextWidth(effectRow.durationText);
-                        glRenderer.drawMiniMessageText(effectRow.nameText, nameX, textBlockY, textShadow);
-                        glRenderer.setMultiplyAlpha(flashAlpha);
-                        glRenderer.drawMiniMessageText(effectRow.durationText, durationX, durationY, textShadow);
-                        glRenderer.resetMultiplyAlpha();
-                    }
-                    else {
-                        String compactLine = compactText(effectRow.nameText, effectRow.durationText, showDurationValue);
-                        float compactX = textRightEdgeWhenRight - glRenderer.measureMiniMessageTextWidth(compactLine);
-                        glRenderer.setMultiplyAlpha(flashAlpha);
-                        glRenderer.drawMiniMessageText(compactLine, compactX, textBlockY, textShadow);
-                        glRenderer.resetMultiplyAlpha();
-                    }
-                    glRenderer.drawSprite(effectRow.effectSprite, sharedIconXWhenRight, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(1f));
-                }
-                else {
-                    float rowWidth = ICON_SIZE + ICON_TEXT_GAP + textWidths[rowIndex];
-                    float rowStartX = padding + HudAnchorLayout.horizontalOffsetInInnerBand(innerWidth, rowWidth, HudAnchorContentAlignment.Horizontal.LEFT);
-                    float textX = rowStartX + ICON_SIZE + ICON_TEXT_GAP;
-                    glRenderer.drawSprite(effectRow.effectSprite, rowStartX, iconY, ICON_SIZE, ICON_SIZE, whiteWithAlpha(1f));
-                    if (detailedLayout) {
-                        glRenderer.drawMiniMessageText(effectRow.nameText, textX, textBlockY, textShadow);
-                        glRenderer.setMultiplyAlpha(flashAlpha);
-                        glRenderer.drawMiniMessageText(effectRow.durationText, textX, durationY, textShadow);
-                        glRenderer.resetMultiplyAlpha();
-                    }
-                    else {
-                        glRenderer.setMultiplyAlpha(flashAlpha);
-                        glRenderer.drawMiniMessageText(compactText(effectRow.nameText, effectRow.durationText, showDurationValue), textX, textBlockY, textShadow);
-                        glRenderer.resetMultiplyAlpha();
-                    }
-                }
-
-                cursorY += rowHeight;
-                if (rowIndex < effectRows.size() - 1) {
-                    cursorY += ROW_GAP;
-                }
-            }
-        };
+    private static AlphaNode fading(float alpha, RichTextNode text) {
+        return new AlphaNode(() -> alpha).columnGap(0).addChild(text);
     }
 
     private float durationFlashAlpha(MobEffectInstance effectInstance) {
@@ -204,62 +138,40 @@ public class StatusEffectsHudPanel extends HudPanel {
         return (remainingSeconds % 2 == 0) ? 1f : 0f;
     }
 
-    private long effectsSignature(boolean includeAmplifier) {
-        long signature = includeAmplifier ? 1L : 0L;
-        signature = signature * 31L + statusEffectsModule.effectsSortMode().ordinal();
-        for (MobEffectInstance effectInstance : minecraft.player.getActiveEffects()) {
-            if (!effectInstance.showIcon()) {
-                continue;
-            }
-            signature = signature * 31L + effectInstance.getEffect().hashCode();
-            signature = signature * 31L + effectInstance.getAmplifier();
-            signature = signature * 31L + (effectInstance.isInfiniteDuration() ? -1 : effectInstance.getDuration() / 20);
-            signature = signature * 31L + Float.floatToIntBits(durationFlashAlpha(effectInstance));
-        }
-        return signature;
-    }
-
     private List<EffectRow> resolveEffectRows(boolean editorMode) {
         boolean includeAmplifier = statusEffectsModule.effectsShowAmplifier();
 
         if (minecraft.player != null) {
-            long signature = effectsSignature(includeAmplifier);
-            if (cachedRowsValid && signature == cachedRowsSignature) {
-                if (!cachedRows.isEmpty()) {
-                    return cachedRows;
-                }
-            }
             List<MobEffectInstance> activeEffects = new ArrayList<>(minecraft.player.getActiveEffects());
             activeEffects.removeIf(effectInstance -> !effectInstance.showIcon());
-            if (!activeEffects.isEmpty()) {
-                if (statusEffectsModule.effectsSortMode() == SortMode.ALPHABETICAL) {
-                    activeEffects.sort(Comparator.comparing(effectInstance -> effectInstance.getEffect().value().getDisplayName().getString(), String.CASE_INSENSITIVE_ORDER));
-                }
-                else {
-                    activeEffects.sort(Comparator.comparingInt(MobEffectInstance::getDuration).reversed());
-                }
-                List<EffectRow> rows = new ArrayList<>(activeEffects.size());
-                for (MobEffectInstance effectInstance : activeEffects) {
-                    String effectName = formatEffectNameWithAmplifier(effectInstance, includeAmplifier);
-                    String durationText = effectInstance.isInfiniteDuration() ? Component.translatable("effect.duration.infinite").getString() : DateUtils.formatDuration(effectInstance.getDuration());
-                    rows.add(new EffectRow(spriteForMobEffect(effectInstance.getEffect()), effectName, durationText, durationFlashAlpha(effectInstance)));
-                }
-                cachedRows = rows;
-                cachedRowsSignature = signature;
-                cachedRowsValid = true;
-                return rows;
+            if (statusEffectsModule.effectsSortMode() == SortMode.ALPHABETICAL) {
+                activeEffects.sort(Comparator.comparing(effectInstance -> effectInstance.getEffect().value().getDisplayName().getString(), String.CASE_INSENSITIVE_ORDER));
             }
-            cachedRowsValid = false;
-        }
-        else {
-            cachedRowsValid = false;
+            else {
+                activeEffects.sort(Comparator.comparingInt(MobEffectInstance::getDuration).reversed());
+            }
+            List<EffectRow> newRows = new ArrayList<>(activeEffects.size());
+            for (MobEffectInstance effectInstance : activeEffects) {
+                String effectName = formatEffectNameWithAmplifier(effectInstance, includeAmplifier);
+                String durationText = effectInstance.isInfiniteDuration() ? Component.translatable("effect.duration.infinite").getString() : DateUtils.formatDuration(effectInstance.getDuration());
+                newRows.add(new EffectRow(spriteForMobEffect(effectInstance.getEffect()), effectName, durationText, durationFlashAlpha(effectInstance)));
+            }
+            if (!newRows.isEmpty()) {
+                return newRows;
+            }
         }
 
         if (editorMode) {
-            return List.of(new EffectRow(PREVIEW_SPEED_ICON, includeAmplifier ? "Speed II" : "Speed", "01:25", 1f), new EffectRow(PREVIEW_POISON_ICON, includeAmplifier ? "Poison II" : "Poison", "00:37", 0.9f));
+            return previewRows(includeAmplifier);
         }
         return List.of();
     }
 
-    private record EffectRow(Identifier effectSprite, String nameText, String durationText, float flashAlpha) {}
+    private List<EffectRow> previewRows(boolean includeAmplifier) {
+        return List.of(
+                new EffectRow(PREVIEW_SPEED_ICON, hudText(includeAmplifier ? "preview_speed_amplified" : "preview_speed"), "01:25", 1f),
+                new EffectRow(PREVIEW_POISON_ICON, hudText(includeAmplifier ? "preview_poison_amplified" : "preview_poison"), "00:37", 0.9f));
+    }
+
+    private record EffectRow(Identifier sprite, String name, String duration, float flashAlpha) {}
 }

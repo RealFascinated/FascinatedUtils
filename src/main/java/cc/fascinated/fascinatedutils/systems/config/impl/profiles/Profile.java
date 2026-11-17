@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.config.impl.profiles;
 
-import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
+import cc.fascinated.fascinatedutils.systems.config.io.GsonSerializable;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

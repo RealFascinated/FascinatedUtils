@@ -1,22 +1,24 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.screenshot;
 
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
-import cc.fascinated.fascinatedutils.common.NumberUtils;
-import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui.core.SpacerNode;
+import cc.fascinated.fascinatedutils.common.util.NumberUtils;
+import cc.fascinated.fascinatedutils.gui.components.CloseButton;
+import cc.fascinated.fascinatedutils.gui.components.PanelCard;
+import cc.fascinated.fascinatedutils.gui.components.UiTranslations;
+import cc.fascinated.fascinatedutils.gui.layout.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
-import cc.fascinated.fascinatedutils.gui.core.UiKeys;
-import cc.fascinated.fascinatedutils.gui.core.UiState;
-import cc.fascinated.fascinatedutils.gui.node.ButtonNode;
-import cc.fascinated.fascinatedutils.gui.node.CardNode;
-import cc.fascinated.fascinatedutils.gui.node.ClickOverlayNode;
-import cc.fascinated.fascinatedutils.gui.node.ConfirmPopupNode;
-import cc.fascinated.fascinatedutils.gui.node.GridNode;
-import cc.fascinated.fascinatedutils.gui.node.ScrollColumnNode;
-import cc.fascinated.fascinatedutils.gui.node.TextNode;
-import cc.fascinated.fascinatedutils.gui.node.TextureNode;
+import cc.fascinated.fascinatedutils.gui.core.input.UiKeys;
+import cc.fascinated.fascinatedutils.gui.core.state.UiState;
+import cc.fascinated.fascinatedutils.gui.node.control.ButtonNode;
+import cc.fascinated.fascinatedutils.gui.node.display.CardNode;
+import cc.fascinated.fascinatedutils.gui.node.control.ClickOverlayNode;
+import cc.fascinated.fascinatedutils.gui.node.popup.ConfirmPopupNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.GridNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.ScrollColumnNode;
+import cc.fascinated.fascinatedutils.gui.node.display.TextNode;
+import cc.fascinated.fascinatedutils.gui.node.display.TextureNode;
+import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.screens.RootScreen;
-import cc.fascinated.fascinatedutils.gui.theme.UiMetrics;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import cc.fascinated.fascinatedutils.systems.screenshot.Screenshot;
 import cc.fascinated.fascinatedutils.systems.screenshot.ScreenshotManager;
@@ -38,8 +40,6 @@ public class ScreenshotScreen extends RootScreen {
     private static final int CELL_BTN_HEIGHT = 18;
     private static final int CELL_FOOTER_HEIGHT = LABEL_HEIGHT + 4;
 
-    private PositionedNode<?> focusedButtonRow;
-
     public ScreenshotScreen() {
         super(Component.translatable("alumite.screenshot.screen.title"));
     }
@@ -50,62 +50,51 @@ public class ScreenshotScreen extends RootScreen {
         List<Screenshot> screenshots = ScreenshotManager.getScreenshots();
         UiState<Integer> confirmDeleteIndex = stateStore.state("confirmDeleteIndex", -1);
 
-        CardNode card = new CardNode()
+        CardNode card = new PanelCard()
+                .setTitleHeader(() -> Component.translatable("alumite.screenshot.screen.title_fmt", NumberUtils.formatWithCommas(screenshots.size())).getString(),
+                        header -> {
+                            header.addChild(new ButtonNode()
+                                    .setLabel(UiTranslations.INSTANCE.get("alumite.screenshot.screen.open_folder"))
+                                    .setLeftIcon(ModUiTextures.IMAGE.getId())
+                                    .setOnPress(() -> Util.getPlatform().openFile(Paths.get(mc.gameDirectory.getAbsolutePath(), "screenshots").toFile())));
+                            header.addChild(new CloseButton(() -> mc.setScreen(null)));
+                        })
                 .full()
-                .setFillResolver(UiTheme::panelFill)
-                .setBorderResolver(UiTheme::borderSubtle)
-                .setHeader(header -> {
-                    header.addChild(new TextNode(() -> Component.translatable("alumite.screenshot.screen.title_fmt", NumberUtils.formatWithCommas(screenshots.size())).getString()).setBold(true));
-
-                    header.addChild(new SpacerNode());
-
-                    header.right(UiMetrics.SPACE_XS);
-                    header.addChild(new ButtonNode()
-                            .setLabel(Component.translatable("alumite.screenshot.screen.open_folder").getString())
-                            .setLeftIcon(ModUiTextures.IMAGE.getId())
-                            .setOnPress(() -> Util.getPlatform().openFile(Paths.get(mc.gameDirectory.getAbsolutePath(), "screenshots").toFile())));
-                    header.addChild(new ButtonNode()
-                            .setIconCenter(ModUiTextures.CLOSE.getId())
-                            .setVariant(ButtonNode.ButtonVariant.GHOST)
-                            .setOnPress(() -> mc.setScreen(null))
-                            .setTooltip(() -> Component.translatable("alumite.common.close").getString()));
-                })
                 .setContents(contents -> {
                     contents.margin(GRID_PADDING);
                     ScrollColumnNode scrollColumn = new ScrollColumnNode().persistScroll("screenshot.list");
                     if (screenshots.isEmpty()) {
-                        scrollColumn.addChild(new TextNode(() -> Component.translatable("alumite.screenshot.screen.empty").getString()).full());
+                        scrollColumn.addChild(new TextNode(() -> UiTranslations.INSTANCE.get("alumite.screenshot.screen.empty")).full());
                     } else {
                         GridNode grid = new GridNode()
                                 .setMinCellWidth(MIN_CELL_WIDTH)
                                 .setCellAspectRatio(16f / 9f)
                                 .setRowFooterHeight(CELL_FOOTER_HEIGHT)
                                 .setGap(GAP);
-                        for (int i = 0; i < screenshots.size(); i++) {
-                            final int screenshotIndex = i;
-                            Screenshot screenshot = screenshots.get(i);
+                        for (int screenshotIndex = 0; screenshotIndex < screenshots.size(); screenshotIndex++) {
+                            final int viewerIndex = screenshotIndex;
+                            Screenshot screenshot = screenshots.get(screenshotIndex);
 
                             // Buttons are hidden by default and shown on hover or keyboard focus, overlaid on the thumbnail.
-                            // Defined before the texture so the hover callbacks can reference them.
                             PositionedNode<?> buttonRow = new PositionedNode<>()
                                     .fullWidth().height(CELL_BTN_HEIGHT).bottom(4).left(4)
                                     .rowGap(4);
                             buttonRow.setVisible(false);
-                            Runnable openViewer = () -> Minecraft.getInstance().setScreen(new ScreenshotViewerScreen(screenshotIndex));
+                            Runnable openViewer = () -> Minecraft.getInstance().setScreen(new ScreenshotViewerScreen(viewerIndex, this));
 
                             buttonRow.addChild(new ButtonNode()
                                     .size(BUTTON_SIZE, CELL_BTN_HEIGHT)
                                     .setIconCenter(ModUiTextures.COPY.getId())
                                     .setOnPress(screenshot::copyToClipboard)
-                                    .setTooltip(() -> Component.translatable("alumite.screenshot.viewer.copy").getString())
+                                    .setTooltip(() -> UiTranslations.INSTANCE.get("alumite.screenshot.viewer.copy"))
                                     );
 
                             buttonRow.addChild(new ButtonNode()
                                     .size(BUTTON_SIZE, CELL_BTN_HEIGHT)
                                     .setIconCenter(ModUiTextures.TRASH.getId())
                                     .setVariant(ButtonNode.ButtonVariant.DANGER)
-                                    .setOnPress(() -> confirmDeleteIndex.set(screenshotIndex))
-                                    .setTooltip(() -> Component.translatable("alumite.screenshot.viewer.delete").getString())
+                                    .setOnPress(() -> confirmDeleteIndex.set(viewerIndex))
+                                    .setTooltip(() -> UiTranslations.INSTANCE.get("alumite.screenshot.viewer.delete"))
                                     );
 
                             TextureNode texture = new TextureNode()
@@ -130,16 +119,7 @@ public class ScreenshotScreen extends RootScreen {
                             }.full());
                             texture.addChild(buttonRow);
 
-                            PositionedNode<?> cell = new FocusRevealCellNode(() -> {
-                                if (focusedButtonRow != null && focusedButtonRow != buttonRow) {
-                                    focusedButtonRow.setVisible(false);
-                                }
-                                focusedButtonRow = buttonRow;
-                                buttonRow.setVisible(true);
-                            }).full();
-                            cell.setOnPointerEnter(() -> buttonRow.setVisible(true));
-                            cell.setOnPointerLeave(() -> buttonRow.setVisible(buttonRow == focusedButtonRow));
-
+                            PositionedNode<?> cell = new RevealOnInteractionCellNode(buttonRow).full();
                             cell.addChild(texture);
 
                             cell.addChild(new TextNode(screenshot::getName)
@@ -161,9 +141,9 @@ public class ScreenshotScreen extends RootScreen {
         if (deleteIdx >= 0 && deleteIdx < screenshots.size()) {
             Screenshot toDelete = screenshots.get(deleteIdx);
             root.addChild(new ConfirmPopupNode()
-                    .setTitle(Component.translatable("alumite.screenshot.delete_popup.title").getString())
+                    .setTitle(UiTranslations.INSTANCE.get("alumite.screenshot.delete_popup.title"))
                     .setDescription(Component.translatable("alumite.screenshot.delete_popup.message_fmt", toDelete.getName()).getString())
-                    .setConfirmLabel(Component.translatable("alumite.screenshot.delete_popup.confirm").getString())
+                    .setConfirmLabel(UiTranslations.INSTANCE.get("alumite.screenshot.delete_popup.confirm"))
                     .setOnCancel(() -> confirmDeleteIndex.set(-1))
                     .setOnConfirm(() -> {
                         confirmDeleteIndex.set(-1);
@@ -175,19 +155,32 @@ public class ScreenshotScreen extends RootScreen {
     }
 
     /**
-     * Thumbnail cell that notifies a callback when keyboard focus lands on one of its descendants.
+     * Thumbnail cell that shows its action buttons while the pointer is over it or keyboard focus is inside it.
      */
-    private static class FocusRevealCellNode extends PositionedNode<FocusRevealCellNode> {
+    private static class RevealOnInteractionCellNode extends PositionedNode<RevealOnInteractionCellNode> {
 
-        private final Runnable onDescendantFocused;
+        private final PositionedNode<?> revealedRow;
 
-        FocusRevealCellNode(Runnable onDescendantFocused) {
-            this.onDescendantFocused = onDescendantFocused;
+        RevealOnInteractionCellNode(PositionedNode<?> revealedRow) {
+            this.revealedRow = revealedRow;
         }
 
         @Override
-        public void revealDescendant(UiNode descendant) {
-            onDescendantFocused.run();
+        public void layout(AlumiteGuiRenderer renderFrame, int parentX, int parentY, int parentWidth, int parentHeight) {
+            revealedRow.setVisible(isInteracted(this));
+            super.layout(renderFrame, parentX, parentY, parentWidth, parentHeight);
+        }
+
+        private static boolean isInteracted(UiNode node) {
+            if (node.isHovered() || node.isFocused()) {
+                return true;
+            }
+            for (UiNode child : node.childrenView()) {
+                if (isInteracted(child)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

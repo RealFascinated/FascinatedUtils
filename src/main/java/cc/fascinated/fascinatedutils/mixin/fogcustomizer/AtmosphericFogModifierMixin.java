@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.fogcustomizer;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.FogCustomizerModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.fogcustomizer.FogCustomizerModule;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.multiplayer.ClientLevel;

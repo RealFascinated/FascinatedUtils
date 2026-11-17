@@ -1,25 +1,27 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.screenshot;
 
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
-import cc.fascinated.fascinatedutils.common.ByteUtils;
-import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui.core.SpacerNode;
-import cc.fascinated.fascinatedutils.gui.core.StackNode;
+import cc.fascinated.fascinatedutils.common.util.ByteUtils;
+import cc.fascinated.fascinatedutils.gui.components.UiTranslations;
+import cc.fascinated.fascinatedutils.gui.layout.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.layout.SpacerNode;
+import cc.fascinated.fascinatedutils.gui.layout.StackNode;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
-import cc.fascinated.fascinatedutils.gui.core.UiState;
-import cc.fascinated.fascinatedutils.gui.node.ButtonNode;
-import cc.fascinated.fascinatedutils.gui.node.ConfirmPopupNode;
-import cc.fascinated.fascinatedutils.gui.node.PanelNode;
-import cc.fascinated.fascinatedutils.gui.node.RectNode;
-import cc.fascinated.fascinatedutils.gui.node.TextNode;
-import cc.fascinated.fascinatedutils.gui.node.TextureNode;
+import cc.fascinated.fascinatedutils.gui.core.state.UiState;
+import cc.fascinated.fascinatedutils.gui.node.control.ButtonNode;
+import cc.fascinated.fascinatedutils.gui.node.popup.ConfirmPopupNode;
+import cc.fascinated.fascinatedutils.gui.node.display.PanelNode;
+import cc.fascinated.fascinatedutils.gui.node.display.RectNode;
+import cc.fascinated.fascinatedutils.gui.node.display.TextNode;
+import cc.fascinated.fascinatedutils.gui.node.display.TextureNode;
 import cc.fascinated.fascinatedutils.gui.screens.RootScreen;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import cc.fascinated.fascinatedutils.systems.screenshot.Screenshot;
 import cc.fascinated.fascinatedutils.systems.screenshot.ScreenshotManager;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -34,33 +36,47 @@ public class ScreenshotViewerScreen extends RootScreen {
     private static final int TEXTURE_MAX_HEIGHT = 4096;
 
     private final int initialIndex;
-    private UiState<Integer> indexState;
-    private UiState<Integer> listVersion;
 
-    public ScreenshotViewerScreen(int initialIndex) {
-        super(Component.translatable("alumite.screenshot.viewer.title"));
+    /**
+     * Creates the viewer.
+     *
+     * @param initialIndex index of the screenshot to show first
+     * @param parent       the screen to return to, or null to close the screen
+     */
+    public ScreenshotViewerScreen(int initialIndex, @Nullable Screen parent) {
+        super(Component.translatable("alumite.screenshot.viewer.title"), parent);
         this.initialIndex = initialIndex;
+    }
+
+    @Override
+    public void tick() {
+        if (ScreenshotManager.getScreenshots().isEmpty()) {
+            super.onEscapePressed();
+        }
+    }
+
+    private UiState<Integer> indexState() {
+        return stateStore.state("index", initialIndex);
+    }
+
+    /**
+     * Current index clamped into the screenshot list, so deletions never leave the viewer past the end.
+     */
+    private int currentIndex() {
+        return Math.clamp(indexState().get(), 0, Math.max(0, ScreenshotManager.getScreenshots().size() - 1));
     }
 
     @Override
     protected UiNode composeContent() {
         List<Screenshot> screenshots = ScreenshotManager.getScreenshots();
         if (screenshots.isEmpty()) {
-            Minecraft.getInstance().setScreen(new ScreenshotScreen());
             return new PositionedNode<>().full();
         }
 
-        indexState = stateStore.state("index", initialIndex);
-        listVersion = stateStore.state("listVersion", 0);
         UiState<Boolean> confirmDelete = stateStore.state("confirmDelete", false);
 
-        int clamped = Math.clamp(indexState.get(), 0, screenshots.size() - 1);
-        if (clamped != indexState.get()) {
-            indexState.set(clamped);
-        }
-
-        // Top info: filename + counter
-        Screenshot screenshot = screenshots.get(indexState.get());
+        int index = currentIndex();
+        Screenshot screenshot = screenshots.get(index);
         PositionedNode<?> topInfo = new PositionedNode<>()
                 .fullWidth()
                 .top(0)
@@ -70,10 +86,10 @@ public class ScreenshotViewerScreen extends RootScreen {
                 .top(7)
                 .height(12)
                 .setTextAlign(0.5f, 0.5f));
-        topInfo.addChild(new TextNode(() -> (indexState.get() + 1) + " / " + screenshots.size())
+        topInfo.addChild(new TextNode(() -> (currentIndex() + 1) + " / " + ScreenshotManager.getScreenshots().size())
                 .fullWidth()
-                .top(22).
-                        height(12)
+                .top(22)
+                .height(12)
                 .setTextAlign(0.5f, 0.5f));
 
         // Screenshot image
@@ -86,7 +102,7 @@ public class ScreenshotViewerScreen extends RootScreen {
                 .setLoadedTextureSupplier(() -> screenshot.getTexture(TEXTURE_MAX_HEIGHT))
                 .setCornerRadius(4)
                 .setShowLoader(true)
-                .naturalSize()
+                .setFit(TextureNode.FitMode.CONTAIN)
                 .full());
 
         // Bottom bar
@@ -96,17 +112,17 @@ public class ScreenshotViewerScreen extends RootScreen {
                 .topRel(0.5f, 0, 0.5f)
                 .height(BUTTON_HEIGHT)
                 .rowGap(4);
-        barRow.addChild(new ButtonNode(() -> Component.translatable("alumite.screenshot.viewer.back").getString())
+        barRow.addChild(new ButtonNode(() -> UiTranslations.INSTANCE.get("alumite.screenshot.viewer.back"))
                 .height(BUTTON_HEIGHT)
                 .setLeftIcon(ModUiTextures.BACK.getId())
-                .setOnPress(() -> Minecraft.getInstance().setScreen(new ScreenshotScreen()))
+                .setOnPress(() -> super.onEscapePressed())
                 );
-        barRow.addChild(new ButtonNode(() -> Component.translatable("alumite.screenshot.viewer.copy").getString())
+        barRow.addChild(new ButtonNode(() -> UiTranslations.INSTANCE.get("alumite.screenshot.viewer.copy"))
                 .height(BUTTON_HEIGHT)
                 .setLeftIcon(ModUiTextures.COPY.getId())
                 .setOnPress(screenshot::copyToClipboard)
                 );
-        barRow.addChild(new ButtonNode(() -> Component.translatable("alumite.screenshot.viewer.delete").getString())
+        barRow.addChild(new ButtonNode(() -> UiTranslations.INSTANCE.get("alumite.screenshot.viewer.delete"))
                 .height(BUTTON_HEIGHT)
                 .setLeftIcon(ModUiTextures.TRASH.getId())
                 .setVariant(ButtonNode.ButtonVariant.DANGER)
@@ -120,14 +136,14 @@ public class ScreenshotViewerScreen extends RootScreen {
                 .setIconCenter(ModUiTextures.CHEVRON_LEFT.getId())
                 .setDisabled(() -> !canNavigate(-1))
                 .setOnPress(() -> navigate(-1))
-                .setTooltip(() -> Component.translatable("alumite.screenshot.viewer.previous").getString())
+                .setTooltip(() -> UiTranslations.INSTANCE.get("alumite.screenshot.viewer.previous"))
                 );
         barRow.addChild(new ButtonNode()
                 .height(BUTTON_HEIGHT).width(NAV_BUTTON_WIDTH)
                 .setIconCenter(ModUiTextures.CHEVRON_RIGHT.getId())
                 .setDisabled(() -> !canNavigate(1))
                 .setOnPress(() -> navigate(1))
-                .setTooltip(() -> Component.translatable("alumite.screenshot.viewer.next").getString())
+                .setTooltip(() -> UiTranslations.INSTANCE.get("alumite.screenshot.viewer.next"))
                 );
 
         PanelNode bottomBar = new PanelNode()
@@ -142,13 +158,13 @@ public class ScreenshotViewerScreen extends RootScreen {
 
         if (confirmDelete.get()) {
             root.addChild(new ConfirmPopupNode()
-                    .setTitle(Component.translatable("alumite.screenshot.delete_popup.title").getString())
+                    .setTitle(UiTranslations.INSTANCE.get("alumite.screenshot.delete_popup.title"))
                     .setDescription(Component.translatable("alumite.screenshot.delete_popup.message_fmt", screenshot.getName()).getString())
-                    .setConfirmLabel(Component.translatable("alumite.screenshot.delete_popup.confirm").getString())
+                    .setConfirmLabel(UiTranslations.INSTANCE.get("alumite.screenshot.delete_popup.confirm"))
                     .setOnCancel(() -> confirmDelete.set(false))
                     .setOnConfirm(() -> {
                         confirmDelete.set(false);
-                        deleteScreenshot(screenshots, indexState.get());
+                        deleteScreenshot(screenshot);
                     }));
         }
 
@@ -156,33 +172,20 @@ public class ScreenshotViewerScreen extends RootScreen {
     }
 
     private boolean canNavigate(int delta) {
-        List<Screenshot> screenshots = ScreenshotManager.getScreenshots();
-        int next = indexState.get() + delta;
-        return next >= 0 && next < screenshots.size();
+        int next = currentIndex() + delta;
+        return next >= 0 && next < ScreenshotManager.getScreenshots().size();
     }
 
     private void navigate(int delta) {
-        if (indexState == null) {
-            return;
-        }
-
-        int next = indexState.get() + delta;
-        int size = ScreenshotManager.getScreenshots().size();
-        if (next >= 0 && next < size) {
-            indexState.set(next);
+        if (canNavigate(delta)) {
+            indexState().set(currentIndex() + delta);
         }
     }
 
-    private void deleteScreenshot(List<Screenshot> screenshots, int index) {
-        if (index < 0 || index >= screenshots.size()) return;
-        Screenshot screenshot = screenshots.get(index);
+    private void deleteScreenshot(Screenshot screenshot) {
         ScreenshotManager.delete(screenshot);
         if (ScreenshotManager.getScreenshots().isEmpty()) {
-            Minecraft.getInstance().setScreen(new ScreenshotScreen());
-        } else if (indexState != null && listVersion != null) {
-            int nextIndex = Math.min(index, ScreenshotManager.getScreenshots().size() - 1);
-            listVersion.set(listVersion.get() + 1);
-            indexState.set(nextIndex);
+            super.onEscapePressed();
         }
     }
 
@@ -191,8 +194,9 @@ public class ScreenshotViewerScreen extends RootScreen {
         UiState<Boolean> confirmDelete = stateStore.state("confirmDelete", false);
         if (confirmDelete.get()) {
             confirmDelete.set(false);
-        } else {
-            Minecraft.getInstance().setScreen(new ScreenshotScreen());
+        }
+        else {
+            super.onEscapePressed();
         }
     }
 

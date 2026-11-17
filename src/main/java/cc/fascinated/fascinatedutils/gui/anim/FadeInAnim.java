@@ -1,5 +1,8 @@
 package cc.fascinated.fascinatedutils.gui.anim;
 
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
 /**
  * A simple fade-in/out animation backed by an {@link AnimHandle}.
  *
@@ -15,14 +18,23 @@ package cc.fascinated.fascinatedutils.gui.anim;
  */
 public class FadeInAnim {
 
+    /**
+     * The underlying easing handle, useful for reading the raw progress value.
+     */
+    @Getter
+    @Accessors(fluent = true)
     private final AnimHandle progress;
 
     /**
      * Create a fade animation that completes (to ~95%) in the given duration.
      *
      * @param durationMs time to reach ~95% of the target value, in milliseconds
+     * @throws IllegalArgumentException when the duration is not positive
      */
     public FadeInAnim(float durationMs) {
+        if (!(durationMs > 0f)) {
+            throw new IllegalArgumentException("durationMs must be positive, got " + durationMs);
+        }
         this.progress = new AnimHandle(0f).speed(3000f / durationMs);
     }
 
@@ -47,15 +59,6 @@ public class FadeInAnim {
      */
     public boolean isVisible() {
         return progress.value() > 0.01f;
-    }
-
-    /**
-     * The underlying easing handle, useful for reading the raw progress value.
-     *
-     * @return the progress {@link AnimHandle}
-     */
-    public AnimHandle progress() {
-        return progress;
     }
 
     /**

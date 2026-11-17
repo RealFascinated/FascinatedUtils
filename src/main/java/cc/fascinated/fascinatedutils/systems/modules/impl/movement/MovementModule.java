@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.movement;
 
-import cc.fascinated.fascinatedutils.common.PlayerUtils;
+import cc.fascinated.fascinatedutils.common.util.PlayerUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;

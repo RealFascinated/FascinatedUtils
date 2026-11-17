@@ -1,10 +1,10 @@
 package cc.fascinated.fascinatedutils.mixin.blockoutline;
 
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
-import cc.fascinated.fascinatedutils.renderer.FascinatedWorldRenderTypes;
-import cc.fascinated.fascinatedutils.renderer.WorldBoxFaces;
+import cc.fascinated.fascinatedutils.renderer.world.FascinatedWorldRenderTypes;
+import cc.fascinated.fascinatedutils.renderer.world.WorldBoxFaces;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.BlockOutlineModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.blockoutline.BlockOutlineModule;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.LevelRenderer;

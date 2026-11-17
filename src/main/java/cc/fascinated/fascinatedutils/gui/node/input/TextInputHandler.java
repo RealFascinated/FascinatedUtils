@@ -1,24 +1,35 @@
 package cc.fascinated.fascinatedutils.gui.node.input;
 
 import lombok.Getter;
+import lombok.experimental.Accessors;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayDeque;
 import java.util.function.Consumer;
 
+/**
+ * Editing state and behaviour of a single-line text field: buffer, caret, selection, undo history and the keyboard
+ * shortcuts shared by every text input. Positions are UTF-16 indices that always sit on code point boundaries.
+ */
+@Accessors(fluent = true)
 public class TextInputHandler {
 
     private record TextSnapshot(String text, int caret) {}
 
     private static final int MAX_UNDO_DEPTH = 200;
 
+    @Getter
     private final StringBuilder buffer = new StringBuilder();
+    @Getter
     private int caretIndex;
+    @Getter
     private int selectionAnchor = -1;
     @Getter
     private boolean focused;
     @Getter
     private boolean mouseSelecting;
+    @Getter
     private int maxLength = 2000;
     private final ArrayDeque<TextSnapshot> undoStack = new ArrayDeque<>();
     private final ArrayDeque<TextSnapshot> redoStack = new ArrayDeque<>();
@@ -27,13 +38,20 @@ public class TextInputHandler {
     private Consumer<String> onChange = ignored -> {};
     private Runnable onCancel;
 
+    /**
+     * Sets the most UTF-16 units the text may hold and shortens the current text to fit.
+     *
+     * @param maxLength the limit, at least zero
+     * @return this handler
+     */
     public TextInputHandler setMaxLength(int maxLength) {
         this.maxLength = Math.max(0, maxLength);
+        if (buffer.length() > this.maxLength) {
+            buffer.setLength(truncationIndex(buffer, this.maxLength));
+            caretIndex = Math.min(caretIndex, buffer.length());
+            selectionAnchor = Math.min(selectionAnchor, buffer.length());
+        }
         return this;
-    }
-
-    public int maxLength() {
-        return maxLength;
     }
 
     public TextInputHandler setOnSubmit(Consumer<String> onSubmit) {
@@ -58,13 +76,47 @@ public class TextInputHandler {
         this.focused = focused;
     }
 
+    /**
+     * Copies the caret, selection and drag state of the handler this one replaces after recomposition, clamped to the
+     * current text.
+     *
+     * @param previous the handler of the matched node from the previous tree
+     */
+    public void inheritInteractionFrom(TextInputHandler previous) {
+        caretIndex = Math.min(previous.caretIndex, buffer.length());
+        selectionAnchor = previous.selectionAnchor < 0 ? -1 : Math.min(previous.selectionAnchor, buffer.length());
+        mouseSelecting = previous.mouseSelecting;
+        inTypingRun = previous.inTypingRun;
+    }
+
+    /**
+     * Copies the text and undo history of the handler this one replaces after recomposition, so typing that the
+     * composed value does not reflect (for example a number that does not parse yet) survives.
+     *
+     * @param previous the handler of the matched node from the previous tree
+     */
+    public void inheritTextFrom(TextInputHandler previous) {
+        buffer.setLength(0);
+        buffer.append(previous.buffer);
+        undoStack.clear();
+        undoStack.addAll(previous.undoStack);
+        redoStack.clear();
+        redoStack.addAll(previous.redoStack);
+    }
+
+    /**
+     * Replaces the text, shortened to the maximum length, and forgets the undo history. Does not fire the change
+     * callback.
+     *
+     * @param value the new text; null means empty
+     */
     public void setValue(String value) {
         inTypingRun = false;
         undoStack.clear();
         redoStack.clear();
         buffer.setLength(0);
         if (value != null) {
-            buffer.append(value);
+            buffer.append(value, 0, truncationIndex(value, maxLength));
         }
         caretIndex = buffer.length();
         selectionAnchor = -1;
@@ -115,27 +167,15 @@ public class TextInputHandler {
         return buffer.toString();
     }
 
+    /**
+     * Empties the text and the undo history. Does not fire the change callback.
+     */
     public void clear() {
-        buffer.setLength(0);
-        caretIndex = 0;
-        selectionAnchor = -1;
-        mouseSelecting = false;
-    }
-
-    public StringBuilder buffer() {
-        return buffer;
+        setValue("");
     }
 
     public int length() {
         return buffer.length();
-    }
-
-    public int caretIndex() {
-        return caretIndex;
-    }
-
-    public int selectionAnchor() {
-        return selectionAnchor;
     }
 
     public int selectStart() {
@@ -156,6 +196,7 @@ public class TextInputHandler {
      * @param charIndex the character index under the pointer
      */
     public void beginDrag(int charIndex) {
+        inTypingRun = false;
         caretIndex = charIndex;
         selectionAnchor = charIndex;
         mouseSelecting = true;
@@ -167,9 +208,7 @@ public class TextInputHandler {
      * @param charIndex the character index under the pointer
      */
     public void updateDrag(int charIndex) {
-        if (charIndex != caretIndex) {
-            caretIndex = charIndex;
-        }
+        caretIndex = charIndex;
     }
 
     /**
@@ -183,63 +222,58 @@ public class TextInputHandler {
     }
 
     /**
-     * Moves the caret to {@code newIndex}, clamped to buffer bounds.
-     * When {@code extending} is {@code true} the selection anchor is fixed (starting a new
-     * selection at the current caret if none exists); otherwise any existing selection is cleared.
+     * Moves the caret to {@code newIndex}, clamped to buffer bounds, and ends the current typing run so the next typed
+     * character starts a new undo step. When {@code extending} is {@code true} the selection anchor is fixed (starting
+     * a new selection at the current caret if none exists); otherwise any existing selection is cleared.
      *
      * @param newIndex  destination caret index
      * @param extending {@code true} to extend the selection, {@code false} to collapse it
      */
     public void moveCaret(int newIndex, boolean extending) {
-        newIndex = Math.max(0, Math.min(newIndex, buffer.length()));
+        inTypingRun = false;
+        int clamped = Math.max(0, Math.min(newIndex, buffer.length()));
         if (extending) {
             if (selectionAnchor == -1) {
                 selectionAnchor = caretIndex;
             }
-            caretIndex = newIndex;
+            caretIndex = clamped;
         } else {
-            caretIndex = newIndex;
+            caretIndex = clamped;
             clearSelection();
         }
     }
 
     /**
-     * Returns the index of the start of the word to the left of {@code pos}.
+     * Returns the index of the start of the word to the left of {@code position}.
      *
-     * @param pos position to search from
+     * @param position position to search from
      * @return word-start index
      */
-    public int wordLeft(int pos) {
-        if (pos <= 0) {
-            return 0;
+    public int wordLeft(int position) {
+        int index = position;
+        while (index > 0 && !isWordCodePoint(buffer.codePointBefore(index))) {
+            index = buffer.offsetByCodePoints(index, -1);
         }
-        int index = pos - 1;
-        while (index > 0 && !isWordChar(buffer.charAt(index))) {
-            index--;
-        }
-        while (index > 0 && isWordChar(buffer.charAt(index - 1))) {
-            index--;
+        while (index > 0 && isWordCodePoint(buffer.codePointBefore(index))) {
+            index = buffer.offsetByCodePoints(index, -1);
         }
         return index;
     }
 
     /**
-     * Returns the index just past the end of the word to the right of {@code pos}.
+     * Returns the index just past the end of the word to the right of {@code position}.
      *
-     * @param pos position to search from
+     * @param position position to search from
      * @return word-end index
      */
-    public int wordRight(int pos) {
-        int len = buffer.length();
-        if (pos >= len) {
-            return len;
+    public int wordRight(int position) {
+        int length = buffer.length();
+        int index = position;
+        while (index < length && !isWordCodePoint(buffer.codePointAt(index))) {
+            index = buffer.offsetByCodePoints(index, 1);
         }
-        int index = pos;
-        while (index < len && !isWordChar(buffer.charAt(index))) {
-            index++;
-        }
-        while (index < len && isWordChar(buffer.charAt(index))) {
-            index++;
+        while (index < length && isWordCodePoint(buffer.codePointAt(index))) {
+            index = buffer.offsetByCodePoints(index, 1);
         }
         return index;
     }
@@ -250,15 +284,21 @@ public class TextInputHandler {
      * @return {@code true} if a selection was deleted
      */
     public boolean deleteSelection() {
+        if (!removeSelection()) {
+            return false;
+        }
+        fireChange();
+        return true;
+    }
+
+    private boolean removeSelection() {
         if (!hasSelection()) {
             return false;
         }
         int start = selectStart();
-        int end = selectEnd();
-        buffer.delete(start, end);
+        buffer.delete(start, selectEnd());
         caretIndex = start;
         clearSelection();
-        fireChange();
         return true;
     }
 
@@ -270,18 +310,17 @@ public class TextInputHandler {
     }
 
     /**
-     * Handles Ctrl+key shortcuts common to all text inputs: A, C, X, V, Left, Right,
-     * Backspace, Delete.
+     * Handles shortcut-modifier key combinations common to all text inputs: undo, redo, select all, copy, cut, paste,
+     * word movement and word deletion.
      *
-     * <p>Home and End are intentionally excluded — their behaviour differs between
-     * single-line (buffer bounds) and multi-line (visual-line bounds) inputs.
+     * <p>Home and End are intentionally excluded; their behaviour differs between single-line (buffer bounds) and
+     * multi-line (visual-line bounds) inputs.
      *
-     * @param keyCode              GLFW key code
-     * @param modifiers            GLFW modifier mask (must include CTRL)
-     * @param allowNewlinesInPaste whether pasted text may contain newlines
+     * @param keyCode   GLFW key code
+     * @param modifiers GLFW modifier mask
      * @return {@code true} if the key was consumed
      */
-    public boolean handleCtrlKeyPress(int keyCode, int modifiers, boolean allowNewlinesInPaste) {
+    public boolean handleShortcutKeyPress(int keyCode, int modifiers) {
         boolean shift = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
         switch (keyCode) {
             case GLFW.GLFW_KEY_Z -> {
@@ -291,13 +330,14 @@ public class TextInputHandler {
                 return redo();
             }
             case GLFW.GLFW_KEY_A -> {
+                inTypingRun = false;
                 selectionAnchor = 0;
                 caretIndex = buffer.length();
                 return true;
             }
             case GLFW.GLFW_KEY_C -> {
                 if (hasSelection()) {
-                    GLFW.glfwSetClipboardString(0L, buffer.substring(selectStart(), selectEnd()));
+                    Minecraft.getInstance().keyboardHandler.setClipboard(buffer.substring(selectStart(), selectEnd()));
                 }
                 return true;
             }
@@ -305,82 +345,37 @@ public class TextInputHandler {
                 if (hasSelection()) {
                     inTypingRun = false;
                     saveUndoSnapshot();
-                    GLFW.glfwSetClipboardString(0L, buffer.substring(selectStart(), selectEnd()));
+                    Minecraft.getInstance().keyboardHandler.setClipboard(buffer.substring(selectStart(), selectEnd()));
                     deleteSelection();
                 }
                 return true;
             }
             case GLFW.GLFW_KEY_V -> {
-                String clip = GLFW.glfwGetClipboardString(0L);
-                if (clip != null && !clip.isEmpty()) {
-                    inTypingRun = false;
-                    saveUndoSnapshot();
-                    deleteSelection();
-                    StringBuilder filtered = new StringBuilder();
-                    for (char character : clip.toCharArray()) {
-                        if (character >= 32 || (allowNewlinesInPaste && character == '\n')) {
-                            filtered.append(character);
-                        }
-                    }
-                    String insert = filtered.toString();
-                    int available = maxLength - buffer.length();
-                    if (available > 0) {
-                        if (insert.length() > available) {
-                            insert = insert.substring(0, available);
-                        }
-                        buffer.insert(caretIndex, insert);
-                        caretIndex += insert.length();
-                        fireChange();
-                    }
-                }
+                paste(Minecraft.getInstance().keyboardHandler.getClipboard());
                 return true;
             }
             case GLFW.GLFW_KEY_LEFT -> {
-                int target = wordLeft(caretIndex);
-                moveCaret(target, shift);
+                moveCaret(wordLeft(caretIndex), shift);
                 return true;
             }
             case GLFW.GLFW_KEY_RIGHT -> {
-                int target = wordRight(caretIndex);
-                moveCaret(target, shift);
+                moveCaret(wordRight(caretIndex), shift);
                 return true;
             }
             case GLFW.GLFW_KEY_BACKSPACE -> {
-                inTypingRun = false;
-                if (hasSelection() || caretIndex > 0) saveUndoSnapshot();
-                if (deleteSelection()) {
-                    return true;
-                }
-                if (caretIndex > 0) {
-                    int target = wordLeft(caretIndex);
-                    buffer.delete(target, caretIndex);
-                    caretIndex = target;
-                    fireChange();
-                }
-                return true;
+                return deleteBackward(true);
             }
             case GLFW.GLFW_KEY_DELETE -> {
-                inTypingRun = false;
-                if (hasSelection() || caretIndex < buffer.length()) saveUndoSnapshot();
-                if (deleteSelection()) {
-                    return true;
-                }
-                if (caretIndex < buffer.length()) {
-                    int target = wordRight(caretIndex);
-                    buffer.delete(caretIndex, target);
-                    fireChange();
-                }
-                return true;
+                return deleteForward(true);
             }
         }
         return false;
     }
 
     /**
-     * Handles non-Ctrl key presses shared by all text inputs: Escape, Backspace, Delete,
-     * Left arrow, Right arrow.
+     * Handles non-shortcut key presses shared by all text inputs: Escape, Backspace, Delete, Left arrow, Right arrow.
      *
-     * <p>Nodes must handle Enter, Home, End, and (for multi-line inputs) Up and Down themselves.
+     * <p>Nodes must handle Enter, Home and End themselves.
      *
      * @param keyCode   GLFW key code
      * @param modifiers GLFW modifier mask
@@ -397,45 +392,24 @@ public class TextInputHandler {
                 return true;
             }
             case GLFW.GLFW_KEY_BACKSPACE -> {
-                inTypingRun = false;
-                if (hasSelection() || caretIndex > 0) saveUndoSnapshot();
-                if (deleteSelection()) {
-                    return true;
-                }
-                if (caretIndex > 0) {
-                    buffer.deleteCharAt(caretIndex - 1);
-                    caretIndex--;
-                    fireChange();
-                }
-                return true;
+                return deleteBackward(false);
             }
             case GLFW.GLFW_KEY_DELETE -> {
-                inTypingRun = false;
-                if (hasSelection() || caretIndex < buffer.length()) saveUndoSnapshot();
-                if (deleteSelection()) {
-                    return true;
-                }
-                if (caretIndex < buffer.length()) {
-                    buffer.deleteCharAt(caretIndex);
-                    fireChange();
-                }
-                return true;
+                return deleteForward(false);
             }
             case GLFW.GLFW_KEY_LEFT -> {
                 if (!shift && hasSelection()) {
-                    caretIndex = selectStart();
-                    clearSelection();
+                    moveCaret(selectStart(), false);
                 } else {
-                    moveCaret(caretIndex - 1, shift);
+                    moveCaret(caretIndex > 0 ? buffer.offsetByCodePoints(caretIndex, -1) : 0, shift);
                 }
                 return true;
             }
             case GLFW.GLFW_KEY_RIGHT -> {
                 if (!shift && hasSelection()) {
-                    caretIndex = selectEnd();
-                    clearSelection();
+                    moveCaret(selectEnd(), false);
                 } else {
-                    moveCaret(caretIndex + 1, shift);
+                    moveCaret(caretIndex < buffer.length() ? buffer.offsetByCodePoints(caretIndex, 1) : buffer.length(), shift);
                 }
                 return true;
             }
@@ -443,24 +417,89 @@ public class TextInputHandler {
         return false;
     }
 
+    private boolean deleteBackward(boolean wholeWord) {
+        inTypingRun = false;
+        if (hasSelection() || caretIndex > 0) {
+            saveUndoSnapshot();
+        }
+        if (deleteSelection()) {
+            return true;
+        }
+        if (caretIndex > 0) {
+            int target = wholeWord ? wordLeft(caretIndex) : buffer.offsetByCodePoints(caretIndex, -1);
+            buffer.delete(target, caretIndex);
+            caretIndex = target;
+            fireChange();
+        }
+        return true;
+    }
+
+    private boolean deleteForward(boolean wholeWord) {
+        inTypingRun = false;
+        if (hasSelection() || caretIndex < buffer.length()) {
+            saveUndoSnapshot();
+        }
+        if (deleteSelection()) {
+            return true;
+        }
+        if (caretIndex < buffer.length()) {
+            int target = wholeWord ? wordRight(caretIndex) : buffer.offsetByCodePoints(caretIndex, 1);
+            buffer.delete(caretIndex, target);
+            fireChange();
+        }
+        return true;
+    }
+
     /**
-     * Handles a typed character: deletes any selection, then inserts the character if within
-     * the {@link #maxLength}.
-     *
-     * @param character the typed character
-     * @return {@code true} always (the character is consumed regardless of insertion)
+     * Replaces the selection with clipboard text: control characters are dropped, line breaks become spaces and the
+     * text is cut to the remaining room. Fires a single change.
      */
-    public boolean handleCharType(char character) {
+    private void paste(String clipboard) {
+        if (clipboard == null || clipboard.isEmpty()) {
+            return;
+        }
+        inTypingRun = false;
+        saveUndoSnapshot();
+        removeSelection();
+        StringBuilder filtered = new StringBuilder(clipboard.length());
+        clipboard.codePoints().forEach(codePoint -> {
+            if (codePoint == '\n' || codePoint == '\r') {
+                filtered.append(' ');
+            } else if (!Character.isISOControl(codePoint)) {
+                filtered.appendCodePoint(codePoint);
+            }
+        });
+        int available = maxLength - buffer.length();
+        if (available > 0) {
+            String insert = filtered.substring(0, truncationIndex(filtered, available));
+            buffer.insert(caretIndex, insert);
+            caretIndex += insert.length();
+        }
+        fireChange();
+    }
+
+    /**
+     * Handles a typed character: deletes any selection, then inserts the character if within the
+     * {@link #maxLength()}. Control characters are ignored.
+     *
+     * @param codePoint the typed Unicode code point
+     * @return {@code true} when the character was consumed
+     */
+    public boolean handleCharType(int codePoint) {
+        if (Character.isISOControl(codePoint)) {
+            return false;
+        }
         if (!inTypingRun) {
             saveUndoSnapshot();
             inTypingRun = true;
         }
-        deleteSelection();
-        if (buffer.length() >= maxLength) {
+        removeSelection();
+        char[] typedChars = Character.toChars(codePoint);
+        if (buffer.length() + typedChars.length > maxLength) {
             return true;
         }
-        buffer.insert(caretIndex, character);
-        caretIndex++;
+        buffer.insert(caretIndex, typedChars);
+        caretIndex += typedChars.length;
         fireChange();
         return true;
     }
@@ -485,7 +524,17 @@ public class TextInputHandler {
         onChange.accept(buffer.toString());
     }
 
-    private static boolean isWordChar(char character) {
-        return Character.isLetterOrDigit(character) || character == '_';
+    /**
+     * Finds how many leading UTF-16 units of the text fit in a limit without cutting a surrogate pair in half.
+     */
+    private static int truncationIndex(CharSequence text, int limit) {
+        if (text.length() <= limit) {
+            return text.length();
+        }
+        return limit > 0 && Character.isHighSurrogate(text.charAt(limit - 1)) ? limit - 1 : limit;
+    }
+
+    private static boolean isWordCodePoint(int codePoint) {
+        return Character.isLetterOrDigit(codePoint) || codePoint == '_';
     }
 }

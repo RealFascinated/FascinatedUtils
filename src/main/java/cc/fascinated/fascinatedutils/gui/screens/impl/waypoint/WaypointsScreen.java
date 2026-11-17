@@ -1,17 +1,23 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.waypoint;
 
 import cc.fascinated.fascinatedutils.client.ModUiTextures;
-import cc.fascinated.fascinatedutils.common.PlayerUtils;
-import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui.core.SpacerNode;
+import cc.fascinated.fascinatedutils.common.util.PlayerUtils;
+import cc.fascinated.fascinatedutils.gui.components.CloseButton;
+import cc.fascinated.fascinatedutils.gui.components.InputHost;
+import cc.fascinated.fascinatedutils.gui.components.PanelCard;
+import cc.fascinated.fascinatedutils.gui.components.ScrollHost;
+import cc.fascinated.fascinatedutils.gui.components.SurfaceCard;
+import cc.fascinated.fascinatedutils.gui.components.UiTranslations;
+import cc.fascinated.fascinatedutils.gui.layout.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.layout.SpacerNode;
 import cc.fascinated.fascinatedutils.gui.core.UiNode;
-import cc.fascinated.fascinatedutils.gui.core.UiState;
-import cc.fascinated.fascinatedutils.gui.node.ButtonNode;
-import cc.fascinated.fascinatedutils.gui.node.CardNode;
-import cc.fascinated.fascinatedutils.gui.node.ConfirmPopupNode;
-import cc.fascinated.fascinatedutils.gui.node.RectNode;
-import cc.fascinated.fascinatedutils.gui.node.ScrollColumnNode;
-import cc.fascinated.fascinatedutils.gui.node.TextNode;
+import cc.fascinated.fascinatedutils.gui.core.state.UiState;
+import cc.fascinated.fascinatedutils.gui.node.control.ButtonNode;
+import cc.fascinated.fascinatedutils.gui.node.display.CardNode;
+import cc.fascinated.fascinatedutils.gui.node.popup.ConfirmPopupNode;
+import cc.fascinated.fascinatedutils.gui.node.display.RectNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.ScrollColumnNode;
+import cc.fascinated.fascinatedutils.gui.node.display.TextNode;
 import cc.fascinated.fascinatedutils.gui.node.input.TextInputNode;
 import cc.fascinated.fascinatedutils.gui.node.input.TextParser;
 import cc.fascinated.fascinatedutils.gui.screens.RootScreen;
@@ -26,8 +32,10 @@ import net.minecraft.network.chat.Component;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 
+/**
+ * Lists the waypoints of the current world and dimension with search, sorting and per-waypoint actions.
+ */
 public class WaypointsScreen extends RootScreen {
 
     private static final int WIDTH = 500;
@@ -40,44 +48,52 @@ public class WaypointsScreen extends RootScreen {
     private static final int LIST_HEIGHT = HEIGHT - 2 * UiMetrics.HEADER_HEIGHT - 3 * UiMetrics.SPACE_SM - UiMetrics.CONTROL_HEIGHT;
     private static final String SEARCH_NODE_ID = "waypoints.search";
 
-    private TextInputNode<String> searchInput;
-
     public WaypointsScreen() {
         super(Component.translatable("alumite.waypoints.title"));
     }
 
     @Override
+    public void tick() {
+        if (Minecraft.getInstance().player == null) {
+            Minecraft.getInstance().setScreen(null);
+        }
+    }
+
+    @Override
     protected void onEscapePressed() {
-        UiState<UUID> confirmDeleteId = stateStore.state("waypoints.confirmDelete", null);
-        UiState<UUID> confirmTeleportId = stateStore.state("waypoints.confirmTeleport", null);
-        if (confirmDeleteId.get() != null || confirmTeleportId.get() != null) {
-            confirmDeleteId.set(null);
-            confirmTeleportId.set(null);
-        } else {
+        UiState<Waypoint> confirmDelete = stateStore.state("waypoints.confirmDelete", null);
+        UiState<Waypoint> confirmTeleport = stateStore.state("waypoints.confirmTeleport", null);
+        if (confirmDelete.get() != null || confirmTeleport.get() != null) {
+            confirmDelete.set(null);
+            confirmTeleport.set(null);
+        }
+        else {
             super.onEscapePressed();
         }
     }
 
     @Override
-    protected UiNode createRootNode() {
-        Minecraft mc = Minecraft.getInstance();
-        LocalPlayer player = mc.player;
-        assert player != null;
-
-        UiState<UUID> confirmDeleteId = stateStore.state("waypoints.confirmDelete", null);
-        UiState<UUID> confirmTeleportId = stateStore.state("waypoints.confirmTeleport", null);
-        UiState<String> search = stateStore.state("waypoints.search", "");
-        UiState<Boolean> sortByDistance = stateStore.state("waypoints.sortByDistance", false);
-        if (searchInput == null) {
-            searchInput = new TextInputNode<>(TextParser.STRING)
-                    .setPlaceholder(Component.translatable("alumite.waypoints.search").getString())
-                    .setOnChange(search::set)
-                    .setValue(search.get());
-            searchInput.setNodeId(SEARCH_NODE_ID);
+    protected UiNode composeContent() {
+        Minecraft minecraft = Minecraft.getInstance();
+        LocalPlayer player = minecraft.player;
+        if (player == null) {
+            return new PositionedNode<>().full();
         }
 
-        List<Waypoint> allWaypoints = WaypointRepository.getForCurrentWorldKey().stream().filter(waypoint ->
-                waypoint.getDimension().equals(player.level().dimension().identifier().toString())).toList();
+        UiState<Waypoint> confirmDelete = stateStore.state("waypoints.confirmDelete", null);
+        UiState<Waypoint> confirmTeleport = stateStore.state("waypoints.confirmTeleport", null);
+        UiState<String> search = stateStore.state("waypoints.search", "");
+        UiState<Boolean> sortByDistance = stateStore.state("waypoints.sortByDistance", false);
+        TextInputNode<String> searchInput = new TextInputNode<>(TextParser.STRING)
+                .setPlaceholder(UiTranslations.INSTANCE.get("alumite.waypoints.search"))
+                .setOnChange(search::set)
+                .setValue(search.get());
+        searchInput.setNodeId(SEARCH_NODE_ID);
+
+        String dimension = player.level().dimension().identifier().toString();
+        List<Waypoint> allWaypoints = WaypointRepository.getForCurrentWorldKey().stream()
+                .filter(waypoint -> waypoint.getDimension().equals(dimension))
+                .toList();
         String searchLower = search.get().trim().toLowerCase(Locale.ROOT);
         List<Waypoint> waypoints = allWaypoints.stream()
                 .filter(waypoint -> searchLower.isEmpty() || waypoint.getName().toLowerCase(Locale.ROOT).contains(searchLower))
@@ -86,44 +102,28 @@ public class WaypointsScreen extends RootScreen {
                         : Comparator.comparing(Waypoint::getName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
 
-        CardNode card = new CardNode()
+        CardNode card = new PanelCard()
+                .setTitleHeader(() -> Component.translatable("alumite.waypoints.count", allWaypoints.size()).getString(),
+                        header -> header.addChild(new CloseButton(() -> minecraft.setScreen(null))))
                 .width(WIDTH)
                 .height(HEIGHT)
-                .setFillResolver(UiTheme::panelFill)
-                .setBorderResolver(UiTheme::borderSubtle)
-                .setHeader(header -> {
-                    header.addChild(new TextNode(() -> Component.translatable("alumite.waypoints.count", allWaypoints.size()).getString()).setBold(true));
-
-                    header.addChild(new SpacerNode());
-
-                    header.right(UiMetrics.SPACE_XS);
-                    header.addChild(new ButtonNode()
-                            .setIconCenter(ModUiTextures.CLOSE.getId())
-                            .setVariant(ButtonNode.ButtonVariant.GHOST)
-                            .setOnPress(() -> mc.setScreen(null))
-                            .setTooltip(() -> Component.translatable("alumite.common.close").getString())
-                    );
-                })
                 .setFooter(footer -> {
                     footer.right(UiMetrics.SPACE_XS);
                     footer.addChild(new SpacerNode());
                     footer.addChild(new ButtonNode()
-                            .setLabel(Component.translatable("alumite.waypoints.new_waypoint").getString())
+                            .setLabel(UiTranslations.INSTANCE.get("alumite.waypoints.new_waypoint"))
                             .setLeftIcon(ModUiTextures.ADD.getId())
                             .setVariant(ButtonNode.ButtonVariant.PRIMARY)
-                            .setOnPress(() -> mc.setScreen(new CreateEditWaypointScreen(CreateEditWaypointScreen.Type.CREATE, null)))
-                    );
+                            .setOnPress(() -> minecraft.setScreen(new CreateEditWaypointScreen(CreateEditWaypointScreen.Type.CREATE, null, this))));
                 })
                 .setContents(contents -> {
                     contents.margin(UiMetrics.SPACE_SM);
                     contents.columnGap(UiMetrics.SPACE_SM);
                     PositionedNode<?> toolbar = new PositionedNode<>().fullWidth().height(UiMetrics.CONTROL_HEIGHT).rowGap(UiMetrics.SPACE_SM);
-                    PositionedNode<?> searchHost = new PositionedNode<>().width(SEARCH_WIDTH).height(UiMetrics.CONTROL_HEIGHT);
-                    searchHost.addChild(searchInput);
-                    toolbar.addChild(searchHost);
+                    toolbar.addChild(new InputHost(searchInput, SEARCH_WIDTH));
                     toolbar.addChild(new SpacerNode());
-                    toolbar.addChild(new ButtonNode(() -> Component.translatable(sortByDistance.get()
-                            ? "alumite.waypoints.sort.distance" : "alumite.waypoints.sort.name").getString())
+                    toolbar.addChild(new ButtonNode(() -> UiTranslations.INSTANCE.get(sortByDistance.get()
+                            ? "alumite.waypoints.sort.distance" : "alumite.waypoints.sort.name"))
                             .width(SORT_BUTTON_WIDTH)
                             .height(UiMetrics.CONTROL_HEIGHT)
                             .setOnPress(() -> sortByDistance.set(!sortByDistance.get())));
@@ -133,117 +133,103 @@ public class WaypointsScreen extends RootScreen {
                             .persistScroll("waypoints.list");
                     if (waypoints.isEmpty() && !allWaypoints.isEmpty()) {
                         list.addChild(new PositionedNode<>().fullWidth().height(EMPTY_STATE_TOP / 2));
-                        list.addChild(new TextNode(() -> Component.translatable("alumite.waypoints.no_results").getString())
+                        list.addChild(new TextNode(() -> UiTranslations.INSTANCE.get("alumite.waypoints.no_results"))
                                 .setColorResolver(UiTheme::textMuted).setTextAlign(0.5f, 0.5f).fullWidth().height(24));
-                    } else if (!waypoints.isEmpty()) {
+                    }
+                    else if (!waypoints.isEmpty()) {
                         for (Waypoint waypoint : waypoints) {
-                            CardNode waypointCard = new CardNode().height(ROW_HEIGHT).fullWidth();
-                            waypointCard.setFillResolver(UiTheme::surfaceCard);
-                            waypointCard.setBorderResolver(UiTheme::borderSubtle);
-                            waypointCard.setContents(row -> {
-                                row.rowGap(UiMetrics.SPACE_XS);
-                                row.left(UiMetrics.SPACE_MD).right((ROW_HEIGHT - ROW_BUTTON_HEIGHT) / 2);
-
-                                row.addChild(new RectNode()
-                                        .size(10, 10)
-                                        .setCornerRadius(5)
-                                        .setFillSupplier(() -> waypoint.getColor().getResolvedArgb())
-                                        .alignY(0.5f));
-
-                                row.addChild(new TextNode(() -> Component.translatable("alumite.waypoints.distance_fmt", (int) Math.round(waypoint.distanceTo())).getString()).width(40).alignY(0.5f));
-
-                                row.addChild(new TextNode(waypoint::getName).setColorResolver((theme) -> waypoint.isVisible() ? theme.textPrimary() : theme.textMuted()).alignY(0.5f));
-
-                                row.addChild(new SpacerNode());
-
-                                row.addChild(new ButtonNode()
-                                        .setVariant(ButtonNode.ButtonVariant.GHOST)
-                                        .alignY(0.5f)
-                                        .height(ROW_BUTTON_HEIGHT)
-                                        .width(28)
-                                        .setLabel(() -> Component.translatable(waypoint.isVisible() ? "alumite.waypoints.toggle.on" : "alumite.waypoints.toggle.off").getString())
-                                        .setOnPress(() -> {
-                                            waypoint.setVisible(!waypoint.isVisible());
-                                            WaypointRepository.save();
-                                        }));
-                                row.addChild(new ButtonNode()
-                                        .setVariant(ButtonNode.ButtonVariant.GHOST)
-                                        .alignY(0.5f)
-                                        .height(ROW_BUTTON_HEIGHT)
-                                        .setLabel(Component.translatable("alumite.waypoints.teleport").getString())
-                                        .setOnPress(() -> confirmTeleportId.set(waypoint.getId())));
-                                row.addChild(new ButtonNode()
-                                        .setVariant(ButtonNode.ButtonVariant.GHOST)
-                                        .alignY(0.5f)
-                                        .height(ROW_BUTTON_HEIGHT)
-                                        .setLabel(Component.translatable("alumite.waypoints.chat").getString())
-                                        .setOnPress(() -> {
-                                            PlayerUtils.sendMessage(Component.translatable("alumite.waypoints.chat_message", waypoint.getName(), waypoint.blockX(), waypoint.blockY(), waypoint.blockZ()).getString());
-                                            mc.setScreen(null);
-                                        }));
-                                row.addChild(new ButtonNode()
-                                        .setVariant(ButtonNode.ButtonVariant.GHOST)
-                                        .alignY(0.5f)
-                                        .height(ROW_BUTTON_HEIGHT)
-                                        .setLabel(Component.translatable("alumite.waypoints.edit_action").getString())
-                                        .setOnPress(() -> mc.setScreen(new CreateEditWaypointScreen(CreateEditWaypointScreen.Type.EDIT, waypoint))));
-                                row.addChild(new ButtonNode()
-                                        .setVariant(ButtonNode.ButtonVariant.GHOST)
-                                        .alignY(0.5f)
-                                        .height(ROW_BUTTON_HEIGHT)
-                                        .setLabel(Component.translatable("alumite.waypoints.remove").getString())
-                                        .setOnPress(() -> confirmDeleteId.set(waypoint.getId())));
-                            });
-                            list.addChild(waypointCard);
+                            list.addChild(waypointRow(waypoint, confirmTeleport, confirmDelete));
                         }
-                    } else {
+                    }
+                    else {
                         list.addChild(new PositionedNode<>().fullWidth().height(EMPTY_STATE_TOP));
-                        list.addChild(new TextNode(() -> Component.translatable("alumite.waypoints.empty").getString())
+                        list.addChild(new TextNode(() -> UiTranslations.INSTANCE.get("alumite.waypoints.empty"))
                                 .setBold(true).setTextAlign(0.5f, 0.5f).fullWidth().height(24));
-                        list.addChild(new TextNode(() -> Component.translatable("alumite.waypoints.empty_hint").getString())
+                        list.addChild(new TextNode(() -> UiTranslations.INSTANCE.get("alumite.waypoints.empty_hint"))
                                 .setColorResolver(UiTheme::textMuted).setTextAlign(0.5f, 0.5f).fullWidth().height(16));
                     }
-                    PositionedNode<?> listHost = new PositionedNode<>().fullWidth().height(LIST_HEIGHT);
-                    listHost.addChild(list);
-                    contents.addChild(listHost);
-                });
-        card.center();
+                    contents.addChild(new ScrollHost(list, LIST_HEIGHT));
+                })
+                .center();
 
         PositionedNode<?> root = new PositionedNode<>().full();
         root.addChild(card);
 
-        UUID pendingTeleport = confirmTeleportId.get();
+        Waypoint pendingTeleport = confirmTeleport.get();
         if (pendingTeleport != null) {
-            Waypoint toTeleport = allWaypoints.stream().filter(waypoint -> waypoint.getId().equals(pendingTeleport)).findFirst().orElse(null);
             root.addChild(new ConfirmPopupNode()
-                    .setTitle(Component.translatable("alumite.waypoints.teleport_popup.title").getString())
-                    .setDescription(toTeleport != null ? Component.translatable("alumite.waypoints.teleport_popup.message", toTeleport.getName()).getString() : null)
-                    .setConfirmLabel(Component.translatable("alumite.waypoints.teleport").getString())
-                    .setOnCancel(() -> confirmTeleportId.set(null))
+                    .setTitle(UiTranslations.INSTANCE.get("alumite.waypoints.teleport_popup.title"))
+                    .setDescription(Component.translatable("alumite.waypoints.teleport_popup.message", pendingTeleport.getName()).getString())
+                    .setConfirmLabel(UiTranslations.INSTANCE.get("alumite.waypoints.teleport"))
+                    .setOnCancel(() -> confirmTeleport.set(null))
                     .setOnConfirm(() -> {
-                        confirmTeleportId.set(null);
-                        if (toTeleport != null) {
-                            PlayerUtils.runCommand("tp %s %s %s".formatted(toTeleport.blockX(), toTeleport.blockY(), toTeleport.blockZ()));
-                            mc.setScreen(null);
-                        }
+                        confirmTeleport.set(null);
+                        PlayerUtils.runCommand("tp %s %s %s".formatted(pendingTeleport.blockX(), pendingTeleport.blockY(), pendingTeleport.blockZ()));
+                        minecraft.setScreen(null);
                     }));
         }
 
-        UUID pendingDelete = confirmDeleteId.get();
+        Waypoint pendingDelete = confirmDelete.get();
         if (pendingDelete != null) {
-            Waypoint toDelete = waypoints.stream().filter(waypoint -> waypoint.getId().equals(pendingDelete)).findFirst().orElse(null);
             root.addChild(new ConfirmPopupNode()
-                    .setTitle(Component.translatable("alumite.waypoints.remove_popup.title").getString())
-                    .setDescription(toDelete != null ? Component.translatable("alumite.waypoints.delete_popup.message", toDelete.getName()).getString() : null)
-                    .setConfirmLabel(Component.translatable("alumite.waypoints.remove").getString())
+                    .setTitle(UiTranslations.INSTANCE.get("alumite.waypoints.remove_popup.title"))
+                    .setDescription(Component.translatable("alumite.waypoints.delete_popup.message", pendingDelete.getName()).getString())
+                    .setConfirmLabel(UiTranslations.INSTANCE.get("alumite.waypoints.remove"))
                     .setConfirmLabelColorResolver(UiTheme::danger)
-                    .setOnCancel(() -> confirmDeleteId.set(null))
+                    .setOnCancel(() -> confirmDelete.set(null))
                     .setOnConfirm(() -> {
-                        confirmDeleteId.set(null);
-                        WaypointRepository.delete(pendingDelete);
+                        confirmDelete.set(null);
+                        WaypointRepository.delete(pendingDelete.getId());
                     }));
         }
 
         return root;
+    }
+
+    private CardNode waypointRow(Waypoint waypoint, UiState<Waypoint> confirmTeleport, UiState<Waypoint> confirmDelete) {
+        Minecraft minecraft = Minecraft.getInstance();
+        CardNode waypointCard = new SurfaceCard().height(ROW_HEIGHT).fullWidth();
+        waypointCard.setContents(row -> {
+            row.rowGap(UiMetrics.SPACE_XS);
+            row.left(UiMetrics.SPACE_MD).right((ROW_HEIGHT - ROW_BUTTON_HEIGHT) / 2);
+
+            row.addChild(new RectNode()
+                    .size(10, 10)
+                    .setCornerRadius(5)
+                    .setFillSupplier(() -> waypoint.getColor().getResolvedArgb())
+                    .alignY(0.5f));
+            row.addChild(new TextNode(() -> Component.translatable("alumite.waypoints.distance_fmt", (int) Math.round(waypoint.distanceTo())).getString()).width(40).alignY(0.5f));
+            row.addChild(new TextNode(waypoint::getName).setColorResolver(theme -> waypoint.isVisible() ? theme.textPrimary() : theme.textMuted()).alignY(0.5f));
+            row.addChild(new SpacerNode());
+
+            row.addChild(new ButtonNode()
+                    .setVariant(ButtonNode.ButtonVariant.GHOST)
+                    .alignY(0.5f)
+                    .height(ROW_BUTTON_HEIGHT)
+                    .width(28)
+                    .setLabel(() -> UiTranslations.INSTANCE.get(waypoint.isVisible() ? "alumite.waypoints.toggle.on" : "alumite.waypoints.toggle.off"))
+                    .setOnPress(() -> {
+                        waypoint.setVisible(!waypoint.isVisible());
+                        WaypointRepository.save();
+                    }));
+            row.addChild(rowButton("alumite.waypoints.teleport", () -> confirmTeleport.set(waypoint)));
+            row.addChild(rowButton("alumite.waypoints.chat", () -> {
+                PlayerUtils.sendMessage(Component.translatable("alumite.waypoints.chat_message", waypoint.getName(), waypoint.blockX(), waypoint.blockY(), waypoint.blockZ()).getString());
+                minecraft.setScreen(null);
+            }));
+            row.addChild(rowButton("alumite.waypoints.edit_action",
+                    () -> minecraft.setScreen(new CreateEditWaypointScreen(CreateEditWaypointScreen.Type.EDIT, waypoint, this))));
+            row.addChild(rowButton("alumite.waypoints.remove", () -> confirmDelete.set(waypoint)));
+        });
+        return waypointCard;
+    }
+
+    private ButtonNode rowButton(String labelKey, Runnable onPress) {
+        return new ButtonNode()
+                .setVariant(ButtonNode.ButtonVariant.GHOST)
+                .alignY(0.5f)
+                .height(ROW_BUTTON_HEIGHT)
+                .setLabel(UiTranslations.INSTANCE.get(labelKey))
+                .setOnPress(onPress);
     }
 }

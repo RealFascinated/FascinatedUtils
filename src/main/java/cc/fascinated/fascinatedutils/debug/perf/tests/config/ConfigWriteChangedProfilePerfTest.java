@@ -6,7 +6,7 @@ import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import cc.fascinated.fascinatedutils.systems.config.impl.profiles.Profile;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.InventoryTweaksModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks.InventoryTweaksModule;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 
 import java.io.IOException;

@@ -19,7 +19,6 @@ public enum HUDWidgetAnchor {
 
     /**
      * Reference Y in screen space used to pick the nearest anchor from a widget center (pixels).
-     * \
      *
      * @param canvasHeight logical canvas height
      * @return reference Y

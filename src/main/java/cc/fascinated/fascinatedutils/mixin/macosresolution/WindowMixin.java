@@ -1,8 +1,8 @@
 package cc.fascinated.fascinatedutils.mixin.macosresolution;
 
-import cc.fascinated.fascinatedutils.common.ClientUtils;
+import cc.fascinated.fascinatedutils.common.util.ClientUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
-import cc.fascinated.fascinatedutils.settings.Settings;
+import cc.fascinated.fascinatedutils.systems.settings.Settings;
 import com.mojang.blaze3d.platform.Window;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

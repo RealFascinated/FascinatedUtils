@@ -1,20 +1,18 @@
 package cc.fascinated.fascinatedutils.systems.hud;
 
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudPanel;
+
 import cc.fascinated.fascinatedutils.common.setting.Setting;
-import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
-import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
-import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.*;
 
@@ -31,18 +29,11 @@ public abstract class HudHostModule extends Module {
     public static final String SETTING_PADDING = "hud_padding";
     public static final String SETTING_TEXT_SHADOW = "text_shadow";
     public static final String SETTING_REMOVE_MIN_WIDTH = "remove_min_width";
-    public static final String HUD_PANELS_CATEGORY_DISPLAY_KEY = "alumite.setting.category.hud_panels";
 
     @Getter
     private final HudDefaults hudDefaults;
-    /**
-     * Corners drawn square for the panel currently being drawn; set by {@link HUDManager} around each draw.
-     */
-    @Setter
-    private int squaredCornerMask;
     private final String settingsTranslationSuffix;
     private final List<HudPanel> registeredHudPanelsList = new ArrayList<>();
-    private final Map<String, BooleanSetting> hudPanelVisibilitySettings = new LinkedHashMap<>();
     private BooleanSetting showBackground;
     private BooleanSetting roundedCorners;
     private SliderSetting roundingRadius;
@@ -113,21 +104,23 @@ public abstract class HudHostModule extends Module {
         addSetting(textShadow);
     }
 
-    private static String sanitizePanelSettingId(String panelId) {
-        return panelId.replace('.', '_').replace('-', '_');
-    }
-
-    public List<HudPanel> registeredHudPanels() {
-        return Collections.unmodifiableList(registeredHudPanelsList);
+    /**
+     * Builds a translation key below this host's module prefix.
+     *
+     * @param name key suffix, such as {@code hud.cps}
+     * @return {@code alumite.module.<host>.<name>}
+     */
+    public String translationKey(String name) {
+        return "alumite.module." + settingsTranslationSuffix + "." + name;
     }
 
     /**
-     * Counts the {@link HudPanel}s this host has registered, without wrapping the list.
+     * Lists the panels this host registered; every host registers exactly one.
      *
-     * @return the number of registered panels
+     * @return an unmodifiable view of the registered panels
      */
-    public int registeredHudPanelCount() {
-        return registeredHudPanelsList.size();
+    public List<HudPanel> registeredHudPanels() {
+        return Collections.unmodifiableList(registeredHudPanelsList);
     }
 
     /**
@@ -141,39 +134,6 @@ public abstract class HudHostModule extends Module {
 
     protected void registerHudPanel(HudPanel panel) {
         registeredHudPanelsList.add(panel);
-        if (registeredHudPanelsList.size() >= 2 || hudDefaults.alwaysShowPanelToggles()) {
-            reconcileHudPanelVisibilitySettings();
-        }
-    }
-
-    private void reconcileHudPanelVisibilitySettings() {
-        for (HudPanel hudPanel : registeredHudPanelsList) {
-            String panelId = hudPanel.getId();
-            if (hudPanelVisibilitySettings.containsKey(panelId)) {
-                continue;
-            }
-            BooleanSetting visible = BooleanSetting.builder().id("hud_panel_visible_" + sanitizePanelSettingId(panelId)).defaultValue(hudPanel.defaultVisible()).categoryDisplayKey(HUD_PANELS_CATEGORY_DISPLAY_KEY).build();
-            addSetting(visible);
-            hudPanelVisibilitySettings.put(panelId, visible);
-        }
-    }
-
-    /**
-     * Exposes persisted per-panel visibility when this host registers more than one {@link HudPanel}.
-     *
-     * @param panelId stable panel identifier
-     * @return the toggle setting when multi-panel mode is active
-     */
-    public Optional<BooleanSetting> hudPanelVisibilityToggle(String panelId) {
-        return Optional.ofNullable(hudPanelVisibilitySettings.get(panelId));
-    }
-
-    public boolean isHudPanelUserVisible(String panelId) {
-        BooleanSetting toggle = hudPanelVisibilitySettings.get(panelId);
-        if (toggle == null) {
-            return true;
-        }
-        return toggle.isEnabled();
     }
 
     public float getPaddingValue() {
@@ -191,9 +151,26 @@ public abstract class HudHostModule extends Module {
         return roundingRadius.getValue().floatValue();
     }
 
-    public void drawHUDPanelBackground(AlumiteGuiRenderer glRenderer, float layoutWidth, float layoutHeight, boolean editorMode) {
-        float cornerRadius = getCornerRadius();
-        HUDPanelBackground.drawPanelChrome(glRenderer, layoutWidth, layoutHeight, showBackground.isEnabled(), borderThickness.getValue().floatValue(), showBorder.isEnabled(), cornerRadius, RectCornerRoundMask.ALL & ~squaredCornerMask, backgroundColor.getResolvedArgb(), borderColor.getResolvedArgb(), editorMode);
+    /**
+     * The fill colour of the panel background.
+     *
+     * @return packed ARGB, or {@code 0} while the background is off
+     */
+    public int backgroundArgb() {
+        return showBackground.isEnabled() ? backgroundColor.getResolvedArgb() : 0;
+    }
+
+    /**
+     * The colour of the panel border.
+     *
+     * @return packed ARGB, or {@code 0} while the border is off
+     */
+    public int borderArgb() {
+        return showBorder.isEnabled() ? borderColor.getResolvedArgb() : 0;
+    }
+
+    public float getBorderThicknessValue() {
+        return borderThickness.getValue().floatValue();
     }
 
     /**
@@ -214,9 +191,6 @@ public abstract class HudHostModule extends Module {
     public void resetToDefault() {
         super.resetToDefault();
         setEnabled(hudDefaults.defaultState());
-        if (registeredHudPanelsList.size() <= 1 && !hudDefaults.alwaysShowPanelToggles()) {
-            hudPanelVisibilitySettings.clear();
-        }
         for (HudPanel hudPanel : registeredHudPanelsList) {
             hudPanel.resetPanelLayoutDefaults();
         }
@@ -227,7 +201,7 @@ public abstract class HudHostModule extends Module {
         JsonObject root = super.serialize(gson).getAsJsonObject();
         JsonObject hudPanelsJson = new JsonObject();
         for (HudPanel hudPanel : registeredHudPanelsList) {
-            hudPanelsJson.add(hudPanel.getId(), hudPanel.serializeHudState(gson));
+            hudPanelsJson.add(hudPanel.getId(), hudPanel.getHudState().toJson());
         }
         root.add("hudPanels", hudPanelsJson);
         return root;
@@ -240,18 +214,18 @@ public abstract class HudHostModule extends Module {
             return this;
         }
         JsonObject root = data.getAsJsonObject();
-        deserializeHudLayouts(root, gson);
+        deserializeHudLayouts(root);
         return this;
     }
 
-    void deserializeHudLayouts(JsonObject root, Gson gson) {
+    void deserializeHudLayouts(JsonObject root) {
         JsonObject hudPanelsJson = root.has("hudPanels") && root.get("hudPanels").isJsonObject() ? root.get("hudPanels").getAsJsonObject() : null;
         if (hudPanelsJson != null && !registeredHudPanelsList.isEmpty()) {
             for (HudPanel hudPanel : registeredHudPanelsList) {
                 String panelKey = hudPanel.getId();
                 JsonElement panelElement = hudPanelsJson.get(panelKey);
                 if (panelElement != null && panelElement.isJsonObject()) {
-                    hudPanel.deserializeHudState(panelElement.getAsJsonObject(), gson);
+                    hudPanel.getHudState().readJson(panelElement.getAsJsonObject());
                 }
             }
         }
@@ -262,10 +236,4 @@ public abstract class HudHostModule extends Module {
         return SettingCategoryGrouper.topLevelInRegistrationOrder(getAllSettings());
     }
 
-    @Override
-    public List<SettingCategory> getSettingCategories() {
-        return SettingCategoryGrouper.categoriesInRegistrationOrder(getAllSettings()).stream()
-                .filter(category -> !HUD_PANELS_CATEGORY_DISPLAY_KEY.equals(category.displayNameKey()))
-                .toList();
-    }
 }

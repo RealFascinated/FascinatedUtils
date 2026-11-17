@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.hurtcam;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.HurtcamModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.hurtcam.HurtcamModule;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;

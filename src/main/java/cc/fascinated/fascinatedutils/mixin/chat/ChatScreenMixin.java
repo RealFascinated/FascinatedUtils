@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.mixin.chat;
 
 import cc.fascinated.fascinatedutils.systems.chat.ChatSearch;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.ChatModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.chat.ChatModule;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;

@@ -1,5 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.node.input;
 
+import java.util.regex.Pattern;
+
 /**
  * Converts between raw input text and a typed value {@code V}.
  *
@@ -58,10 +60,17 @@ public interface TextParser<V> {
     };
 
     TextParser<Double> DOUBLE = new TextParser<>() {
+        // Plain decimal numbers only: Double.parseDouble would also accept "1d", "1f", "0x1p3", "NaN" and "Infinity".
+        private final Pattern decimalPattern = Pattern.compile("[+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?");
+
         @Override
         public Double parse(String text) {
+            String trimmed = text.trim();
+            if (!decimalPattern.matcher(trimmed).matches()) {
+                return null;
+            }
             try {
-                double parsed = Double.parseDouble(text.trim());
+                double parsed = Double.parseDouble(trimmed);
                 // NaN and +/-Infinity parse fine but are not usable coordinates or amounts.
                 return Double.isFinite(parsed) ? parsed : null;
             } catch (NumberFormatException ignored) {
@@ -71,7 +80,7 @@ public interface TextParser<V> {
 
         @Override
         public String format(Double value) {
-            return String.valueOf(value);
+            return value == null ? "" : String.valueOf(value);
         }
     };
 }

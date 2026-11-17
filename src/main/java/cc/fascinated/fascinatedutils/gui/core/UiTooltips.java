@@ -1,22 +1,21 @@
 package cc.fascinated.fascinatedutils.gui.core;
 
 import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
-import cc.fascinated.fascinatedutils.gui.render.UiText;
-import cc.fascinated.fascinatedutils.gui.theme.UiMetrics;
-import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
+import cc.fascinated.fascinatedutils.gui.layout.MeasuredSize;
+import cc.fascinated.fascinatedutils.gui.node.display.TooltipNode;
+
+import java.util.Map;
 
 /**
- * Shared tooltip layer. The input router reports which node the pointer rests on, and the UI host calls
+ * Tooltip layer owned by one {@link UiHost}. The input router reports which node the pointer rests on, and the UI host calls
  * {@link #render} after drawing the whole tree so the tooltip sits above every other node.
  */
 public class UiTooltips {
-    public static final UiTooltips INSTANCE = new UiTooltips();
-
     private static final long HOVER_DELAY_MILLIS = 450L;
-    private static final int PADDING = 4;
     private static final int POINTER_OFFSET = 12;
     private static final int EDGE_MARGIN = 2;
 
+    private final TooltipNode bubble = new TooltipNode();
     private UiNode tooltipNode;
     private float pointerX;
     private float pointerY;
@@ -55,6 +54,17 @@ public class UiTooltips {
     }
 
     /**
+     * Follows the tooltip owner to its replacement after recomposition.
+     *
+     * @param previousToNext mapping from previous nodes to their replacements
+     */
+    void retarget(Map<UiNode, UiNode> previousToNext) {
+        if (tooltipNode != null) {
+            tooltipNode = previousToNext.get(tooltipNode);
+        }
+    }
+
+    /**
      * Hides the current tooltip and restarts the hover delay, for example after a click.
      */
     public void reset() {
@@ -76,18 +86,14 @@ public class UiTooltips {
         if (text == null || text.isBlank()) {
             return;
         }
-        UiTheme theme = renderFrame.theme();
-        int textWidth = renderFrame.measureTextWidth(text, false);
-        int boxWidth = textWidth + PADDING * 2;
-        int boxHeight = renderFrame.fontHeight() + PADDING * 2;
-        int boxX = Math.max(EDGE_MARGIN, Math.min(Math.round(pointerX) + POINTER_OFFSET, screenWidth - boxWidth - EDGE_MARGIN));
+        bubble.setText(text);
+        MeasuredSize size = bubble.measure(renderFrame, screenWidth, screenHeight);
+        int boxX = Math.max(EDGE_MARGIN, Math.min(Math.round(pointerX) + POINTER_OFFSET, screenWidth - size.width() - EDGE_MARGIN));
         int boxY = Math.round(pointerY) + POINTER_OFFSET;
-        if (boxY + boxHeight > screenHeight - EDGE_MARGIN) {
-            boxY = Math.round(pointerY) - boxHeight - EDGE_MARGIN;
+        if (boxY + size.height() > screenHeight - EDGE_MARGIN) {
+            boxY = Math.round(pointerY) - size.height() - EDGE_MARGIN;
         }
-        renderFrame.flushText();
-        renderFrame.drawRoundedRectFrame(boxX, boxY, boxWidth, boxHeight, UiMetrics.RADIUS, theme.borderSubtle(), theme.surfaceRaised(), 1);
-        UiText.of(text).color(theme.textPrimary()).draw(renderFrame, boxX + PADDING, boxY + PADDING);
-        renderFrame.flushText();
+        bubble.arrange(renderFrame, boxX, boxY, size.width(), size.height());
+        bubble.render(renderFrame, 0f);
     }
 }

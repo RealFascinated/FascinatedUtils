@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.turboweather;
 
-import cc.fascinated.fascinatedutils.settings.Settings;
+import cc.fascinated.fascinatedutils.systems.settings.Settings;
 import net.minecraft.world.level.Level;
 
 import lombok.Getter;

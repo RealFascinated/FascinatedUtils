@@ -2,7 +2,9 @@ package cc.fascinated.fascinatedutils.debug.perf.core;
 
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.debug.perf.scene.PerfSceneRegistry;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
@@ -12,6 +14,7 @@ import java.util.List;
  * {@link #sceneIds()} to run it inside a world scene instead, where its result is named {@code scene.<id>/<test id>}.
  */
 @Getter
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class PerfTest {
     private static final int DEFAULT_WARMUP_ITERATIONS = 20;
     private static final int DEFAULT_MEASURED_ITERATIONS = 200;
@@ -26,13 +29,6 @@ public abstract class PerfTest {
      * lower it in their constructor for slow tests.
      */
     protected long warmupMillis = 300;
-
-    protected PerfTest(String id, String description, int warmupIterations, int measuredIterations) {
-        this.id = id;
-        this.description = description;
-        this.warmupIterations = warmupIterations;
-        this.measuredIterations = measuredIterations;
-    }
 
     protected PerfTest(String id, String description) {
         this(id, description, DEFAULT_WARMUP_ITERATIONS, DEFAULT_MEASURED_ITERATIONS);

@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.mixin.tab;
 
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.TabModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.tab.TabModule;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;

@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.confirmdisconnect;
 
-import cc.fascinated.fascinatedutils.settings.Settings;
+import cc.fascinated.fascinatedutils.systems.settings.Settings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.PauseScreen;

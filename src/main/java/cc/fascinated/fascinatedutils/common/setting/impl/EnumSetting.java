@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.common.setting.impl;
 
-import cc.fascinated.fascinatedutils.common.EnumUtils;
+import cc.fascinated.fascinatedutils.common.util.EnumUtils;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;

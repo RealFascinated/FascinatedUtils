@@ -1,8 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks;
 
-import cc.fascinated.fascinatedutils.mixin.InventorySelectedAccessorMixin;
+import cc.fascinated.fascinatedutils.mixin.accessor.InventorySelectedAccessorMixin;
 import cc.fascinated.fascinatedutils.systems.modules.Feature;
-import cc.fascinated.fascinatedutils.systems.modules.impl.InventoryTweaksModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;

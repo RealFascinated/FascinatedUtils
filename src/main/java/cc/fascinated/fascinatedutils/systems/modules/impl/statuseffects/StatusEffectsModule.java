@@ -6,6 +6,7 @@ import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.statuseffects.hud.StatusEffectsHudPanel;
+import lombok.AllArgsConstructor;
 
 public class StatusEffectsModule extends HudHostModule {
 
@@ -49,28 +50,22 @@ public class StatusEffectsModule extends HudHostModule {
         return displayMode.getValue();
     }
 
+    @AllArgsConstructor
     public enum SortMode {
         REMAINING_TIME("Remaining Time"), ALPHABETICAL("Alphabetical");
 
         private final String label;
-
-        SortMode(String label) {
-            this.label = label;
-        }
 
         public String label() {
             return label;
         }
     }
 
+    @AllArgsConstructor
     public enum DisplayMode {
         DETAILED("Detailed"), COMPACT("Compact");
 
         private final String label;
-
-        DisplayMode(String label) {
-            this.label = label;
-        }
 
         public String label() {
             return label;

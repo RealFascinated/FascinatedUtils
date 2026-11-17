@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.mixin.freelook;
 
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.FreelookModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.freelook.FreelookModule;
 import net.minecraft.client.Camera;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;

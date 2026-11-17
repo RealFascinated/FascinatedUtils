@@ -3,9 +3,9 @@ package cc.fascinated.fascinatedutils.debug.perf.tests.hud;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.HudOverlaysPerfScene;
-import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
-import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
-import cc.fascinated.fascinatedutils.systems.hud.HudPanelMerger;
+import cc.fascinated.fascinatedutils.systems.hud.HudManager;
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.layout.HudPanelMerger;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ public class HudPanelMergerPerfTest extends PerfTest {
 
     @Override
     public void setup() {
-        panels = HUDManager.INSTANCE.visibleWidgets();
+        panels = HudManager.INSTANCE.visibleWidgets();
     }
 
     @Override

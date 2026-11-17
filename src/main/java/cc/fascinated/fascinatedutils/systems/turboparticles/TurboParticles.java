@@ -6,7 +6,7 @@ import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStartedEvent;
 import cc.fascinated.fascinatedutils.event.impl.lifecycle.ClientStoppingEvent;
-import cc.fascinated.fascinatedutils.settings.Settings;
+import cc.fascinated.fascinatedutils.systems.settings.Settings;
 import meteordevelopment.orbit.EventHandler;
 
 /**

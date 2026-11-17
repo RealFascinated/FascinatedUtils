@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.hudeditor;
 
-import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.layout.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 

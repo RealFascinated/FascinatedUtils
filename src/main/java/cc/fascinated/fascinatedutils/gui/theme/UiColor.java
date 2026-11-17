@@ -8,7 +8,7 @@ public class UiColor {
     /**
      * Parse a CSS-style hex color into packed ARGB (alpha in the high byte, matching Minecraft {@code 0xAARRGGBB}).
      */
-    public static int argb(String hexWithOptionalHash) {
+    public int argb(String hexWithOptionalHash) {
         String digits = hexWithOptionalHash.trim();
         if (digits.startsWith("#")) {
             digits = digits.substring(1);

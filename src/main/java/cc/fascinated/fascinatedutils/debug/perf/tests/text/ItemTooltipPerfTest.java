@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.debug.perf.tests.text;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.InventoryPerfScene;
-import cc.fascinated.fascinatedutils.systems.modules.impl.ItemTooltipModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.itemtooltip.ItemTooltipModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;

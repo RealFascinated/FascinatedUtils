@@ -1,17 +1,17 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.clock.hud;
 
-import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.panel.MiniMessageHudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.impl.clock.ClockWidget;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ClockHudPanel extends MiniMessageHudPanel {
 
-    private final Map<ClockWidget.ClockFormat, DateTimeFormatter> formatterCache = new ConcurrentHashMap<>();
+    private final Map<ClockWidget.ClockFormat, DateTimeFormatter> formatterCache = new HashMap<>();
     private final ClockWidget clockWidget;
 
     public ClockHudPanel(ClockWidget clockWidget) {

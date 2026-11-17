@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.mixin.zoom;
 
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.ZoomModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.zoom.ZoomModule;
 import net.minecraft.client.MouseHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

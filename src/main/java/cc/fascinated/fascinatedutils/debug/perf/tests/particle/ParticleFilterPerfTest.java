@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.debug.perf.tests.particle;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.ParticleFilterModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.particlefilter.ParticleFilterModule;
 import net.minecraft.core.particles.ParticleTypes;
 
 import java.util.List;

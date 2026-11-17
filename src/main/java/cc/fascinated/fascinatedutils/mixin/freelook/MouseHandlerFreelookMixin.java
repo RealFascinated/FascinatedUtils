@@ -2,7 +2,7 @@ package cc.fascinated.fascinatedutils.mixin.freelook;
 
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.FreelookModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.freelook.FreelookModule;
 import net.minecraft.client.MouseHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

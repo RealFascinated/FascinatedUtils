@@ -1,8 +1,8 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.hudeditor;
 
-import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.layout.PositionedNode;
 import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
-import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudPanel;
 
 /**
  * Corner handle on the selected HUD panel; dragging it rescales the panel.
@@ -30,7 +30,7 @@ public class HudScaleHandleNode extends PositionedNode<HudScaleHandleNode> {
     }
 
     @Override
-    public boolean blocksHitWhenEmpty() {
+    public boolean hitTarget() {
         return true;
     }
 

@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.common.culling;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -10,6 +11,7 @@ import java.util.function.Supplier;
  *
  * @param <T> the cull task type run on the thread
  */
+@RequiredArgsConstructor
 public class CullThreadLifecycle<T extends AbstractCullTask> {
     private static final long WORKER_EXIT_TIMEOUT_MILLIS = 100L;
 
@@ -28,13 +30,6 @@ public class CullThreadLifecycle<T extends AbstractCullTask> {
 
     @Getter
     private volatile T task;
-
-    public CullThreadLifecycle(BooleanSupplier settingEnabled, Supplier<T> taskFactory, String threadName, Runnable onThreadStarted) {
-        this.settingEnabled = settingEnabled;
-        this.taskFactory = taskFactory;
-        this.threadName = threadName;
-        this.onThreadStarted = onThreadStarted;
-    }
 
     public boolean isThreadAlive() {
         return task != null && thread != null && thread.isAlive();

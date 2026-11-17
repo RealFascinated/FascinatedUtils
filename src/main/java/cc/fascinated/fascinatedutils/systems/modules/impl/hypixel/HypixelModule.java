@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.hypixel;
 
-import cc.fascinated.fascinatedutils.common.PatternHandler;
+import cc.fascinated.fascinatedutils.common.text.PatternHandler;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleCategory;

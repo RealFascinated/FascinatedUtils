@@ -1,7 +1,8 @@
 package cc.fascinated.fascinatedutils.debug.perf.scene;
 
-import cc.fascinated.fascinatedutils.mixin.KeyBindingAccessorMixin;
+import cc.fascinated.fascinatedutils.mixin.accessor.KeyBindingAccessorMixin;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -18,6 +19,7 @@ import java.util.function.Supplier;
  * not flooded; keys held and screens opened here are released by the runner after the scene's teardown.
  */
 @Getter
+@RequiredArgsConstructor
 public class PerfSceneContext {
     private static final int COMMANDS_PER_TICK = 4;
 
@@ -26,11 +28,6 @@ public class PerfSceneContext {
     private final Deque<String> pendingCommands = new ArrayDeque<>();
     private final List<KeyMapping> heldKeys = new ArrayList<>();
     private Supplier<Screen> screenFactory;
-
-    public PerfSceneContext(Minecraft minecraft, PerfScenario scenario) {
-        this.minecraft = minecraft;
-        this.scenario = scenario;
-    }
 
     /**
      * Queues a server command (without the leading slash).

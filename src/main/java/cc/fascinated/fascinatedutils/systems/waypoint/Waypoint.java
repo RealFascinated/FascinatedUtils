@@ -1,12 +1,13 @@
 package cc.fascinated.fascinatedutils.systems.waypoint;
 
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
-import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
+import cc.fascinated.fascinatedutils.systems.config.io.GsonSerializable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@AllArgsConstructor
 public class Waypoint implements GsonSerializable<Waypoint> {
     private UUID id;
     private WaypointType type;
@@ -30,22 +32,6 @@ public class Waypoint implements GsonSerializable<Waypoint> {
     private boolean showBeam;
     private boolean showDistance;
     private SettingColor color;
-
-    public Waypoint(UUID id, WaypointType type, String name, String worldKey, double x, double y, double z, String dimension, boolean visible,
-                    boolean showBeam, boolean showDistance, SettingColor color) {
-        this.id = id;
-        this.type = type;
-        this.name = name;
-        this.worldKey = worldKey;
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.dimension = dimension;
-        this.visible = visible;
-        this.showBeam = showBeam;
-        this.showDistance = showDistance;
-        this.color = color;
-    }
 
     public static Waypoint create(UUID id, WaypointType type, String name, double x, double y, double z, String dimension, boolean visible,
                                   boolean showBeam, boolean showDistance, SettingColor color) {

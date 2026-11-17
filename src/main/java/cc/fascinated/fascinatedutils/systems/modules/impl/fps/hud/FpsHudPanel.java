@@ -1,11 +1,11 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.fps.hud;
 
-import cc.fascinated.fascinatedutils.common.Colors;
-import cc.fascinated.fascinatedutils.common.FrameCounter;
+import cc.fascinated.fascinatedutils.common.color.Colors;
+import cc.fascinated.fascinatedutils.common.timing.FrameCounter;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.hud.MiniMessageHudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.panel.MiniMessageHudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.impl.fps.FpsWidget;
 
 import java.util.ArrayList;
@@ -44,7 +44,7 @@ public class FpsHudPanel extends MiniMessageHudPanel {
         FrameCounter instance = FrameCounter.getInstance();
         int fps = instance.getSmoothFps();
         List<String> lines = new ArrayList<>();
-        lines.add("<" + Colors.rgbHex(fpsColorArgb(fps)) + ">" + fps + " <white>FPS");
+        lines.add("<" + Colors.rgbHex(fpsColorArgb(fps)) + ">" + fps + " <white>" + hudText("fps"));
         BooleanSetting onePercentLowSetting = fpsWidget.getShowOnePercentLows();
         if (onePercentLowSetting.isEnabled()) {
             int onePercentLows = instance.getOnePercentLowFps();

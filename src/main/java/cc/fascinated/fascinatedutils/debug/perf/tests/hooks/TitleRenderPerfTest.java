@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.TitlesModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.titles.TitlesModule;
 
 import java.util.List;
 import java.util.Optional;

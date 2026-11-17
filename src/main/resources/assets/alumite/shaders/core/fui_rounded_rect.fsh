@@ -1,60 +1,52 @@
 #version 330
 
-layout (std140) uniform DynamicTransforms {
+// Can't moj_import in things used during startup, when resource packs don't exist.
+// This is a copy of dynamictransforms.glsl
+layout(std140) uniform DynamicTransforms {
     mat4 ModelViewMat;
     vec4 ColorModulator;
     vec3 ModelOffset;
     mat4 TextureMat;
 };
 
+#ifdef TEXTURED
 uniform sampler2D Sampler0;
-uniform sampler2D Sampler1;
+#endif
 
-in vec2 texCoord0;
+in vec2 localPos;
 in vec4 vertexColor;
+flat in vec2 halfSize;
+flat in vec4 cornerRadii;
+flat in float ringStroke;
+in vec2 texCoord;
 
 out vec4 fragColor;
 
-/* Independent corner fillets; GUI y-down (top is negative y from rect center). */
-float sdRoundedRectCornersYDown(vec2 pointPx, vec2 halfSizePx, vec4 rCorners) {
-    vec2 rSide = (pointPx.x > 0.0) ? vec2(rCorners.g, rCorners.b) : vec2(rCorners.r, rCorners.a);
-    float rad = (pointPx.y < 0.0) ? rSide.x : rSide.y;
-    rad = min(rad, min(halfSizePx.x, halfSizePx.y) - 1e-4);
-    vec2 q = abs(pointPx) - halfSizePx + vec2(rad);
-    return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - rad;
+// Signed distance to a rectangle with independent corner radii (top left, top right, bottom right, bottom left);
+// GUI y is down, so the top is negative y from the centre.
+float sdRoundedBox(vec2 point, vec2 halfExtent, vec4 radii) {
+    vec2 side = (point.x > 0.0) ? vec2(radii.y, radii.z) : vec2(radii.x, radii.w);
+    float radius = (point.y < 0.0) ? side.x : side.y;
+    radius = min(radius, min(halfExtent.x, halfExtent.y));
+    vec2 corner = abs(point) - halfExtent + vec2(radius);
+    return min(max(corner.x, corner.y), 0.0) + length(max(corner, 0.0)) - radius;
 }
 
 void main() {
-    vec4 texSample = texture(Sampler0, texCoord0);
-    vec2 uv = texCoord0;
-    vec2 h = max(fwidth(uv), vec2(1e-5));
-    float widthPx = 1.0 / h.x;
-    float heightPx = 1.0 / h.y;
-    float expansionPx = texelFetch(Sampler1, ivec2(5, 0), 0).r * 255.0;
-    vec2 halfSizePx = vec2(widthPx, heightPx) * 0.5 - expansionPx;
-    vec2 pointPx = (uv - vec2(0.5)) * vec2(widthPx, heightPx);
-    float minSidePx = min(widthPx, heightPx);
-    float r_tl = texelFetch(Sampler1, ivec2(0, 0), 0).r * minSidePx * 0.5;
-    float r_tr = texelFetch(Sampler1, ivec2(1, 0), 0).r * minSidePx * 0.5;
-    float r_br = texelFetch(Sampler1, ivec2(2, 0), 0).r * minSidePx * 0.5;
-    float r_bl = texelFetch(Sampler1, ivec2(3, 0), 0).r * minSidePx * 0.5;
-    float ringStrokePx = texelFetch(Sampler1, ivec2(4, 0), 0).r * 255.0;
-    vec4 rCorners = vec4(r_tl, r_tr, r_br, r_bl);
-    float signedDistance = sdRoundedRectCornersYDown(pointPx, halfSizePx, rCorners);
-    float edgeWidth = max(fwidth(signedDistance), 1e-4);
-    float coverage;
-    if (ringStrokePx > 0.5) {
-        float insideShape = clamp(0.5 - signedDistance / edgeWidth, 0.0, 1.0);
-        float depthInward = max(0.0, -signedDistance);
-        float ringBody = clamp(0.5 - (depthInward - ringStrokePx) / edgeWidth, 0.0, 1.0);
-        coverage = insideShape * ringBody;
-    } else {
-        coverage = clamp(0.5 - signedDistance / edgeWidth, 0.0, 1.0);
+    float distance = sdRoundedBox(localPos, halfSize, cornerRadii);
+    // Distance is in local units, so the gradient length is local units per framebuffer pixel.
+    float edge = max(length(vec2(dFdx(distance), dFdy(distance))), 1e-5);
+    float coverage = clamp(0.5 - distance / edge, 0.0, 1.0);
+    if (ringStroke > 0.0) {
+        float insideInner = clamp(0.5 - (distance + ringStroke) / edge, 0.0, 1.0);
+        coverage *= 1.0 - insideInner;
     }
     if (coverage <= 0.001) {
         discard;
     }
-    vec3 tintRgb = texSample.rgb * vertexColor.rgb;
-    float outAlpha = texSample.a * vertexColor.a * coverage * ColorModulator.a;
-    fragColor = vec4(tintRgb * ColorModulator.rgb, outAlpha);
+    vec4 color = vertexColor;
+#ifdef TEXTURED
+    color *= texture(Sampler0, texCoord);
+#endif
+    fragColor = vec4(color.rgb * ColorModulator.rgb, color.a * coverage * ColorModulator.a);
 }

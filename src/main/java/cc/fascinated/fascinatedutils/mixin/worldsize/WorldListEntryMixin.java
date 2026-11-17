@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.worldsize;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.WorldSizeModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.worldsize.WorldSizeModule;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
 import net.minecraft.network.chat.Component;

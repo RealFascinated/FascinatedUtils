@@ -1,232 +1,183 @@
 package cc.fascinated.fascinatedutils.gui.toast;
 
-import cc.fascinated.fascinatedutils.client.ModUiTextures;
-import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
-import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
-import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
-import cc.fascinated.fascinatedutils.gui.theme.UiThemeRepository;
-import net.minecraft.resources.Identifier;
+import cc.fascinated.fascinatedutils.gui.anim.AnimHandle;
+import cc.fascinated.fascinatedutils.gui.layout.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.core.UiNode;
+import cc.fascinated.fascinatedutils.gui.core.overlay.UiOverlay;
+import cc.fascinated.fascinatedutils.gui.core.overlay.UiOverlays;
+import cc.fascinated.fascinatedutils.gui.core.state.UiStateStore;
+import cc.fascinated.fascinatedutils.gui.node.display.AlphaNode;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * Queues and animates {@link Toast}s stacked in the top-right corner. Each frame it composes a node tree of
+ * {@link ToastNode}s that a {@link UiOverlay} lays out and draws; clicking a toast dismisses it.
+ */
 public class ToastManager {
 
     public static final ToastManager INSTANCE = new ToastManager();
 
-    private static final float TOAST_W = 220f;
-    private static final float TOAST_H = 46f;
     private static final float MARGIN_R = 12f;
     private static final float MARGIN_T = 12f;
     private static final float GAP = 6f;
-    private static final float CORNER_R = 6f;
-    private static final float ICON_SLOT_W = 30f;
-    private static final float TITLE_GAP = 4f;
     private static final float FADE_IN_SPD = 8f;
     private static final float FADE_OUT_SPD = 4f;
     private static final float SLIDE_SPD = 12f;
-    private static final float Y_LERP_SPD = 10f;
+    private static final float Y_SPD = 10f;
+    private static final float GONE_ALPHA = 0.02f;
     private static final int MAX_TOASTS = 5;
-    private static final float LINE_GAP = 2f;
-    private static final int MAX_LINES = 4;
+    private static final int MAX_PENDING = 16;
 
-    private final ConcurrentLinkedQueue<Toast> pending = new ConcurrentLinkedQueue<>();
+    private final ArrayDeque<Toast> pending = new ArrayDeque<>();
     private final List<Entry> entries = new ArrayList<>();
+    private final UiOverlay overlay = UiOverlays.INSTANCE.register(new UiOverlay(this::composeToasts).guiFont(true).acceptsInput(true).recomposeEveryFrame(true), UiOverlays.ORDER_TOASTS);
+    private Toast lastAdded;
+    private float canvasWidth;
+    private float frameDeltaSeconds;
+    private int nextEntryId;
 
-    private static int accentColor(UiTheme theme, Toast.Type type) {
-        return switch (type) {
-            case SUCCESS -> theme.success();
-            case ERROR -> theme.danger();
-            case WARNING -> theme.warning();
-            case INFO -> theme.accent();
-        };
-    }
-
-    private static List<String> wrapText(AlumiteGuiRenderer renderer, String text, float maxWidth) {
-        List<String> lines = new ArrayList<>();
-        String[] words = text.split(" ", -1);
-        StringBuilder current = new StringBuilder();
-        for (String word : words) {
-            String candidate = current.isEmpty() ? word : current + " " + word;
-            if (renderer.measureTextWidth(candidate, false) <= maxWidth) {
-                current = new StringBuilder(candidate);
-            }
-            else {
-                if (!current.isEmpty()) {
-                    lines.add(current.toString());
-                }
-                // If a single word exceeds max width, add it anyway to avoid infinite loop
-                current = new StringBuilder(word);
-            }
-            if (lines.size() == MAX_LINES - 1) {
-                break;
-            }
-        }
-        if (!current.isEmpty()) {
-            lines.add(current.toString());
-        }
-        return lines;
-    }
-
-    private static Identifier iconSprite(Toast.Type type) {
-        return switch (type) {
-            case SUCCESS -> ModUiTextures.CHECK.getId();
-            case ERROR -> ModUiTextures.CLOSE.getId();
-            case WARNING -> ModUiTextures.WARNING.getId();
-            case INFO -> null;
-        };
+    private static boolean sameContent(Toast first, Toast second) {
+        return first.type() == second.type() && first.title().equals(second.title()) && first.message().equals(second.message());
     }
 
     /**
-     * Enqueues a toast for display. Safe to call from any thread.
+     * Enqueues a toast for display. Safe to call from any thread. A toast identical to the previous one that is
+     * still queued or on screen is dropped, and the queue keeps only the newest entries when it overflows.
      *
      * @param toast the toast to display
      */
-    public void add(Toast toast) {
-        pending.add(toast);
+    public synchronized void add(Toast toast) {
+        if (lastAdded != null && sameContent(lastAdded, toast)) {
+            return;
+        }
+        lastAdded = toast;
+        pending.addLast(toast);
+        while (pending.size() > MAX_PENDING) {
+            pending.pollFirst();
+        }
+    }
+
+    private synchronized Toast pollPending() {
+        return pending.pollFirst();
+    }
+
+    private synchronized boolean hasPending() {
+        return !pending.isEmpty();
+    }
+
+    private synchronized void forget(Toast toast) {
+        if (lastAdded == toast) {
+            lastAdded = null;
+        }
     }
 
     /**
-     * Ticks animations and renders all active toasts.
+     * Ticks animations and draws all active toasts through the toast overlay. Hovering a toast pauses its countdown.
      *
-     * <p>Call this between {@code renderer.begin()} and {@code renderer.end()} in any
-     * screen's {@code renderCustom} method.
-     *
-     * @param renderer     the active {@link AlumiteGuiRenderer}
-     * @param uiWidth      logical UI canvas width
-     * @param uiHeight     logical UI canvas height
-     * @param mouseX       UI-space pointer X
-     * @param mouseY       UI-space pointer Y
+     * @param graphics     the draw context to submit to
+     * @param canvasWidth  logical UI canvas width
+     * @param canvasHeight logical UI canvas height
+     * @param pointerX     UI-space pointer X
+     * @param pointerY     UI-space pointer Y
      * @param deltaSeconds elapsed seconds since last frame
      */
-    public void render(AlumiteGuiRenderer renderer, float uiWidth, float uiHeight, float mouseX, float mouseY, float deltaSeconds) {
-        tick(deltaSeconds);
-        for (Entry entry : entries) {
-            float renderX = uiWidth - TOAST_W - MARGIN_R + entry.slideOffset;
-            renderEntry(renderer, entry, renderX, mouseX, mouseY);
+    public void render(GuiGraphicsExtractor graphics, float canvasWidth, float canvasHeight, float pointerX, float pointerY, float deltaSeconds) {
+        if (entries.isEmpty() && !hasPending()) {
+            return;
         }
+        this.canvasWidth = canvasWidth;
+        this.frameDeltaSeconds = deltaSeconds;
+        overlay.render(graphics, canvasWidth, canvasHeight, pointerX, pointerY, deltaSeconds);
+    }
+
+    private UiNode composeToasts(UiStateStore stateStore) {
+        tick(frameDeltaSeconds);
+        PositionedNode<?> layer = new PositionedNode<>().full();
+        for (Entry entry : entries) {
+            ToastNode card = new ToastNode(entry.toast, entry::dismiss);
+            entry.card = card;
+            float alpha = entry.alpha.value();
+            int renderX = Math.round(canvasWidth - ToastNode.TOAST_WIDTH - MARGIN_R + entry.slide.value());
+            int renderY = Math.round(entry.y.value());
+            layer.addChild(new AlphaNode(() -> alpha).columnGap(0).pos(renderX, renderY).setNodeId("toast-" + entry.id).addChild(card));
+        }
+        return layer;
     }
 
     private void tick(float delta) {
         while (entries.size() < MAX_TOASTS) {
-            Toast next = pending.poll();
+            Toast next = pollPending();
             if (next == null) {
                 break;
             }
-            Entry entry = new Entry(next);
-            // Snap renderY to the top slot; slide-in handles the horizontal entry
-            entry.renderY = MARGIN_T;
+            Entry entry = new Entry(nextEntryId++, next);
+            // Start just above the top slot so older toasts and this one ease down together without overlapping
+            entry.y.snap(MARGIN_T - entry.height() - GAP);
             entries.add(entry);
         }
 
         for (int idx = 0; idx < entries.size(); idx++) {
             Entry entry = entries.get(idx);
-            entry.age += delta;
-
+            if (!entry.hovered() || entry.dismissing) {
+                entry.age += delta;
+            }
             if (!entry.dismissing && entry.age >= entry.toast.durationSeconds()) {
-                entry.dismissing = true;
+                entry.dismiss();
             }
-
-            if (entry.dismissing) {
-                entry.alpha = Math.max(0f, entry.alpha - FADE_OUT_SPD * delta);
-                if (entry.alpha <= 0f) {
-                    entries.remove(idx);
-                    idx--;
-                    continue;
-                }
+            entry.alpha.tick(delta);
+            if (entry.dismissing && entry.alpha.value() <= GONE_ALPHA) {
+                forget(entry.toast);
+                entries.remove(idx);
+                idx--;
+                continue;
             }
-            else {
-                entry.alpha = Math.min(1f, entry.alpha + FADE_IN_SPD * delta);
-            }
-
-            entry.slideOffset = Math.max(0f, entry.slideOffset * (1f - SLIDE_SPD * delta));
-            if (entry.slideOffset < 0.5f) {
-                entry.slideOffset = 0f;
-            }
+            entry.slide.tick(delta);
         }
 
-        // Lerp each entry toward its stacking target (newest at top, older ones stack downward)
-        int count = entries.size();
+        // Newest at the top, older ones stack downward
         float stackTop = MARGIN_T;
-        for (int idx = count - 1; idx >= 0; idx--) {
+        for (int idx = entries.size() - 1; idx >= 0; idx--) {
             Entry entry = entries.get(idx);
-            float targetY = stackTop;
-            entry.renderY += (targetY - entry.renderY) * Math.min(1f, Y_LERP_SPD * delta);
-            stackTop += entry.effectiveHeight + GAP;
+            entry.y.target(stackTop);
+            entry.y.tick(delta);
+            stackTop += entry.height() + GAP;
         }
-    }
-
-    private void renderEntry(AlumiteGuiRenderer renderer, Entry entry, float renderX, float mouseX, float mouseY) {
-        float renderY = entry.renderY;
-
-        // Text area geometry (after accent stripe + icon slot)
-        float textStartX = renderX + ICON_SLOT_W;
-        float textClipW = TOAST_W - ICON_SLOT_W - 10f;
-
-        if (entry.wrappedLines == null) {
-            entry.wrappedLines = wrapText(renderer, entry.toast.message(), textClipW);
-            float capH = renderer.fontCapHeight();
-            float lineH = renderer.fontHeight();
-            int lineCount = entry.wrappedLines.size();
-            float msgH = lineCount > 0 ? lineCount * lineH + (lineCount - 1) * LINE_GAP + TITLE_GAP : 0f;
-            float padV = (TOAST_H - capH - (lineCount > 0 ? TITLE_GAP + lineH : 0f)) / 2f;
-            entry.effectiveHeight = Math.max(TOAST_H, padV + capH + msgH + padV);
-        }
-        float effectiveH = entry.effectiveHeight;
-
-        boolean hovered = mouseX >= renderX && mouseX < renderX + TOAST_W && mouseY >= renderY && mouseY < renderY + effectiveH;
-        UiTheme theme = UiThemeRepository.get();
-        int accentColor = accentColor(theme, entry.toast.type());
-
-        renderer.setMultiplyAlpha(entry.alpha);
-
-        int cardFill = hovered ? theme.surfaceActive() : theme.surfaceRaised();
-        renderer.fillRoundedRectFrame(renderX, renderY, TOAST_W, effectiveH, CORNER_R, theme.borderSubtle(), cardFill, 1f, 1f, RectCornerRoundMask.ALL);
-
-        // Vertical layout: pad top, then title row, then TITLE_GAP, then message rows
-        float capH = renderer.fontCapHeight();
-        float lineH = renderer.fontHeight();
-        float padV = (TOAST_H - capH - TITLE_GAP - lineH) / 2f;
-        float titleY = renderY + padV;
-        float msgY = titleY + capH + TITLE_GAP;
-
-        // Icon — vertically centered
-        float iconCenterX = renderX + ICON_SLOT_W / 2f;
-        float iconY = renderY + (effectiveH - capH) / 2f;
-        Identifier iconSprite = iconSprite(entry.toast.type());
-        if (iconSprite != null) {
-            renderer.drawSprite(iconSprite, iconCenterX - capH / 2f, iconY, capH, capH, accentColor);
-        } else {
-            renderer.drawCenteredText("ℹ", iconCenterX, iconY, accentColor, false, true);
-        }
-
-        renderer.pushClip(textStartX, renderY, textClipW, effectiveH);
-        renderer.drawText(entry.toast.title(), textStartX, titleY, theme.textPrimary(), false, true);
-
-        for (int lineIdx = 0; lineIdx < entry.wrappedLines.size(); lineIdx++) {
-            float lineY = msgY + lineIdx * (lineH + LINE_GAP);
-            renderer.drawText(entry.wrappedLines.get(lineIdx), textStartX, lineY, theme.textMuted(), false, false);
-        }
-        renderer.popClip();
-
-        renderer.resetMultiplyAlpha();
     }
 
     private static class Entry {
 
+        final int id;
         final Toast toast;
+        final AnimHandle alpha = new AnimHandle(0f).target(1f).speed(FADE_IN_SPD);
+        final AnimHandle slide = new AnimHandle(ToastNode.TOAST_WIDTH + MARGIN_R).target(0f).speed(SLIDE_SPD);
+        final AnimHandle y = new AnimHandle(MARGIN_T).speed(Y_SPD);
         float age;
-        float alpha;
-        float slideOffset;
-        float renderY;
         boolean dismissing;
-        List<String> wrappedLines;
-        float effectiveHeight = TOAST_H;
+        // The card composed last frame; its laid-out height and hover state drive this frame's stacking and countdown
+        ToastNode card;
 
-        Entry(Toast toast) {
+        Entry(int id, Toast toast) {
+            this.id = id;
             this.toast = toast;
-            this.slideOffset = TOAST_W + MARGIN_R; // starts fully off-screen right
+        }
+
+        boolean hovered() {
+            return card != null && card.isHovered();
+        }
+
+        float height() {
+            return card != null && card.bounds().height() > 0 ? card.bounds().height() : ToastNode.MIN_HEIGHT;
+        }
+
+        void dismiss() {
+            if (!dismissing) {
+                dismissing = true;
+                alpha.target(0f).speed(FADE_OUT_SPD);
+            }
         }
     }
 }

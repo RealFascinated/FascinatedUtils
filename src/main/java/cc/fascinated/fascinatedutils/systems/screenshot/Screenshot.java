@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.screenshot;
 
 import cc.fascinated.fascinatedutils.gui.toast.Toast;
-import cc.fascinated.fascinatedutils.systems.TextureManager;
+import cc.fascinated.fascinatedutils.systems.texture.TextureManager;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.Client;
 import net.minecraft.network.chat.Component;
@@ -15,17 +15,17 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
-import java.util.Date;
+import java.time.Instant;
 
 @Getter
 public class Screenshot {
     private final String name;
     private final Path path;
-    private final Date createdAt;
+    private final Instant createdAt;
     private final long size;
 
     @SneakyThrows
@@ -33,11 +33,12 @@ public class Screenshot {
         this.name = path.getFileName().toString();
         this.path = path;
 
-        BasicFileAttributes attrs = Files.readAttributes(this.path, BasicFileAttributes.class);
-        FileTime createdAt = attrs.creationTime();
-        this.createdAt = new Date(createdAt.toMillis());
-
-        this.size = path.toFile().length();
+        BasicFileAttributes attributes = Files.readAttributes(this.path, BasicFileAttributes.class);
+        if (!attributes.isRegularFile()) {
+            throw new IOException(path + " is not a regular file");
+        }
+        this.createdAt = attributes.creationTime().toInstant();
+        this.size = attributes.size();
     }
 
     /**

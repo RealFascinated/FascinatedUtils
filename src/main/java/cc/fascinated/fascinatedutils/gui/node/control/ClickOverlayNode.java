@@ -1,0 +1,35 @@
+package cc.fascinated.fascinatedutils.gui.node.control;
+
+import cc.fascinated.fascinatedutils.gui.layout.PositionedNode;
+
+public class ClickOverlayNode extends PositionedNode<ClickOverlayNode> {
+    private Runnable onPrimaryClick = () -> {};
+
+    public ClickOverlayNode() {
+        full();
+    }
+
+    public ClickOverlayNode(Runnable onPrimaryClick) {
+        this();
+        setOnPrimaryClick(onPrimaryClick);
+    }
+
+    public ClickOverlayNode setOnPrimaryClick(Runnable onPrimaryClick) {
+        this.onPrimaryClick = onPrimaryClick == null ? () -> {} : onPrimaryClick;
+        return this;
+    }
+
+    @Override
+    public boolean hitTarget() {
+        return true;
+    }
+
+    @Override
+    public boolean onClick(float pointerX, float pointerY, int button) {
+        if (button == 0) {
+            onPrimaryClick.run();
+            return true;
+        }
+        return false;
+    }
+}

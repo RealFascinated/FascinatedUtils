@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.timechanger;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.TimeChangerModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.timechanger.TimeChangerModule;
 import net.minecraft.client.ClientClockManager;
 import net.minecraft.core.Holder;
 import net.minecraft.world.clock.WorldClock;

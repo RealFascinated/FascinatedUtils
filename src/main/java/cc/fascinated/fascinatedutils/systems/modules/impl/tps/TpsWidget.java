@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.tps;
 
-import cc.fascinated.fascinatedutils.common.IntegratedServerUtils;
+import cc.fascinated.fascinatedutils.common.util.IntegratedServerUtils;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.event.impl.ClientTickEvent;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;

@@ -4,17 +4,15 @@ import cc.fascinated.fascinatedutils.AlumiteMod;
 import com.mojang.blaze3d.platform.NativeImage;
 import lombok.Getter;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleIcons;
+import lombok.extern.slf4j.Slf4j;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 
+@Slf4j
 @Getter
 public enum ModUiTextures {
     CLOSE("ui/close"),
@@ -34,8 +32,6 @@ public enum ModUiTextures {
     SAVE("ui/save"),
     ;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ModUiTextures.class);
-
     private final Identifier id;
 
     ModUiTextures(String spritePath) {
@@ -49,7 +45,7 @@ public enum ModUiTextures {
      * <p>Must be called on the Minecraft main thread after the render device is initialised
      * (e.g. from the {@code CLIENT_STARTED} lifecycle event). Once registered,
      * {@code Renderer2D.drawTexture} finds the texture via {@code TextureManager.getTexture} and
-     * routes it through the linear-sampled mesh path instead of the nearest-filtered atlas path.
+     * draws it through the linear-sampled mesh path.
      *
      * @param mc the active Minecraft instance
      */
@@ -84,14 +80,7 @@ public enum ModUiTextures {
                 }
             }
         } catch (Exception exception) {
-            LOGGER.error("Failed to load UI sprite {}", spriteId, exception);
+            log.error("Failed to load UI sprite {}", spriteId, exception);
         }
-    }
-
-    /**
-     * Draw a GUI sprite with a packed ARGB tint.
-     */
-    public static void drawTinted(GuiGraphicsExtractor graphics, Identifier textureId, int x, int y, int width, int height, int tintArgb) {
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, textureId, x, y, width, height, tintArgb);
     }
 }

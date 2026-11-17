@@ -1,9 +1,9 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.hudeditor;
 
-import cc.fascinated.fascinatedutils.systems.hud.HUDEditorSnap;
-import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
-import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
-import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.editor.HudEditorSnap;
+import cc.fascinated.fascinatedutils.systems.hud.HudManager;
+import cc.fascinated.fascinatedutils.systems.hud.layout.HudLayoutCanvas;
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudPanel;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.minecraft.util.Mth;
@@ -109,7 +109,7 @@ public class HudEditorPointerSession {
         }
         float rawX = pointerX - dragOffsetX;
         float rawY = pointerY - dragOffsetY;
-        HUDEditorSnap.SnapResult snapped = HUDEditorSnap.snapTopLeft(rawX, rawY, dragging.getScaledWidth(), dragging.getScaledHeight(), HudLayoutCanvas.width(), HudLayoutCanvas.height(), HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets()), dragging);
+        HudEditorSnap.SnapResult snapped = HudEditorSnap.snapTopLeft(rawX, rawY, dragging.getScaledWidth(), dragging.getScaledHeight(), HudLayoutCanvas.width(), HudLayoutCanvas.height(), HudEditorChrome.visibleLayoutWidgets(HudManager.INSTANCE.getWidgets()), dragging);
         dragging.getHudState().setPositionX(snapped.snappedLeft());
         dragging.getHudState().setPositionY(snapped.snappedTop());
         snapGuideX = snapped.hasVerticalGuide() ? snapped.verticalGuideX() : Float.NaN;
@@ -132,7 +132,7 @@ public class HudEditorPointerSession {
         float dragOriginX = HudEditorChrome.scaleDragOriginX(scalingWidget);
         float dragOriginY = HudEditorChrome.scaleDragOriginY(scalingWidget);
         float pointerDistance = Math.max(HudEditorChrome.SCALE_DRAG_MIN_REFERENCE_DISTANCE, (float) Math.hypot(pointerX - dragOriginX, pointerY - dragOriginY));
-        float nextScale = Math.max(HudEditorChrome.MIN_WIDGET_SCALE, scaleDragStartScale * (pointerDistance / scaleDragReferenceDistance));
+        float nextScale = Mth.clamp(scaleDragStartScale * (pointerDistance / scaleDragReferenceDistance), HudPanel.MIN_SCALE, HudPanel.MAX_SCALE);
         scalingWidget.getHudState().setScale(HudEditorChrome.snapScaleNearUnity(nextScale));
         float shiftX = dragOriginX - HudEditorChrome.scaleDragOriginX(scalingWidget);
         float shiftY = dragOriginY - HudEditorChrome.scaleDragOriginY(scalingWidget);
@@ -166,13 +166,12 @@ public class HudEditorPointerSession {
     }
 
     /**
-     * Hides a panel and drops the selection if it was selected.
+     * Hides a panel and drops the selection if it was selected. The layout is saved when the editor closes.
      *
      * @param widget panel to disable
      */
     public void disable(HudPanel widget) {
-        widget.hudHostModule().setEnabled(false);
-        HUDManager.INSTANCE.saveAll();
+        widget.hideFromHud();
         if (selected == widget) {
             selected = null;
         }
@@ -186,7 +185,7 @@ public class HudEditorPointerSession {
      * @return whether the key was an arrow key applied to a selected panel
      */
     public boolean nudgeSelected(int keyCode, int modifiers) {
-        if (selected == null || !HudEditorChrome.visibleLayoutWidgets(HUDManager.INSTANCE.getWidgets()).contains(selected)) {
+        if (selected == null || !HudEditorChrome.visibleLayoutWidgets(HudManager.INSTANCE.getWidgets()).contains(selected)) {
             return false;
         }
         float nudgeDistance = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0 ? 5f : 1f;

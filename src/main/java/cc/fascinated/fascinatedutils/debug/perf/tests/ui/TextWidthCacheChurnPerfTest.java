@@ -34,7 +34,7 @@ public class TextWidthCacheChurnPerfTest extends PerfTest {
         for (int index = 0; index < HOT_STRINGS; index++) {
             hotInputs[index] = String.format(Locale.ROOT, "Module %d: value %d ms", index, index % 300);
         }
-        guiRenderer = new AlumiteGuiRenderer(new GuiGraphicsExtractor(Minecraft.getInstance(), new GuiRenderState(), 0, 0));
+        guiRenderer = new AlumiteGuiRenderer(new GuiGraphicsExtractor(Minecraft.getInstance(), new GuiRenderState(), 0, 0), false);
     }
 
     @Override

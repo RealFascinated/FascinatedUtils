@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.debug.perf.scene.impl;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.debug.perf.scene.PerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.PerfSceneContext;
-import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
+import cc.fascinated.fascinatedutils.systems.hud.HudManager;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 
@@ -40,8 +40,8 @@ public class KeybindsPerfScene extends PerfScene {
     }
 
     private void close(Minecraft minecraft) {
-        if (HUDManager.INSTANCE.isEditMode()) {
-            HUDManager.INSTANCE.setEditMode(false);
+        if (HudManager.INSTANCE.isEditMode()) {
+            HudManager.INSTANCE.setEditMode(false);
         }
         minecraft.setScreen(null);
     }

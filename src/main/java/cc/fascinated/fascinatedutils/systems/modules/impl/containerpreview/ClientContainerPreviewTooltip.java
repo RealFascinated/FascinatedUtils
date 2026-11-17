@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.containerpreview;
 
+import lombok.RequiredArgsConstructor;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -9,16 +10,13 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 public class ClientContainerPreviewTooltip implements ClientTooltipComponent {
     private static final Identifier SLOT_BACKGROUND_SPRITE = Identifier.withDefaultNamespace("container/bundle/slot_background");
     private static final int SLOT_SIZE = 24;
     private static final int COLUMNS = 9;
 
     private final List<ItemStack> contents;
-
-    public ClientContainerPreviewTooltip(List<ItemStack> contents) {
-        this.contents = contents;
-    }
 
     @Override
     public int getHeight(Font font) {

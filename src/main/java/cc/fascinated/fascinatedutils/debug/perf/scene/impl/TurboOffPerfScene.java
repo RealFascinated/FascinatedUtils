@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.debug.perf.scene.PerfScenario;
 import cc.fascinated.fascinatedutils.debug.perf.scene.PerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.PerfSceneContext;
-import cc.fascinated.fascinatedutils.settings.Settings;
+import cc.fascinated.fascinatedutils.systems.settings.Settings;
 
 import java.util.List;
 

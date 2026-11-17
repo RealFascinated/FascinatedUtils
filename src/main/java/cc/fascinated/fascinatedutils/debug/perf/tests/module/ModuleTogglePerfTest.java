@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.debug.perf.tests.module;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.FullbrightModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.fullbright.FullbrightModule;
 
 import java.util.List;
 

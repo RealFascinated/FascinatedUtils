@@ -2,15 +2,15 @@ package cc.fascinated.fascinatedutils.renderer.text;
 
 import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.client.Client;
+import cc.fascinated.fascinatedutils.renderer.state.GlyphRunRenderState;
 import cc.fascinated.fascinatedutils.renderer.MeshRenderer;
 import com.mojang.blaze3d.platform.NativeImage;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
-import org.joml.Matrix3x2f;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.stb.STBTTPackContext;
 import org.lwjgl.stb.STBTTPackedchar;
@@ -29,6 +29,7 @@ import java.nio.FloatBuffer;
  * float-positioned quads. This avoids vanilla's nearest-filtered glyph sampling, which makes custom fonts look thin and
  * jagged on the fixed-scale GUI canvas.
  */
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class GlyphAtlas {
     private static final int ATLAS_SIZE = 1024;
     private static final float EM_LOGICAL_PX = 10f;
@@ -47,10 +48,6 @@ public class GlyphAtlas {
     private DynamicTexture texture;
     @Nullable
     private TextureSetup textureSetup;
-
-    private GlyphAtlas(String resourcePath) {
-        this.resourcePath = resourcePath;
-    }
 
     public static GlyphAtlas get(boolean bold) {
         return bold ? BOLD : REGULAR;
@@ -91,25 +88,38 @@ public class GlyphAtlas {
     }
 
     /**
-     * Queues one quad per glyph. Only valid when {@link #canRender} returned true.
+     * Submits the text as one glyph run. Only valid when {@link #canRender} returned true. The origin is rounded to
+     * whole units like rectangles; glyph advances stay fractional.
      *
-     * @param drawContext active draw context
-     * @param scissor     active scissor or null
-     * @param text        text to draw
-     * @param originX     left origin in logical pixels
-     * @param lineTopY    layout line top in logical pixels
-     * @param colorArgb   final packed ARGB color
+     * @param mesh      renderer that receives the glyph run
+     * @param text      text to draw
+     * @param originX   left origin in logical pixels
+     * @param lineTopY  layout line top in logical pixels
+     * @param colorArgb final packed ARGB color
      */
-    public void draw(GuiGraphicsExtractor drawContext, @Nullable ScreenRectangle scissor, String text, float originX, float lineTopY, int colorArgb) {
-        Matrix3x2f pose = new Matrix3x2f(drawContext.pose());
-        float penX = originX;
-        float baselineY = lineTopY + BASELINE_OFFSET;
+    public void draw(MeshRenderer mesh, String text, float originX, float lineTopY, int colorArgb) {
+        float[] quads = new float[text.length() * GlyphRunRenderState.FLOATS_PER_GLYPH];
+        int glyphCount = 0;
+        float penX = Math.round(originX);
+        float baselineY = Math.round(lineTopY) + BASELINE_OFFSET;
         for (int index = 0; index < text.length(); index++) {
             Glyph glyph = glyphs[text.charAt(index)];
             if (glyph.visible) {
-                MeshRenderer.INSTANCE.enqueueGlyphQuad(scissor, textureSetup, pose, penX + glyph.x0, baselineY + glyph.y0, penX + glyph.x1, baselineY + glyph.y1, glyph.u0, glyph.v0, glyph.u1, glyph.v1, colorArgb);
+                int base = glyphCount * GlyphRunRenderState.FLOATS_PER_GLYPH;
+                quads[base] = penX + glyph.x0;
+                quads[base + 1] = baselineY + glyph.y0;
+                quads[base + 2] = penX + glyph.x1;
+                quads[base + 3] = baselineY + glyph.y1;
+                quads[base + 4] = glyph.u0;
+                quads[base + 5] = glyph.v0;
+                quads[base + 6] = glyph.u1;
+                quads[base + 7] = glyph.v1;
+                glyphCount++;
             }
             penX += glyph.advance;
+        }
+        if (glyphCount > 0) {
+            mesh.glyphRun(textureSetup, quads, glyphCount, colorArgb);
         }
     }
 
@@ -186,7 +196,7 @@ public class GlyphAtlas {
             String textureName = resourcePath;
             texture = new DynamicTexture(() -> AlumiteMod.MOD_ID + "/glyph_atlas/" + textureName, image);
             texture.upload();
-            textureSetup = MeshRenderer.INSTANCE.linearTextureSetup(texture);
+            textureSetup = MeshRenderer.linearTextureSetup(texture);
         }
         finally {
             MemoryUtil.memFree(fontBuffer);

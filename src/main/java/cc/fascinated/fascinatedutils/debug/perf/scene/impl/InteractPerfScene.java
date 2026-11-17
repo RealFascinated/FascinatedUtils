@@ -4,7 +4,7 @@ import cc.fascinated.fascinatedutils.common.color.SettingColor;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.debug.perf.scene.PerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.PerfSceneContext;
-import cc.fascinated.fascinatedutils.systems.modules.impl.BlockOutlineModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.blockoutline.BlockOutlineModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.reach.ReachWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.waypoint.WaypointsModule;

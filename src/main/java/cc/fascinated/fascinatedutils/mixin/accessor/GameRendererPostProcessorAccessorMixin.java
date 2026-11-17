@@ -1,0 +1,19 @@
+package cc.fascinated.fascinatedutils.mixin.accessor;
+
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.resources.Identifier;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.gen.Invoker;
+
+@Mixin(GameRenderer.class)
+public interface GameRendererPostProcessorAccessorMixin {
+    @Invoker("setPostEffect")
+    void alumite$setPostProcessor(Identifier id);
+
+    @Accessor("effectActive")
+    boolean alumite$isPostProcessorEnabled();
+
+    @Accessor("effectActive")
+    void alumite$setPostProcessorEnabled(boolean enabled);
+}

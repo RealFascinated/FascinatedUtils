@@ -1,9 +1,9 @@
 package cc.fascinated.fascinatedutils.systems.config.impl.config;
 
 import cc.fascinated.fascinatedutils.Constants;
-import cc.fascinated.fascinatedutils.settings.Settings;
+import cc.fascinated.fascinatedutils.systems.settings.Settings;
 import cc.fascinated.fascinatedutils.systems.config.ConfigManager;
-import cc.fascinated.fascinatedutils.systems.config.SettingsJsonCodec;
+import cc.fascinated.fascinatedutils.systems.config.io.SettingsJsonCodec;
 import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
 

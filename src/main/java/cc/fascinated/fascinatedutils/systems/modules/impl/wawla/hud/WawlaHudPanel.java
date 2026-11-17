@@ -1,27 +1,31 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.wawla.hud;
 
-import cc.fascinated.fascinatedutils.common.Colors;
-import cc.fascinated.fascinatedutils.common.StringUtils;
+import cc.fascinated.fascinatedutils.common.color.Colors;
+import cc.fascinated.fascinatedutils.common.util.StringUtils;
 import cc.fascinated.fascinatedutils.gui.anim.FadeInAnim;
-import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
+import cc.fascinated.fascinatedutils.gui.core.UiNode;
+import cc.fascinated.fascinatedutils.gui.node.display.AlphaNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.PadNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.ColumnNode;
+import cc.fascinated.fascinatedutils.gui.node.display.ItemStackNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.OverlayNode;
+import cc.fascinated.fascinatedutils.gui.node.display.ProgressBarNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.RowNode;
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
-import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
-import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorContentAlignment;
-import cc.fascinated.fascinatedutils.systems.hud.anchor.HudAnchorLayout;
-import cc.fascinated.fascinatedutils.systems.hud.content.HudContent;
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudComposeContext;
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaWidget;
 import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.WawlaWidget.CrosshairTarget;
 import net.minecraft.util.Mth;
 import org.jspecify.annotations.Nullable;
 
-import java.util.List;
+import java.util.Objects;
 
 public class WawlaHudPanel extends HudPanel {
 
-    private static final float ICON_SIZE = 16f;
-    private static final float ICON_TEXT_GAP = 5f;
-    private static final float LINE_GAP = 1f;
-    private static final float BREAK_BAR_HEIGHT = 2f;
+    private static final int ICON_TEXT_GAP = 5;
+    private static final int LINE_GAP = 1;
+    private static final int BREAK_BAR_HEIGHT = 2;
     private static final float BREAK_BAR_LERP_SPEED = 14f;
 
     private static final int TITLE_COLOR = UiColor.argb("#f2f6ff");
@@ -29,6 +33,9 @@ public class WawlaHudPanel extends HudPanel {
     private static final int SUBTITLE_COLOR = UiColor.argb("#aaaaaa");
     private static final int BREAK_BAR_BACKGROUND = UiColor.argb("#44232a33");
     private static final int BREAK_BAR_FILL = UiColor.argb("#ffffffff");
+    private static final String TITLE_OPEN = "<color:" + Colors.rgbHex(TITLE_COLOR) + ">";
+    private static final String SUBTITLE_OPEN = "<color:" + Colors.rgbHex(SUBTITLE_COLOR) + ">";
+    private static final String SOURCE_OPEN = "<i><color:" + Colors.rgbHex(SOURCE_COLOR) + ">";
 
     private final WawlaWidget wawlaWidget;
     private final FadeInAnim fadeAnim = new FadeInAnim(100f);
@@ -43,13 +50,9 @@ public class WawlaHudPanel extends HudPanel {
     }
 
     @Override
-    protected @Nullable HudContent produceHudContent(float deltaSeconds, boolean editorMode) {
-        return null;
-    }
-
-    @Override
-    public @Nullable Runnable prepareAndDraw(AlumiteGuiRenderer glRenderer, float deltaSeconds, boolean editorMode) {
-        CrosshairTarget displayTarget = wawlaWidget.resolveCrosshairTarget(editorMode);
+    protected @Nullable UiNode compose(HudComposeContext context) {
+        float deltaSeconds = context.deltaSeconds();
+        CrosshairTarget displayTarget = wawlaWidget.resolveCrosshairTarget(context.editorMode());
 
         fadeAnim.tick(deltaSeconds);
         breakBarAnim.tick(deltaSeconds);
@@ -69,30 +72,6 @@ public class WawlaHudPanel extends HudPanel {
             return null;
         }
 
-        float lineHeight = glRenderer.fontHeight();
-        List<String> subtitleLines = target.subtitleLines();
-        int extraLines = subtitleLines.size();
-        int totalLines = 2 + extraLines;
-        float textBlockHeight = lineHeight * totalLines + LINE_GAP * (totalLines - 1);
-        float contentHeight = Math.max(ICON_SIZE, textBlockHeight);
-
-        String rawDisplayName = target.displayName();
-        String strippedDisplayName = rawDisplayName == null ? "" : StringUtils.stripColors(rawDisplayName).trim();
-        String titleMini = "<color:" + Colors.rgbHex(TITLE_COLOR) + ">" + (strippedDisplayName.isEmpty() ? target.entityName() : rawDisplayName) + "</color>";
-        List<String> subtitleMinis = subtitleLines.stream().map(line -> "<color:" + Colors.rgbHex(SUBTITLE_COLOR) + ">" + line + "</color>").toList();
-        float[] subtitleWidths = new float[subtitleMinis.size()];
-        float subtitleMaxWidth = 0f;
-        for (int subtitleIndex = 0; subtitleIndex < subtitleMinis.size(); subtitleIndex++) {
-            subtitleWidths[subtitleIndex] = glRenderer.measureMiniMessageTextWidth(subtitleMinis.get(subtitleIndex));
-            subtitleMaxWidth = Math.max(subtitleMaxWidth, subtitleWidths[subtitleIndex]);
-        }
-        String sourceMini = "<i><color:" + Colors.rgbHex(SOURCE_COLOR) + ">" + target.sourceName() + "</color></i>";
-
-        float titleWidth = glRenderer.measureMiniMessageTextWidth(titleMini);
-        float sourceWidth = glRenderer.measureMiniMessageTextWidth(sourceMini);
-        float textBlockWidth = Math.max(Math.max(titleWidth, subtitleMaxWidth), sourceWidth);
-        float panelPadding = hudHostModule().getPaddingValue();
-
         if (target.showBreakBar()) {
             float targetBreakProgress = Mth.clamp(target.breakProgress(), 0f, 1f);
             float lerpFactor = targetBreakProgress >= smoothedBreakProgress ? Mth.clamp(deltaSeconds * 20f, 0f, 1f) : Mth.clamp(deltaSeconds * BREAK_BAR_LERP_SPEED, 0f, 1f);
@@ -106,52 +85,53 @@ public class WawlaHudPanel extends HudPanel {
             }
         }
 
-        boolean renderBreakBar = breakBarAnim.isVisible();
-        float layoutWidth = Math.max(getMinWidth(), panelPadding * 2f + ICON_SIZE + ICON_TEXT_GAP + textBlockWidth);
-        float layoutHeight = panelPadding * 2f + contentHeight;
-        commitLayout(layoutWidth, layoutHeight);
+        // The break bar runs along the panel's bottom edge, so the panel's own padding is applied inside the overlay.
+        context.padded(false);
+        context.opacity(() -> fadeAnim.progress().value());
+        OverlayNode overlay = new OverlayNode();
+        overlay.addChild(new PadNode().padding(context.padding()).addChild(targetRow(context, target)));
+        if (breakBarAnim.isVisible()) {
+            float breakProgress = smoothedBreakProgress;
+            overlay.addChild(new AlphaNode(() -> breakBarAnim.progress().value())
+                    .fullWidth()
+                    .height(BREAK_BAR_HEIGHT)
+                    .alignY(1f)
+                    .addChild(new ProgressBarNode(() -> breakProgress)
+                            .setTrackArgb(BREAK_BAR_BACKGROUND)
+                            .setFillArgb(BREAK_BAR_FILL)
+                            .full()));
+        }
+        return overlay;
+    }
 
-        float fadeAlpha = fadeAnim.progress().value();
-        float breakBarAlpha = breakBarAnim.progress().value();
-        float capturedBreakProgress = smoothedBreakProgress;
-        boolean textShadow = hudHostModule().isTextShadowEnabled();
-        return () -> {
-            glRenderer.setMultiplyAlpha(fadeAlpha);
-            hudHostModule().drawHUDPanelBackground(glRenderer, layoutWidth, layoutHeight, editorMode);
-            // The icon rides with the text block, so it is always centered on it instead of sticking to the panel's anchor edge.
-            float iconY = panelPadding + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, ICON_SIZE, HudAnchorContentAlignment.Vertical.CENTER);
-            float textBlockY = panelPadding + HudAnchorLayout.verticalOffsetInInnerBand(contentHeight, textBlockHeight, HudAnchorContentAlignment.Vertical.CENTER);
-            boolean rightAligned = hudContentHorizontalAlignment() == HudAnchorContentAlignment.Horizontal.RIGHT;
+    /**
+     * The icon beside the title, subtitle and source lines, centered on each other. Names come from the server
+     * (entity names, custom block names), so they are escaped and cannot inject MiniMessage tags.
+     */
+    private RowNode targetRow(HudComposeContext context, CrosshairTarget target) {
+        String rawDisplayName = target.displayName();
+        String strippedDisplayName = rawDisplayName == null ? "" : StringUtils.stripColors(rawDisplayName).trim();
+        String titleName = strippedDisplayName.isEmpty() ? Objects.toString(target.entityName(), "") : rawDisplayName;
+        boolean rightAligned = context.contentAlignment() == 1f;
+        float lineAlignment = rightAligned ? 1f : 0f;
 
-            if (!rightAligned) {
-                glRenderer.drawGuiItem(target.iconStack(), panelPadding, iconY);
-                float textX = panelPadding + ICON_SIZE + ICON_TEXT_GAP;
-                glRenderer.drawMiniMessageText(titleMini, textX, textBlockY, textShadow);
-                for (int si = 0; si < subtitleMinis.size(); si++) {
-                    glRenderer.drawMiniMessageText(subtitleMinis.get(si), textX, textBlockY + (lineHeight + LINE_GAP) * (si + 1), textShadow);
-                }
-                glRenderer.drawMiniMessageText(sourceMini, textX, textBlockY + (lineHeight + LINE_GAP) * (extraLines + 1), textShadow);
-            }
-            else {
-                float iconX = layoutWidth - panelPadding - ICON_SIZE;
-                glRenderer.drawGuiItem(target.iconStack(), iconX, iconY);
-                float textRightEdge = iconX - ICON_TEXT_GAP;
-                glRenderer.drawMiniMessageText(titleMini, textRightEdge - titleWidth, textBlockY, textShadow);
-                for (int si = 0; si < subtitleMinis.size(); si++) {
-                    glRenderer.drawMiniMessageText(subtitleMinis.get(si), textRightEdge - subtitleWidths[si], textBlockY + (lineHeight + LINE_GAP) * (si + 1), textShadow);
-                }
-                glRenderer.drawMiniMessageText(sourceMini, textRightEdge - sourceWidth, textBlockY + (lineHeight + LINE_GAP) * (extraLines + 1), textShadow);
-            }
+        ColumnNode textColumn = new ColumnNode(LINE_GAP).alignY(0.5f);
+        textColumn.addChild(context.text(TITLE_OPEN + escapeMiniMessage(titleName) + "</color>").alignX(lineAlignment));
+        for (String subtitleLine : target.subtitleLines()) {
+            textColumn.addChild(context.text(SUBTITLE_OPEN + subtitleLine + "</color>").alignX(lineAlignment));
+        }
+        textColumn.addChild(context.text(SOURCE_OPEN + escapeMiniMessage(Objects.toString(target.sourceName(), "")) + "</color></i>").alignX(lineAlignment));
 
-            if (renderBreakBar) {
-                float barY = layoutHeight - BREAK_BAR_HEIGHT;
-                glRenderer.setMultiplyAlpha(fadeAlpha * breakBarAlpha);
-                glRenderer.drawRect(0, barY, layoutWidth, BREAK_BAR_HEIGHT, BREAK_BAR_BACKGROUND);
-                glRenderer.drawRect(0, barY, layoutWidth * capturedBreakProgress, BREAK_BAR_HEIGHT, BREAK_BAR_FILL);
-                glRenderer.setMultiplyAlpha(fadeAlpha);
-            }
-
-            glRenderer.resetMultiplyAlpha();
-        };
+        ItemStackNode icon = new ItemStackNode(target.iconStack()).alignY(0.5f);
+        RowNode row = new RowNode(0);
+        if (rightAligned) {
+            row.addChild(textColumn);
+            row.addChild(icon.left(ICON_TEXT_GAP));
+        }
+        else {
+            row.addChild(icon);
+            row.addChild(textColumn.left(ICON_TEXT_GAP));
+        }
+        return row;
     }
 }

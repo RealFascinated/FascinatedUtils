@@ -1,6 +1,7 @@
 package cc.fascinated.fascinatedutils.systems.turboparticles;
 
 import cc.fascinated.fascinatedutils.common.culling.Cullable;
+import lombok.RequiredArgsConstructor;
 import net.minecraft.client.particle.SingleQuadParticle;
 
 import java.util.Iterator;
@@ -9,14 +10,11 @@ import java.util.NoSuchElementException;
 /**
  * Skips particles the cull worker has hidden, so the render loop never frustum-tests or extracts them.
  */
+@RequiredArgsConstructor
 public class CulledParticleIterator implements Iterator<SingleQuadParticle> {
     private final Iterator<SingleQuadParticle> delegate;
     private SingleQuadParticle nextParticle;
     private boolean nextReady;
-
-    public CulledParticleIterator(Iterator<SingleQuadParticle> delegate) {
-        this.delegate = delegate;
-    }
 
     @Override
     public boolean hasNext() {

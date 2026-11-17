@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.fullbright;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.FullbrightModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.fullbright.FullbrightModule;
 import net.minecraft.client.renderer.LightmapRenderStateExtractor;
 import net.minecraft.client.renderer.state.LightmapRenderState;
 import org.joml.Vector3f;

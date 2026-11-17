@@ -2,9 +2,9 @@ package cc.fascinated.fascinatedutils.debug.perf.tests.hooks;
 
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
-import cc.fascinated.fascinatedutils.renderer.WorldBoxFaces;
+import cc.fascinated.fascinatedutils.renderer.world.WorldBoxFaces;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.BlockOutlineModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.blockoutline.BlockOutlineModule;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 

@@ -17,6 +17,4 @@ public class HudDefaults {
     private int defaultXOffset = 5;
     @Builder.Default
     private int defaultYOffset = 5;
-    @Builder.Default
-    private boolean alwaysShowPanelToggles = false;
 }

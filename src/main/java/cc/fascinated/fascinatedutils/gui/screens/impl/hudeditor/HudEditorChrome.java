@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.hudeditor;
 
 import cc.fascinated.fascinatedutils.gui.theme.UiColor;
-import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudPanel;
 import cc.fascinated.fascinatedutils.systems.hud.anchor.HUDWidgetAnchor;
 
 import java.util.ArrayList;
@@ -14,7 +14,6 @@ import java.util.List;
 public class HudEditorChrome {
 
     public static final float SCALE_HANDLE_SIZE = 6f;
-    public static final float MIN_WIDGET_SCALE = 0.5f;
     public static final float SCALE_DRAG_MIN_REFERENCE_DISTANCE = 4f;
     /**
      * Half-width of the band around 1.0 where scale snaps to exactly default.
@@ -69,10 +68,10 @@ public class HudEditorChrome {
     /**
      * Pixel size of the scale handle.
      *
-     * @return handle edge length, at least one pixel
+     * @return handle edge length in pixels
      */
     public static float scaleHandleSize() {
-        return Math.max(1f, (float) Math.round(SCALE_HANDLE_SIZE));
+        return SCALE_HANDLE_SIZE;
     }
 
     /**

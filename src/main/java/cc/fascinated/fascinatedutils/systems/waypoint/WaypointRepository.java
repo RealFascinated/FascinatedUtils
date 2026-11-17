@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.systems.waypoint;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.common.color.SettingColor;
-import cc.fascinated.fascinatedutils.systems.config.AtomicFiles;
+import cc.fascinated.fascinatedutils.systems.config.io.AtomicFiles;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

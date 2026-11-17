@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.inventorytweaks;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.InventoryTweaksModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks.InventoryTweaksModule;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;

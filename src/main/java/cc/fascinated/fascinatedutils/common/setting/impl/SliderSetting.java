@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.common.setting.impl;
 
-import cc.fascinated.fascinatedutils.common.NumberUtils;
+import cc.fascinated.fascinatedutils.common.util.NumberUtils;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;

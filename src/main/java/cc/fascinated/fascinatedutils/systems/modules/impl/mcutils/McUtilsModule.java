@@ -1,5 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.mcutils;
 
+import lombok.Getter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -41,14 +42,19 @@ public class McUtilsModule extends HudHostModule {
     private final LinkedHashSet<String> submittedNames = new LinkedHashSet<>(MAX_NAMES * 2);
 
     private final BooleanSetting submitPlayers = BooleanSetting.builder().id("submit_players").defaultValue(true).build();
+    // Keeps the module (and its name submission) running while the HUD panel is hidden, which is the default.
+    @Getter
+    private final BooleanSetting showHud = BooleanSetting.builder().id("hud_panel_visible_mcutils").defaultValue(false).build();
 
     private volatile long initialCount = -1;
-    private volatile long currentCount = -1;
+    @Getter
+    private volatile long submittedCount = -1;
 
 
     public McUtilsModule() {
-        super("mcutils", "McUtils", HudDefaults.builder().defaultState(true).alwaysShowPanelToggles(true).build());
+        super("mcutils", "McUtils", HudDefaults.builder().defaultState(true).build());
         addSetting(submitPlayers);
+        addSetting(showHud);
         addAppearanceSettings(true);
         registerHudPanel(new McUtilsHudPanel(this));
 
@@ -195,21 +201,17 @@ public class McUtilsModule extends HudHostModule {
             if (initialCount == -1) {
                 initialCount = count;
             }
-            currentCount = count;
+            submittedCount = count;
         } catch (Exception exception) {
             Client.LOG.error("Failed to fetch McUtils player stats", exception);
         }
     }
 
-    public long getSubmittedCount() {
-        return currentCount;
-    }
-
     public long getSessionDelta() {
-        if (initialCount == -1 || currentCount == -1) {
+        if (initialCount == -1 || submittedCount == -1) {
             return 0;
         }
-        return currentCount - initialCount;
+        return submittedCount - initialCount;
     }
 
     @EventHandler

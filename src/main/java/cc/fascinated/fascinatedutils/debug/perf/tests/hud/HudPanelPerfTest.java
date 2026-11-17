@@ -3,10 +3,15 @@ package cc.fascinated.fascinatedutils.debug.perf.tests.hud;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.HudOverlaysPerfScene;
 import cc.fascinated.fascinatedutils.debug.perf.scene.impl.IdlePerfScene;
-import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
-import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
-import cc.fascinated.fascinatedutils.systems.hud.HudLayoutCanvas;
-import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
+import cc.fascinated.fascinatedutils.gui.core.UiNode;
+import cc.fascinated.fascinatedutils.gui.core.overlay.UiOverlay;
+import cc.fascinated.fascinatedutils.gui.core.state.UiStateStore;
+import cc.fascinated.fascinatedutils.systems.hud.HudManager;
+import cc.fascinated.fascinatedutils.systems.hud.layout.HudLayoutCanvas;
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.layout.HudPanelMerger;
+import cc.fascinated.fascinatedutils.systems.hud.node.HudLayerNode;
+import cc.fascinated.fascinatedutils.systems.hud.node.HudPanelNode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
@@ -14,7 +19,8 @@ import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import java.util.List;
 
 /**
- * One HUD panel's prepare and draw, exactly as {@link HUDManager} runs it each frame, into an offscreen render state.
+ * One HUD panel's compose, layout and draw, exactly as {@link HudManager} runs it each frame (a one-panel HUD overlay
+ * recomposed every frame), into an offscreen render state.
  * One instance is registered per panel so each panel's time and allocation are reported on their own.
  */
 public class HudPanelPerfTest extends PerfTest {
@@ -22,7 +28,9 @@ public class HudPanelPerfTest extends PerfTest {
 
     private final String panelId;
     private final GuiRenderState renderState = new GuiRenderState();
-    private AlumiteGuiRenderer renderer;
+    private final HudPanelMerger panelMerger = new HudPanelMerger();
+    private GuiGraphicsExtractor graphics;
+    private UiOverlay overlay;
     private HudPanel panel;
     private int drawn;
 
@@ -33,8 +41,19 @@ public class HudPanelPerfTest extends PerfTest {
 
     @Override
     public void setup() {
-        panel = HUDManager.INSTANCE.getWidgets().stream().filter(widget -> widget.getId().equals(panelId)).findFirst().orElse(null);
-        renderer = new AlumiteGuiRenderer(new GuiGraphicsExtractor(Minecraft.getInstance(), renderState, 0, 0));
+        panel = HudManager.INSTANCE.getWidgets().stream().filter(widget -> widget.getId().equals(panelId)).findFirst().orElse(null);
+        graphics = new GuiGraphicsExtractor(Minecraft.getInstance(), renderState, 0, 0);
+        overlay = new UiOverlay(this::composePanel).recomposeEveryFrame(true);
+    }
+
+    private UiNode composePanel(UiStateStore stateStore) {
+        HudLayerNode layer = new HudLayerNode(panelMerger);
+        HudPanelNode panelNode = panel.composeNode(DELTA_SECONDS, false, true);
+        if (panelNode != null) {
+            layer.addChild(panelNode);
+            drawn++;
+        }
+        return layer;
     }
 
     @Override
@@ -43,20 +62,15 @@ public class HudPanelPerfTest extends PerfTest {
             return;
         }
         renderState.reset();
-        renderer.beginFrame(HudLayoutCanvas.width(), HudLayoutCanvas.height());
-        Runnable draw = panel.prepareAndDraw(renderer, DELTA_SECONDS, false);
-        if (draw != null) {
-            draw.run();
-            renderer.endRenderSegment();
-            drawn++;
-        }
-        renderer.endFrame();
+        overlay.render(graphics, HudLayoutCanvas.width(), HudLayoutCanvas.height(), 0f, 0f, DELTA_SECONDS);
     }
 
     @Override
     public void teardown() {
         renderState.reset();
-        renderer = null;
+        overlay.dispose();
+        overlay = null;
+        graphics = null;
         panel = null;
     }
 

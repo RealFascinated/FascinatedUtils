@@ -1,7 +1,6 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.inventorytweaks;
 
 import cc.fascinated.fascinatedutils.systems.modules.Feature;
-import cc.fascinated.fascinatedutils.systems.modules.impl.InventoryTweaksModule;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 

@@ -5,13 +5,17 @@ import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategoryGrouper;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.systems.config.ConfigVersion;
-import cc.fascinated.fascinatedutils.systems.config.GsonSerializable;
-import cc.fascinated.fascinatedutils.systems.config.SettingsJsonCodec;
+import cc.fascinated.fascinatedutils.systems.config.io.GsonSerializable;
+import cc.fascinated.fascinatedutils.systems.config.io.SettingsJsonCodec;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.locale.Language;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,6 +31,36 @@ public abstract class Module implements GsonSerializable<Module> {
     private final String moduleKey;
     private final String displayName;
 
+    @Getter(AccessLevel.NONE)
+    private String searchableText;
+    @Getter(AccessLevel.NONE)
+    private Language searchableLanguage;
+
+    /**
+     * Whether this module, one of its settings or one of its setting sections matches a search query. The searchable
+     * text is built lazily and rebuilt whenever the active language changes.
+     *
+     * @param queryLower the lowercased query
+     * @return true when the query is empty or found in the module's searchable text
+     */
+    public boolean matchesSearch(String queryLower) {
+        Language language = Language.getInstance();
+        if (searchableText == null || searchableLanguage != language) {
+            StringBuilder text = new StringBuilder(getDisplayName().toLowerCase(Locale.ROOT));
+            for (Setting<?> setting : settings) {
+                text.append('\n').append(setting.searchableText());
+            }
+            for (SettingCategory settingCategory : getSettingCategories()) {
+                if (settingCategory.displayNameKey() != null && !settingCategory.displayNameKey().isBlank()) {
+                    text.append('\n').append(I18n.get(settingCategory.displayNameKey()).toLowerCase(Locale.ROOT));
+                }
+            }
+            searchableText = text.toString();
+            searchableLanguage = language;
+        }
+        return searchableText.contains(queryLower);
+    }
+
     public String getDisplayName() {
         String key = "alumite.module." + moduleKey + ".name";
         String translated = I18n.get(key);
@@ -38,6 +72,7 @@ public abstract class Module implements GsonSerializable<Module> {
 
     private final boolean defaultEnabled;
 
+    @Setter
     private boolean enabled;
     private long lastUsedMillis;
     private final List<ModuleRestriction> restrictions = new ArrayList<>();
@@ -157,7 +192,22 @@ public abstract class Module implements GsonSerializable<Module> {
      * @return the violated restriction, or empty when the module is free to run
      */
     public Optional<ModuleRestriction> getActiveRestriction() {
-        return restrictions.stream().filter(ModuleRestriction::isViolated).findFirst();
+        return Optional.ofNullable(findActiveRestriction());
+    }
+
+    /**
+     * Allocation-free variant of {@link #getActiveRestriction()} for per-frame callers.
+     *
+     * @return the violated restriction, or {@code null} when the module is free to run
+     */
+    public @Nullable ModuleRestriction findActiveRestriction() {
+        for (int index = 0; index < restrictions.size(); index++) {
+            ModuleRestriction restriction = restrictions.get(index);
+            if (restriction.isViolated()) {
+                return restriction;
+            }
+        }
+        return null;
     }
 
     /**
@@ -166,7 +216,13 @@ public abstract class Module implements GsonSerializable<Module> {
      * @return true when hidden
      */
     public boolean isHidden() {
-        return restrictions.stream().anyMatch(restriction -> restriction.isHidesModule() && restriction.isViolated());
+        for (int index = 0; index < restrictions.size(); index++) {
+            ModuleRestriction restriction = restrictions.get(index);
+            if (restriction.isHidesModule() && restriction.isViolated()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -175,7 +231,7 @@ public abstract class Module implements GsonSerializable<Module> {
      * @return true when running
      */
     public boolean isEnabled() {
-        return enabled && getActiveRestriction().isEmpty();
+        return enabled && findActiveRestriction() == null;
     }
 
     /**
@@ -185,10 +241,6 @@ public abstract class Module implements GsonSerializable<Module> {
      */
     public boolean isUserEnabled() {
         return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 
     /**

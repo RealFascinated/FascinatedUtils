@@ -1,77 +1,67 @@
 package cc.fascinated.fascinatedutils.renderer;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.client.ModUiTextures;
-import cc.fascinated.fascinatedutils.common.LRUCache;
-import cc.fascinated.fascinatedutils.gui.render.RectCornerRoundMask;
 import cc.fascinated.fascinatedutils.renderer.text.GlyphAtlas;
-import cc.fascinated.fascinatedutils.renderer.text.TextRenderer;
+import cc.fascinated.fascinatedutils.renderer.text.TextCaches;
+import cc.fascinated.fascinatedutils.renderer.text.TextVariant;
 import cc.fascinated.fascinatedutils.renderer.text.VanillaTextRenderer;
 import net.kyori.adventure.platform.modcommon.MinecraftClientAudiences;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Options;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FontDescription;
-import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import org.joml.Matrix3x2f;
-import org.joml.Matrix3x2fStack;
-import org.joml.Vector2f;
 
-import java.util.function.Supplier;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Low-level GUI draw bridge: batched mesh quads (rounded rects, gradients, {@link #drawBorder}) via {@link MeshBuilder}
- * / {@link MeshRenderer}, then {@link GuiGraphicsExtractor} immediate draws for text and items. Text uses the active
- * {@link VanillaTextRenderer}.
+ * GUI draw primitives. Every call is submitted immediately with the pose and scissor of the draw context at call time,
+ * so paint order is call order. Geometry goes through {@link MeshRenderer}; text, sprites and items go through the
+ * draw context. Frame state (pose stack, clips, alpha stack) lives in
+ * {@code AlumiteGuiRenderer}, which tells this class the alpha factor to apply through {@link #setAlpha}.
+ *
+ * <p>Sizes and positions are in local units, that is, whatever the current pose maps to the screen. Rectangle edges are
+ * rounded to whole local units.
  */
 public class Renderer2D {
-
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
-    private static final int MINI_MESSAGE_CACHE_LIMIT = 1024;
-    private static final LRUCache<String, Component> MINI_MESSAGE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
-    private static final LRUCache<String, Integer> MINI_MESSAGE_WIDTH_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
-    private static final LRUCache<String, FormattedCharSequence> MINI_MESSAGE_VISUAL_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
-    private static final LRUCache<String, FormattedCharSequence> LITERAL_SEQUENCE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
-    private static final LRUCache<String, FormattedCharSequence> BOLD_LITERAL_SEQUENCE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
-    private static final LRUCache<String, FormattedCharSequence> GUI_LITERAL_SEQUENCE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
-    private static final LRUCache<String, FormattedCharSequence> GUI_BOLD_LITERAL_SEQUENCE_CACHE = new LRUCache<>(MINI_MESSAGE_CACHE_LIMIT);
-    private static final Style GUI_REGULAR_STYLE = Style.EMPTY.withFont(new FontDescription.Resource(Identifier.fromNamespaceAndPath("alumite", "inter_regular")));
-    private static final Style GUI_BOLD_STYLE = Style.EMPTY.withFont(new FontDescription.Resource(Identifier.fromNamespaceAndPath("alumite", "inter_bold")));
-    private static final Matrix3x2f POSE_SCRATCH = new Matrix3x2f();
-    private static final Vector2f ORIGIN_SCRATCH = new Vector2f();
-    private static final Vector2f UNIT_X_SCRATCH = new Vector2f();
-    private static final Vector2f UNIT_Y_SCRATCH = new Vector2f();
-    private static volatile int cachedFontOptionsKey;
+    private static final TextCaches TEXT_CACHES = new TextCaches();
+    private static final VanillaTextRenderer TEXT_RENDERER = new VanillaTextRenderer();
+    private static final Map<Identifier, AbstractTexture> TEXTURE_LOOKUP = new HashMap<>();
+    private static final int OPAQUE_WHITE = 0xFFFFFFFF;
+    private static final int ITEM_BAR_BACKGROUND = 0xFF000000;
+    private static final int ITEM_COOLDOWN_OVERLAY = 0x7FFFFFFF;
+    /**
+     * Alpha multiplier captured by {@code GuiItemRenderState} instances created right now. Only non-default between
+     * the set and reset around an item submission in this class.
+     */
     private static float guiItemAlpha = 1f;
-    private final GuiGraphicsExtractor graphics;
-    private final TextRenderer guiTextRenderer;
-    private final boolean guiFont;
-    private final Supplier<ScreenRectangle> scissorSupplier;
-    private float multiplyAlpha = 1f;
-    private float multiplyAlphaText = 1f;
+    private GuiGraphicsExtractor graphics;
+    private boolean guiFont;
+    private final MeshRenderer mesh;
+    private float alpha = 1f;
 
-    public Renderer2D(GuiGraphicsExtractor graphics, Supplier<ScreenRectangle> scissorSupplier) {
-        this(graphics, scissorSupplier, false);
-    }
-
-    public Renderer2D(GuiGraphicsExtractor graphics, Supplier<ScreenRectangle> scissorSupplier, boolean guiFont) {
+    /**
+     * Creates a renderer.
+     *
+     * @param graphics the draw context to submit to
+     * @param guiFont  whether literal text uses the mod's GUI font
+     */
+    public Renderer2D(GuiGraphicsExtractor graphics, boolean guiFont) {
         this.graphics = graphics;
         this.guiFont = guiFont;
-        this.guiTextRenderer = VanillaTextRenderer.INSTANCE;
-        this.scissorSupplier = scissorSupplier;
+        this.mesh = new MeshRenderer(graphics);
     }
 
     /**
@@ -86,32 +76,6 @@ public class Renderer2D {
         return Math.max(1f, Math.round(Math.min(borderThicknessX, borderThicknessY)));
     }
 
-    private static int scaleColorAlpha(int color, float factor) {
-        if (factor >= 0.999f) {
-            return color;
-        }
-        int alpha255 = (color >>> 24) & 0xFF;
-        int scaledAlpha255 = Mth.clamp(Mth.floor(alpha255 * factor), 0, 255);
-        return (scaledAlpha255 << 24) | (color & 0xFFFFFF);
-    }
-
-    /**
-     * Average length of the pose image of the unit X and Y axes (translation cancels). Matches how {@link
-     * GuiGraphics#fill} thickness scales with the matrix stack; the rounded-rect ring shader measures stroke in
-     * framebuffer pixels, so callers pass logical stroke and multiply by this before LUT upload.
-     */
-    private static float linearUniformScaleFromModelPose(Matrix3x2f pose) {
-        Vector2f origin = ORIGIN_SCRATCH.set(0f, 0f);
-        Vector2f unitX = UNIT_X_SCRATCH.set(1f, 0f);
-        Vector2f unitY = UNIT_Y_SCRATCH.set(0f, 1f);
-        pose.transformPosition(origin);
-        pose.transformPosition(unitX);
-        pose.transformPosition(unitY);
-        unitX.sub(origin);
-        unitY.sub(origin);
-        return 0.5f * (unitX.length() + unitY.length());
-    }
-
     /**
      * Alpha multiplier to capture on GUI items submitted right now; read by the item render state mixin.
      *
@@ -121,193 +85,305 @@ public class Renderer2D {
         return guiItemAlpha;
     }
 
-    public void setMultiplyAlpha(float factor) {
-        float clamped = Mth.clamp(factor, 0f, 1f);
-        this.multiplyAlpha = clamped;
-        this.multiplyAlphaText = clamped;
+    /**
+     * Drops every cached MiniMessage and literal width and sequence; call when fonts or languages may have changed.
+     */
+    public static void clearMiniMessageWidthCache() {
+        TEXT_CACHES.clear();
+    }
+
+    private static int scaleColorAlpha(int color, float factor) {
+        if (factor >= 0.999f) {
+            return color;
+        }
+        int scaledAlpha = Mth.clamp(Math.round(((color >>> 24) & 0xFF) * factor), 0, 255);
+        return (scaledAlpha << 24) | (color & 0xFFFFFF);
     }
 
     /**
-     * Set separate alpha multipliers for non-text draws (fills, textures, borders) and for text draws.
-     *
-     * @param geometryFactor multiplier applied to shapes and textures
-     * @param textFactor     multiplier applied to string and {@link Component} draws
+     * Vanilla treats text alpha below four as fully opaque, so text that faded that far must be skipped instead.
      */
-    public void setMultiplyAlpha(float geometryFactor, float textFactor) {
-        this.multiplyAlpha = Mth.clamp(geometryFactor, 0f, 1f);
-        this.multiplyAlphaText = Mth.clamp(textFactor, 0f, 1f);
+    private static boolean isTextInvisible(int argb) {
+        return (argb & 0xFC000000) == 0;
     }
 
-    public void resetMultiplyAlpha() {
-        this.multiplyAlpha = 1f;
-        this.multiplyAlphaText = 1f;
+    private static boolean isInvisible(int argb) {
+        return (argb >>> 24) == 0;
     }
 
     /**
-     * Apply the current text alpha multiplier for queued deferred draws (see {@link
-     * AlumiteGuiRenderer}).
+     * Points this renderer at another draw context so one instance can be reused across frames.
      *
-     * @param color packed ARGB input color
-     * @return packed ARGB color with text alpha multiplier applied
+     * @param graphics the new draw context
+     * @param guiFont  whether literal text uses the mod's GUI font
      */
-    public int withQueuedTextColor(int color) {
-        return withTextAlpha(color);
+    public void rebind(GuiGraphicsExtractor graphics, boolean guiFont) {
+        this.graphics = graphics;
+        this.guiFont = guiFont;
+        this.mesh.rebind(graphics);
     }
 
+    /**
+     * Starts a frame: forgets texture lookups from the previous frame, which may have been replaced by a reload.
+     */
+    public void beginFrame() {
+        TEXTURE_LOOKUP.clear();
+    }
+
+    /**
+     * Sets the alpha multiplier applied to everything drawn from now on.
+     *
+     * @param alphaFactor multiplier in the range 0 to 1
+     */
+    public void setAlpha(float alphaFactor) {
+        this.alpha = Mth.clamp(alphaFactor, 0f, 1f);
+    }
+
+    /**
+     * Fills a rectangle.
+     *
+     * @param positionX local left
+     * @param positionY local top
+     * @param width     local width
+     * @param height    local height
+     * @param color     packed ARGB
+     */
     public void drawRect(float positionX, float positionY, float width, float height, int color) {
-        if (width < 1e-3f || height < 1e-3f) {
-            return;
-        }
         int argb = withAlpha(color);
-        MeshRenderer.INSTANCE.enqueueAxisTexQuad(graphics, currentScissor(), positionX, positionY, width, height, argb, argb, argb, argb);
+        if (width < 1e-3f || height < 1e-3f || isInvisible(argb)) {
+            return;
+        }
+        mesh.fillRect(positionX, positionY, width, height, argb, argb, argb, argb);
     }
 
+    /**
+     * Draws a dotted rectangle outline from the local origin.
+     *
+     * @param width   outline width
+     * @param height  outline height
+     * @param dotSize dot side length
+     * @param step    distance between dot starts
+     * @param color   packed ARGB
+     */
     public void drawDottedOutline(float width, float height, float dotSize, float step, int color) {
-        MeshRenderer.INSTANCE.enqueueDottedOutline(graphics, currentScissor(), width, height, dotSize, step, withAlpha(color));
-    }
-
-    public void drawLine(float x1, float y1, float x2, float y2, float thickness, int color) {
-        float deltaX = x2 - x1;
-        float deltaY = y2 - y1;
-        float length = (float) Math.hypot(deltaX, deltaY);
-        if (length < 1e-4f) {
-            drawRect(x1, y1, thickness, thickness, color);
+        int argb = withAlpha(color);
+        if (isInvisible(argb)) {
             return;
         }
-        float midX = (x1 + x2) * 0.5f;
-        float midY = (y1 + y2) * 0.5f;
-        float angle = (float) Math.atan2(deltaY, deltaX);
-        Matrix3x2fStack matrices = graphics.pose();
-        matrices.pushMatrix();
-        matrices.translate(midX, midY);
-        matrices.rotate(angle);
-        drawRect(-length * 0.5f, -thickness * 0.5f, length, thickness, color);
-        matrices.popMatrix();
+        mesh.dottedOutline(width, height, dotSize, step, argb);
     }
 
+    /**
+     * Fills a rectangle with a vertical gradient.
+     *
+     * @param positionX   local left
+     * @param positionY   local top
+     * @param width       local width
+     * @param height      local height
+     * @param colorTop    packed ARGB at the top
+     * @param colorBottom packed ARGB at the bottom
+     */
     public void fillGradientVertical(float positionX, float positionY, float width, float height, int colorTop, int colorBottom) {
-        if (width < 1e-3f || height < 1e-3f) {
-            return;
-        }
         int top = withAlpha(colorTop);
         int bottom = withAlpha(colorBottom);
-        MeshRenderer.INSTANCE.enqueueAxisTexQuad(graphics, currentScissor(), positionX, positionY, width, height, top, bottom, bottom, top);
+        if (width < 1e-3f || height < 1e-3f || (isInvisible(top) && isInvisible(bottom))) {
+            return;
+        }
+        mesh.fillRect(positionX, positionY, width, height, top, bottom, bottom, top);
     }
 
+    /**
+     * Draws a square-cornered border inside the rectangle.
+     *
+     * @param positionX local left
+     * @param positionY local top
+     * @param width     local width
+     * @param height    local height
+     * @param thickness requested thickness; rounded, at least one
+     * @param color     packed ARGB
+     */
     public void drawBorder(float positionX, float positionY, float width, float height, float thickness, int color) {
+        int argb = withAlpha(color);
+        if (width < 1e-3f || height < 1e-3f || isInvisible(argb)) {
+            return;
+        }
+        mesh.border(positionX, positionY, width, height, thickness, argb);
+    }
+
+    /**
+     * Fills a rounded rectangle.
+     *
+     * @param positionX       local left
+     * @param positionY       local top
+     * @param width           local width
+     * @param height          local height
+     * @param cornerRadius    corner radius
+     * @param fillArgb        packed ARGB
+     * @param cornerRoundMask which corners are rounded
+     */
+    public void fillRoundedRect(float positionX, float positionY, float width, float height, float cornerRadius, int fillArgb, int cornerRoundMask) {
+        int argb = withAlpha(fillArgb);
+        if (width < 1e-3f || height < 1e-3f || isInvisible(argb)) {
+            return;
+        }
+        mesh.roundedRect(positionX, positionY, width, height, cornerRadius, argb, argb, cornerRoundMask, 0f);
+    }
+
+    /**
+     * Draws only an outer band of the rounded rectangle, for stacking on a separate fill pass. The stroke is measured
+     * in local units, so it scales with the pose like the rectangle itself.
+     *
+     * @param positionX       local left
+     * @param positionY       local top
+     * @param width           local width
+     * @param height          local height
+     * @param cornerRadius    corner radius
+     * @param ringStroke      band thickness
+     * @param borderArgb      packed ARGB
+     * @param cornerRoundMask which corners are rounded
+     */
+    public void fillRoundedRectBorderRing(float positionX, float positionY, float width, float height, float cornerRadius, float ringStroke, int borderArgb, int cornerRoundMask) {
+        int argb = withAlpha(borderArgb);
+        if (width < 1e-3f || height < 1e-3f || ringStroke <= 0f || isInvisible(argb)) {
+            return;
+        }
+        mesh.roundedRect(positionX, positionY, width, height, cornerRadius, argb, argb, cornerRoundMask, ringStroke);
+    }
+
+    /**
+     * Draws a rounded rectangle as a border-colored shape with a smaller fill-colored shape on top.
+     *
+     * @param positionX        local left
+     * @param positionY        local top
+     * @param width            local width
+     * @param height           local height
+     * @param cornerRadius     outer corner radius
+     * @param borderArgb       packed ARGB of the border
+     * @param fillArgb         packed ARGB of the inside
+     * @param borderThicknessX requested horizontal border thickness
+     * @param borderThicknessY requested vertical border thickness
+     * @param cornerRoundMask  which corners are rounded
+     */
+    public void fillRoundedRectFrame(float positionX, float positionY, float width, float height, float cornerRadius, int borderArgb, int fillArgb, float borderThicknessX, float borderThicknessY, int cornerRoundMask) {
         if (width < 1e-3f || height < 1e-3f) {
             return;
         }
-        float strokeLogical = Math.max(1f, Math.round(thickness));
-        enqueueLutBorderRing(positionX, positionY, width, height, 0f, strokeLogical, withAlpha(color), RectCornerRoundMask.ALL);
-    }
-
-    public void fillRoundedRect(float positionX, float positionY, float width, float height, float cornerRadius, int fillArgb, int cornerRoundMask) {
-        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, currentScissor(), positionX, positionY, width, height, cornerRadius, fillArgb, fillArgb, cornerRoundMask, 0f, 0f);
-    }
-
-    /**
-     * LUT rounded-rect path that tints only an outer band of {@code ringStrokePx} (same SDF as fills, no inner
-     * overdraw). Intended for HUD chrome drawn after a separate fill pass.
-     */
-    public void fillRoundedRectBorderRing(float positionX, float positionY, float width, float height, float cornerRadius, float ringStrokePx, int borderArgb, int cornerRoundMask) {
-        enqueueLutBorderRing(positionX, positionY, width, height, cornerRadius, ringStrokePx, withAlpha(borderArgb), cornerRoundMask);
-    }
-
-    public void fillRoundedRectFrame(float positionX, float positionY, float width, float height, float cornerRadius, int borderArgb, int fillArgb, float borderThicknessX, float borderThicknessY, int cornerRoundMask) {
         float thickness = roundedRectFrameBorderThickness(borderThicknessX, borderThicknessY);
-        ScreenRectangle scissor = currentScissor();
-        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, scissor, positionX, positionY, width, height, cornerRadius, borderArgb, borderArgb, cornerRoundMask, 0f, 0f);
-        float innerX = positionX + thickness;
-        float innerY = positionY + thickness;
-        float innerW = Math.max(0f, width - 2f * thickness);
-        float innerH = Math.max(0f, height - 2f * thickness);
-        float innerRadius = Math.max(0f, cornerRadius - thickness);
-        if (innerW > 0.5f && innerH > 0.5f) {
-            MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, scissor, innerX, innerY, innerW, innerH, innerRadius, fillArgb, fillArgb, cornerRoundMask, 0f, 0f);
+        int border = withAlpha(borderArgb);
+        int fill = withAlpha(fillArgb);
+        if (!isInvisible(border)) {
+            mesh.roundedRect(positionX, positionY, width, height, cornerRadius, border, border, cornerRoundMask, 0f);
+        }
+        float innerWidth = width - 2f * thickness;
+        float innerHeight = height - 2f * thickness;
+        if (innerWidth > 0.5f && innerHeight > 0.5f && !isInvisible(fill)) {
+            mesh.roundedRect(positionX + thickness, positionY + thickness, innerWidth, innerHeight, Math.max(0f, cornerRadius - thickness), fill, fill, cornerRoundMask, 0f);
         }
     }
 
     /**
-     * Draw styled {@link Component} after batched geometry has been flushed (Meteor text pass); no extra batch flush.
+     * Draws rich text with the alpha applied.
      *
-     * @param text      rich text to draw
-     * @param positionX left origin in logical pixels
-     * @param positionY layout line top in logical pixels (top of the nominal line box; converted to vanilla {@code drawString}-compatible baseline coordinates before drawing)
-     * @param color     packed ARGB color (already multiplied when queued from {@link
-     *                  AlumiteGuiRenderer})
+     * @param text      rich text
+     * @param positionX left origin
+     * @param positionY layout line top
+     * @param color     packed ARGB before alpha
      * @param shadow    whether to draw vanilla text shadow
      */
-    public void drawTextImmediate(Component text, float positionX, float positionY, int color, boolean shadow) {
-        guiTextRenderer.drawText(graphics, text, Mth.floor(positionX), Math.round(positionY), color, shadow);
+    public void drawText(Component text, float positionX, float positionY, int color, boolean shadow) {
+        int argb = withAlpha(color);
+        if (isTextInvisible(argb)) {
+            return;
+        }
+        TEXT_RENDERER.draw(graphics, text, positionX, positionY, argb, shadow);
     }
 
     /**
-     * Draw a pre-ordered glyph sequence (see {@link #miniMessageVisualOrder}) after batched geometry has been flushed.
+     * Draws a pre-ordered glyph sequence with the alpha applied.
      *
      * @param text      visual-order glyph sequence
-     * @param positionX left origin in logical pixels
-     * @param positionY top origin in logical pixels
-     * @param color     packed ARGB color
+     * @param positionX left origin
+     * @param positionY layout line top
+     * @param color     packed ARGB before alpha
      * @param shadow    whether vanilla text shadow is drawn
      */
-    public void drawTextImmediate(FormattedCharSequence text, float positionX, float positionY, int color, boolean shadow) {
-        guiTextRenderer.drawText(graphics, text, Mth.floor(positionX), Math.round(positionY), color, shadow);
+    public void drawText(FormattedCharSequence text, float positionX, float positionY, int color, boolean shadow) {
+        int argb = withAlpha(color);
+        if (isTextInvisible(argb)) {
+            return;
+        }
+        TEXT_RENDERER.draw(graphics, text, positionX, positionY, argb, shadow);
     }
 
+    /**
+     * Draws a literal string with the alpha applied. With the GUI font, strings the glyph atlas covers are drawn
+     * from it (without shadow); everything else uses the vanilla font.
+     *
+     * @param text      string content
+     * @param positionX left origin
+     * @param positionY layout line top
+     * @param color     packed ARGB before alpha
+     * @param shadow    whether vanilla shadow is drawn
+     * @param bold      whether bold styling is applied
+     */
+    public void drawText(String text, float positionX, float positionY, int color, boolean shadow, boolean bold) {
+        int argb = withAlpha(color);
+        if (text == null || text.isEmpty() || isTextInvisible(argb)) {
+            return;
+        }
+        if (guiFont) {
+            GlyphAtlas atlas = GlyphAtlas.get(bold);
+            if (atlas.canRender(text)) {
+                atlas.draw(mesh, text, positionX, positionY, argb);
+                return;
+            }
+        }
+        TEXT_RENDERER.draw(graphics, TEXT_CACHES.literal(TextVariant.of(guiFont, bold), text), positionX, positionY, argb, shadow);
+    }
+
+    /**
+     * Parses MiniMessage into a component. Results, including the literal fallback for unparsable text, are cached.
+     *
+     * @param miniMessageText MiniMessage source; null is treated as empty
+     * @return the parsed component
+     */
     public Component parseMiniMessage(String miniMessageText) {
-        Component component = miniMessageText == null ? null : MINI_MESSAGE_CACHE.get(miniMessageText);
+        String source = miniMessageText == null ? "" : miniMessageText;
+        Component component = TEXT_CACHES.miniMessageComponent(source);
         if (component != null) {
             return component;
         }
-
         ProfilerFiller profiler = Profiler.get();
         profiler.push("parseMiniMessage");
         try {
-            var adventure = MINI_MESSAGE.deserialize(miniMessageText == null ? "" : miniMessageText);
-            Component nativeComponent = MinecraftClientAudiences.of().asNative(adventure);
-            if (miniMessageText != null) {
-                MINI_MESSAGE_CACHE.put(miniMessageText, nativeComponent);
-            }
-            return nativeComponent;
-        } catch (Exception exception) {
-            Client.LOG.debug("MiniMessage parse failed for UI text \"{}\", falling back to literal", miniMessageText, exception);
-            return Component.literal(miniMessageText == null ? "" : miniMessageText);
-        } finally {
+            component = MinecraftClientAudiences.of().asNative(MINI_MESSAGE.deserialize(source));
+        }
+        catch (Exception exception) {
+            Client.LOG.debug("MiniMessage parse failed for UI text \"{}\", falling back to literal", source, exception);
+            component = Component.literal(source);
+        }
+        finally {
             profiler.pop();
         }
+        TEXT_CACHES.putMiniMessageComponent(source, component);
+        return component;
     }
 
     /**
-     * Measures the width of MiniMessage text in logical pixels, reusing the last measurement for the exact same text.
+     * Measures the width of MiniMessage text, reusing the last measurement for the exact same text.
      *
      * @param miniMessageText MiniMessage source text
      * @return width in logical pixels, at least one
      */
     public int measureMiniMessageTextWidth(String miniMessageText) {
-        Options options = Minecraft.getInstance().options;
-        int fontOptionsKey = (options.forceUnicodeFont().get() ? 1 : 0) | (options.japaneseGlyphVariants().get() ? 2 : 0);
-        if (fontOptionsKey != cachedFontOptionsKey) {
-            cachedFontOptionsKey = fontOptionsKey;
-            MINI_MESSAGE_WIDTH_CACHE.clear();
-        }
-        Integer cachedWidth = miniMessageText == null ? null : MINI_MESSAGE_WIDTH_CACHE.get(miniMessageText);
+        String source = miniMessageText == null ? "" : miniMessageText;
+        Integer cachedWidth = TEXT_CACHES.miniMessageWidth(source);
         if (cachedWidth != null) {
             return cachedWidth;
         }
-        int width = measureTextWidth(parseMiniMessage(miniMessageText));
-        if (miniMessageText != null) {
-            MINI_MESSAGE_WIDTH_CACHE.put(miniMessageText, width);
-        }
+        int width = measureTextWidth(parseMiniMessage(source));
+        TEXT_CACHES.putMiniMessageWidth(source, width);
         return width;
-    }
-
-    /**
-     * Drops every cached MiniMessage width; call when fonts or languages may have changed.
-     */
-    public static void clearMiniMessageWidthCache() {
-        MINI_MESSAGE_WIDTH_CACHE.clear();
-        MINI_MESSAGE_VISUAL_CACHE.clear();
     }
 
     /**
@@ -315,248 +391,228 @@ public class Renderer2D {
      * Vanilla rebuilds this sequence from a {@link Component} on every draw, so caching it avoids that per-frame work.
      *
      * @param miniMessageText MiniMessage source text
-     * @return visual-order sequence ready for {@link #drawTextImmediate(FormattedCharSequence, float, float, int, boolean)}
+     * @return visual-order sequence ready for {@link #drawText(FormattedCharSequence, float, float, int, boolean)}
      */
     public FormattedCharSequence miniMessageVisualOrder(String miniMessageText) {
-        if (miniMessageText == null) {
-            return parseMiniMessage(null).getVisualOrderText();
+        String source = miniMessageText == null ? "" : miniMessageText;
+        FormattedCharSequence sequence = TEXT_CACHES.miniMessageSequence(source);
+        if (sequence == null) {
+            sequence = parseMiniMessage(source).getVisualOrderText();
+            TEXT_CACHES.putMiniMessageSequence(source, sequence);
         }
-        FormattedCharSequence cachedSequence = MINI_MESSAGE_VISUAL_CACHE.get(miniMessageText);
-        if (cachedSequence != null) {
-            return cachedSequence;
-        }
-        FormattedCharSequence sequence = parseMiniMessage(miniMessageText).getVisualOrderText();
-        MINI_MESSAGE_VISUAL_CACHE.put(miniMessageText, sequence);
         return sequence;
     }
 
     /**
-     * Measure {@link Component} width in logical pixels (matches {@link #drawTextImmediate}).
+     * Measures a component, matching {@link #drawText(Component, float, float, int, boolean)}.
+     *
+     * @param text rich text to measure
+     * @return width in logical pixels, at least one
      */
     public int measureTextWidth(Component text) {
-        int vanilla = guiTextRenderer.getWidth(text);
-        return Math.max(1, Mth.ceil(vanilla));
+        return TEXT_RENDERER.width(text);
     }
 
     /**
-     * Draw a GUI item like a hotbar slot: stack icon plus vanilla overlays (stack count, durability bar, cooldown).
+     * Measures a literal string in the style {@link #drawText(String, float, float, int, boolean, boolean)} draws it.
+     * Results are cached because layout re-measures the same labels every frame.
+     *
+     * @param text the text to measure
+     * @param bold whether the text is bold
+     * @return the width in logical pixels, at least one
+     */
+    public int measureTextWidth(String text, boolean bold) {
+        String plainText = text == null ? "" : text;
+        TextVariant variant = TextVariant.of(guiFont, bold);
+        Integer cachedWidth = TEXT_CACHES.width(variant, plainText);
+        if (cachedWidth != null) {
+            return cachedWidth;
+        }
+        int width;
+        GlyphAtlas atlas = guiFont ? GlyphAtlas.get(bold) : null;
+        if (atlas != null && atlas.canRender(plainText)) {
+            width = Math.max(1, Mth.ceil(atlas.measure(plainText)));
+        }
+        else {
+            width = TEXT_RENDERER.width(TEXT_CACHES.literal(variant, plainText));
+        }
+        TEXT_CACHES.putWidth(variant, plainText, width);
+        return width;
+    }
+
+    /**
+     * @return the nominal line height of body text, at least one
+     */
+    public int getFontHeight() {
+        return Math.max(1, TEXT_RENDERER.lineHeight());
+    }
+
+    /**
+     * Draws a GUI item like a hotbar slot: the stack icon plus count, durability bar and cooldown, all faded by the
+     * alpha.
      *
      * @param stack     item stack to draw (empty stacks are ignored)
-     * @param positionX left origin in logical pixels
-     * @param positionY top origin in logical pixels
+     * @param positionX left origin
+     * @param positionY top origin
      */
     public void drawGuiItem(ItemStack stack, float positionX, float positionY) {
-        if (stack.isEmpty()) {
+        if (stack.isEmpty() || alpha <= 0f) {
             return;
         }
-        flushMeshSegmentBeforeImmediateDraw();
-        int originX = Mth.floor(positionX);
-        int originY = Mth.floor(positionY);
-        Font vanillaFont = Minecraft.getInstance().font;
-        guiItemAlpha = multiplyAlpha;
+        int originX = Math.round(positionX);
+        int originY = Math.round(positionY);
+        guiItemAlpha = alpha;
         try {
             graphics.fakeItem(stack, originX, originY);
-        } finally {
+        }
+        finally {
             guiItemAlpha = 1f;
         }
-        graphics.itemDecorations(vanillaFont, stack, originX, originY);
+        drawItemDecorations(stack, originX, originY);
     }
 
     /**
-     * Draw a GUI item like a hotbar slot for a holder: icon, glint seed, then vanilla overlays (count, bar, cooldown).
+     * Draws a GUI item for a holder: icon, glint seed, then count, durability bar and cooldown.
      *
      * @param holder    living entity whose age contributes to the render seed
      * @param stack     item stack to draw (empty stacks are ignored)
-     * @param positionX left origin in logical pixels
-     * @param positionY top origin in logical pixels
+     * @param positionX left origin
+     * @param positionY top origin
      */
     public void drawGuiItem(LivingEntity holder, ItemStack stack, float positionX, float positionY) {
-        if (stack.isEmpty()) {
+        if (stack.isEmpty() || alpha <= 0f) {
             return;
         }
-        flushMeshSegmentBeforeImmediateDraw();
-        int originX = Mth.floor(positionX);
-        int originY = Mth.floor(positionY);
-        Font vanillaFont = Minecraft.getInstance().font;
+        int originX = Math.round(positionX);
+        int originY = Math.round(positionY);
         int seed = Math.floorMod(holder.tickCount * 31 + stack.hashCode(), Integer.MAX_VALUE);
-        guiItemAlpha = multiplyAlpha;
+        guiItemAlpha = alpha;
         try {
             graphics.item(holder, stack, originX, originY, seed);
-        } finally {
+        }
+        finally {
             guiItemAlpha = 1f;
         }
-        graphics.itemDecorations(vanillaFont, stack, originX, originY);
+        drawItemDecorations(stack, originX, originY);
     }
 
     /**
-     * Draw a literal string after batched geometry has been flushed; {@code color} is final packed ARGB.
+     * Draws a texture over a rectangle, sampled linearly.
      *
-     * @param text      string content
-     * @param positionX left origin in logical pixels
-     * @param positionY top origin in logical pixels
-     * @param color     packed ARGB color
-     * @param shadow    whether vanilla text shadow is drawn
-     * @param bold      whether bold styling is applied
+     * @param texture   id of a texture registered with the texture manager
+     * @param positionX local left
+     * @param positionY local top
+     * @param width     local width
+     * @param height    local height
+     * @param tintArgb  packed ARGB tint
      */
-    public void drawTextImmediate(String text, float positionX, float positionY, int color, boolean shadow, boolean bold) {
-        String plainText = text == null ? "" : text;
-        if (guiFont) {
-            GlyphAtlas atlas = GlyphAtlas.get(bold);
-            if (atlas.canRender(plainText)) {
-                atlas.draw(graphics, currentScissor(), plainText, positionX, positionY, color);
-                return;
-            }
-        }
-        FormattedCharSequence literalText = styledLiteralSequence(text, bold);
-        guiTextRenderer.drawText(graphics, literalText, Mth.floor(positionX), Math.round(positionY), color, shadow);
-    }
-
     public void drawTexture(Identifier texture, float positionX, float positionY, float width, float height, int tintArgb) {
-        if (width < 1e-3f || height < 1e-3f) {
+        int tint = withAlpha(tintArgb);
+        if (width < 1e-3f || height < 1e-3f || isInvisible(tint)) {
             return;
         }
-        Object raw = Minecraft.getInstance().getTextureManager().getTexture(texture);
-        if (raw instanceof DynamicTexture dynamicTexture) {
-            MeshRenderer.INSTANCE.enqueueTexturedQuad(graphics, currentScissor(), dynamicTexture, positionX, positionY, width, height, withAlpha(tintArgb));
-            return;
-        }
-        flushMeshSegmentBeforeImmediateDraw();
-        int drawWidth = Math.max(1, Math.round(width));
-        int drawHeight = Math.max(1, Math.round(height));
-        Matrix3x2fStack matrices = graphics.pose();
-        matrices.pushMatrix();
-        matrices.translate(positionX, positionY);
-        ModUiTextures.drawTinted(graphics, texture, 0, 0, drawWidth, drawHeight, withAlpha(tintArgb));
-        matrices.popMatrix();
+        mesh.texturedRect(MeshRenderer.linearTextureSetup(lookupTexture(texture)), positionX, positionY, width, height, tint);
     }
 
-    public void drawRoundedTexture(Identifier texture, float positionX, float positionY, float width, float height, float cornerRadius, int tintArgb) {
-        if (width < 1e-3f || height < 1e-3f) {
+    /**
+     * Draws a sub-rectangle of a texture over a rounded rectangle, so the rounded mask applies to the destination
+     * rectangle while a cropped region is sampled; pass {@code 0, 0, 1, 1} for the whole texture. The texture is sampled
+     * linearly.
+     *
+     * @param texture      texture or sprite id
+     * @param positionX    local left
+     * @param positionY    local top
+     * @param width        local width
+     * @param height       local height
+     * @param cornerRadius corner radius
+     * @param tintArgb     packed ARGB tint
+     * @param textureU0    texture u at the left edge, 0 to 1 across the full texture
+     * @param textureV0    texture v at the top edge
+     * @param textureU1    texture u at the right edge
+     * @param textureV1    texture v at the bottom edge
+     */
+    public void drawRoundedTexture(Identifier texture, float positionX, float positionY, float width, float height, float cornerRadius, int tintArgb, float textureU0, float textureV0, float textureU1, float textureV1) {
+        int tint = withAlpha(tintArgb);
+        if (width < 1e-3f || height < 1e-3f || isInvisible(tint)) {
             return;
         }
-        Object raw = Minecraft.getInstance().getTextureManager().getTexture(texture);
-        if (raw instanceof DynamicTexture dynamicTexture) {
-            MeshRenderer.INSTANCE.enqueueRoundedTexturedQuad(graphics, currentScissor(), dynamicTexture, positionX, positionY, width, height, cornerRadius, withAlpha(tintArgb));
-            return;
-        }
-        drawTexture(texture, positionX, positionY, width, height, tintArgb);
+        mesh.roundedTexturedRect(MeshRenderer.linearTextureSetup(lookupTexture(texture)), positionX, positionY, width, height, cornerRadius, tint, textureU0, textureV0, textureU1, textureV1);
     }
 
+    /**
+     * Draws a GUI atlas sprite stretched over a rectangle.
+     *
+     * @param spriteId  sprite id
+     * @param positionX local left
+     * @param positionY local top
+     * @param width     local width
+     * @param height    local height
+     * @param tintArgb  packed ARGB tint
+     */
     public void drawSprite(Identifier spriteId, float positionX, float positionY, float width, float height, int tintArgb) {
-        if (width < 1e-3f || height < 1e-3f) {
+        int tint = withAlpha(tintArgb);
+        if (width < 1e-3f || height < 1e-3f || isInvisible(tint)) {
             return;
         }
-        flushMeshSegmentBeforeImmediateDraw();
-        int drawWidth = Math.max(1, Math.round(width));
-        int drawHeight = Math.max(1, Math.round(height));
-        Matrix3x2fStack matrices = graphics.pose();
-        matrices.pushMatrix();
-        matrices.translate(positionX, positionY);
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, 0, 0, drawWidth, drawHeight, withAlpha(tintArgb));
-        matrices.popMatrix();
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(positionX, positionY);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, 0, 0, Math.max(1, Math.round(width)), Math.max(1, Math.round(height)), tint);
+        graphics.pose().popMatrix();
     }
 
+    /**
+     * Draws part of a GUI atlas sprite stretched over a rectangle.
+     *
+     * @param spriteId      sprite id
+     * @param textureWidth  width of the full sprite texture
+     * @param textureHeight height of the full sprite texture
+     * @param sourceX       left of the source region
+     * @param sourceY       top of the source region
+     * @param positionX     local left
+     * @param positionY     local top
+     * @param width         local width
+     * @param height        local height
+     */
     public void drawSprite(Identifier spriteId, int textureWidth, int textureHeight, int sourceX, int sourceY, float positionX, float positionY, float width, float height) {
-        if (width < 1e-3f || height < 1e-3f) {
+        if (width < 1e-3f || height < 1e-3f || alpha <= 0f) {
             return;
         }
-        flushMeshSegmentBeforeImmediateDraw();
-        int drawWidth = Math.max(1, Math.round(width));
-        int drawHeight = Math.max(1, Math.round(height));
-        Matrix3x2fStack matrices = graphics.pose();
-        matrices.pushMatrix();
-        matrices.translate(positionX, positionY);
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, textureWidth, textureHeight, sourceX, sourceY, 0, 0, drawWidth, drawHeight);
-        matrices.popMatrix();
-    }
-
-    public void pushTranslate(float offsetX, float offsetY) {
         graphics.pose().pushMatrix();
-        graphics.pose().translate(offsetX, offsetY);
-    }
-
-    public void popTranslate() {
+        graphics.pose().translate(positionX, positionY);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, textureWidth, textureHeight, sourceX, sourceY, 0, 0, Math.max(1, Math.round(width)), Math.max(1, Math.round(height)));
         graphics.pose().popMatrix();
     }
 
-    public void pushScale(float scale) {
-        graphics.pose().pushMatrix();
-        graphics.pose().scale(scale, scale);
-    }
-
-    public void popScale() {
-        graphics.pose().popMatrix();
-    }
-
-    public int measureTextWidth(String text, boolean bold) {
-        if (guiFont) {
-            GlyphAtlas atlas = GlyphAtlas.get(bold);
-            String plainText = text == null ? "" : text;
-            if (atlas.canRender(plainText)) {
-                return Math.max(1, Mth.ceil(atlas.measure(plainText)));
-            }
+    private void drawItemDecorations(ItemStack stack, int originX, int originY) {
+        if (stack.isBarVisible()) {
+            int left = originX + 2;
+            int top = originY + 13;
+            drawRect(left, top, 13, 2, ITEM_BAR_BACKGROUND);
+            drawRect(left, top, stack.getBarWidth(), 1, ARGB.opaque(stack.getBarColor()));
         }
-        double vanilla = guiTextRenderer.getWidth(styledLiteralSequence(text, bold));
-        return Math.max(1, Mth.ceil(vanilla));
+        Minecraft minecraft = Minecraft.getInstance();
+        LocalPlayer player = minecraft.player;
+        float cooldown = player == null ? 0f : player.getCooldowns().getCooldownPercent(stack, minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(true));
+        if (cooldown > 0f) {
+            int top = originY + Mth.floor(16f * (1f - cooldown));
+            drawRect(originX, top, 16, Mth.ceil(16f * cooldown), ITEM_COOLDOWN_OVERLAY);
+        }
+        if (stack.getCount() != 1) {
+            String amount = String.valueOf(stack.getCount());
+            drawText(Component.literal(amount), originX + 19 - 2 - minecraft.font.width(amount), originY + 6 + 2, OPAQUE_WHITE, true);
+        }
     }
 
-    public int getFontHeight() {
-        return Math.max(1, Mth.ceil(guiTextRenderer.getHeight()));
-    }
-
-    private void flushMeshSegmentBeforeImmediateDraw() {
-        MeshBuilder.INSTANCE.endSegment(graphics);
-    }
-
-    private ScreenRectangle currentScissor() {
-        return scissorSupplier == null ? null : scissorSupplier.get();
+    private AbstractTexture lookupTexture(Identifier texture) {
+        AbstractTexture found = TEXTURE_LOOKUP.get(texture);
+        if (found == null) {
+            found = Minecraft.getInstance().getTextureManager().getTexture(texture);
+            TEXTURE_LOOKUP.put(texture, found);
+        }
+        return found;
     }
 
     private int withAlpha(int color) {
-        return scaleColorAlpha(color, multiplyAlpha);
-    }
-
-    private int withTextAlpha(int color) {
-        return scaleColorAlpha(color, multiplyAlphaText);
-    }
-
-    /**
-     * Queues {@code fui_rounded_rect} outer-ring mode (LUT): same path as {@link #fillRoundedRectBorderRing}; stroke is
-     * in logical pixels, constant in framebuffer pixels regardless of GUI scale (scales only with widget user scale).
-     */
-    private void enqueueLutBorderRing(float positionX, float positionY, float width, float height, float cornerRadius, float ringStrokeLogicalPx, int borderArgb, int cornerRoundMask) {
-        if (width < 1e-3f || height < 1e-3f || ringStrokeLogicalPx <= 0f) {
-            return;
-        }
-        Matrix3x2f poseSnapshot = POSE_SCRATCH.set(graphics.pose());
-        float poseScale = Math.max(0.001f, linearUniformScaleFromModelPose(poseSnapshot));
-        // The pose base scale from AlumiteGuiRenderer.begin() is 2/guiScale; multiply by guiScale to cancel it,
-        // leaving widgetUserScale * 2 (since 1 logical px = 2 framebuffer pixels on the fixed scale-2 canvas).
-        Minecraft mc = Minecraft.getInstance();
-        float guiScale = mc.getWindow().getWidth() / Math.max(1f, (float) mc.getWindow().getGuiScaledWidth());
-        float strokeForLut = ringStrokeLogicalPx * poseScale * guiScale * 0.5f;
-        // Expand the quad by 1 logical pixel outward on each side so the outer anti-aliasing fringe has
-        // geometry to render into. The shader subtracts expansionShaderPx from halfSizePx to restore the
-        // correct SDF boundary, keeping the visible ring at the original logical position.
-        float expansionShaderPx = poseScale * guiScale;
-        MeshRenderer.INSTANCE.enqueueRoundedGradient(graphics, currentScissor(), positionX - 1f, positionY - 1f, width + 2f, height + 2f, cornerRadius, borderArgb, borderArgb, cornerRoundMask, strokeForLut, expansionShaderPx);
-    }
-
-    private FormattedCharSequence styledLiteralSequence(String raw, boolean bold) {
-        String text = raw == null ? "" : raw;
-        LRUCache<String, FormattedCharSequence> cache;
-        if (guiFont) {
-            cache = bold ? GUI_BOLD_LITERAL_SEQUENCE_CACHE : GUI_LITERAL_SEQUENCE_CACHE;
-        }
-        else {
-            cache = bold ? BOLD_LITERAL_SEQUENCE_CACHE : LITERAL_SEQUENCE_CACHE;
-        }
-        FormattedCharSequence cached = cache.get(text);
-        if (cached == null) {
-            Style style = guiFont ? (bold ? GUI_BOLD_STYLE : GUI_REGULAR_STYLE) : (bold ? Style.EMPTY.withBold(true) : Style.EMPTY);
-            cached = FormattedCharSequence.forward(text, style);
-            cache.put(text, cached);
-        }
-        return cached;
+        return scaleColorAlpha(color, alpha);
     }
 }

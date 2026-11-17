@@ -1,112 +1,232 @@
 package cc.fascinated.fascinatedutils.gui.layout;
 
+/**
+ * Start, end and size constraints along one axis. Every setter fully defines the edge it sets, so
+ * {@code center().left(10)} anchors to the left edge rather than keeping the centre anchor. A start and an end
+ * constraint together fix the size, so a size set while both exist is ignored and a start or end set while a size
+ * exists replaces that size.
+ *
+ * <p>Relative values resolve against the available size handed to the node, which is the parent's resolved size, or
+ * the parent's own available size when the parent is auto-sized. Edges are rounded rather than sizes, so neighbouring
+ * relative boxes tile without one-pixel gaps.
+ */
 public class AxisConstraints {
-    private LayoutValue start;
-    private LayoutValue end;
-    private LayoutValue size;
+    /**
+     * Shared empty constraints for nodes that never set a property. Never mutate it.
+     */
+    public static final AxisConstraints NONE = new AxisConstraints();
+
+    private boolean hasStart;
+    private boolean hasEnd;
+    private boolean hasSize;
+    private boolean startRelative;
+    private boolean endRelative;
+    private boolean sizeRelative;
+    private float startValue;
+    private float endValue;
+    private float sizeValue;
     private int startOffset;
     private int endOffset;
     private float startAnchor;
     private float endAnchor;
 
+    /**
+     * Packs a resolved start and size into one value.
+     *
+     * @param start the start edge in pixels
+     * @param size  the size in pixels
+     * @return the packed box, readable with {@link #boxStart(long)} and {@link #boxSize(long)}
+     */
+    public static long packBox(int start, int size) {
+        return ((long) start << 32) | (size & 0xFFFFFFFFL);
+    }
+
+    /**
+     * Reads the start edge of a packed box.
+     *
+     * @param box a value from {@link #packBox(int, int)} or {@link #resolveBox(int, int, int)}
+     * @return the start edge in pixels
+     */
+    public static int boxStart(long box) {
+        return (int) (box >> 32);
+    }
+
+    /**
+     * Reads the size of a packed box.
+     *
+     * @param box a value from {@link #packBox(int, int)} or {@link #resolveBox(int, int, int)}
+     * @return the size in pixels
+     */
+    public static int boxSize(long box) {
+        return (int) box;
+    }
+
     public AxisConstraints startPx(int value) {
-        this.start = LayoutValue.pixels(value);
-        return this;
+        return setStart(value, false, 0, 0f);
     }
 
     public AxisConstraints startRel(float value) {
-        this.start = LayoutValue.relative(value);
-        return this;
+        return setStart(value, true, 0, 0f);
     }
 
     public AxisConstraints startRel(float value, int offset, float anchor) {
-        this.start = LayoutValue.relative(value);
-        this.startOffset = offset;
-        this.startAnchor = anchor;
-        return this;
+        return setStart(value, true, offset, anchor);
     }
 
     public AxisConstraints endPx(int value) {
-        this.end = LayoutValue.pixels(value);
-        return this;
+        return setEnd(value, false, 0, 0f);
     }
 
     public AxisConstraints endRel(float value) {
-        this.end = LayoutValue.relative(value);
-        return this;
+        return setEnd(value, true, 0, 0f);
     }
 
     public AxisConstraints endRel(float value, int offset, float anchor) {
-        this.end = LayoutValue.relative(value);
-        this.endOffset = offset;
-        this.endAnchor = anchor;
-        return this;
+        return setEnd(value, true, offset, anchor);
     }
 
     public AxisConstraints sizePx(int value) {
-        this.size = LayoutValue.pixels(value);
-        return this;
+        return setSize(value, false);
     }
 
     public AxisConstraints sizeRel(float value) {
-        this.size = LayoutValue.relative(value);
+        return setSize(value, true);
+    }
+
+    /**
+     * Whether this axis fixes its own size, either by an explicit size or by both start and end constraints.
+     *
+     * @return true when the size does not depend on the node's content
+     */
+    public boolean hasDefinedSize() {
+        return hasSize || (hasStart && hasEnd);
+    }
+
+    /**
+     * Resolves the size along this axis, falling back to the content size when the axis does not define one.
+     *
+     * @param availableSize the available size along this axis in pixels
+     * @param contentSize   the content size used when {@link #hasDefinedSize()} is false
+     * @return the size in pixels, never negative
+     */
+    public int resolveSize(int availableSize, int contentSize) {
+        return Math.max(0, Math.round(sizeFloat(availableSize, contentSize)));
+    }
+
+    /**
+     * Resolves the unrounded size along this axis, so stacks can place neighbours on shared rounded edges.
+     *
+     * @param availableSize the available size along this axis in pixels
+     * @param contentSize   the content size used when {@link #hasDefinedSize()} is false
+     * @return the size in pixels as a float, never negative
+     */
+    public float resolveExactSize(int availableSize, int contentSize) {
+        return sizeFloat(availableSize, contentSize);
+    }
+
+    /**
+     * Resolves start and size within a slot. Both edges are rounded and the size is derived from them, so adjacent
+     * relative boxes meet exactly.
+     *
+     * @param slotStart   the slot's start coordinate in pixels
+     * @param slotSize    the slot's size in pixels
+     * @param contentSize the content size used when {@link #hasDefinedSize()} is false
+     * @return the packed box, readable with {@link #boxStart(long)} and {@link #boxSize(long)}
+     */
+    public long resolveBox(int slotStart, int slotSize, int contentSize) {
+        float size = sizeFloat(slotSize, contentSize);
+        float start;
+        if (hasStart) {
+            start = slotStart + startPixels(slotSize) - startAnchor * size;
+        }
+        else if (hasEnd) {
+            start = slotStart + slotSize - (endPixels(slotSize) + size - endAnchor * size);
+        }
+        else {
+            start = slotStart;
+        }
+        int startEdge = Math.round(start);
+        int endEdge = Math.round(start + size);
+        return packBox(startEdge, Math.max(0, endEdge - startEdge));
+    }
+
+    /**
+     * The space this axis asks for before the box when the node is stacked. Only a start constraint that is not
+     * anchored counts as a margin.
+     *
+     * @param availableSize the available size along this axis in pixels
+     * @return the leading margin in pixels, never negative
+     */
+    public int leadingMargin(int availableSize) {
+        if (!hasStart || startAnchor != 0f) {
+            return 0;
+        }
+        return Math.max(0, Math.round(startPixels(availableSize)));
+    }
+
+    /**
+     * The space this axis asks for after the box when the node is stacked. Only an end constraint that is not
+     * anchored counts as a margin.
+     *
+     * @param availableSize the available size along this axis in pixels
+     * @return the trailing margin in pixels, never negative
+     */
+    public int trailingMargin(int availableSize) {
+        if (!hasEnd || endAnchor != 0f) {
+            return 0;
+        }
+        return Math.max(0, Math.round(endPixels(availableSize)));
+    }
+
+    private AxisConstraints setStart(float value, boolean relative, int offset, float anchor) {
+        hasStart = true;
+        startValue = value;
+        startRelative = relative;
+        startOffset = offset;
+        startAnchor = anchor;
+        if (hasEnd) {
+            hasSize = false;
+        }
         return this;
     }
 
-    public boolean hasStartConstraint() {
-        return start != null;
-    }
-
-    public boolean hasEndConstraint() {
-        return end != null;
-    }
-
-    public boolean hasSizeConstraint() {
-        return size != null;
-    }
-
-    public int resolvePosition(int parentPosition, int parentSize, int resolvedSize) {
-        dropSizeWhenOverConstrained();
-        if (start != null) {
-            float startValue = start.resolve(parentSize) + startOffset;
-            return parentPosition + Math.round(startValue - startAnchor * resolvedSize);
+    private AxisConstraints setEnd(float value, boolean relative, int offset, float anchor) {
+        hasEnd = true;
+        endValue = value;
+        endRelative = relative;
+        endOffset = offset;
+        endAnchor = anchor;
+        if (hasStart) {
+            hasSize = false;
         }
-        if (end != null) {
-            float endValue = end.resolve(parentSize) + endOffset;
-            return parentPosition + parentSize - Math.round(endValue + resolvedSize - endAnchor * resolvedSize);
-        }
-        return parentPosition;
+        return this;
     }
 
-    /**
-     * Whether this axis fixes its own size, either by an explicit size or by both start and end constraints. Only then
-     * may {@link #resolveSize(int)} be called.
-     *
-     * @return true when {@link #resolveSize(int)} can resolve the size
-     */
-    public boolean hasDefinedSize() {
-        return hasSizeConstraint() || (hasStartConstraint() && hasEndConstraint());
+    private AxisConstraints setSize(float value, boolean relative) {
+        if (hasStart && hasEnd) {
+            return this;
+        }
+        hasSize = true;
+        sizeValue = value;
+        sizeRelative = relative;
+        return this;
     }
 
-    /**
-     * Resolves the size of an axis that has a defined size. Check {@link #hasDefinedSize()} first.
-     *
-     * @param parentSize the parent's size along this axis in pixels
-     * @return the resolved size in pixels, never negative
-     */
-    public int resolveSize(int parentSize) {
-        dropSizeWhenOverConstrained();
-        if (size != null) {
-            return Math.max(0, Math.round(size.resolve(parentSize)));
-        }
-        float startValue = start.resolve(parentSize) + startOffset;
-        float endValue = end.resolve(parentSize) + endOffset;
-        return Math.max(0, Math.round(parentSize - startValue - endValue));
+    private float startPixels(int availableSize) {
+        return (startRelative ? startValue * availableSize : startValue) + startOffset;
     }
 
-    private void dropSizeWhenOverConstrained() {
-        if (start != null && end != null && size != null) {
-            size = null;
+    private float endPixels(int availableSize) {
+        return (endRelative ? endValue * availableSize : endValue) + endOffset;
+    }
+
+    private float sizeFloat(int availableSize, int contentSize) {
+        if (hasStart && hasEnd) {
+            return Math.max(0f, availableSize - startPixels(availableSize) - endPixels(availableSize));
         }
+        if (hasSize) {
+            return Math.max(0f, sizeRelative ? sizeValue * availableSize : sizeValue);
+        }
+        return Math.max(0, contentSize);
     }
 }

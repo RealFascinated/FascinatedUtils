@@ -1,17 +1,24 @@
 package cc.fascinated.fascinatedutils.gui.screens;
 
-import cc.fascinated.fascinatedutils.gui.core.*;
+import cc.fascinated.fascinatedutils.gui.layout.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.core.input.UiEvent;
+import cc.fascinated.fascinatedutils.gui.core.UiHost;
+import cc.fascinated.fascinatedutils.gui.core.UiNode;
+import cc.fascinated.fascinatedutils.gui.core.UiScale;
+import cc.fascinated.fascinatedutils.gui.core.state.UiStateStore;
 import cc.fascinated.fascinatedutils.gui.render.AlumiteGuiRenderer;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import cc.fascinated.fascinatedutils.gui.theme.UiThemeRepository;
 import cc.fascinated.fascinatedutils.gui.theme.impl.DefaultUiTheme;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 public abstract class RootScreen extends WidgetScreen {
@@ -20,28 +27,39 @@ public abstract class RootScreen extends WidgetScreen {
     private boolean initialized;
     protected final UiStateStore stateStore = host.stateStore();
 
+    @Nullable
+    private final Screen parentScreen;
+
     public RootScreen(Component title) {
+        this(title, null);
+    }
+
+    /**
+     * Creates a screen that returns to a parent screen when escape is pressed.
+     *
+     * @param title        the screen title
+     * @param parentScreen the screen to return to on escape, or null to close the screen
+     */
+    public RootScreen(Component title, @Nullable Screen parentScreen) {
         super(title);
-    }
-
-    protected UiNode createRootNode() {
-        throw new IllegalStateException("RootScreen requires composeContent(...) or createRootNode() override.");
+        this.parentScreen = parentScreen;
     }
 
     /**
-     * Subclasses override this to compose their screen content. The returned node is placed inside
-     * a full-screen root.
+     * Composes this screen's content. Called whenever the host recomposes; the returned node is placed inside a
+     * full-screen root.
+     *
+     * @return the content node, never null
      */
-    protected UiNode composeContent() {
-        return createRootNode();
-    }
+    protected abstract UiNode composeContent();
 
-    /**
-     * Final. Wraps {@link #composeContent} with a full-screen root.
-     */
-    protected final UiNode composeRoot(UiStateStore stateStore) {
+    private UiNode composeRoot(UiStateStore hostStateStore) {
+        UiNode content = composeContent();
+        if (content == null) {
+            throw new IllegalStateException(getClass().getSimpleName() + ".composeContent() returned null");
+        }
         PositionedNode<?> root = new PositionedNode<>().full();
-        root.addChild(composeContent());
+        root.addChild(content);
         return root;
     }
 
@@ -55,20 +73,29 @@ public abstract class RootScreen extends WidgetScreen {
         return false;
     }
 
+    /**
+     * Reports whether the content must be recomposed on every frame, for screens that show live previews.
+     *
+     * @return true to recompose each frame instead of when state changes and once a second
+     */
+    protected boolean recomposesEveryFrame() {
+        return false;
+    }
+
     private float canvasWidth() {
-        return usesHudCanvas() ? UIScale.uiWidth() : UIScale.screenWidth();
+        return usesHudCanvas() ? UiScale.uiWidth() : UiScale.screenWidth();
     }
 
     private float canvasHeight() {
-        return usesHudCanvas() ? UIScale.uiHeight() : UIScale.screenHeight();
+        return usesHudCanvas() ? UiScale.uiHeight() : UiScale.screenHeight();
     }
 
     private float canvasPointerX() {
-        return usesHudCanvas() ? UIScale.uiPointerX() : UIScale.screenPointerX();
+        return usesHudCanvas() ? UiScale.uiPointerX() : UiScale.screenPointerX();
     }
 
     private float canvasPointerY() {
-        return usesHudCanvas() ? UIScale.uiPointerY() : UIScale.screenPointerY();
+        return usesHudCanvas() ? UiScale.uiPointerY() : UiScale.screenPointerY();
     }
 
     protected UiTheme uiTheme() {
@@ -80,6 +107,7 @@ public abstract class RootScreen extends WidgetScreen {
             return;
         }
         host.setComposer(this::composeRoot);
+        host.setRecomposeEveryFrame(recomposesEveryFrame());
         initialized = true;
     }
 
@@ -95,13 +123,7 @@ public abstract class RootScreen extends WidgetScreen {
         float deltaSeconds = delta / 20f;
         AlumiteGuiRenderer renderFrame = new AlumiteGuiRenderer(drawContext, true);
         renderFrame.beginFrame(uiWidth, uiHeight);
-        renderFrame.setPointer(pointerX, pointerY);
         host.layout(0, 0, Math.round(uiWidth), Math.round(uiHeight), renderFrame);
-        // Dispatch PointerMove twice: the first pass triggers any hover-driven visibility
-        // changes (e.g. showing overlaid buttons on cell hover); the second pass re-evaluates
-        // the hit-leaf against the now-stable tree so those newly-visible nodes receive
-        // onPointerEnter and show their hover style correctly.
-        host.dispatch(new UiEvent.PointerMove(pointerX, pointerY));
         host.dispatch(new UiEvent.PointerMove(pointerX, pointerY));
         host.render(renderFrame, deltaSeconds);
         renderFrame.endFrame();
@@ -112,9 +134,8 @@ public abstract class RootScreen extends WidgetScreen {
         ensureInitialized();
         float pointerX = canvasPointerX();
         float pointerY = canvasPointerY();
-        boolean hitRegion = AlumiteGuiRenderer.recordPressedRegion(pointerX, pointerY, event.button());
-        boolean handled = hitRegion || host.dispatch(new UiEvent.PointerPress(pointerX, pointerY, event.button()));
-        return handled || super.mouseClicked(event, doubled);
+        boolean routed = host.dispatch(new UiEvent.PointerPress(pointerX, pointerY, event.button()));
+        return routed || super.mouseClicked(event, doubled);
     }
 
     @Override
@@ -122,9 +143,8 @@ public abstract class RootScreen extends WidgetScreen {
         ensureInitialized();
         float pointerX = canvasPointerX();
         float pointerY = canvasPointerY();
-        host.dispatch(new UiEvent.PointerRelease(pointerX, pointerY, event.button()));
-        AlumiteGuiRenderer.fireAndClearPressedRegion(pointerX, pointerY);
-        return super.mouseReleased(event);
+        boolean routed = host.dispatch(new UiEvent.PointerRelease(pointerX, pointerY, event.button()));
+        return routed || super.mouseReleased(event);
     }
 
     @Override
@@ -132,15 +152,15 @@ public abstract class RootScreen extends WidgetScreen {
         ensureInitialized();
         float pointerX = canvasPointerX();
         float pointerY = canvasPointerY();
-        host.dispatch(new UiEvent.PointerMove(pointerX, pointerY));
-        return super.mouseDragged(event, dragX, dragY);
+        boolean routed = host.dispatch(new UiEvent.PointerMove(pointerX, pointerY));
+        return routed || super.mouseDragged(event, dragX, dragY);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         ensureInitialized();
-        host.dispatch(new UiEvent.PointerScroll(canvasPointerX(), canvasPointerY(), (float) verticalAmount));
-        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        boolean routed = host.dispatch(new UiEvent.PointerScroll(canvasPointerX(), canvasPointerY(), (float) verticalAmount));
+        return routed || super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     @Override
@@ -157,18 +177,19 @@ public abstract class RootScreen extends WidgetScreen {
     }
 
     /**
-     * Called when escape was not consumed by a focused node. Closes the screen by default.
+     * Called when escape was not consumed by a focused node. Returns to the parent screen when one was provided,
+     * otherwise closes the screen.
      */
     protected void onEscapePressed() {
-        Minecraft.getInstance().setScreen(null);
+        Minecraft.getInstance().setScreen(parentScreen);
     }
 
     @Override
     public boolean charTyped(CharacterEvent event) {
         ensureInitialized();
-        int codepoint = event.codepoint();
-        if (codepoint >= 0 && codepoint <= 0xFFFF) {
-            return host.dispatch(new UiEvent.CharType((char) codepoint));
+        int codePoint = event.codepoint();
+        if (codePoint >= 0 && host.dispatch(new UiEvent.CharType(codePoint))) {
+            return true;
         }
         return super.charTyped(event);
     }

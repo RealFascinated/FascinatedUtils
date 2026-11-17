@@ -1,17 +1,23 @@
 package cc.fascinated.fascinatedutils.systems.config;
 
+import cc.fascinated.fascinatedutils.systems.config.io.GsonSerializable;
+
+import cc.fascinated.fascinatedutils.systems.config.io.AtomicFiles;
+
 import cc.fascinated.fascinatedutils.client.Client;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 public class ConfigManager<R extends GsonSerializable<R>> {
 
     private final Path filePath;
@@ -21,13 +27,6 @@ public class ConfigManager<R extends GsonSerializable<R>> {
 
     @Getter
     private R current;
-
-    public ConfigManager(Path filePath, Class<R> rootType, Supplier<R> rootDefaults, Gson gson) {
-        this.filePath = filePath;
-        this.rootType = rootType;
-        this.rootDefaults = rootDefaults;
-        this.gson = gson;
-    }
 
     /**
      * Reads and deserialises the root config from disk.

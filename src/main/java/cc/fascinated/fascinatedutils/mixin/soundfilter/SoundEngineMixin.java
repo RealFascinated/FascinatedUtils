@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.mixin.soundfilter;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.SoundFilterModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.soundfilter.SoundFilterModule;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
 import org.spongepowered.asm.mixin.Mixin;

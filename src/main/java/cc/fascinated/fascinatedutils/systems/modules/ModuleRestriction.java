@@ -1,6 +1,8 @@
 package cc.fascinated.fascinatedutils.systems.modules;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
@@ -11,17 +13,12 @@ import java.util.function.BooleanSupplier;
  * Register one with {@link Module#addRestriction(ModuleRestriction)}; the module resumes once it stops holding.
  */
 @Getter
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class ModuleRestriction {
 
     private final BooleanSupplier violated;
     private final Component reason;
     private final boolean hidesModule;
-
-    private ModuleRestriction(BooleanSupplier violated, Component reason, boolean hidesModule) {
-        this.violated = violated;
-        this.reason = reason;
-        this.hidesModule = hidesModule;
-    }
 
     /**
      * Creates a restriction that keeps the module off while the condition holds.

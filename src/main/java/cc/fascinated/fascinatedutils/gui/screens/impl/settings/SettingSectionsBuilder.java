@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.settings;
 
-import cc.fascinated.fascinatedutils.common.Colors;
+import cc.fascinated.fascinatedutils.common.color.Colors;
 import cc.fascinated.fascinatedutils.common.setting.Setting;
 import cc.fascinated.fascinatedutils.common.setting.SettingCategory;
 import cc.fascinated.fascinatedutils.common.setting.impl.BooleanSetting;
@@ -8,23 +8,28 @@ import cc.fascinated.fascinatedutils.common.setting.impl.ColorSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.EnumSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.KeybindSetting;
 import cc.fascinated.fascinatedutils.common.setting.impl.SliderSetting;
-import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
-import cc.fascinated.fascinatedutils.gui.core.SpacerNode;
-import cc.fascinated.fascinatedutils.gui.node.ButtonNode;
-import cc.fascinated.fascinatedutils.gui.node.CardNode;
-import cc.fascinated.fascinatedutils.gui.node.DividerNode;
-import cc.fascinated.fascinatedutils.gui.node.SwitchNode;
-import cc.fascinated.fascinatedutils.gui.node.KeybindNode;
-import cc.fascinated.fascinatedutils.gui.node.RectNode;
-import cc.fascinated.fascinatedutils.gui.node.SliderNode;
-import cc.fascinated.fascinatedutils.gui.node.TextNode;
+import cc.fascinated.fascinatedutils.gui.components.UiTranslations;
+import cc.fascinated.fascinatedutils.gui.layout.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.layout.SpacerNode;
+import cc.fascinated.fascinatedutils.gui.node.control.ButtonNode;
+import cc.fascinated.fascinatedutils.gui.node.display.CardNode;
+import cc.fascinated.fascinatedutils.gui.node.layout.DividerNode;
+import cc.fascinated.fascinatedutils.gui.node.control.SwitchNode;
+import cc.fascinated.fascinatedutils.gui.node.control.KeybindNode;
+import cc.fascinated.fascinatedutils.gui.node.display.RectNode;
+import cc.fascinated.fascinatedutils.gui.node.control.SliderNode;
+import cc.fascinated.fascinatedutils.gui.node.display.TextNode;
 import cc.fascinated.fascinatedutils.gui.theme.UiMetrics;
 import cc.fascinated.fascinatedutils.gui.theme.UiTheme;
 import net.minecraft.client.resources.language.I18n;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -49,6 +54,9 @@ public class SettingSectionsBuilder {
     private static final int SWATCH_SIZE = 12;
     private static final int HEX_BUTTON_WIDTH = 70;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SettingSectionsBuilder.class);
+    private static final Set<Class<?>> WARNED_UNSUPPORTED = new HashSet<>();
+
     private final Runnable save;
     private final Runnable refresh;
     private final Consumer<ColorSetting> openColorPicker;
@@ -66,6 +74,12 @@ public class SettingSectionsBuilder {
         this.openColorPicker = openColorPicker;
     }
 
+    /**
+     * Whether the builder has a control for a setting's type. Settings of any other type are skipped, and logged once.
+     *
+     * @param setting the setting to check
+     * @return true when a row can be built for the setting
+     */
     public static boolean isRenderable(Setting<?> setting) {
         return setting instanceof BooleanSetting || setting instanceof SliderSetting || setting instanceof KeybindSetting
                 || setting instanceof EnumSetting<?> || setting instanceof ColorSetting;
@@ -81,13 +95,13 @@ public class SettingSectionsBuilder {
     public PositionedNode<?> build(List<Setting<?>> topLevelSettings, List<SettingCategory> categories) {
         PositionedNode<?> column = new PositionedNode<>().fullWidth().columnGap(GROUP_GAP);
         boolean any = false;
-        List<Setting<?>> topLevel = topLevelSettings.stream().filter(setting -> !setting.isSubSetting() && isRenderable(setting)).toList();
+        List<Setting<?>> topLevel = renderableRoots(topLevelSettings);
         if (!topLevel.isEmpty()) {
             column.addChild(section(null, topLevel));
             any = true;
         }
         for (SettingCategory category : categories) {
-            List<Setting<?>> renderable = category.settings().stream().filter(setting -> !setting.isSubSetting() && isRenderable(setting)).toList();
+            List<Setting<?>> renderable = renderableRoots(category.settings());
             if (renderable.isEmpty()) {
                 continue;
             }
@@ -98,17 +112,49 @@ public class SettingSectionsBuilder {
         return any ? column : null;
     }
 
+    private static List<Setting<?>> renderableRoots(List<Setting<?>> settings) {
+        List<Setting<?>> renderable = new ArrayList<>();
+        for (Setting<?> setting : settings) {
+            if (setting.isSubSetting()) {
+                continue;
+            }
+            if (isRenderable(setting)) {
+                renderable.add(setting);
+            }
+            else {
+                warnUnsupported(setting);
+            }
+        }
+        return renderable;
+    }
+
+    private static void warnUnsupported(Setting<?> setting) {
+        if (WARNED_UNSUPPORTED.add(setting.getClass())) {
+            LOGGER.warn("Settings screen has no control for setting type {} (first seen on '{}'); such settings are not shown",
+                    setting.getClass().getSimpleName(), setting.getSettingKey());
+        }
+    }
+
+    private void addRows(Setting<?> setting, int depth, List<PositionedNode<?>> rows) {
+        rows.add(buildRow(setting, depth));
+        boolean childrenShown = !(setting instanceof BooleanSetting booleanSetting) || booleanSetting.isEnabled();
+        if (!setting.hasSubSettings() || !childrenShown) {
+            return;
+        }
+        for (Setting<?> subSetting : setting.getSubSettings()) {
+            if (isRenderable(subSetting)) {
+                addRows(subSetting, depth + 1, rows);
+            }
+            else {
+                warnUnsupported(subSetting);
+            }
+        }
+    }
+
     private PositionedNode<?> section(String heading, List<Setting<?>> settings) {
         List<PositionedNode<?>> rows = new ArrayList<>();
         for (Setting<?> setting : settings) {
-            rows.add(buildRow(setting, false));
-            if (setting instanceof BooleanSetting booleanSetting && booleanSetting.hasSubSettings() && booleanSetting.isEnabled()) {
-                for (Setting<?> subSetting : booleanSetting.getSubSettings()) {
-                    if (isRenderable(subSetting)) {
-                        rows.add(buildRow(subSetting, true));
-                    }
-                }
-            }
+            addRows(setting, 0, rows);
         }
         int cardHeight = rows.size() * ROW_HEIGHT + (rows.size() - 1);
         CardNode card = new CardNode().fullWidth().height(cardHeight);
@@ -125,7 +171,8 @@ public class SettingSectionsBuilder {
         });
         PositionedNode<?> group = new PositionedNode<>().fullWidth().height(cardHeight + (heading != null && !heading.isBlank() ? HEADING_HEIGHT + SECTION_GAP : 0)).columnGap(SECTION_GAP);
         if (heading != null && !heading.isBlank()) {
-            group.addChild(new TextNode(() -> heading.toUpperCase(Locale.ROOT))
+            String upperHeading = heading.toUpperCase(Locale.ROOT);
+            group.addChild(new TextNode(() -> upperHeading)
                     .setBold(true)
                     .setColorResolver(UiTheme::textSubtle)
                     .setTextAlign(0f, 0.5f)
@@ -136,31 +183,29 @@ public class SettingSectionsBuilder {
         return group;
     }
 
-    private PositionedNode<?> buildRow(Setting<?> setting, boolean indented) {
+    private PositionedNode<?> buildRow(Setting<?> setting, int depth) {
         PositionedNode<?> row = new PositionedNode<>().fullWidth().height(ROW_HEIGHT).rowGap(ROW_GAP);
-        row.left(ROW_PADDING + (indented ? SUB_SETTING_INDENT : 0)).right(ROW_PADDING);
+        row.left(ROW_PADDING + depth * SUB_SETTING_INDENT).right(ROW_PADDING);
         row.addChild(new TextNode(setting::getName)
-                .setColorResolver(theme -> setting.isLocked() ? theme.textSubtle() : indented ? theme.textMuted() : theme.textPrimary())
+                .setColorResolver(theme -> setting.isLocked() ? theme.textSubtle() : depth > 0 ? theme.textMuted() : theme.textPrimary())
                 .alignY(0.5f));
         row.addChild(new SpacerNode());
 
-        if (setting instanceof BooleanSetting booleanSetting) {
-            row.addChild(booleanControl(booleanSetting));
-        } else if (setting instanceof SliderSetting sliderSetting) {
-            row.addChild(new TextNode(sliderSetting::formatValueForDisplay).setColorResolver(UiTheme::textMuted).width(VALUE_WIDTH).alignY(0.5f));
-            row.addChild(sliderControl(sliderSetting));
-        } else if (setting instanceof EnumSetting<?> enumSetting) {
-            row.addChild(enumControl(enumSetting));
-        } else if (setting instanceof KeybindSetting keybindSetting) {
-            row.addChild(new KeybindNode(keybindSetting).size(BUTTON_CONTROL_WIDTH, CONTROL_HEIGHT).alignY(0.5f));
-        } else if (setting instanceof ColorSetting colorSetting) {
-            row.addChild(new RectNode()
-                    .size(SWATCH_SIZE, SWATCH_SIZE)
-                    .setCornerRadius(3)
-                    .setFillSupplier(colorSetting::getResolvedArgb)
-                    .setBorderResolver(UiTheme::inputBorder)
-                    .alignY(0.5f));
-            row.addChild(colorControl(colorSetting));
+        switch (setting) {
+            case BooleanSetting booleanSetting -> row.addChild(booleanControl(booleanSetting));
+            case SliderSetting sliderSetting -> {
+                row.addChild(new TextNode(sliderSetting::formatValueForDisplay).setColorResolver(UiTheme::textMuted).width(VALUE_WIDTH).alignY(0.5f));
+                row.addChild(sliderControl(sliderSetting));
+            }
+            case EnumSetting<?> enumSetting -> row.addChild(enumControl(enumSetting));
+            case KeybindSetting keybindSetting ->
+                    row.addChild(new KeybindNode(keybindSetting).size(BUTTON_CONTROL_WIDTH, CONTROL_HEIGHT).alignY(0.5f));
+            case ColorSetting colorSetting -> {
+                row.addChild(new RectNode().size(SWATCH_SIZE, SWATCH_SIZE).setCornerRadius(3).setFillSupplier(colorSetting::getResolvedArgb).setBorderResolver(UiTheme::inputBorder).alignY(0.5f));
+                row.addChild(colorControl(colorSetting));
+            }
+            default -> {
+            }
         }
         row.setTooltip(() -> rowTooltip(setting));
         return row;
@@ -170,7 +215,7 @@ public class SettingSectionsBuilder {
         if (setting.isLocked()) {
             Supplier<String> lockedReason = setting.getLockedReason();
             String reason = lockedReason != null ? lockedReason.get() : null;
-            return reason != null && !reason.isBlank() ? reason : I18n.get("alumite.setting.ui.lock_reason.default");
+            return reason != null && !reason.isBlank() ? reason : UiTranslations.INSTANCE.get("alumite.setting.ui.lock_reason.default");
         }
         return setting.getTooltipProvider().get();
     }
@@ -198,6 +243,7 @@ public class SettingSectionsBuilder {
                 setting.setValue(rawValue);
             }
         });
+        slider.setStep(setting.getStep());
         slider.setDisabled(setting::isLocked).setOnCommit(save);
         slider.width(SLIDER_WIDTH).alignY(0.5f);
         return slider;

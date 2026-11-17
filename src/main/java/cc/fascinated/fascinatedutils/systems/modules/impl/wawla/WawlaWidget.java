@@ -1,10 +1,23 @@
 package cc.fascinated.fascinatedutils.systems.modules.impl.wawla;
 
-import cc.fascinated.fascinatedutils.common.StringUtils;
-import cc.fascinated.fascinatedutils.mixin.ClientPlayerInteractionManagerAccessorMixin;
+import cc.fascinated.fascinatedutils.common.util.StringUtils;
+import cc.fascinated.fascinatedutils.gui.node.display.ItemStackNode;
+import cc.fascinated.fascinatedutils.mixin.accessor.ClientPlayerInteractionManagerAccessorMixin;
 import cc.fascinated.fascinatedutils.systems.hud.HudDefaults;
 import cc.fascinated.fascinatedutils.systems.hud.HudHostModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extentions.*;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.BeehiveExtension;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.ComparatorExtension;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.ComposterExtension;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.CropGrowthExtension;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.DaylightDetectorExtension;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.FarmlandExtension;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.HealthExtension;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.NetherWartExtension;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.RedstoneWireExtension;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.RepeaterExtension;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.SculkSensorExtension;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.SweetBerryExtension;
+import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.extensions.TargetExtension;
 import cc.fascinated.fascinatedutils.systems.modules.impl.wawla.hud.WawlaHudPanel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -122,7 +135,7 @@ public class WawlaWidget extends HudHostModule {
             String displayName = block.getName().getString();
             String sourceName = formatSourceName(BuiltInRegistries.BLOCK.getKey(block).getNamespace());
             Item iconItem = block.asItem();
-            ItemStack iconStack = iconItem == Items.AIR ? new ItemStack(Items.SANDSTONE) : new ItemStack(iconItem);
+            ItemStack iconStack = ItemStackNode.iconStack(iconItem == Items.AIR ? Items.SANDSTONE : iconItem);
             float breakProgress = resolveBreakProgress(mc, blockPos);
             WawlaBlockExtension<?> blockExtension = BLOCK_EXTENSIONS.get(block);
             List<String> subtitleLines = blockExtension != null ? blockExtension.getExtension(blockState) : List.of();
@@ -139,7 +152,7 @@ public class WawlaWidget extends HudHostModule {
                 iconStack.set(DataComponents.PROFILE, player.getProfile());
             }
             else {
-                iconStack = SpawnEggItem.byId(entity.getType()).map(ItemStack::new).orElse(ItemStack.EMPTY);
+                iconStack = SpawnEggItem.byId(entity.getType()).map(spawnEgg -> ItemStackNode.iconStack(spawnEgg.value())).orElse(ItemStack.EMPTY);
             }
             List<String> entitySubtitleLines = ENTITY_EXTENSIONS.stream().filter(ext -> ext.matches(entity)).flatMap(ext -> ext.apply(entity).stream()).toList();
             return new CrosshairTarget(displayName, entityName, sourceName, iconStack, 0f, false, entitySubtitleLines);

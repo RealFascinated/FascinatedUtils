@@ -1,7 +1,9 @@
 package cc.fascinated.fascinatedutils.debug.perf.scene;
 
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
@@ -13,14 +15,10 @@ import java.util.List;
  * <p>To add a scene: subclass this, then add one {@code register(...)} line in {@link PerfSceneRegistry}.
  */
 @Getter
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class PerfScene {
     private final String id;
     private final String description;
-
-    protected PerfScene(String id, String description) {
-        this.id = id;
-        this.description = description;
-    }
 
     /**
      * Prepares the scene after the camera is in place. Queue commands, hold keys or open screens through the context.

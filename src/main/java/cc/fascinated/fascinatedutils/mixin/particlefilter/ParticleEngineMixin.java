@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.particlefilter;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.ParticleFilterModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.particlefilter.ParticleFilterModule;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.particles.ParticleOptions;

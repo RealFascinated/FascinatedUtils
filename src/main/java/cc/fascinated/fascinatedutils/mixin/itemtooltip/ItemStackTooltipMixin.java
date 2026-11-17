@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.itemtooltip;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.ItemTooltipModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.itemtooltip.ItemTooltipModule;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;

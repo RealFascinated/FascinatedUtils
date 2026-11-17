@@ -3,7 +3,7 @@ package cc.fascinated.fascinatedutils.updater;
 import cc.fascinated.fascinatedutils.AlumiteMod;
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.common.AlumiteEnvironment;
-import cc.fascinated.fascinatedutils.common.SystemUtils;
+import cc.fascinated.fascinatedutils.common.util.SystemUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.fabricmc.loader.api.FabricLoader;

@@ -2,13 +2,13 @@ package cc.fascinated.fascinatedutils.systems.modules.impl.hypixel.feature;
 
 import cc.fascinated.fascinatedutils.Constants;
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.common.PatternHandler;
-import cc.fascinated.fascinatedutils.common.PlaceholderAPI;
-import cc.fascinated.fascinatedutils.common.PlayerUtils;
-import cc.fascinated.fascinatedutils.common.StringUtils;
+import cc.fascinated.fascinatedutils.common.text.PatternHandler;
+import cc.fascinated.fascinatedutils.common.text.PlaceholderAPI;
+import cc.fascinated.fascinatedutils.common.util.PlayerUtils;
+import cc.fascinated.fascinatedutils.common.util.StringUtils;
 import cc.fascinated.fascinatedutils.event.FascinatedEventBus;
 import cc.fascinated.fascinatedutils.event.impl.chat.ChatMessageEvent;
-import cc.fascinated.fascinatedutils.systems.config.YMLConfigFile;
+import cc.fascinated.fascinatedutils.systems.config.io.YMLConfigFile;
 import cc.fascinated.fascinatedutils.systems.modules.Feature;
 import cc.fascinated.fascinatedutils.systems.modules.impl.hypixel.HypixelModule;
 import meteordevelopment.orbit.EventHandler;

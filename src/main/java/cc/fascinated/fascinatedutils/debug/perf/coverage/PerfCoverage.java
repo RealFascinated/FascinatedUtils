@@ -86,7 +86,7 @@ public class PerfCoverage {
             Map.entry(common("TimeUtils"), "not referenced anywhere in the mod"),
             Map.entry(system("updater"), "checks and downloads releases over the network at exit"),
             Map.entry(listener("ModConfig"), "only handles ClientStoppingEvent, once per launch"),
-            Map.entry(listener("HUDManager"), "only handles ClientStarted/ClientStopping events, once per launch"),
+            Map.entry(listener("HudManager"), "only handles ClientStarted/ClientStopping events, once per launch"),
             Map.entry(listener("PerfAutoRun"), "the perf harness itself"),
             Map.entry(listener("PerfProbe"), "the perf harness itself"),
             Map.entry(listener("PerfWorldScenario"), "the perf harness itself"),

@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.mixin.movement;
 
-import cc.fascinated.fascinatedutils.common.PlayerUtils;
+import cc.fascinated.fascinatedutils.common.util.PlayerUtils;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Player;

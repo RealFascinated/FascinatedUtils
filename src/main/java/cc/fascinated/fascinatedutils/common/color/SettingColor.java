@@ -2,11 +2,13 @@ package cc.fascinated.fascinatedutils.common.color;
 
 import com.google.gson.JsonObject;
 import java.util.concurrent.ThreadLocalRandom;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 public class SettingColor {
 
     private int red;
@@ -227,28 +229,6 @@ public class SettingColor {
         green = clampChannel(green);
         blue = clampChannel(blue);
         alpha = clampChannel(alpha);
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass()) {
-            return false;
-        }
-        SettingColor that = (SettingColor) other;
-        return red == that.red && green == that.green && blue == that.blue && alpha == that.alpha && rainbow == that.rainbow;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = red;
-        result = 31 * result + green;
-        result = 31 * result + blue;
-        result = 31 * result + alpha;
-        result = 31 * result + (rainbow ? 1 : 0);
-        return result;
     }
 
     @Override

@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.mixin.tab;
 
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.TabModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.tab.TabModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;

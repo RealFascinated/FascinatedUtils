@@ -8,10 +8,9 @@ import cc.fascinated.fascinatedutils.gui.screens.impl.screenshot.ScreenshotScree
 import cc.fascinated.fascinatedutils.gui.screens.impl.settings.ModSettingsScreen;
 import cc.fascinated.fascinatedutils.gui.screens.impl.waypoint.CreateEditWaypointScreen;
 import cc.fascinated.fascinatedutils.gui.screens.impl.waypoint.WaypointsScreen;
-import cc.fascinated.fascinatedutils.systems.hud.HUDManager;
-import cc.fascinated.fascinatedutils.systems.hud.HudPanel;
+import cc.fascinated.fascinatedutils.systems.hud.HudManager;
+import cc.fascinated.fascinatedutils.systems.hud.panel.HudPanel;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import net.minecraft.client.gui.screens.Screen;
 import cc.fascinated.fascinatedutils.debug.perf.tests.calibration.CalibrationPerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.tests.chat.ChatDuplicateStackPerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.tests.chat.ChatSearchPerfTest;
@@ -65,7 +64,7 @@ public class PerfTestRegistry {
         initialized = true;
 
         register(new CalibrationPerfTest());
-        for (HudPanel panel : HUDManager.INSTANCE.getWidgets()) {
+        for (HudPanel panel : HudManager.INSTANCE.getWidgets()) {
             register(new HudPanelPerfTest(panel.getId()));
         }
         register(new ScreenFramePerfTest(List.of("screen.settings", "screen.settings_detail", "screen.settings_profiles", "screen.settings_global", "screen.hud_editor", "screen.screenshots", "screen.waypoints", "screen.waypoint_edit")));

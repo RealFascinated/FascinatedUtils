@@ -34,7 +34,7 @@ public class MiniMessageParsePerfTest extends PerfTest {
             inputs[index] = String.format(Locale.ROOT, "<gradient:#ff5555:#55ffff>Row %d</gradient> <gray>(<white>%d</white> ms)</gray>", index, index % 300);
         }
         GuiGraphicsExtractor graphics = new GuiGraphicsExtractor(Minecraft.getInstance(), new GuiRenderState(), 0, 0);
-        renderer = new Renderer2D(graphics, () -> null);
+        renderer = new Renderer2D(graphics, false);
     }
 
     @Override

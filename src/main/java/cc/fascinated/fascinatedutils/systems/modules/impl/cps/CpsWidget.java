@@ -18,5 +18,6 @@ public class CpsWidget extends HudHostModule {
         addAppearanceSettings(true);
         addSetting(splitMouseButtons);
         registerHudPanel(new CpsHudPanel(this));
+        MouseClickRateTracker.INSTANCE.register();
     }
 }

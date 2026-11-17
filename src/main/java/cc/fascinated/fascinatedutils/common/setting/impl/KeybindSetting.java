@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.common.setting.impl;
 
 import cc.fascinated.fascinatedutils.common.setting.Setting;
-import cc.fascinated.fascinatedutils.mixin.KeyBindingAccessorMixin;
+import cc.fascinated.fascinatedutils.mixin.accessor.KeyBindingAccessorMixin;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;

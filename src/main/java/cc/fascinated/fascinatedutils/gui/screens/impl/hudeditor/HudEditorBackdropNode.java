@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.gui.screens.impl.hudeditor;
 
-import cc.fascinated.fascinatedutils.gui.core.PositionedNode;
+import cc.fascinated.fascinatedutils.gui.layout.PositionedNode;
 
 /**
  * Full-screen node behind the HUD panels; pressing empty space clears the selection.
@@ -15,7 +15,7 @@ public class HudEditorBackdropNode extends PositionedNode<HudEditorBackdropNode>
     }
 
     @Override
-    public boolean blocksHitWhenEmpty() {
+    public boolean hitTarget() {
         return true;
     }
 

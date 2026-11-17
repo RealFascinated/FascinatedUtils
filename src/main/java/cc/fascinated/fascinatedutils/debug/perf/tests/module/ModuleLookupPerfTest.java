@@ -4,11 +4,11 @@ import cc.fascinated.fascinatedutils.debug.perf.core.PerfTest;
 import cc.fascinated.fascinatedutils.debug.perf.coverage.PerfCoverage;
 import cc.fascinated.fascinatedutils.systems.modules.Module;
 import cc.fascinated.fascinatedutils.systems.modules.ModuleRegistry;
-import cc.fascinated.fascinatedutils.systems.modules.impl.BlockOutlineModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.BlurModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.FogCustomizerModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.FreelookModule;
-import cc.fascinated.fascinatedutils.systems.modules.impl.TabModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.blockoutline.BlockOutlineModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.blur.BlurModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.fogcustomizer.FogCustomizerModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.freelook.FreelookModule;
+import cc.fascinated.fascinatedutils.systems.modules.impl.tab.TabModule;
 import cc.fascinated.fascinatedutils.systems.modules.impl.music.MusicModule;
 
 import java.util.List;

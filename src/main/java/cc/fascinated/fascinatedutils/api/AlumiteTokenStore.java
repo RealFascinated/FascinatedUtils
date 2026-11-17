@@ -1,7 +1,7 @@
 package cc.fascinated.fascinatedutils.api;
 
 import cc.fascinated.fascinatedutils.client.Client;
-import cc.fascinated.fascinatedutils.systems.config.AtomicFiles;
+import cc.fascinated.fascinatedutils.systems.config.io.AtomicFiles;
 import cc.fascinated.fascinatedutils.systems.config.ModConfig;
 
 import java.io.IOException;

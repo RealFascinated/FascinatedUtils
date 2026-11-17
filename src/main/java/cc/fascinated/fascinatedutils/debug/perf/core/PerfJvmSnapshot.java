@@ -1,6 +1,6 @@
 package cc.fascinated.fascinatedutils.debug.perf.core;
 
-import cc.fascinated.fascinatedutils.systems.TextureManager;
+import cc.fascinated.fascinatedutils.systems.texture.TextureManager;
 
 import java.lang.management.BufferPoolMXBean;
 import java.lang.management.CompilationMXBean;
