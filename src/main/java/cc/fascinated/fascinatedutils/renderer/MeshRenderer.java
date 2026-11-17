@@ -84,6 +84,20 @@ public class MeshRenderer {
     }
 
     /**
+     * Queue one text glyph quad with float coordinates sampling a sub-rectangle of a glyph atlas.
+     */
+    public void enqueueGlyphQuad(@Nullable ScreenRectangle scissor, @NonNull TextureSetup textureSetup, @NonNull Matrix3x2f pose, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, int color) {
+        pendingTextured.add(new GlyphQuadRenderState(textureSetup, pose, x0, y0, x1, y1, u0, v0, u1, v1, color, scissor));
+    }
+
+    /**
+     * Texture setup that samples the given texture with linear filtering.
+     */
+    public TextureSetup linearTextureSetup(@NonNull DynamicTexture texture) {
+        return TextureSetup.singleTexture(texture.getTextureView(), linearSampler());
+    }
+
+    /**
      * Queue an axis-aligned textured quad with rounded corners, using the LUT rounded-rect pipeline.
      * Sampler0 = the image texture; Sampler1 = the corner-radii LUT.
      */
