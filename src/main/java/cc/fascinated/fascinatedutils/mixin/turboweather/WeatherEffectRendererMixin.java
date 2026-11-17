@@ -19,8 +19,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.function.IntSupplier;
-
 @Mixin(WeatherEffectRenderer.class)
 public class WeatherEffectRendererMixin {
     @Unique
@@ -37,7 +35,11 @@ public class WeatherEffectRendererMixin {
         if (!weather.isEnabled()) {
             return original.call(level, types, x, z);
         }
-        return alumite$cachedColumn(weather.heights(), x, z, BlockPos.asLong(x, 0, z), () -> original.call(level, types, x, z));
+        TurboWeather.ColumnTable table = weather.heights();
+        if (table.find(x, z, BlockPos.asLong(x, 0, z))) {
+            return table.found();
+        }
+        return table.store(original.call(level, types, x, z));
     }
 
     @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WeatherEffectRenderer;getPrecipitationAt(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/biome/Biome$Precipitation;"))
@@ -46,8 +48,13 @@ public class WeatherEffectRendererMixin {
         if (!weather.isEnabled()) {
             return original.call(instance, level, pos);
         }
-        int ordinal = alumite$cachedColumn(weather.precipitations(), pos.getX(), pos.getZ(), pos.asLong(), () -> original.call(instance, level, pos).ordinal());
-        return PRECIPITATIONS[ordinal];
+        TurboWeather.ColumnTable table = weather.precipitations();
+        if (table.find(pos.getX(), pos.getZ(), pos.asLong())) {
+            return PRECIPITATIONS[table.found()];
+        }
+        Biome.Precipitation precipitation = original.call(instance, level, pos);
+        table.store(precipitation.ordinal());
+        return precipitation;
     }
 
     @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;getLightCoords(Lnet/minecraft/world/level/BlockAndLightGetter;Lnet/minecraft/core/BlockPos;)I"))
@@ -56,14 +63,10 @@ public class WeatherEffectRendererMixin {
         if (!weather.isEnabled()) {
             return original.call(getter, pos);
         }
-        return alumite$cachedColumn(weather.lights(), pos.getX(), pos.getZ(), pos.asLong(), () -> original.call(getter, pos));
-    }
-
-    @Unique
-    private static int alumite$cachedColumn(TurboWeather.ColumnTable table, int x, int z, long packed, IntSupplier original) {
-        if (table.find(x, z, packed)) {
+        TurboWeather.ColumnTable table = weather.lights();
+        if (table.find(pos.getX(), pos.getZ(), pos.asLong())) {
             return table.found();
         }
-        return table.store(original.getAsInt());
+        return table.store(original.call(getter, pos));
     }
 }

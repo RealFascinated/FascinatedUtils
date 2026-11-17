@@ -25,20 +25,14 @@ public abstract class BlockEntityRenderDispatcherMixin {
             return;
         }
 
+        if (!(blockEntity instanceof Cullable cullable) || !cullable.alumite$isCulled()) {
+            return;
+        }
+
         BlockEntityRenderer<?, ?> blockEntityRenderer = getRenderer(blockEntity);
-        if (blockEntityRenderer == null) {
+        if (blockEntityRenderer == null || blockEntityRenderer.shouldRenderOffScreen()) {
             return;
         }
-
-        if (!(blockEntity instanceof Cullable cullable)) {
-            return;
-        }
-
-        if (cullable.alumite$isCulled()) {
-            if (blockEntityRenderer.shouldRenderOffScreen()) {
-                return;
-            }
-            info.setReturnValue(null);
-        }
+        info.setReturnValue(null);
     }
 }

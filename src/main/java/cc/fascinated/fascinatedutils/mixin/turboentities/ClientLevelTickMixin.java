@@ -19,6 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientLevel.class)
 public class ClientLevelTickMixin {
+    @Unique
+    private static final int FULL_TICK_INTERVAL = 4;
 
     @Inject(method = "tickNonPassenger", at = @At("HEAD"), cancellable = true)
     private void alumite$skipCulledEntityTick(Entity entity, CallbackInfo info) {
@@ -34,6 +36,14 @@ public class ClientLevelTickMixin {
         Minecraft minecraft = Minecraft.getInstance();
         boolean culled = entity instanceof Cullable cullable && cullable.alumite$isCulled();
         if (entity == minecraft.player || entity == minecraft.getCameraEntity() || entity.isVehicle() || entity.isPassenger() || !culled) {
+            Client.TURBO_ENTITIES.incrementTickedEntities();
+            return;
+        }
+
+        // Only living entities get the minimal tick: anything else (projectiles, items, vehicles) must keep simulating
+        // or it jumps when revealed. Living entities still take a full tick now and then so head turn, swim and elytra
+        // animation state catch up instead of snapping.
+        if (!(entity instanceof LivingEntity) || entity.tickCount % FULL_TICK_INTERVAL == 0) {
             Client.TURBO_ENTITIES.incrementTickedEntities();
             return;
         }

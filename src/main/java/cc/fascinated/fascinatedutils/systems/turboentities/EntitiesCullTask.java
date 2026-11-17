@@ -65,6 +65,12 @@ public class EntitiesCullTask extends AbstractCullTask {
     }
 
     @Override
+    protected void resetCulledFlags() {
+        uncullPublished(entitySnapshots);
+        uncullPublished(blockEntitySnapshots);
+    }
+
+    @Override
     protected long newestSnapshotPublishNanos() {
         return Math.max(entitySnapshots.getPublishedNanos(), blockEntitySnapshots.getPublishedNanos());
     }
@@ -123,13 +129,18 @@ public class EntitiesCullTask extends AbstractCullTask {
             if (Minecraft.getInstance().shouldEntityAppearGlowing(entity) || (Minecraft.getInstance().player != null && Minecraft.getInstance().player.getVehicle() == entity)) {
                 cullable.alumite$setCulled(false);
             }
-            else if (entity.distanceToSqr(getLastCameraPos().x, getLastCameraPos().y, getLastCameraPos().z) > CullDistances.ENTITY_FORCE_CULL_DISTANCE_SQ) {
-                cullable.alumite$setCulled(true);
+            else if (entity.isVehicle() || entity.isPassenger()) {
+                // A vehicle and its riders are visible together, so a ride chain is never culled piecemeal.
+                cullable.alumite$setCulled(false);
             }
             else if (entity instanceof Display) {
                 // The cull box is only the width/height footprint at the entity position, while the displayed model is moved and
                 // scaled by its transformation, so occlusion tests on it would hide displays that are in plain view.
+                // Displays also carry their own view range, which vanilla already enforces.
                 cullable.alumite$setCulled(false);
+            }
+            else if (entity.distanceToSqr(getLastCameraPos().x, getLastCameraPos().y, getLastCameraPos().z) > getEntityForceCullDistanceSq(entity)) {
+                cullable.alumite$setCulled(true);
             }
             else {
                 EntityRenderer<?, ?> renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
@@ -158,8 +169,8 @@ public class EntitiesCullTask extends AbstractCullTask {
                 cullable.alumite$setCulled(true);
             }
             else {
-                AABB box = getBlockEntityCullingBox(blockEntity, pos);
-                cullable.alumite$setCulled(!isVisible(box));
+                double extraHeight = blockEntity instanceof BannerBlockEntity ? 1.0 : 0.0;
+                cullable.alumite$setCulled(!isVisible(pos.getX(), pos.getY() - extraHeight, pos.getZ(), pos.getX() + 1.0, pos.getY() + 1.0 + extraHeight, pos.getZ() + 1.0));
             }
             return true;
         });
@@ -167,11 +178,13 @@ public class EntitiesCullTask extends AbstractCullTask {
         culledBlockEntityCount = tally.culled();
     }
 
-    private AABB getBlockEntityCullingBox(BlockEntity blockEntity, BlockPos pos) {
-        if (blockEntity instanceof BannerBlockEntity) {
-            return new AABB(pos).inflate(0, 1, 0);
-        }
-        return new AABB(pos);
+    /**
+     * Force-cull distance for an entity: the flat limit, widened for big entities the way vanilla scales render distance
+     * by bounding box size, so ghasts, dragons and large modded bosses stay visible at range.
+     */
+    private double getEntityForceCullDistanceSq(Entity entity) {
+        double scaledDistance = entity.getBoundingBox().getSize() * 64.0;
+        return Math.max(CullDistances.ENTITY_FORCE_CULL_DISTANCE_SQ, scaledDistance * scaledDistance);
     }
 
     private AABB getCullingBox(Entity entity, EntityRendererAccess rendererAccess) {

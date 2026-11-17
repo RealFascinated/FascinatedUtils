@@ -63,6 +63,7 @@
     "tab.PlayerTabOverlayMixin",
     "timechanger.ClientClockManagerMixin",
     "title.GuiMixin",
+    "culling.FrustumAccess",
     "turboentities.BlockDisplayRendererMixin",
     "turboentities.BlockEntityRenderDispatcherMixin",
     "turboentities.BlockModelRenderStateMixin",

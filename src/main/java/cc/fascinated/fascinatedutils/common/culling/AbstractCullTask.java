@@ -2,6 +2,7 @@ package cc.fascinated.fascinatedutils.common.culling;
 
 import cc.fascinated.fascinatedutils.client.Client;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfAllocation;
+import cc.fascinated.fascinatedutils.mixin.culling.FrustumAccess;
 import cc.fascinated.fascinatedutils.debug.perf.core.PerfProbe;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
 import com.logisticscraft.occlusionculling.cache.ArrayOcclusionCache;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
 /**
@@ -37,11 +39,11 @@ public abstract class AbstractCullTask implements Runnable {
     private final PerfProbe.Section cullLatencySection;
     private final Set<String> loggedFailures = ConcurrentHashMap.newKeySet();
     private volatile boolean running = true;
-    private volatile boolean requestCull = false;
+    private final AtomicBoolean requestCull = new AtomicBoolean(false);
     private volatile Thread cullThread = null;
     private volatile boolean inGame = false;
-    private volatile Vec3 camera = Vec3.ZERO;
-    private volatile Frustum frustum = null;
+    private volatile CullFrame frame = new CullFrame(Vec3.ZERO, null);
+    private Frustum passFrustum = null;
     @Getter
     private volatile long lastPassNanos = 0L;
     @Getter(AccessLevel.PROTECTED)
@@ -72,6 +74,15 @@ public abstract class AbstractCullTask implements Runnable {
     @Override
     public void run() {
         cullThread = Thread.currentThread();
+        try {
+            runLoop();
+        } finally {
+            // Whatever was hidden must render again once this worker is gone; the next worker starts from visible.
+            resetCulledFlags();
+        }
+    }
+
+    private void runLoop() {
         while (running && Minecraft.getInstance().isRunning()) {
             try {
                 // Woken early by requestCull(); otherwise polls for camera movement every sleepMillis.
@@ -83,24 +94,35 @@ public abstract class AbstractCullTask implements Runnable {
                     continue;
                 }
 
-                Vec3 cameraSnap = camera;
-                if (requestCull || !cameraSnap.equals(lastCameraPos)) {
-                    requestCull = false;
-                    cullPass(cameraSnap);
+                CullFrame frameSnap = frame;
+                Vec3 cameraSnap = frameSnap.camera();
+                if (requestCull.getAndSet(false) || !cameraSnap.equals(lastCameraPos)) {
+                    cullPass(cameraSnap, frameSnap.frustum());
                 }
-            } catch (Exception exception) {
+            } catch (Throwable throwable) {
                 // A failed pass must not end the thread, or everything keeps its last culled flag forever.
-                Client.LOG.warn("{} cull pass failed: {}", getClass().getSimpleName(), exception.toString());
+                Client.LOG.warn("{} cull pass failed: {}", getClass().getSimpleName(), throwable.toString());
             }
         }
+    }
+
+    /**
+     * Runs one occlusion and frustum pass over the published snapshots, using the frustum of the latest handed-over frame.
+     *
+     * @param cameraPosition the camera position to cull from
+     */
+    public void cullPass(Vec3 cameraPosition) {
+        cullPass(cameraPosition, frame.frustum());
     }
 
     /**
      * Runs one occlusion and frustum pass over the published snapshots.
      *
      * @param cameraPosition the camera position to cull from
+     * @param frustum        the frustum matching the camera position, or null when the task does not frustum-test
      */
-    public void cullPass(Vec3 cameraPosition) {
+    public void cullPass(Vec3 cameraPosition, Frustum frustum) {
+        passFrustum = frustum;
         lastCameraPos = cameraPosition;
         cameraVec3d.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
         boolean recording = PerfProbe.INSTANCE.isRecording();
@@ -127,6 +149,30 @@ public abstract class AbstractCullTask implements Runnable {
     protected abstract void cullSnapshots();
 
     /**
+     * Marks every subject in the published snapshots as visible. Runs on the cull thread when it exits.
+     */
+    protected abstract void resetCulledFlags();
+
+    /**
+     * Marks every {@link Cullable} in the published snapshot of a buffer as visible.
+     *
+     * @param buffers the snapshot buffers to reset
+     * @param <T>     the snapshot element type
+     */
+    protected static <T> void uncullPublished(CullSnapshotBuffers<T> buffers) {
+        List<T> snapshot = buffers.acquire();
+        try {
+            for (T subject : snapshot) {
+                if (subject instanceof Cullable cullable) {
+                    cullable.alumite$setCulled(false);
+                }
+            }
+        } finally {
+            buffers.release();
+        }
+    }
+
+    /**
      * Returns when the newest snapshot this task culls was published, for measuring how stale the culled data is.
      *
      * @return the {@link System#nanoTime()} of the most recent publish, or 0 when nothing was published yet
@@ -134,8 +180,9 @@ public abstract class AbstractCullTask implements Runnable {
     protected abstract long newestSnapshotPublishNanos();
 
     /**
-     * Hands the cull thread the latest camera and, at most once per cull interval, a private copy of the frustum.
-     * Marks the worker as out of game when there is no level or player.
+     * Hands the cull thread the camera and, for frustum-testing tasks, a private copy of the frustum taken at most once
+     * per cull interval. The camera and frustum are published together so a pass never mixes a new camera with an old
+     * frustum. Marks the worker as out of game when there is no level or player.
      *
      * @param renderCamera the render thread's camera
      * @param liveFrustum  the render thread's frustum
@@ -149,11 +196,18 @@ public abstract class AbstractCullTask implements Runnable {
         }
 
         inGame = true;
-        camera = renderCamera.position();
+        Vec3 position = renderCamera.position();
+        if (!usesFrustum()) {
+            if (!position.equals(frame.camera())) {
+                frame = new CullFrame(position, null);
+            }
+            return true;
+        }
+
         long now = System.nanoTime();
         if (now - lastFrustumCopyNanos >= frustumCopyIntervalNanos) {
             lastFrustumCopyNanos = now;
-            frustum = new Frustum(liveFrustum);
+            frame = new CullFrame(position, new Frustum(liveFrustum));
         }
         return true;
     }
@@ -163,7 +217,7 @@ public abstract class AbstractCullTask implements Runnable {
      * collapse into a single pass.
      */
     public void requestCull() {
-        this.requestCull = true;
+        this.requestCull.set(true);
         Thread worker = cullThread;
         if (worker != null) {
             LockSupport.unpark(worker);
@@ -200,17 +254,34 @@ public abstract class AbstractCullTask implements Runnable {
         if (box == null) {
             return true;
         }
+        return isVisible(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+    }
 
-        if (box.getXsize() > CullDistances.HITBOX_LIMIT || box.getYsize() > CullDistances.HITBOX_LIMIT || box.getZsize() > CullDistances.HITBOX_LIMIT) {
+    /**
+     * Tests a box given by its corners against the frustum and the occlusion culler, without allocating an AABB.
+     *
+     * @param minX the box minimum x
+     * @param minY the box minimum y
+     * @param minZ the box minimum z
+     * @param maxX the box maximum x
+     * @param maxY the box maximum y
+     * @param maxZ the box maximum z
+     * @return true when the box should still render
+     */
+    protected boolean isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+        if (maxX - minX > CullDistances.HITBOX_LIMIT || maxY - minY > CullDistances.HITBOX_LIMIT || maxZ - minZ > CullDistances.HITBOX_LIMIT) {
             return true;
         }
 
-        if (usesFrustum() && frustum != null && !frustum.isVisible(box)) {
-            return false;
+        if (usesFrustum() && passFrustum != null) {
+            int intersection = ((FrustumAccess) passFrustum).alumite$cubeInFrustum(minX, minY, minZ, maxX, maxY, maxZ);
+            if (intersection != -2 && intersection != -1) {
+                return false;
+            }
         }
 
-        aabbMin.set(box.minX, box.minY, box.minZ);
-        aabbMax.set(box.maxX, box.maxY, box.maxZ);
+        aabbMin.set(minX, minY, minZ);
+        aabbMax.set(maxX, maxY, maxZ);
         return culling.isAABBVisible(aabbMin, aabbMax, cameraVec3d);
     }
 
@@ -219,6 +290,9 @@ public abstract class AbstractCullTask implements Runnable {
      */
     protected void resetOcclusionCache() {
         culling.resetCache();
+    }
+
+    private record CullFrame(Vec3 camera, Frustum frustum) {
     }
 
     /**
@@ -271,7 +345,7 @@ public abstract class AbstractCullTask implements Runnable {
                 if (!decision.decide(subject, cullable)) {
                     continue;
                 }
-            } catch (Exception exception) {
+            } catch (Throwable exception) {
                 // Fail visible: one bad subject must not stay hidden or abort the pass for the rest.
                 cullable.alumite$setCulled(false);
                 logFailureOnce(subjectName, exception);
@@ -290,7 +364,7 @@ public abstract class AbstractCullTask implements Runnable {
      * @param subject   what was being culled
      * @param exception the failure
      */
-    protected void logFailureOnce(String subject, Exception exception) {
+    protected void logFailureOnce(String subject, Throwable exception) {
         if (loggedFailures.add(subject + exception.getClass().getName())) {
             Client.LOG.debug("{} cull failed: {}", subject, exception.toString());
         }

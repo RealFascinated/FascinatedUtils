@@ -15,10 +15,12 @@ public class CulledParticleIterator implements Iterator<SingleQuadParticle> {
     private final Iterator<SingleQuadParticle> delegate;
     private SingleQuadParticle nextParticle;
     private boolean nextReady;
+    private boolean canRemove;
 
     @Override
     public boolean hasNext() {
         while (!nextReady && delegate.hasNext()) {
+            canRemove = false;
             SingleQuadParticle particle = delegate.next();
             if (!(particle instanceof Cullable cullable) || !cullable.alumite$isCulled()) {
                 nextParticle = particle;
@@ -36,6 +38,16 @@ public class CulledParticleIterator implements Iterator<SingleQuadParticle> {
         SingleQuadParticle particle = nextParticle;
         nextParticle = null;
         nextReady = false;
+        canRemove = true;
         return particle;
+    }
+
+    @Override
+    public void remove() {
+        if (!canRemove) {
+            throw new IllegalStateException();
+        }
+        canRemove = false;
+        delegate.remove();
     }
 }

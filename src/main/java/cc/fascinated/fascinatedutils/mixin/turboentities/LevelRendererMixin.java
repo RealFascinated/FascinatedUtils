@@ -37,7 +37,7 @@ public class LevelRendererMixin {
             return;
         }
 
-        Double maxDistSq = TurboEntities.RENDER_DISTANCE_CAPS.get(entity.getType());
+        Double maxDistSq = TurboEntities.getRenderDistanceCapSq(entity);
         if (maxDistSq != null) {
             Vec3 cameraPos = alumite$frameCameraPos;
             if (cameraPos == null) {

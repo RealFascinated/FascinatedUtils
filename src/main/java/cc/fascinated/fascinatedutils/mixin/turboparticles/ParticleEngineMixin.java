@@ -30,6 +30,7 @@ public class ParticleEngineMixin {
         }
 
         if (!cullTask.handOffFrame(camera, frustum)) {
+            cullTask.clearSnapshots();
             return;
         }
 

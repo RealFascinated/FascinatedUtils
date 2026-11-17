@@ -13,8 +13,6 @@ import java.util.function.Supplier;
  */
 @RequiredArgsConstructor
 public class CullThreadLifecycle<T extends AbstractCullTask> {
-    private static final long WORKER_EXIT_TIMEOUT_MILLIS = 100L;
-
     private final BooleanSupplier settingEnabled;
     private final Supplier<T> taskFactory;
     private final String threadName;
@@ -25,11 +23,19 @@ public class CullThreadLifecycle<T extends AbstractCullTask> {
     /**
      * Snapshot of the setting for hot paths on the render thread; refreshed each client tick.
      */
-    @Getter
     private volatile boolean enabled = false;
 
     @Getter
     private volatile T task;
+
+    /**
+     * Whether the turbo system is on and has a running cull task, so culled flags can be trusted.
+     *
+     * @return true when mixins should apply culling
+     */
+    public boolean isEnabled() {
+        return enabled && task != null;
+    }
 
     public boolean isThreadAlive() {
         return task != null && thread != null && thread.isAlive();
@@ -47,6 +53,13 @@ public class CullThreadLifecycle<T extends AbstractCullTask> {
         boolean nowEnabled = settingEnabled.getAsBoolean();
         enabled = nowEnabled;
         if (nowEnabled == previousEnabledState) {
+            if (nowEnabled && task != null && thread != null && !thread.isAlive()) {
+                // The worker died; start a fresh one so nothing stays hidden forever.
+                task = null;
+                if (!startThread()) {
+                    previousEnabledState = false;
+                }
+            }
             return;
         }
 
@@ -72,16 +85,9 @@ public class CullThreadLifecycle<T extends AbstractCullTask> {
             if (task != null) {
                 return true;
             }
-            // A stopped worker may still be finishing its pass; never run two cull threads at once.
-            try {
-                thread.join(WORKER_EXIT_TIMEOUT_MILLIS);
-            } catch (InterruptedException exception) {
-                Thread.currentThread().interrupt();
-                return false;
-            }
-            if (thread.isAlive()) {
-                return false;
-            }
+            // A stopped worker may still be finishing its pass; never run two cull threads at once. Retry next tick
+            // instead of blocking the client thread.
+            return false;
         }
         task = taskFactory.get();
         onThreadStarted.run();

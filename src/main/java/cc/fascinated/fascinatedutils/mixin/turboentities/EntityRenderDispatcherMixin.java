@@ -23,7 +23,7 @@ public class EntityRenderDispatcherMixin {
             return;
         }
 
-        Double maxDistSq = TurboEntities.RENDER_DISTANCE_CAPS.get(entity.getType());
+        Double maxDistSq = TurboEntities.getRenderDistanceCapSq(entity);
         if (maxDistSq != null && entity.distanceToSqr(camX, camY, camZ) > maxDistSq) {
             info.setReturnValue(false);
             return;

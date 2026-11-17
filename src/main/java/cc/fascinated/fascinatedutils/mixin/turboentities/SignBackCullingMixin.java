@@ -9,7 +9,6 @@ import net.minecraft.client.renderer.blockentity.AbstractSignRenderer;
 import net.minecraft.client.renderer.blockentity.state.SignRenderState;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -22,6 +21,10 @@ public class SignBackCullingMixin {
     @Unique
     private static final double FACING_EPSILON = 0.0;
 
+    // Sign text is submitted on the render thread only, so one scratch vector avoids an allocation per sign face.
+    @Unique
+    private static final Vector4f NORMAL_SCRATCH = new Vector4f();
+
     @Inject(method = "submitSignText", at = @At("HEAD"), cancellable = true)
     private void alumite$cullSignText(SignRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, SignText signText, CallbackInfo info) {
         if (!Client.TURBO_ENTITIES.isEnabled()) {
@@ -30,9 +33,8 @@ public class SignBackCullingMixin {
 
         Transformation faceTransform = signText == state.frontText ? state.transformations.frontText() : state.transformations.backText();
 
-        Vector4f normal = new Vector4f(0f, 0f, 1f, 0f);
-        Matrix4f matrix = faceTransform.getMatrixCopy();
-        matrix.transform(normal);
+        Vector4f normal = NORMAL_SCRATCH.set(0f, 0f, 1f, 0f);
+        faceTransform.getMatrix().transform(normal);
 
         Vec3 cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().position();
         double toCameraX = cameraPos.x - state.blockPos.getX() - 0.5;

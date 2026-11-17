@@ -34,6 +34,21 @@ public class ParticleCullTask extends AbstractCullTask {
     }
 
     @Override
+    protected void resetCulledFlags() {
+        uncullPublished(particleSnapshots);
+    }
+
+    /**
+     * Drops the published snapshot so its particles, and the level they reference, can be collected. Called from the
+     * main thread when there is no level to cull for.
+     */
+    public void clearSnapshots() {
+        particleSnapshots.clear();
+        consideredParticleCount = 0;
+        culledParticleCount = 0;
+    }
+
+    @Override
     protected long newestSnapshotPublishNanos() {
         return particleSnapshots.getPublishedNanos();
     }
@@ -101,8 +116,9 @@ public class ParticleCullTask extends AbstractCullTask {
                 return true;
             }
 
-            AABB box = new AABB(centerX - 0.1, centerY - 0.1, centerZ - 0.1, centerX + 0.1, centerY + 0.1, centerZ + 0.1);
-            cullable.alumite$setCulled(!isVisible(box));
+            // Pad by the rendered quad size so large particles are not hidden while part of the quad is on screen.
+            double halfSize = Math.max(0.1, ((SingleQuadParticle) particle).getQuadSize(1.0F));
+            cullable.alumite$setCulled(!isVisible(centerX - halfSize, centerY - halfSize, centerZ - halfSize, centerX + halfSize, centerY + halfSize, centerZ + halfSize));
             return true;
         });
         consideredParticleCount = tally.considered();

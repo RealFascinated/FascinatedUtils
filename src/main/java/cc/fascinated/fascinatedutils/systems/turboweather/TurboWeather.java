@@ -32,6 +32,8 @@ public class TurboWeather {
     public void beginFrame(Level level) {
         enabled = Settings.INSTANCE.getTurboWeather().isEnabled();
         if (!enabled) {
+            // Forget the level so re-enabling starts from an empty cache.
+            cachedLevel = new WeakReference<>(null);
             return;
         }
         heights.snapshotAndReset();
@@ -81,6 +83,10 @@ public class TurboWeather {
         }
 
         private void snapshotAndReset() {
+            if (lookups == 0) {
+                // No lookups this frame (no precipitation): keep the last real stats for the debug screen.
+                return;
+            }
             lastLookups = lookups;
             lastHits = hits;
             lookups = 0;

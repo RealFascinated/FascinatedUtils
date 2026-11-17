@@ -12,12 +12,31 @@ import cc.fascinated.fascinatedutils.systems.settings.Settings;
 import lombok.Getter;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 
 import java.util.Map;
 
 public class TurboEntities {
     public static final Map<EntityType<?>, Double> RENDER_DISTANCE_CAPS = Map.of(EntityType.ITEM, CullDistances.ITEM_RENDER_DISTANCE_SQ, EntityType.EXPERIENCE_ORB, CullDistances.ITEM_RENDER_DISTANCE_SQ, EntityType.ARMOR_STAND, CullDistances.DECORATION_RENDER_DISTANCE_SQ, EntityType.ITEM_DISPLAY, CullDistances.DECORATION_RENDER_DISTANCE_SQ);
+
+    /**
+     * Returns the render distance cap for an entity, or null when it is uncapped.
+     *
+     * <p>Display entities carry their own view range and armor stands with a visible name are servers' holograms, so
+     * neither is capped.
+     *
+     * @param entity the entity to look up
+     * @return the squared cap distance, or null
+     */
+    public static Double getRenderDistanceCapSq(Entity entity) {
+        Double maxDistSq = RENDER_DISTANCE_CAPS.get(entity.getType());
+        if (maxDistSq == null || entity instanceof Display || entity.isCustomNameVisible()) {
+            return null;
+        }
+        return maxDistSq;
+    }
 
     /**
      * Block entities farther than this chunk radius from the player are not snapshotted for the cull worker
